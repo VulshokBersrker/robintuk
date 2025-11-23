@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "robintuk_player",
+  "version": "0.1.0",
+  "identifier": "com.robintuk",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Robintuk",
+        "width": 1400,
+        "height": 950,
+        "decorations": false,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' customprotocol: asset:",
+        "connect-src": "ipc: http://ipc.localhost",
+        "font-src": ["https://fonts.gstatic.com"],
+        "img-src": "'self' asset: http://asset.localhost blob: data:",
+        "style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com",
+        "media-src": "'self' asset: http://asset.localhost"
+      },
+      "freezePrototype": true,
+      "assetProtocol": {
+        "enable": true,
+        "scope": {
+          "allow": ["$APPDATA/db/**", "$RESOURCE/**", "$HOME/.config/**"],
+          "deny": ["$APPDATA/db/*.stronghold"]
+        }
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Music",
+    "copyright": "copyright",    
+    "shortDescription": "A beautiful music player made with tauri and React",
+    "icon": [
+      "icons/icon.png",
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      { "ext": ["mp3"] },
+      { "ext": ["m4a"] },
+      { "ext": ["flac"] },
+      { "ext": ["wav"] },
+      { "ext": ["ogg"] },
+      { "ext": ["opus"] },
+      { "ext": ["aac"] },
+      { "ext": ["aiff"] }
+    ]
+  },  
+  "plugins": {
+    "sql": {
+      "preload": ["sqlite:third_rhythm.db"]
+    }
+  }
+}
