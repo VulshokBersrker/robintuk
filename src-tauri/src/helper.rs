@@ -76,7 +76,7 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
     // Get the directory where all the data is stored
     let image_dir =
-        dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/third_rhythm/covers/";
+        dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers/";
     let mut covers_path = PathBuf::new();
 
     // Probe the media source ------------------------------------- Error on read # 1250 when adding songs
