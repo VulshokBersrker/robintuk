@@ -500,7 +500,7 @@ pub async fn reorder_playlist(
 #[tauri::command(rename_all = "snake_case")]
 pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, playlist_name: String) -> Result<(), String> {
     // First get the image file and the playlist cover directory
-    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/music_player/playlist_covers/";
+    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers/";
     let file_type = Path::new(&file_path).extension().and_then(OsStr::to_str).unwrap();
     let new_path = image_dir.clone() + "" + &playlist_name.as_str() + "." + file_type;
 
