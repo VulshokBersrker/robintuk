@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
-import ListVirtualization from '../componets/lists/listVirtualization.js';
+import ListVirtualization from '../components/lists/listVirtualization.js';
 import { Songs } from "../globalValues";
 
 import SearchIcon from '../images/search_icon.svg';

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 // Custom Components
 import { saveQueue, Songs, savePosition, Playlists } from "../../globalValues";
-import ImageWithFallBack from "../../componets/imageFallback.js";
+import ImageWithFallBack from "../../components/imageFallback.js";
 
 // Images
 import EllipsisIcon from '../../images/ellipsis-solid-full.svg';

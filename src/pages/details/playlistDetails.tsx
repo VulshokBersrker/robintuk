@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 // Custom Components
 import { savePosition, saveQueue, Songs } from "../../globalValues";
-import ImageWithFallBack from "../../componets/imageFallback";
+import ImageWithFallBack from "../../components/imageFallback";
 
 // Images
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';

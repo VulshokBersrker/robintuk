@@ -10,7 +10,7 @@ import PlayIcon from '../../images/play-icon-outline.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import SearchIcon from '../../images/search_icon.svg';
-import ImageWithFallBack from "../../componets/imageFallback";
+import ImageWithFallBack from "../../components/imageFallback";
 
 interface AlbumDetails {
     name: string,

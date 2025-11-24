@@ -1,23 +1,7 @@
 import { useState } from "react";
 import { invoke } from '@tauri-apps/api/core';
 
-import PathSelector from "../componets/fileSystem/pathSelector";
 
-interface FileInfo {
-    path: string,
-    size: number,
-    data: Songs
-}
-
-interface Songs {
-    song_id: number,
-    song_name: String,
-    song_album: String,
-    song_image: String,
-    song_genre: String,
-    song_artist: String,
-    song_path: String
-}
 
 
 

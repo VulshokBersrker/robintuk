@@ -4,7 +4,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 
 import CheckIcon from '../images/circle-check-regular-full.svg';
 import ErrorIcon from '../images/circle-xmark-regular-full.svg';
-import ThemeOptions from "../componets/themeOptions";
+import ThemeOptions from "../components/themeOptions";
 
 interface ScanResults {
     success: number,

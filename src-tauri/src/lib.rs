@@ -3,11 +3,12 @@
 
 use std::sync::{Arc, Mutex};
 
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
 use sqlx::{Pool, Sqlite};
 use tokio::runtime::Runtime;
 use walkdir::WalkDir;
-use tauri::{Builder, Manager};
+use tauri::{Builder, Manager, Emitter};
 
 // Import files
 mod commands;
@@ -52,7 +53,7 @@ pub fn run() -> Result<(), String> {
     let pool: Pool<Sqlite> = Runtime::new().unwrap().block_on(establish_connection())?;
 
     Builder::default()
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_cache::init())
         .plugin(tauri_plugin_dialog::init())
@@ -60,6 +61,32 @@ pub fn run() -> Result<(), String> {
         .setup(|app: &mut tauri::App| {
             
             app.manage(AppState { player, pool });
+
+            #[cfg(desktop)]
+            {
+                app.handle().plugin(
+                    tauri_plugin_global_shortcut::Builder::new().with_shortcuts(["MediaPlayPause", "MediaTrackNext", "MediaTrackPrevious"])?
+                    .with_handler(move |_app, shortcut, event| {
+                        println!("{:?}", shortcut);
+                        if event.state == ShortcutState::Pressed {
+                            if shortcut.matches(Modifiers::FN, Code::MediaPlayPause) {
+                                let temp = _app.emit("controls-play-pause", "test");
+                                println!("{:?}", temp);
+                                println!("play-pause");
+                            }
+                            if shortcut.matches(Modifiers::FN, Code::MediaTrackNext) {
+                                _app.emit("controls-next-song", "test");
+                                println!("play-pause");
+                            }
+                            if shortcut.matches(Modifiers::FN, Code::MediaTrackPrevious) {
+                                _app.emit("controls-prev-song", "test");
+                                println!("play-pause");
+                            }
+                        }
+                    })
+                    .build(),
+                )?;
+            }
 
             Ok(())
         })

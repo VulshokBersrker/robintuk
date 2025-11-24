@@ -1,5 +1,5 @@
 // Core Libraries
-import { isRegistered, register } from '@tauri-apps/plugin-global-shortcut';
+import { isRegistered, register, unregister } from '@tauri-apps/plugin-global-shortcut';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
@@ -42,8 +42,6 @@ type GetCurrentSong = { q: Songs; };
 
 export default function MusicControls() {
 
-    // Load the queue (song / album / playlist) from the backend
-    listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); });
     const [displayFullscreen, setDisplayFullscreen] = useState<boolean>(false);
 
     // Song Info
@@ -81,7 +79,37 @@ export default function MusicControls() {
         if(storedVolume !== null) {
             updateVolume(JSON.parse(storedVolume));
         }
-        registerShortcuts();
+
+        
+    }, []);
+
+    // Just for listeners
+    useEffect(() => {
+        // Load the queue (song / album / playlist) from the backend
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); console.log("Getting new song");});
+        
+        // Listen for when the MediaPlayPause shortcut is pressed
+        const unlisten_play_pause = listen("controls-play-pause", async() => { 
+            const isPaused = await invoke("player_is_paused");
+            if(!isPaused) {
+                pauseMusic();
+            }
+            else {
+                playMusic();
+            }
+        });
+        // Listen for when the MediaTrackNext shortcut is pressed
+        const unlisten_next_song = listen<GetCurrentSong>("controls-next-song", () => { nextSong(); });
+        // Listen for when the MediaTrackPrevious shortcut is pressed
+        const unlisten_previous_song = listen<GetCurrentSong>("controls-prev-song", () => { previousSong() });
+        
+        
+        return () => {
+            unlisten_get_current_song.then(f => f());
+            unlisten_play_pause.then(f => f());
+            unlisten_next_song.then(f => f());
+            unlisten_previous_song.then(f => f());
+        }        
     }, []);
 
     async function sendQueueToBackend(queue: Songs[], index: number) {
@@ -105,51 +133,6 @@ export default function MusicControls() {
         catch(e) {
             alert(`Failed to get song: ${e}`);
             setIsLoaded(false);
-        }
-    }
-
-    async function registerShortcuts() {
-        try {
-            const isPlayReg: boolean = await isRegistered("MediaPlayPause");
-            if(isPlayReg === false) {
-                await register("MediaPlayPause", async (event) => {
-                    if(event.state === "Pressed") {
-                        const isPaused = await invoke("player_is_paused");
-                        if(!isPaused) {
-                            pauseMusic();
-                            console.log("pausing");
-                        }
-                        else {
-                            playMusic();
-                            console.log("playing");
-                        }
-                    }                
-                });
-            }
-            
-            const isNextReg: boolean = await isRegistered("MediaTrackNext");
-            if(isNextReg === false) {
-                await register("MediaTrackNext", async (event) => {
-                    if(event.state === "Pressed") {
-                        nextSong();
-                        console.log("Next song");
-                    }                
-                });
-            }
-
-            const isPrevReg: boolean = await isRegistered("MediaTrackPrevious");
-            console.log(isPrevReg)
-            if(isPrevReg === false) {
-                await register("MediaTrackPrevious", async (event) => {
-                    if(event.state === "Pressed") {
-                        previousSong();
-                        console.log("Previous song");
-                    }                
-                });
-            }
-        }
-        catch(e) {
-            console.log(e)
         }
     }
 
@@ -460,7 +443,7 @@ export default function MusicControls() {
                 </div>
                 
                 
-                <div className={`fullscreen-music ${displayFullscreen ? "open" : "closed"}`} >
+                <div className={`fullscreen-music ${displayFullscreen ? "closed" : "open"}`} >
                     <span className="d-flex">
                         <ImageWithFallBack image={songDetails?.cover} alt="" image_type="album-larger" />
                         <p>

@@ -2,8 +2,8 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import "./App.css";
 
 // Components
-import MusicControls from "./componets/musicControls";
-import RightSideBar from "./componets/rightSideBar";
+import MusicControls from "./components/musicControls";
+import RightSideBar from "./components/rightSideBar";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
