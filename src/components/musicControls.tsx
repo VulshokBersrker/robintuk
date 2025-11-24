@@ -1,5 +1,4 @@
 // Core Libraries
-import { isRegistered, register, unregister } from '@tauri-apps/plugin-global-shortcut';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
@@ -102,7 +101,6 @@ export default function MusicControls() {
         const unlisten_next_song = listen<GetCurrentSong>("controls-next-song", () => { nextSong(); });
         // Listen for when the MediaTrackPrevious shortcut is pressed
         const unlisten_previous_song = listen<GetCurrentSong>("controls-prev-song", () => { previousSong() });
-        
         
         return () => {
             unlisten_get_current_song.then(f => f());

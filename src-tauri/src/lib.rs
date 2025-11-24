@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
 use sqlx::{Pool, Sqlite};
 use tokio::runtime::Runtime;
@@ -70,17 +70,13 @@ pub fn run() -> Result<(), String> {
                         println!("{:?}", shortcut);
                         if event.state == ShortcutState::Pressed {
                             if shortcut.matches(Modifiers::FN, Code::MediaPlayPause) {
-                                let temp = _app.emit("controls-play-pause", "test");
-                                println!("{:?}", temp);
-                                println!("play-pause");
+                                let _ = _app.emit("controls-play-pause", "test");
                             }
                             if shortcut.matches(Modifiers::FN, Code::MediaTrackNext) {
-                                _app.emit("controls-next-song", "test");
-                                println!("play-pause");
+                                let _ = _app.emit("controls-next-song", "test");
                             }
                             if shortcut.matches(Modifiers::FN, Code::MediaTrackPrevious) {
-                                _app.emit("controls-prev-song", "test");
-                                println!("play-pause");
+                                let _ = _app.emit("controls-prev-song", "test");
                             }
                         }
                     })
