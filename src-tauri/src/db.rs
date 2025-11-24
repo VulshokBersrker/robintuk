@@ -7,7 +7,11 @@ use chrono::Utc;
 use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Row, Sqlite, SqlitePool};
 use tauri::{State};
 
-use crate::types::{AlbumRes, AllAlbumResults, DirsTable, History, PlaylistDetailTable, PlaylistFull, PlaylistTable, SongRes, SongTable, SongTableUpload};
+use crate::types::{
+    AlbumRes, AllAlbumResults, AllArtistResults,
+    DirsTable, History, PlaylistDetailTable, PlaylistFull, PlaylistTable,
+    SongRes, SongTable, SongTableUpload, ArtistRes
+};
 use crate::{AppState, helper::ALPHABETICALLY_ORDERED};
 
 // ---------------------------------------- Initilize Database and Check if Database exists ----------------------------------------
@@ -342,29 +346,69 @@ pub async fn get_genre(name: String) -> Result<SongTable, String> {
 // ------------------------------------ Artist Functions ------------------------------------
 
 #[tauri::command]
-pub async fn get_all_artists() -> Result<Vec<SongTable>, String> {
-    let pool = establish_connection().await?;
+pub async fn get_all_artists(state: State<AppState, '_>) -> Result<Vec<ArtistRes>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>(
-        "
-        SELECT DISTINCT album, artist, cover FROM songs
-        GROUP BY album
-        ORDER BY album ASC;",
+    let temp: Vec<AllArtistResults> = sqlx::query_as::<_, AllArtistResults>(
+        "SELECT DISTINCT name, album_artist FROM songs
+        GROUP BY album_artist
+        ORDER BY album_artist ASC;",
     )
-    .fetch_all(&pool)
+    .fetch_all(&state.pool)
     .await
     .unwrap();
 
-    Ok(temp)
+    let mut output: Vec<ArtistRes> = vec![];
+
+    for letter in ALPHABETICALLY_ORDERED {
+        let mut t: Vec<AllArtistResults> = vec![];
+        for item in temp.clone() {
+
+            // A check for when an artist is null or empty
+            if Some(&item.album_artist) == None || item.album_artist == "".to_string() {
+                if letter == '.' {
+                    t.push(AllArtistResults{ album_artist: "Unknown Artist".to_string(), name: "".to_string() } );
+                    continue;
+                }
+            }
+            else if Some(&item.album_artist) != None || item.album_artist != "".to_string() {
+                // Special Characters
+                if letter == '&' &&
+                    (item.album_artist.as_str().starts_with('#') || item.album_artist.as_str().starts_with('!') || item.album_artist.as_str().starts_with('#')
+                    || item.album_artist.as_str().starts_with('[') || item.album_artist.as_str().starts_with(']') || item.album_artist.as_str().starts_with('\\')
+                    || item.album_artist.as_str().starts_with('-') || item.album_artist.as_str().starts_with('_') || item.album_artist.as_str().starts_with('\"')
+                    || item.album_artist.as_str().starts_with('\'') || item.album_artist.as_str().starts_with('&') || item.album_artist.as_str().starts_with('$')
+                    || item.album_artist.as_str().starts_with('+') || item.album_artist.as_str().starts_with('%') || item.album_artist.as_str().starts_with('*') || item.album_artist.as_str().starts_with('.') ) {
+                    t.push(item);
+                }
+                // Other Characters outside ascii values
+                else if letter == '.' && !item.album_artist.as_bytes()[0].is_ascii() {
+                    t.push(item);
+                }
+                // 0 - 9
+                else if letter == '#' && item.album_artist.as_str().chars().next().unwrap().is_numeric() {
+                    t.push(item);
+                }
+                // A - Z
+                else if letter.is_alphabetic() && item.album_artist.starts_with(letter) {
+                    t.push(item);
+                    
+                }
+            }
+            
+        }
+        output.push(ArtistRes{name: letter.to_string(), section: t});
+    }
+    
+
+    Ok(output)
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn get_artist(name: String) -> Result<SongTable, String> {
-    let pool = establish_connection().await?;
+pub async fn get_artist(state: State<AppState, '_>, name: String) -> Result<SongTable, String> {
 
     let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE artist=$1 ORDER BY artist;")
         .bind(name)
-        .fetch_one(&pool)
+        .fetch_one(&state.pool)
         .await
         .unwrap();
 

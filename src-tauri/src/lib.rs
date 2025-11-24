@@ -67,7 +67,7 @@ pub fn run() -> Result<(), String> {
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new().with_shortcuts(["MediaPlayPause", "MediaTrackNext", "MediaTrackPrevious"])?
                     .with_handler(move |_app, shortcut, event| {
-                        println!("{:?}", shortcut);
+                        // println!("{:?}", shortcut);
                         if event.state == ShortcutState::Pressed {
                             if shortcut.matches(Modifiers::FN, Code::MediaPlayPause) {
                                 let _ = _app.emit("controls-play-pause", "test");

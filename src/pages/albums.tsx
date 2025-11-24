@@ -44,7 +44,7 @@ export default function AlbumPage() {
 
     useEffect(() => {
         getAlbums();
-    }, [])
+    }, []);
 
     const navigateToAlbumOverview = (name: string) => {
         navigate("/albums/overview", {state: {name: name}});

@@ -7,12 +7,12 @@
 
 A beautiful and colorful music player for **Windows**.
 
-<div>
+</div>
 
 
 ## Download
 
-- Recommended: ** Download and install the latest installer from [Github Releases](https://github.com/VulshokBersrker/robintuk_player/releases/latest).
+- **Recommended:** Download and install the latest installer from [Github Releases](https://github.com/VulshokBersrker/robintuk_player/releases/latest).
 
 ## Main Features
 
@@ -21,7 +21,7 @@ A beautiful and colorful music player for **Windows**.
 - Add custom playlist artwork
 - Customize the look with multiple theme colors
 
-<!-- ## Screenshots -->
+<!-- ## [Screenshots](./assets/index.md) -->
 
 
 <!-- ![](./assets/screenshots/1.png) -->
@@ -31,7 +31,6 @@ A beautiful and colorful music player for **Windows**.
 
 
 <!-- More: [See all screenshots](./assets/screenshots/index.md) -->
-
 
 ---
 
@@ -62,6 +61,7 @@ Made with Tauri (React and Rust).
 - [ ] Reorganize Albums page
 - [ ] Remember scroll position on page back
 - [ ] Force scrollbar to stop before music controls
+- [ ] Ipdate Play/Pause icon
 - [x] Repeat Controls
 - [x] Volume Controls
 - [x] Keyboard Media Controls

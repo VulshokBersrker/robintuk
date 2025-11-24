@@ -70,10 +70,22 @@ pub struct AllAlbumResults {
     pub cover: String,
 }
 
+#[derive(sqlx::FromRow, Default, Clone, Serialize)]
+pub struct AllArtistResults {
+    pub album_artist: String,
+    pub name: String
+}
+
 #[derive(Serialize)]
 pub struct AlbumRes {
     pub name: String,
     pub section: Vec<AllAlbumResults>
+}
+
+#[derive(Serialize)]
+pub struct ArtistRes {
+    pub name: String,
+    pub section: Vec<AllArtistResults>
 }
 
 #[derive(Serialize)]
