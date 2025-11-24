@@ -1,6 +1,6 @@
 # robintuk_player
 <div align="center">
-    <img src="./assets/logo.png" height="130px" alt="Robintuk Logo" title="Robintuk" />
+    <img src="./assets/logo full.png" height="130px" alt="Robintuk Logo" title="Robintuk" />
 <br>
 
 
