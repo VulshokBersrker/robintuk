@@ -21,16 +21,15 @@ A beautiful and colorful music player for **Windows**.
 - Add custom playlist artwork
 - Customize the look with multiple theme colors
 
-<!-- ## [Screenshots](./assets/index.md) -->
+## [Screenshots](./assets/index.md)
 
 
-<!-- ![](./assets/screenshots/1.png) -->
-<!-- ![](./assets/screenshots/2.png) -->
-<!-- ![](./assets/screenshots/3.png) -->
-<!-- ![](./assets/screenshots/4.png) -->
+![](./assets/screenshots/1.png)
+![](./assets/screenshots/2.png)
+![](./assets/screenshots/3.png)
 
 
-<!-- More: [See all screenshots](./assets/screenshots/index.md) -->
+More: [See all screenshots](./assets/screenshots/index.md)
 
 ---
 
