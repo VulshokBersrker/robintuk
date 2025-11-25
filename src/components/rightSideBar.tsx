@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
+// Core Components
 import { Link, useNavigate } from 'react-router-dom';
+import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useState } from "react";
+
+// Custom Components
+import ImageWithFallBack from "./imageFallback";
+import { Playlists } from "../globalValues";
 
 // Image Components
-// import MenuIcon from '../images/bars-solid-full.svg';
-import HomeIcon from '../images/home-outline.svg';
-import MusicLibraryIcon from '../images/music-outline.svg';
 import SettingsIcon from '../images/settings-svgrepo-com.svg';
-import { invoke } from "@tauri-apps/api/core";
-import { Playlists } from "../globalValues";
-import ImageWithFallBack from "./imageFallback";
-import { listen } from "@tauri-apps/api/event";
+// import MusicLibraryIcon from '../images/music-outline.svg';
+// import HomeIcon from '../images/home-outline.svg';
 
 type NewPlaylistList = {
     playlist: Playlists[]
 }
 
 export default function RightSideBar() {
-
-    listen<NewPlaylistList>("new-playlist-created", (event) => { console.log(event.payload.playlist); setPlaylistLists(event.payload.playlist); });
-
+    
     const navigate = useNavigate();
 
     const [isSidebarCollapsed, setIsSideBarCollapsed] = useState<Boolean>(false);
-    const [isActive, setIsActive] = useState<boolean[]>([false, false, false, false, false, false]);
+    const [isActive, setIsActive] = useState<boolean[]>([false, false, false, false, false, false, false, false]);
     
     const navArray = ["home", "songs", "albums", "artists", "settings"];
 
@@ -51,6 +51,16 @@ export default function RightSideBar() {
 
     }, []);
 
+    // Just for listeners
+    useEffect(() => {
+        // Load the new playlist from the backend
+        const unlisten_get_playlists= listen<NewPlaylistList>("new-playlist-created", (event) => { console.log(event.payload.playlist); setPlaylistLists(event.payload.playlist); });
+        
+        return () => {
+            unlisten_get_playlists.then(f => f());
+        }        
+    }, []);
+
     async function getPlaylists() {
         try{
             const list: Playlists[] = await invoke<Playlists[]>('get_all_playlists');
@@ -69,33 +79,33 @@ export default function RightSideBar() {
         <div className={`grid-10 side-navbar ${isSidebarCollapsed === true ? "closed" : "open"}`} >
 
             <div className="section-10">
-                {/* <span className="nav-item d-flex align-items-center" onClick={() => setIsSideBarCollapsed(!isSidebarCollapsed)} >
-                    <img className="bi icon menu-icon-container" src={MenuIcon} alt="menu icon" />
-                </span> */}
-
                 <Link to={"/"} className={`nav-item nav-link d-flex align-items-center ${isActive[0] === true ? "active" : ""}`} onClick={() => toggleActive(0)}>
-                    <img src={HomeIcon} className="bi icon icon-size" aria-hidden="true" />
+                    {/* <img src={HomeIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Home </span>
                 </Link>
 
                 <Link to={"/songs"} className={`nav-item nav-link d-flex align-items-center ${isActive[1] === true ? "active" : ""}`} onClick={() => toggleActive(1)} >
-                    <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" />
+                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Songs </span>
                 </Link>
 
                 <Link to={"/albums"} className={`nav-item nav-link d-flex align-items-center ${isActive[2] === true ? "active" : ""}`} onClick={() => toggleActive(2)}>
-                    <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" />
+                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Albums </span>
                 </Link>
 
                 <Link to={"/artists"} className={`nav-item nav-link d-flex align-items-center ${isActive[3] === true ? "active" : ""}`} onClick={() => toggleActive(3)}>
-                    <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" />
+                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Artists </span>
                 </Link>
 
                 <hr />
-                <Link to={"/playlists"} className={`nav-item nav-link d-flex align-items-center ${isActive[4] === true ? "active" : ""}`} onClick={() => toggleActive(4)}>
-                    <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" />
+                <Link to={"/queue"} className={`nav-item nav-link d-flex align-items-center ${isActive[4] === true ? "active" : ""}`} onClick={() => toggleActive(4)}>
+                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
+                    <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} >Queue </span>
+                </Link>
+                <Link to={"/playlists"} className={`nav-item nav-link d-flex align-items-center ${isActive[5] === true ? "active" : ""}`} onClick={() => toggleActive(5)}>
+                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} >Playlists </span>
                 </Link>
             </div>
@@ -106,8 +116,10 @@ export default function RightSideBar() {
                 <nav className="grid-10" >
                     {playlistLists.map((item, i) => {
                         return(
-                            <div key={i} onClick={() => navigateToPlaylistOverview(item.name)}
+                            <div
+                                key={i} onClick={() => navigateToPlaylistOverview(item.name)}
                                 className="section-10 nav-item nav-link d-flex align-items-center"
+                                id={item.name}
                             >
                                 <ImageWithFallBack image={item.image} alt="" image_type="sidebar-playlist-image"/>
                                 <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > {item.name} </span>
@@ -120,7 +132,7 @@ export default function RightSideBar() {
             <hr />
 
             <div className="section-10 settings-section" >
-                <Link to="/settings" className={`nav-item nav-link d-flex align-items-center ${isActive[5] === true ? "active" : ""}`} onClick={() => toggleActive(5)}>
+                <Link to="/settings" className={`nav-item nav-link d-flex align-items-center ${isActive[6] === true ? "active" : ""}`} onClick={() => toggleActive(6)}>
                     <img src={SettingsIcon} className="bi icon icon-size" aria-hidden="true" />
                     <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Settings </span>
                 </Link>

@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { saveQueue, Songs, savePosition } from "../globalValues";
+import { saveQueue, Songs, savePosition, AlbumRes } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -18,10 +18,7 @@ import SearchIcon from '../images/search_icon.svg';
 
 // List virtualization might be good for these lists
 
-interface AlbumRes {
-    name: string,
-    section: Songs[]
-}
+
 
 export default function AlbumPage() {
 

@@ -20,7 +20,6 @@ export default function SongPage() {
     async function getSongs() {
         try {
             const list = await invoke<SongRes[]>('get_all_songs');
-            // console.log(list);
             let testV: any[] = [];
             for(let i = 0; i < list.length; i++) {
                 testV.push(list[i].name);
@@ -28,7 +27,7 @@ export default function SongPage() {
                     testV.push(list[i].song_list[j]);
                 }
             }
-            console.log(testV);
+            // console.log(testV);
             setSongList(testV);
         }
         catch (err) {

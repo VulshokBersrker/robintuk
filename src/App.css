@@ -492,6 +492,15 @@ img.off {
 .titlebar > .controls {
   display: flex;
 }
+.titlebar .logo {
+  position: absolute;
+  top: 3px;
+  left: 15px;
+}
+.titlebar .window-logo {
+  height: 30px;
+  width: 30px;
+}
 .titlebar button {
   /* appearance: none; */
   padding: 0px;
@@ -549,7 +558,7 @@ img.off {
 }
 
 .side-navbar {
-  top: 28px;
+  top: 35px;
   left: 0px;
   display: flex;
   flex-direction: column;
@@ -569,6 +578,7 @@ img.off {
   position: relative;
   padding-top: 0.2rem;
   padding-bottom: 0.2rem;
+  min-height: 25px;
   width: 85%;
   margin: auto;
   margin-bottom: 0.4rem;
@@ -997,10 +1007,11 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   margin: auto;
 }
 .album-link {
+  margin: 4px;
   padding-left: 4px;
   padding-right: 4px;
   padding-bottom: 4px;
-  width: 149px;
+  width: 155px;
 }
 
 .album-link:hover {
@@ -1013,8 +1024,8 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 
 .album-image-container .container {
   margin-top: 8px;
-  width: 140px;
-  height: 140px;
+  width: 150px;
+  height: 150px;
   border-radius: var(--border-radius);
   overflow: hidden;
 }
@@ -1072,7 +1083,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 .album-image-container .play-album {
   position: absolute;
   bottom: 42px;
-  left: 12px;
+  left: 6px;
   z-index: 1000;
   opacity: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -1089,7 +1100,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 .album-image-container .options {
   position: absolute;
   bottom: 42px;
-  right: 20px;
+  right: 6px;
   z-index: 1000;
   opacity: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -1125,6 +1136,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   width: 96%;
   padding: 0px;
   margin: 1px;
+  margin-top: 10px;
   position: relative;
   display: inline-block;
 }
@@ -1179,6 +1191,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 .song-row {
   padding-top: 11px;
   padding-bottom: 11px;
+  border-radius: var(--border-radius);
   transition: 0.2s ease-in-out;
   position: relative;
 }
@@ -1327,7 +1340,7 @@ input[type="checkbox"]:disabled {
 }
 
 
-/* Playlist Pages Styles */
+/* -------------------------- Playlist Pages Styles -------------------------- */
 
 .playlist-list-container {
   position: absolute;
@@ -1373,6 +1386,33 @@ input.new-playlist {
 
 .image-upload:hover {
   cursor: pointer;
+}
+
+.song-row.playlist {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  transition: 0.2s ease-in-out;
+  position: relative;
+}
+.song-row.playlist .album-image {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.album-link.playlist {
+  margin: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-bottom: 4px;
+  width: 180px;
+}
+
+.album-image-container.playlist .container {
+  margin-top: 8px;
+  width: 170px;
+  height: 170px;
+  border-radius: var(--border-radius);
+  overflow: hidden;
 }
 
 /* -------------------------- Settings Page -------------------------- */
@@ -1549,14 +1589,13 @@ input.new-playlist {
 
 
 
-/* Placeholder Styles */
+/* ---------- Placeholder Styles ---------- */
 .album-link.placeholder {
   border-radius: var(--border-radius);
   overflow: hidden;
   z-index: 10;
 }
 .album-link.placeholder:hover {
-  /* cursor: none; */
   cursor: auto;
   background-color: none;
   border-radius: var(--border-radius);
@@ -1670,7 +1709,7 @@ img.search-icon:hover {
   }
   #root:has(.music-control-container) {
     .nav-scrollable {
-      height: calc(100vh - 24.5rem);
+      height: calc(100vh - 26.5rem);
     }
     .empty-space {
       height: 130px;
@@ -1683,7 +1722,6 @@ img.search-icon:hover {
     padding: 0.2rem !important;
   }
 }
-
 
 
 /* styles for smaller Phones */

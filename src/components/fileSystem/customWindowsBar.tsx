@@ -7,6 +7,7 @@ import MinimizeWindowIcon from '../../images/window-minimize-solid-full.svg';
 import FullscreenWindowIcon from '../../images/maximize.svg';
 import TabWindowIcon from '../../images/minimize.svg'
 import CloseWindowIcon from '../../images/x.svg';
+import AppLogo from '../../images/logo.svg';
 
 // Visual Error when dragging a Maximized window - it will minimize and still show the Minimize icon - when it should show Maximize icon
 export default function CustomWindowsBar() {
@@ -14,12 +15,22 @@ export default function CustomWindowsBar() {
     const [isMaximized, setIsMaximized] = useState<boolean>();
     const appWindow = getCurrentWindow();
 
-
     useEffect(() => {
         if(isMaximized === null || isMaximized === undefined) {
             getMaximizedStatus();
-        }        
-    }, [])
+        }
+
+        let unlisten: any = undefined;
+
+        const listen_window_resize = async() => {
+            unlisten = await appWindow.onResized(() => {
+                getMaximizedStatus();
+            });
+        };
+
+        listen_window_resize();
+        return () => unlisten && unlisten();         
+    }, []);
 
     async function getMaximizedStatus() {
         let m: boolean = await appWindow.isMaximized();
@@ -28,14 +39,14 @@ export default function CustomWindowsBar() {
             setIsMaximized(false);
         }
         else {
-            // setIsMaximized(true);
-        }
-        
+            setIsMaximized(true);
+        }        
     }
 
     return(
         <div className="titlebar">
             <div data-tauri-drag-region></div>
+            <div className="logo"><img src={AppLogo} className="window-logo"/></div>
             <div className="controls">
                 {/* <a href="/settings" className="" id="titlebar-settings" title="settings">
                     <img src={SettingsIcon} className="icon"/>

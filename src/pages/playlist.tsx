@@ -3,12 +3,12 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { saveQueue, Songs, savePosition, Playlists } from "../../globalValues";
-import ImageWithFallBack from "../../components/imageFallback.js";
+import { saveQueue, Songs, savePosition, Playlists } from "../globalValues.js";
+import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
-import EllipsisIcon from '../../images/ellipsis-solid-full.svg';
-import PlayIcon from '../../images/play-icon-outline.svg';
+import EllipsisIcon from '../images/ellipsis-solid-full.svg';
+import PlayIcon from '../images/play-icon-outline.svg';
 
 export default function PlaylistPage() {
 
@@ -50,17 +50,15 @@ export default function PlaylistPage() {
 
     return(
         <>
-            <div className="header-font font-4 page-header d-flex align-items-center">
-                Playlists 
-                <span className="playlist-button">
-                    <button onClick={() => {}}>+ New Playlist</button>
-                </span>
-            </div>
+            <div className="header-font font-4 page-header d-flex align-items-center">Playlists</div>
+
+            <div className="playlist-button"> <button onClick={() => {}}>+ New Playlist</button> </div>
+
             <div className="d-flex flex-wrap">
                 {playlistList.map((item, i) => {
                     return(
-                        <div key={i} className="album-link">
-                            <div className="album-image-container">
+                        <div key={i} className="album-link playlist">
+                            <div className="album-image-container playlist">
                                 <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playPlaylist(item.name)}/></div>
                                 <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
                                 

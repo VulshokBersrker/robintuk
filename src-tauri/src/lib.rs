@@ -104,6 +104,7 @@ pub fn run() -> Result<(), String> {
             db::get_all_genres,
             db::get_genre,
             // Artist Functions - SQLITE
+            db::get_albums_by_artist,
             db::get_all_artists,
             db::get_artist,
             // Playlist Functions - SQLITE

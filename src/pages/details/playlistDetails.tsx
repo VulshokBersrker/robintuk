@@ -234,7 +234,7 @@ export default function PlaylistOverviewPage() {
                     {playlist.map((song, i) => {
                         return(
                             <div key={i}>
-                                <div className={`grid-20 song-row align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}>
+                                <div className={`grid-20 song-row playlist align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}>
                                     <span className="section-1 play">
                                         <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
                                             <input
@@ -245,7 +245,7 @@ export default function PlaylistOverviewPage() {
                                         </span>
                                         <img src={PlayIcon} onClick={() => playSong(i)} />
                                     </span>
-                                    <span className="section-1"><ImageWithFallBack image={song.cover} alt="" image_type="playlist-song" /></span>
+                                    <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={song.cover} alt="" image_type="playlist-song" /></span>
                                     <span className="section-9 font-0 name">{song.name}</span>
                                     <span className="section-4 font-0 line-clamp-2 artist">{song.album}</span>
                                     <span className="section-4 font-0 line-clamp-2 artist">{song.artist}</span>

@@ -21,10 +21,33 @@ export interface Songs {
     duration: number
 }
 
+export interface AlbumRes {
+    name: string,
+    section: Songs[]
+}
+
+export interface AlbumDetails {
+    album: string,
+    artist: string,
+    cover: string
+}
+
+export interface ArtistDetails {
+    num_tracks: number,
+    total_duration: number,
+    album_artist: string,
+    albums: AlbumDetails[],
+}
+
 export interface Playlists {
     name: string,
     image: string,
 }
+
+export interface PlaylistList {
+    name: string
+}
+
 
 export const alphabeticallyOrdered = [
     '&', '#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',

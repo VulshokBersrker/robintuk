@@ -76,6 +76,14 @@ pub struct AllArtistResults {
     pub name: String
 }
 
+#[derive(sqlx::FromRow, Default, Clone, Serialize)]
+pub struct ArtistDetailsResults {
+    pub num_tracks: usize,
+    pub total_duration: u64,
+    pub album_artist: String,
+    pub albums: Vec<AllAlbumResults>
+}
+
 #[derive(Serialize)]
 pub struct AlbumRes {
     pub name: String,

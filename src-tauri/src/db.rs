@@ -8,7 +8,7 @@ use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Row, Sqlite, SqlitePool};
 use tauri::{State};
 
 use crate::types::{
-    AlbumRes, AllAlbumResults, AllArtistResults,
+    AlbumRes, AllAlbumResults, AllArtistResults, ArtistDetailsResults,
     DirsTable, History, PlaylistDetailTable, PlaylistFull, PlaylistTable,
     SongRes, SongTable, SongTableUpload, ArtistRes
 };
@@ -256,8 +256,7 @@ pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AlbumRes>,
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
         "
         SELECT DISTINCT album, artist, cover FROM songs
-        GROUP BY album
-        ORDER BY album ASC;",
+        GROUP BY album ORDER BY album ASC;",
     )
     .fetch_all(&state.pool)
     .await
@@ -307,6 +306,28 @@ pub async fn get_album(state: State<AppState, '_>, name: String) -> Result<Vec<S
         .unwrap();
 
     Ok(temp)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: String) -> Result<ArtistDetailsResults, String> {
+
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album_artist=$1 ORDER BY album ASC;")
+        .bind(&artist)
+        .fetch_all(&state.pool)
+        .await
+        .unwrap();
+
+    let albums: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
+        "SELECT DISTINCT album, artist, cover FROM songs WHERE album_artist=$1
+        GROUP BY album ORDER BY album ASC;",
+    ).bind(&artist).fetch_all(&state.pool).await.unwrap();
+
+    let mut duration: u64 = 0;
+    for song in &temp {
+        duration += song.duration;
+    }
+
+    Ok(ArtistDetailsResults{ num_tracks: temp.len(), total_duration: duration, album_artist: artist, albums })
 }
 
 // ------------------------------------ Genre Functions ------------------------------------

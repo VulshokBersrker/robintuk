@@ -58,10 +58,13 @@ Made with Tauri (React and Rust).
 - [ ] Display the queue
 - [ ] New default playlist icons
 - [ ] New default image for missing album artwork
-- [ ] Reorganize Albums page
 - [ ] Remember scroll position on page back
-- [ ] Force scrollbar to stop before music controls
-- [ ] Ipdate Play/Pause icon
+- [ ] Force scrollbar to stop before music control section
+- [ ] Update Play/Pause icon design
+- [ ] Support for flac and wav
+- [ ] Improve sidebar active navigation styles
+- [ ] Lock navigation when scanning for new music from settings?
+- [x] Reorganize Albums page
 - [x] Repeat Controls
 - [x] Volume Controls
 - [x] Keyboard Media Controls
@@ -79,3 +82,4 @@ Made with Tauri (React and Rust).
 - [ ] Better error handling
 - [ ] Albums displaying Disc 0 when metadata has no disc value
 - [ ] Blank pages on route change while it grabs the data from the backend
+- [x] Wrong icon shown when resizing window with double click or drag
