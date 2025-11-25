@@ -20,6 +20,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.9.4",
+    "react-router-hash-link": "^2.4.3",
     "react-virtualized": "^9.22.6",
     "tauri-plugin-cache-api": "^0.1.5"
   },
@@ -27,6 +28,7 @@
     "@tauri-apps/cli": "^2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/react-router-hash-link": "^2.4.9",
     "@vitejs/plugin-react": "^4.6.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"

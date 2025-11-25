@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { HashLink } from 'react-router-hash-link';
+import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
-import { alphabeticallyOrdered, Songs } from "../globalValues";
-import { Link, useNavigate, ScrollRestoration, NavigateFunction } from 'react-router-dom';
-import ImageWithFallBack from "../components/imageFallback";
+import { useEffect, useState } from "react";
+
+// Custom Components
+import ImageWithFallBack from "../components/imageFallback.js";
+import { Songs } from "../globalValues";
 
 // Images
 import EllipsisIcon from '../images/ellipsis-solid-full.svg';
@@ -40,7 +43,6 @@ export default function ArtistsPage() {
         navigate("/artists/overview", {state: {name: name}});
     }
 
-
     return(
         <div>
             <div className="search-filters d-flex justify-content-end vertical-centered"> 
@@ -58,42 +60,41 @@ export default function ArtistsPage() {
 
             </div>
 
-            <div>
+            <div className="section-list">
+                {artistList.map(section => {
+                    if(section.section.length !== 0) {
+                        return(
+                            <div key={section.name}>
+                                <HashLink to={`/artists#${section.name}-0`} smooth>
+                                    {section.name}
+                                </HashLink>
+                            </div>
+                        );
+                    }                    
+                })}
+            </div>
+
+            <div className="d-flex flex-wrap">
                 {artistList.map(section => {
                     if(section.section.length > 0) {
                         return(
-                            <div key={section.name} className="">
-                                {/* Add ability to jump to a section - popup - best to use Links */}
-                                {section.name !== "." &&
-                                    <div className="section-list">
-                                        <Link to={'/artists/#9'} className="position-relative" id={`${alphabeticallyOrdered.indexOf(section.name)}`} >
-                                            <span className="header-3" >{section.name}</span>
-                                        </Link>
-                                    </div>
-                                }
-                                {section.name === "." && <h1 className="header-3 position-relative" id={"..."}>...</h1>}
-
-                                <div className="d-flex flex-wrap">
-                                    {section.section.map((entry, i) => {
-                                        return(
-                                            <div key={i} className="album-link">
-                                                <div className="album-image-container">
-                                                    <div className="play-album"><img src={PlayIcon} className="icon-size" /></div>
-                                                    <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
-                                                    
-                                                    <div className="container" onClick={() => navigateToArtistOverview(entry.album)} >
-                                                        <ImageWithFallBack image={entry.cover} alt={entry.album} image_type="artist" />
-                                                    </div>
-                                                    <div className="album-image-name header-font">
-                                                        <div className="album-name">{entry.album_artist}</div>
-                                                    </div>
-                                                </div>
-                                                
+                            section.section.map((entry, i) => {
+                                return(
+                                    <div key={`${section.name}-${i}`} className="album-link" id={`${section.name}-${i}`}>
+                                        <div className="album-image-container">
+                                            {/* <div className="play-album"><img src={PlayIcon} className="icon-size" /></div> */}
+                                            {/* <div className="options"><img src={EllipsisIcon} className="icon-size" /></div> */}
+                                            
+                                            <div className="container" onClick={() => navigateToArtistOverview(entry.album_artist)} >
+                                                <ImageWithFallBack image={entry.cover} alt={entry.album_artist} image_type={"artist"} />
                                             </div>
-                                        );                                        
-                                    })}
-                                </div>
-                            </div>
+                                            <div className="album-image-name header-font">
+                                                <div className="album-name">{entry.album_artist}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );                                        
+                            })
                         );
                     }            
                 })}                

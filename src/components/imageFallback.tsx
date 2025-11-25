@@ -1,5 +1,6 @@
 
 import PlaceHolderAlbumArt from '../images/placeholder_album.png';
+import PlaceHolderArtistArt from '../images/placeholder_artist.png'
 import ConvertFileToImage from './fileSystem/convertFileToImage';
 
 type Props = {
@@ -51,6 +52,17 @@ const ImageWithFallBack = (props: Props) => {
                 loading='lazy'
                 onError={(e) => e.currentTarget.src = PlaceHolderAlbumArt}
                 className="album-image playlist"
+            />
+        );
+    }
+    else if(props.image_type === "artist") {
+        return (
+            <img
+                src={props.image !== undefined ? ConvertFileToImage(props.image) : PlaceHolderArtistArt}
+                alt={props.alt}
+                loading='lazy'
+                onError={(e) => e.currentTarget.src = PlaceHolderArtistArt}
+                className="album-image"
             />
         );
     }

@@ -10,6 +10,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  --border-radius: 8px;
 }
 
 [data-theme="red"] {
@@ -148,7 +149,7 @@
   /* Scrollbar Colors */
   --scrollbar-color: rgba(108, 73, 129, 0.45) rgba(0,0,0,0);
   /* Music Player Colors */
-  --music-player-bg: rgba(1, 8, 16, 0.317);
+  --music-player-bg: rgba(1, 8, 16, 0.55);
   --music-player-border: linear-gradient(to right, #5d2881, rgb(28, 28, 28)) 1 stretch;
   --slider-color-one: #5d2881;
   /* Album Overview Colors */
@@ -271,7 +272,7 @@ button {
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   border: 1px solid #fff;
   color: #fff;
   background-color: rgba(0, 0, 0, 0.0);
@@ -441,9 +442,9 @@ img.off {
   position: relative;
   transition: 0s ease-in-out;
   height: calc(100vh - 43px);
-  width: calc(100vw - 170px);
+  width: calc(100vw - 164px);
   margin-top: 25px;
-  padding-left: 10px;
+  padding-left: 5px;
   /* Scrollbar Styles */
   overflow-y: auto;
   scrollbar-color: var(--scrollbar-color);
@@ -577,13 +578,13 @@ img.off {
 .nav-link:hover {
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
-  border-radius: 10px;
+  border-radius: var(--border-radius);
 }
 
 .nav-item.active {
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
-  border-radius: 10px;
+  border-radius: var(--border-radius);
 }
 
 .side-navbar hr {
@@ -622,7 +623,7 @@ img.off {
   width: 35px;
   height: 35px;
   margin-left: 5px;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 /* --------------------------- CLOSED Side Navbar Styles --------------------------- */
@@ -657,7 +658,7 @@ img.off {
   width: 35px;
   height: 35px;
   margin-left: 6px;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 /* Hide scrollbar when sidebar is collapsed */
@@ -716,7 +717,7 @@ img.off {
 
 .music-details:hover {
   background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
 }
 
 .song-album-image {
@@ -729,7 +730,7 @@ img.off {
   height: 65px;
   width: 65px;
   margin-top: 3px;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
 }
 .music-details .song-name {
   font-size: 20px;
@@ -916,10 +917,9 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 .fullscreen-music {
   position: absolute;
   display: block;
-  top: 0px;
+  bottom: 0px;
   left: 0px;
   width: 100%;
-  height: 100%;
   z-index: 99;
   overflow: hidden;
   background: #30052b;
@@ -928,17 +928,12 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 }
 
 .fullscreen-music.open {
-  transform: translateY(100%);
-  transition: 0.2s  ease-in-out;
-}
-
-.fullscreen-music.closed {
-  transform: translateY(0%);
+  height: 100%;
   transition: 0.2s ease-in-out;
 }
-
-.fullscreen-music div {
-  filter: brightness(0.2);
+.fullscreen-music.closed {
+  height: 0%;
+  transition: 0.2s ease-in-out;
 }
 
 .fullscreen-music span {
@@ -964,7 +959,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   height: 100%;
   background-repeat: no-repeat;
   background-size: contain;
-  filter: blur(20px);
+  filter: blur(20px) brightness(0.2);
 }
 
 
@@ -976,33 +971,51 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 /* -------------- Album List Page -------------- */
 
 .section-list {
-  padding-bottom: 20px;
+  position: fixed;
+  z-index: 11;
+  top: 50%;
+  right: 23px;
+  transform: translateY(-50%);
+  text-align: center;
 }
-.section-list:hover {
-
+.section-list div {
+  padding: 3px;
+  font-size: 16px;
 }
-.section-list-container {
-  
+.section-list a {
+  color: var(--font-color-two) !important;
+}
+.section-list div:hover {
+  cursor: pointer;
+  background-color: var(--gradient-one);
+  border-radius: 50%;
 }
 
 .album-image-container {
   position: relative;
-  margin-left: 3px;
-  margin-right: 3px;
+  width: 95%;
+  margin: auto;
 }
 .album-link {
-  padding-bottom: 20px;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-bottom: 4px;
+  width: 149px;
 }
+
 .album-link:hover {
   cursor: pointer;
   /* Could use work */
   z-index: 10;
+  border-radius: var(--border-radius);
+  background-color: var(--gradient-one);
 }
 
 .album-image-container .container {
-  width: 160px;
-  height: 160px;
-  border-radius: 10px;
+  margin-top: 8px;
+  width: 140px;
+  height: 140px;
+  border-radius: var(--border-radius);
   overflow: hidden;
 }
 .album-image-container .container img {
@@ -1038,10 +1051,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 }
 
 .album-image-name .album-name {
-  margin-left: 5px;
-  margin-right: 5px;
-  font-size: 14px;
-  width: 160px;
+  font-size: 15px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 1; /* number of lines to show */
@@ -1049,12 +1059,9 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   -webkit-box-orient: vertical;
 }
 .album-image-name .artist-name {
-  margin-left: 5px;
-  margin-right: 5px;
   font-size: 12px;
   color: var(--font-color-two);
   font-weight: 400;
-  width: 160px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 1; /* number of lines to show */
@@ -1130,14 +1137,14 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   display: block;
   max-width: 180px;
   height: 180px;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   z-index: 1;
 }
 .album-image.larger {
   display: block;
   max-width: 300px;
   height: 300px;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   z-index: 1;
 }
 
@@ -1178,11 +1185,11 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 .song-row.current-song {
   color: var(--font-color-two) !important;
   background: linear-gradient(90deg, var(--gradient-one) 0%, var(--gradient-two) 100%);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 .song-row:hover {
   background: linear-gradient(90deg, var(--gradient-one) 0%, rgba(0, 0, 0, 0.0) 100%);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   transition: 0.2s ease-in-out;
 }
 
@@ -1209,7 +1216,7 @@ input[type="checkbox"] {
   width: 25px;
   height: 25px;
   border: 2px solid var(--checkbox-checked-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   transform: translateY(-0.075em);
   display: grid;
   place-content: center;
@@ -1238,7 +1245,7 @@ input[type="checkbox"]:disabled {
 .selection-popup-container {
   z-index: 1000;
   position: fixed;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   top: 35px;
   left: 50%;
   transform: translateX(-50%);
@@ -1268,7 +1275,7 @@ input[type="checkbox"]:disabled {
 .song-row .play img:hover {
   cursor: pointer;
   background-color: rgba(0, 0, 0, 0.562);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   transition: 0.1s ease-in-out;
 }
 .song-row:hover .play img, .song-row:hover input[type="checkbox"] {
@@ -1331,7 +1338,7 @@ input[type="checkbox"]:disabled {
   background: var(--gradient-two);
   border: 1px solid var(--font-color-three);
   padding: 10px 5px 10px 5px;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
 }
 .playlist-list-container hr {
   background-color: var(--font-color-three);
@@ -1346,7 +1353,7 @@ input[type="checkbox"]:disabled {
 }
 .playlist-list-container div:hover {
   background-color: var(--gradient-one);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   transition: 0.1s ease-in-out;
 }
 
@@ -1375,7 +1382,7 @@ input.new-playlist {
 }
 .directory-container {
   background-color: rgba(0, 0, 0, 0.6);
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   padding: 15px;
   width: 200px;
   transition: 0.1s ease-in-out;
@@ -1405,7 +1412,7 @@ input.new-playlist {
   border: 1px solid var(--font-color-one);
   background-color: rgba(0, 0, 0, 0.0) !important;
   color: var(--font-color-one);
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   /* Padding */
   padding: 10px 15px 10px 15px;
   transition: 0.2s ease-in-out;
@@ -1456,7 +1463,7 @@ input.new-playlist {
   left: 50%;
   transform: translate(-50%, -50%);
   padding: 13px;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   text-align: start;
   font-size: 14px;
   transition: all 0.3s ease-in-out;
@@ -1498,7 +1505,7 @@ input.new-playlist {
   border: 1px solid;
   outline: 2px solid rgba(216, 216, 216, 0.354);
   outline-offset: 3px;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   cursor: pointer;
 }
 .theme-option:hover {
@@ -1534,15 +1541,58 @@ input.new-playlist {
   background-color: #12971f;
   border-color: #12971f;
 }
+#theme-dark-wave {
+  background-color: #7b228d;
+  border-color: #7b228d;
+}
 
 
 
 
+/* Placeholder Styles */
+.album-link.placeholder {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  z-index: 10;
+}
+.album-link.placeholder:hover {
+  /* cursor: none; */
+  cursor: auto;
+  background-color: none;
+  border-radius: var(--border-radius);
+  background-color: rgba(0, 0, 0, 0);
+}
 
+.album-image.placeholder {
+  margin-top: 8px;
+  width: 140px;
+  height: 140px;
+  border-radius: var(--border-radius);
+  background-color: var(--gradient-one);
+  overflow: hidden;
+  z-index: 10;
+}
 
+.activity{
+  position: absolute;
+  left: -45%;
+  height: 100%;
+  width: 45%;
+  background-image: linear-gradient(to left, rgba(251,251,251, .05), rgba(251,251,251, .3), rgba(251,251,251, .6), rgba(251,251,251, .3), rgba(251,251,251, .05));
+  background-image: -moz-linear-gradient(to left, rgba(251,251,251, .05), rgba(251,251,251, .3), rgba(251,251,251, .6), rgba(251,251,251, .3), rgba(251,251,251, .05));
+  background-image: -webkit-linear-gradient(to left, rgba(251,251,251, .05), rgba(251,251,251, .3), rgba(251,251,251, .6), rgba(251,251,251, .3), rgba(251,251,251, .05));
+  animation: loading 2s infinite;
+  z-index: 11;
+}
 
-
-
+@keyframes loading {
+  0%{
+    left: -45%;
+  }
+  100%{
+    left: 100%;
+  }
+}
 
 
 
@@ -1551,6 +1601,7 @@ input.new-playlist {
 .search-filters {
   padding-top: 10px;
   margin-right: 15px;
+  padding-bottom: 20px;
 }
 .search-filters .filter {
   padding-right: 10px;
@@ -1577,7 +1628,7 @@ input[type=text] {
   height: 34px;
   background-color: rgba(0, 0, 0, 0.0);
   border: 1px solid var(--font-color-three);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   padding: 10px 10px 10px 10px;
   box-sizing: border-box;
   font-size: 14px;

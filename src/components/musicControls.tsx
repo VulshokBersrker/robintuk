@@ -441,24 +441,21 @@ export default function MusicControls() {
                 </div>
                 
                 
-                <div className={`fullscreen-music ${displayFullscreen ? "closed" : "open"}`} >
+                <div className={`fullscreen-music ${displayFullscreen ? "open" : "closed"}`} >
                     <span className="d-flex">
                         <ImageWithFallBack image={songDetails?.cover} alt="" image_type="album-larger" />
-                        <p>
+                        <div>
                             <p className="header-font font-4">{songDetails?.name}</p>
                             <p className="font-3 song-album">{songDetails?.album}</p>
                             <p className="font-2 song-album">{songDetails?.artist}</p>
-                        </p>
-                        
+                        </div>                        
                     </span>
                     <div className="vertical-centered" id="fullscreen-bg"><ImageWithFallBack image={songDetails?.cover} alt="" image_type="fullscreen" /></div>
                 </div>
             </>
         );
     }
-    else {
-        return;
-    }
+    else { return; }
 }
 
 
