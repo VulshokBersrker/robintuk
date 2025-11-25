@@ -4,12 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 
 // Custom Components
-import { savePosition, saveQueue, Songs } from "../globalValues";
+import { GetCurrentSong, savePosition, saveQueue, Songs } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback";
 
 // Images
 import PlayIcon from '../images/play-icon-outline.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
+import { listen } from "@tauri-apps/api/event";
 
 export default function QueueOverviewPage() {
 
@@ -34,6 +35,13 @@ export default function QueueOverviewPage() {
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }
+
+        // Load the current song (song / album / playlist) from the backend
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
+        
+        return () => {
+            unlisten_get_current_song.then(f => f());
+        }  
     }, []);
 
     async function getQueue() {
@@ -123,7 +131,7 @@ export default function QueueOverviewPage() {
                     <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                 </div>
 
-                {/* Album Details */}
+                {/* Queue Details */}
                 <div className="d-flex">
                     <div className="album-details d-flex">
 
@@ -162,7 +170,7 @@ export default function QueueOverviewPage() {
                                             <input
                                                 type="checkbox" id={`select-${i}`} name={`select-${i}`}
                                                 onClick={(e) => editSelection(song, e.currentTarget.checked, i)}
-                                                checked={checkBoxNumber[i]}
+                                                checked={checkBoxNumber[i]} onChange={() => {}}
                                             />
                                         </span>
                                         <img src={PlayIcon} onClick={() => playSong(i)} />

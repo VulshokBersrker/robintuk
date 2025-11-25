@@ -16,7 +16,7 @@ A beautiful and colorful music player for **Windows**.
 
 ## Main Features
 
-- Play most music formats (mp3)
+- Play most music formats (mp3 at the moment)
 - Smooth performance even with 11,000 songs loaded
 - Add custom playlist artwork
 - Customize the look with multiple theme colors
@@ -40,6 +40,7 @@ Made with Tauri (React and Rust).
 
 ## Features to Be Added
 
+- [ ] Get artist data from online service for artist page (maybe)
 - [ ] Playlist Import/Export as m3u file
 - [ ] Remove a song from the queue
 - [ ] Notification of version update
@@ -73,7 +74,7 @@ Made with Tauri (React and Rust).
 ## Known Issues
 
 - [ ] Songs end one second early sometimes
-- [ ] Songs have hiccups randomly
+- [ ] Songs have hiccups randomly (maybe due to refreshes in dev mode)
 - [ ] CSS Optimization
 - [ ] Application Optimizations (streamlining, data caching, etc.)
 - [ ] Playback errors
@@ -81,4 +82,5 @@ Made with Tauri (React and Rust).
 - [ ] Better error handling
 - [ ] Albums displaying Disc 0 when metadata has no disc value
 - [ ] Blank pages on route change while it grabs the data from the backend
+- [ ] Fix songs page search results formatting
 - [x] Wrong icon shown when resizing window with double click or drag

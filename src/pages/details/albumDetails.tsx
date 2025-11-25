@@ -1,16 +1,18 @@
 // Core Libraries
-import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useState } from "react";
 
 // Custom Components
-import { savePosition, saveQueue, Songs } from "../../globalValues";
+import { GetCurrentSong, savePosition, saveQueue, Songs } from "../../globalValues";
+import ImageWithFallBack from "../../components/imageFallback";
 
-import PlayIcon from '../../images/play-icon-outline.svg';
+// Image Components
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
+import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import SearchIcon from '../../images/search_icon.svg';
-import ImageWithFallBack from "../../components/imageFallback";
 
 interface AlbumDetails {
     name: string,
@@ -61,6 +63,13 @@ export default function AlbumOverviewPage() {
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }
+
+        // Load the current song (song / album / playlist) from the backend
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
+        
+        return () => {
+            unlisten_get_current_song.then(f => f());
+        } 
     }, []);
 
     async function getAlbum() {

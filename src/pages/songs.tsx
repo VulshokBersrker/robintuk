@@ -17,9 +17,11 @@ export default function SongPage() {
     const [songList, setSongList] = useState<any[]>([]);
     const [searchValue, setSearchValue] = useState<string>("");
 
+    const [filteredSongs, setFilteredSongs] = useState<any[]>([]);
+
     async function getSongs() {
         try {
-            const list = await invoke<SongRes[]>('get_all_songs');
+            const list: SongRes[] = await invoke<SongRes[]>('get_all_songs');
             let testV: any[] = [];
             for(let i = 0; i < list.length; i++) {
                 testV.push(list[i].name);
@@ -27,8 +29,9 @@ export default function SongPage() {
                     testV.push(list[i].song_list[j]);
                 }
             }
-            // console.log(testV);
+            console.log(testV)
             setSongList(testV);
+            setFilteredSongs(testV);
         }
         catch (err) {
             alert(`Failed to scan folder: ${err}`);
@@ -38,6 +41,22 @@ export default function SongPage() {
     useEffect(() => {
         getSongs();
     }, []);
+
+    function updateSearchResults(value: string) {
+        setSearchValue(value);
+
+        const temp_section = songList.filter((entry) => {
+            if(entry.name !== undefined) {
+                return entry.name.toLowerCase().includes(value.toLowerCase());
+            }
+            else {
+                return entry;
+            }
+        });
+        
+        // console.log(temp_section);
+        setFilteredSongs(temp_section);
+    }
 
 
 
@@ -52,13 +71,13 @@ export default function SongPage() {
                     <input
                         type="text" placeholder="Search Albums" id="search_albums"
                         value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
+                        onChange={(e) => updateSearchResults(e.target.value)}
                     />
                 </span>
 
             </div>
 
-            <ListVirtualization song_data={songList} />
+            <ListVirtualization song_data={filteredSongs} />
 
         </div>
     );

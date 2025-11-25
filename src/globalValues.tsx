@@ -48,6 +48,8 @@ export interface PlaylistList {
     name: string
 }
 
+export type GetCurrentSong = { q: Songs; };
+
 
 export const alphabeticallyOrdered = [
     '&', '#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',

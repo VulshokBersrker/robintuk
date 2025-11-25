@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { savePosition, Songs } from "../globalValues";
+import { GetCurrentSong, savePosition, Songs } from "../globalValues";
 import ImageWithFallBack from "./imageFallback";
 
 // Images
@@ -37,7 +37,7 @@ Create icons for playlists with no custom cover
 
 */
 
-type GetCurrentSong = { q: Songs; };
+
 
 export default function MusicControls() {
 
@@ -202,6 +202,7 @@ export default function MusicControls() {
             }
             else {
                 const details = await invoke<Songs>('player_get_current_song');
+                await invoke("update_current_song_played");
                 setSongDetails(details);
                 saveSong(details);
                 resetSongValues(true);
@@ -224,6 +225,7 @@ export default function MusicControls() {
         }
         finally {
             const details = await invoke<Songs>('player_get_current_song');
+            await invoke("update_current_song_played");
             setSongDetails(details);
             saveSong(details);
             resetSongValues(false);
@@ -268,7 +270,7 @@ export default function MusicControls() {
     // Function to update the volume of the music player
     async function updateVolume(volume: number) {
         setVolume(volume);
-        console.log("volume is at: ", (volume / 50))
+        // console.log("volume is at: ", (volume / 50));
         await invoke("player_set_volume", { volume: (volume / 50) });
         localStorage.setItem("volume-level", JSON.stringify(volume));
     }
@@ -278,6 +280,13 @@ export default function MusicControls() {
         setRepeatMode(mode);
         await invoke("player_set_repeat_mode", { mode: mode });
         localStorage.setItem("repeat-mode", JSON.stringify(mode));
+    }
+
+    // Function to update the volume of the music player
+    async function updateShuffleMode() {
+        setIsShuffle(!isShuffle);
+        // await invoke("player_set_shuffle", { mode: mode });
+        localStorage.setItem("shuffle-mode", JSON.stringify(!isShuffle));
     }
 
     async function seekSong(value: number) {
@@ -358,7 +367,7 @@ export default function MusicControls() {
                                     <img
                                         src={ShuffleButton}
                                         alt="shuffle queue"
-                                        onClick={() => setIsShuffle(!isShuffle)}
+                                        onClick={updateShuffleMode}
                                         className={`cursor-pointer ${songDetails === undefined ? "disabled" : ""} ${isShuffle === true ? "on" : "off"}`}
                                     />
                                 </div>
@@ -428,7 +437,7 @@ export default function MusicControls() {
                                 {(volume > 0 ) && <img src={VolumeStandard} alt="" className="icon volume-icon" onClick={() => updateVolume(0)}/>}
 
                                 <input
-                                    type="range" min={0} max={50}
+                                    type="range" min={0} max={60}
                                     className={`volume ${songDetails === undefined ? "disabled" : ""}`}
                                     value={volume}
                                     onChange={(e) => updateVolume(parseInt(e.target.value))}

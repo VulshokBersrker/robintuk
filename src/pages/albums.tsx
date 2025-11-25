@@ -27,12 +27,15 @@ export default function AlbumPage() {
     const [albumList, setAlbumList] = useState<AlbumRes[]>([]);
     const [searchValue, setSearchValue] = useState<string>("");
 
+    const [filteredAlbums, setFilteredAlbums] = useState<AlbumRes[]>([]);
+
     async function getAlbums() {
         try {
             setLoading(true);
             const list = await invoke<AlbumRes[]>('get_all_albums');
             // console.log(list);
             setAlbumList(list);
+            setFilteredAlbums(list);
         }
         catch (err) {
             alert(`Failed to scan folder: ${err}`);
@@ -65,6 +68,18 @@ export default function AlbumPage() {
         }
     }
 
+    function updateSearchResults(value: string) {
+        setSearchValue(value);
+        let temp: AlbumRes[] = [];
+        for(let i = 0; i < albumList.length; i++) {            
+            const temp_section = albumList[i].section.filter((entry) => {
+                return entry.album.toLowerCase().includes(value.toLowerCase());
+            });
+            temp.push({ name: albumList[i].name, section: temp_section });
+        }
+        setFilteredAlbums(temp);
+    }
+
     if(loading) {
         return(
             <div>
@@ -77,7 +92,7 @@ export default function AlbumPage() {
                         <input
                             type="text" placeholder="Search Albums" id="search_albums"
                             value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
+                            onChange={(e) => updateSearchResults(e.target.value)}
                         />
                     </span>
                 </div>
@@ -115,7 +130,7 @@ export default function AlbumPage() {
                         <input
                             type="text" placeholder="Search Albums" id="search_albums"
                             value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
+                            onChange={(e) => updateSearchResults(e.target.value)}
                         />
                     </span>
                 </div>
@@ -135,12 +150,12 @@ export default function AlbumPage() {
                 </div>
 
                 <div className="d-flex flex-wrap">
-                    {albumList.map(section => {
-                        if(section.section.length > 0) {
+                    {filteredAlbums.map(part => {
+                        if(part.section.length > 0) {
                             return(
-                                section.section.map((entry, i) => {
+                                part.section.map((entry, i) => {
                                     return(
-                                        <div key={`${section.name}-${i}`} className="album-link" id={`${section.name}-${i}`}>
+                                        <div key={`${part.name}-${i}`} className="album-link" id={`${part.name}-${i}`}>
                                             <div className="album-image-container">
                                                 <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playAlbum(entry.album)}/></div>
                                                 <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>

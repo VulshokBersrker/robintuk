@@ -3,9 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 
 // Custom Components
-import { savePosition, saveQueue, Songs } from "../../globalValues";
+import { GetCurrentSong, savePosition, saveQueue, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Images
@@ -49,6 +50,13 @@ export default function PlaylistOverviewPage() {
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }
+
+        // Load the current song (song / album / playlist) from the backend
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
+        
+        return () => {
+            unlisten_get_current_song.then(f => f());
+        }
     }, []);
 
     // On refresh if a user select another playlist from the sidebar while still looking at a playlist
@@ -59,6 +67,8 @@ export default function PlaylistOverviewPage() {
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }
+
+        
     }, [location.state.name]);
 
     // --------------------------- Playlist Functions ---------------------------

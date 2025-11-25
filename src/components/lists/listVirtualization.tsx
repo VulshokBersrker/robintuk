@@ -1,12 +1,14 @@
-import { useRef } from "react";
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { listen } from "@tauri-apps/api/event";
+import { useEffect, useRef, useState } from "react";
 
-import { useVirtualizer } from '@tanstack/react-virtual'
 
-// import { Songs } from "../../globalValues";
 
+import { GetCurrentSong, saveQueue, Songs } from "../../globalValues";
 import PlayIcon from '../../images/play-icon-outline.svg';
 import { invoke } from "@tauri-apps/api/core";
-import { saveQueue, Songs } from "../../globalValues";
+
+
 
 type Props = {
     song_data: any
@@ -56,7 +58,9 @@ export default function ListVirtualization({song_data}: Props) {
                     >
                         {items.map((virtualRow) => (
                             <div
-                                key={virtualRow.key} data-index={virtualRow.index} ref={virtualizer.measureElement}
+                                key={virtualRow.key}
+                                data-index={virtualRow.index}
+                                ref={virtualizer.measureElement}
                                 className={`song-list`}
                             >
                                 
@@ -77,7 +81,6 @@ type P = {
 }
 
 function RowComponent({song}: P) {
-    // console.log(song);
 
     async function playSong() {
         try {
@@ -86,12 +89,26 @@ function RowComponent({song}: P) {
             await invoke('player_load_album', {queue: arr, index: 0});
             await invoke('update_current_song_played', {path: arr[0].path});
             await invoke('get_queue', {q: arr, index: 0});
-            saveQueue(arr, 0);
+            saveQueue(arr);
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
         }
     }
+
+    const[isCurrent, setIsCurrent] = useState<Songs>({
+        id: "", name: "", path: "", cover: "", release: "", track: 0, album: "",
+        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0
+    });
+
+    useEffect(() => {
+        // Load the current song (song / album / playlist) from the backend
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
+        
+        return () => {
+            unlisten_get_current_song.then(f => f());
+        }
+    }, []);
 
     if(song.name === null || song.name === undefined) {
         return (
@@ -105,11 +122,11 @@ function RowComponent({song}: P) {
         return (
             <div className="flex items-center justify-between">
                 <div className="song-link">
-                    <div className="grid-20 song-row">
+                    <div className={`grid-20 song-row ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}>
                         
                         <span className="section-1 vertical-centered play ">
                             <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
-                                <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike" />
+                                <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike" onChange={() => {}} />
                             </span>
                             <img src={PlayIcon} onClick={playSong}/>
                         </span>
@@ -125,43 +142,5 @@ function RowComponent({song}: P) {
                 </div>
             </div>
         );
-    }
-
-    
+    }   
 }
-
-
-//  <button 
-//                 style={{marginBottom: '5px'}}
-//                 onClick={() => {
-//                     virtuosoRef.current?.scrollToIndex({index: Math.random() * song_data.length, align: "start"})
-//                 }}
-//             >
-//                 scroll
-//             </button>
-//             <GroupedVirtuoso 
-//                 className="virtual-scroller"
-//                 ref={virtuosoRef}
-//                 groupCounts={groupCounts}
-//                 groupContent={(index) => {
-//                     return(
-//                         // add background to the element to avoid seeing the items below it
-//                         <h1 style={{position: "relative"}} className="header-3">
-//                             {song_data[index].name} - {groupCounts[index]}
-//                             {/* {song_data[index].name !== "." && <h1 className="header-3">{song_data[index].name}</h1>} */}
-//                             {/* {song_data[index].name === "." && <h1 className="header-3">...</h1>} */}
-                            
-//                         </h1>
-//                     );
-//                 }}
-//                 itemContent={(index, groupIndex) => {
-//                     return(
-//                         <div>
-//                             {groupIndex}.{index}
-//                             {/* {song_data[groupIndex].song_list[index].name} */}
-//                             {/* <RowComponent song={song_data[groupIndex].song_list[index]}/> */}
-//                         </div>
-//                     );
-//                 }}
-//                 style={{ height: '91vh', position: "relative" }}
-//             /> 
