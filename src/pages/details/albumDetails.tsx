@@ -9,6 +9,8 @@ import { GetCurrentSong, savePosition, saveQueue, Songs } from "../../globalValu
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Image Components
+import QueueIcon from '../../images/rectangle-list-regular-full.svg';
+import CloseIcon from '../../images/x.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
@@ -34,7 +36,6 @@ export default function AlbumOverviewPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const [albumList, setAlbumList] = useState<Songs[]>([]);
-    // const savedAlbum = useRef(location.state.name);
 
     const [loading, isLoading] = useState<boolean>(false);
     const [albumDetails, setAlbumDetails] = useState<AlbumDetails>({ name: "", total_duration: 0, cover: "", artist: "", release: "", genre: "", num_songs: 0, hasDiscValue: false});
@@ -63,13 +64,9 @@ export default function AlbumOverviewPage() {
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }
-
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
-        
-        return () => {
-            unlisten_get_current_song.then(f => f());
-        } 
+        return () => { unlisten_get_current_song.then(f => f()); } 
     }, []);
 
     async function getAlbum() {
@@ -130,7 +127,6 @@ export default function AlbumOverviewPage() {
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
-            console.log("Adding song: " + song.name);
             setSongSelection([...songSelection, song]);
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = true;
@@ -140,7 +136,6 @@ export default function AlbumOverviewPage() {
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            console.log("Removing song: " + song.name);
             setSongSelection(songSelection.filter(item => item.id !== song.id));
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
@@ -158,13 +153,11 @@ export default function AlbumOverviewPage() {
     }
 
     // ------------ Selection Bar Functions ------------
-     useEffect(() => {
+    useEffect(() => {
         const fetchData = async() => {
             const list: PlaylistList[] | undefined = await getAllPlaylists();
             if(list !== undefined) {
                 setPlaylistList(list);
-                console.log("Playlist names: ");
-                console.log(list);
             }
         }
         fetchData();        
@@ -172,13 +165,22 @@ export default function AlbumOverviewPage() {
 
     async function addToQueue() {
         try {
-            await invoke('player_add_to_queue', {queue: songSelection});
+            const q = localStorage.getItem("last-played-queue")
+            if(q !== null) {
+                const oldQ = JSON.parse(q);
+
+                await invoke('player_add_to_queue', {queue: songSelection});
+                const newQ = [...oldQ, songSelection];
+                localStorage.setItem("last-played-queue", JSON.stringify(newQ) );
+            }
+            
         }
         catch(e) {
             console.log(e);
         }
         finally {
-            await invoke('get_appended_queue');
+            const test = await invoke('player_get_queue');
+            console.log(test)
             clearSelection();
         }
     }
@@ -211,8 +213,7 @@ export default function AlbumOverviewPage() {
 
     async function getAllPlaylists() {
         try {
-            const playlists: PlaylistList[] = await invoke('get_all_playlists',);
-            console.log(playlists);
+            const playlists: PlaylistList[] = await invoke('get_all_playlists');
             if(playlists.length !== 0) {
                 return playlists;
             }
@@ -238,26 +239,24 @@ export default function AlbumOverviewPage() {
     else if(loading === false && albumList.length !== 0 && discs.length > 0) {
         return(
             <div className="album-container">
-                <div className={`album-details-container`}>
-                    
-                    {/* Song Selection Bar */}
+                {/* Song Selection Bar */}
                     {songSelection.length !== 0 && 
-                        <div className="selection-popup-container vertical-centered grid-20">
-                            <div className="section-4">{songSelection.length} items selected</div>
-                            <div className="section-3"><button className="d-flex align-items-center"><img src={PlayIcon} />Play</button></div>
-                            <div className="section-3 position-relative">
+                        <div className="selection-popup-container grid-20">
+                            <div className="section-8">{songSelection.length} items selected</div>
+                            <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
+                            <div className="section-6 position-relative">
                                 <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
                                 {displayAddToMenu &&
-                                    <div className="playlist-list-container">
-                                        <div className="" onClick={addToQueue}> Queue </div>
+                                    <div className="playlist-list-container header-font">
+                                        <div className="d-flex align-items-center" onClick={addToQueue}>
+                                            <img src={QueueIcon} className="icon icon-size"/>
+                                            <span>&nbsp;Queue</span>
+                                        </div>
                                         <hr/>
-                                        <span className="d-flex justify-content-center align-items-center">
+                                        <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                             <input
-                                                id="new_playlist_input"
-                                                type="text"
-                                                className="new-playlist"
-                                                placeholder="New Playlist"
-                                                value={newPlaylistName}
+                                                id="new_playlist_input" type="text" placeholder="New Playlist"
+                                                className="new-playlist" value={newPlaylistName}
                                                 onChange={(e) => setNewPlaylistName(e.target.value)}
                                             />
                                             <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
@@ -265,7 +264,7 @@ export default function AlbumOverviewPage() {
                                         
                                         {playlistList?.map((playlist) => {
                                             return(
-                                                <div onClick={() => addToPlaylist(playlist.name)}>
+                                                <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
                                                     {playlist.name}
                                                 </div>
                                             );
@@ -273,14 +272,11 @@ export default function AlbumOverviewPage() {
                                     </div>
                                 }
                             </div>
-
-                            {/* Only show when you are on a playlist or queue */}
-                            <div className="section-3"><button>Remove</button></div>
-                            <span className="section-1" onClick={clearSelection}>X</span>
+                            <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} className="icon"/></span>
                         </div>
                     }
                     {/* End of Song Selection Bar */}
-
+                <div>
                     <div className="d-flex top-row justify-content-between">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                         <span className="search-bar">
@@ -293,7 +289,7 @@ export default function AlbumOverviewPage() {
                         </span>
                     </div>
                     {/* Album Details */}
-                    <div className="d-flex">
+                    <div>
                         <div className="album-details d-flex">   
                             <ImageWithFallBack image={albumDetails.cover} alt={""} image_type={"album"}/>
 
@@ -314,7 +310,7 @@ export default function AlbumOverviewPage() {
                             </span>
                         </div>
                     </div>
-                     
+
                 </div>
 
                 {/* Song list */}
@@ -331,17 +327,17 @@ export default function AlbumOverviewPage() {
                             <div key={`disc-${disc_number}`}>
                                 {/* Row Details - Only render Discs that exist*/}
                                 {doesDiscExist &&
-                                    <div >
+                                    <>
                                         <div className="grid-20 position-relative">
                                             <span className="section-20 header-font font-2" key={disc_number}>Disc {disc_number}</span>
                                             <span className="section-1"></span>
                                             <span className="section-1 track details">#</span>
-                                            <span className="section-9 details">Track</span>
+                                            <span className="section-9 details">Name</span>
                                             <span className="section-8 details">Artist</span>
                                             <span className="section-1 details">Length</span>
                                         </div>
                                         <hr />
-                                    </div>
+                                    </>
                                 }
                                 {/* Display all the songs in that disc */}
                                 {albumList.map((song, i) => {
@@ -349,7 +345,7 @@ export default function AlbumOverviewPage() {
                                         return(
                                             <div key={i}>
                                                 <div className={`grid-20 song-row align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}>
-                                                    <span className="section-1 play ">
+                                                    <span className="section-1 play">
                                                         <span className="form-control">
                                                             <input
                                                                 type="checkbox" id={`select-${i}`} name={`select-${i}`}
@@ -360,9 +356,9 @@ export default function AlbumOverviewPage() {
                                                         </span>
                                                         <img src={PlayIcon} onClick={() => playSong(i)} />
                                                     </span>
-                                                    <span className="section-1 font-0 track ">{song.track}</span>
+                                                    <span className="section-1 track">{song.track}</span>
                                                     <span className="section-9 font-0 name ">{song.name}</span>
-                                                    <span className="section-8 font-0 artist ">{song.artist}</span>
+                                                    <span className="section-8 artist ">{song.artist}</span>
                                                     <span className="section-1 header-font duration ">{new Date(song.duration * 1000).toISOString().slice(14, 19)}</span>
                                                 </div>
                                                 <hr />
@@ -374,7 +370,7 @@ export default function AlbumOverviewPage() {
                         );               
                     })}
 
-                    
+                    <div className="empty-space" />
                 </div>
             </div>
         );

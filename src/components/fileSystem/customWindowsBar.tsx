@@ -1,9 +1,10 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 //  Tray icons
 import MinimizeWindowIcon from '../../images/window-minimize-solid-full.svg';
-// import SettingsIcon from '../../images/settings-svgrepo-com.svg';
+import SettingsIcon from '../../images/settings-svgrepo-com.svg';
 import FullscreenWindowIcon from '../../images/maximize.svg';
 import TabWindowIcon from '../../images/minimize.svg'
 import CloseWindowIcon from '../../images/x.svg';
@@ -48,9 +49,9 @@ export default function CustomWindowsBar() {
             <div data-tauri-drag-region></div>
             <div className="logo"><img src={AppLogo} className="window-logo"/></div>
             <div className="controls">
-                {/* <a href="/settings" className="" id="titlebar-settings" title="settings">
+                <Link to="/settings" className="" id="titlebar-settings" title="settings">
                     <img src={SettingsIcon} className="icon"/>
-                </a> */}
+                </Link>
                 <button className="" id="titlebar-minimize" title="minimize" onClick={() => appWindow.minimize()}>
                     <img src={MinimizeWindowIcon} className="icon"/>
                 </button>

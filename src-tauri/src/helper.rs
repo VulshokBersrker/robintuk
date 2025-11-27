@@ -62,7 +62,7 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
     // Create a probe hint using the file's extension. [Optional]
     let mut hint: Hint = Hint::new();
-    hint.with_extension("mp3").with_extension("wav");
+    hint.with_extension("mp3").with_extension("wav").with_extension("flac");
 
     // Use the default options for metadata and format readers.
     let meta_opts: MetadataOptions = Default::default();
@@ -75,14 +75,12 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
     };
 
     // Get the directory where all the data is stored
-    let image_dir =
-        dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers/";
+    let image_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers/";
     let mut covers_path = PathBuf::new();
 
-    // Probe the media source ------------------------------------- Error on read # 1250 when adding songs
+    // Probe the media source
     let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts);
 
-    //
     if probed.is_ok() {
         let mut probe = probed.unwrap();
 

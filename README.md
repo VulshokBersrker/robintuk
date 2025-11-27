@@ -62,6 +62,7 @@ Made with Tauri (React and Rust).
 - [ ] Force scrollbar to stop before music control section
 - [ ] Update Play/Pause icon design
 - [ ] Support for flac and wav
+- [ ] Create a Genre section
 - [ ] Improve sidebar active navigation styles
 - [ ] Lock navigation when scanning for new music from settings?
 - [x] Reorganize Albums page

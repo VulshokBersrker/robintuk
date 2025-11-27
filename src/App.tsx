@@ -2,6 +2,7 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import "./App.css";
 
 // Components
+import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
 import MusicControls from "./components/musicControls";
 import RightSideBar from "./components/rightSideBar";
 
@@ -17,11 +18,6 @@ import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
 import Home from "./pages/home";
 
-
-// Need to add Artist hub
-// Need to add content to the home page (if I'm going to keep it)
-// Need to populate playlists
-
 function App() {
 
   const selectedTheme = localStorage.getItem('theme');
@@ -32,6 +28,7 @@ function App() {
 
   return(
     <BrowserRouter>
+      <CustomWindowsBar />
       <RightSideBar />
       <MusicControls />
       <div className="content">
@@ -48,7 +45,6 @@ function App() {
           <Route path="/artists/overview" element={ <ArtistOverviewPage />} />
           <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
         </Routes>
-        <div className="empty-space" />
       </div>
         
     </BrowserRouter>

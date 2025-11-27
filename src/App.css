@@ -17,24 +17,26 @@
   /* Font Colors */
   --font-color-one: #e3e2dd;
   --font-color-two: #877373;
-  --font-color-three: #800a0a;
+  --font-color-three: #6c0e1a;
   /* Gradient Colors */
-  --gradient-one: rgb(35, 1, 1);
-  --gradient-two: rgb(19, 0, 0);
+  --gradient-one: #430909;
+  --gradient-two: #250303;
   --gradient-three: rgb(0, 0, 0);
   /* Hr Colors */
-  --hr-gradient-one: #361717;
-  --hr-gradient-two: #3a1717;
+  --hr-gradient-one: #571f1f;
+  --hr-gradient-two: #511616;
   /* Scrollbar Colors */
-  --scrollbar-color: rgba(129, 69, 69, 0.45) rgba(0,0,0,0);
+  --scrollbar-color: #6c0e1a rgba(0,0,0,0);
   /* Music Player Colors */
-  --music-player-bg: rgba(16, 1, 1, 0.429);
-  --music-player-border: linear-gradient(to right, rgb(101, 1, 1), rgb(28, 28, 28)) 1 stretch;
-  --slider-color-one: #a70000;
+  --music-player-bg: rgba(16, 1, 1, 0.55);
+  --music-player-border: linear-gradient(to right, rgb(138, 2, 2), rgb(28, 28, 28)) 1 stretch;
+  --slider-color-one: #6c0e1a;
   /* Album Overview Colors */
   --play-icon: brightness(0) saturate(100%) invert(7%) sepia(98%) saturate(7176%) hue-rotate(18deg) brightness(77%) contrast(111%);
   --play-icon-hover: brightness(0) saturate(100%) invert(86%) sepia(6%) saturate(1038%) hue-rotate(314deg) brightness(99%) contrast(86%);
-  --arrow-icon: brightness(0) saturate(100%) invert(40%) sepia(9%) saturate(372%) hue-rotate(316deg) brightness(88%) contrast(89%);
+  --arrow-icon: brightness(0) saturate(100%) invert(15%) sepia(99%) saturate(2579%) hue-rotate(344deg) brightness(84%) contrast(86%);
+  /* Checkbox Colors */
+  --checkbox-checked-color: rgb(141, 68, 68);
 }
 [data-theme="blue"] {
   /* Font Colors */
@@ -58,6 +60,8 @@
   --play-icon: brightness(0) saturate(100%) invert(15%) sepia(93%) saturate(2862%) hue-rotate(228deg) brightness(94%) contrast(101%);;
   --play-icon-hover: brightness(0) saturate(100%) invert(69%) sepia(11%) saturate(1645%) hue-rotate(193deg) brightness(98%) contrast(91%);
   --arrow-icon: brightness(0) saturate(100%) invert(16%) sepia(83%) saturate(3109%) hue-rotate(202deg) brightness(99%) contrast(93%);
+  /* Checkbox Colors */
+  --checkbox-checked-color: rgb(68, 98, 141);
 }
 [data-theme="purple"] {
   /* Font Colors */
@@ -82,6 +86,8 @@
   --play-icon: brightness(0) saturate(100%) invert(8%) sepia(57%) saturate(7414%) hue-rotate(274deg) brightness(95%) contrast(101%);
   --play-icon-hover: brightness(0) saturate(100%) invert(47%) sepia(96%) saturate(2625%) hue-rotate(242deg) brightness(98%) contrast(91%);
   --arrow-icon: brightness(0) saturate(100%) invert(26%) sepia(24%) saturate(4938%) hue-rotate(255deg) brightness(86%) contrast(89%);
+  /* Checkbox Colors */
+  --checkbox-checked-color: rgb(120, 68, 141);
 }
 [data-theme="orange"] {
   /* Font Colors */
@@ -106,6 +112,8 @@
   --play-icon: brightness(0) saturate(100%) invert(41%) sepia(27%) saturate(1724%) hue-rotate(349deg) brightness(96%) contrast(91%);
   --play-icon-hover: brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(633%) hue-rotate(351deg) brightness(93%) contrast(89%);
   --arrow-icon: brightness(0) saturate(100%) invert(31%) sepia(67%) saturate(741%) hue-rotate(350deg) brightness(96%) contrast(92%);
+  /* Checkbox Colors */
+  --checkbox-checked-color: rgb(155, 114, 49);
 }
 [data-theme="green"] {
   /* Font Colors */
@@ -1135,7 +1143,6 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 .album-container {
   width: 96%;
   padding: 0px;
-  margin: 1px;
   margin-top: 10px;
   position: relative;
   display: inline-block;
@@ -1189,8 +1196,8 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   justify-content: end;
 }
 .song-row {
-  padding-top: 11px;
-  padding-bottom: 11px;
+  padding-top: 6px;
+  padding-bottom: 6px;
   border-radius: var(--border-radius);
   transition: 0.2s ease-in-out;
   position: relative;
@@ -1223,7 +1230,7 @@ input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;
   background-color: rgba(0, 0, 0, 0);
-  margin: 0;
+  margin-top: 4px;
   font: inherit;
   color: var(--checkbox-checked-color);
   width: 25px;
@@ -1257,17 +1264,31 @@ input[type="checkbox"]:disabled {
 
 .selection-popup-container {
   z-index: 1000;
-  position: fixed;
+  position: sticky;
   border-radius: var(--border-radius);
   top: 35px;
   left: 50%;
   transform: translateX(-50%);
-  width: 60%;
+  width: 30%;
   height: 50px;
   background-color: var(--gradient-two);
   border: 2px solid var(--font-color-three);
-  display: flex;
-  justify-content: center;
+  align-items: center;
+  align-content: center;
+  /* To offset it's effect on other elements */
+  margin-bottom: -54px;
+}
+
+.selection-popup-container div {
+  margin-left: 15px;
+}
+.selection-popup-container span {
+  margin-right: 15px;
+}
+
+button img {
+  height: 18px;
+  width: 18px;
 }
 
 .borderless img {
@@ -1280,8 +1301,7 @@ input[type="checkbox"]:disabled {
   justify-content: end;
 }
 .song-row .play img {
-  padding-left: 3px;
-  /* filter: var(--play-icon); */
+  padding: 4px;
   transition: 0.1s ease-in-out;
   opacity: 0;
 }
@@ -1305,7 +1325,6 @@ input[type="checkbox"]:disabled {
   font-size: 14px;
   font-weight: 400 !important;
   color: var(--font-color-two);
-
 }
 .song-row .name {
   text-overflow: ellipsis;
@@ -1345,22 +1364,27 @@ input[type="checkbox"]:disabled {
 .playlist-list-container {
   position: absolute;
   top: 50%;
-  transform: translate(-30%, 40%);
+  transform: translate(-43%, 12%);
   left: 0px;
   width: 250px;
   background: var(--gradient-two);
-  border: 1px solid var(--font-color-three);
-  padding: 10px 5px 10px 5px;
+  border: 2px solid var(--font-color-three);
+  padding: 0px 5px 10px 5px;
   border-radius: var(--border-radius);
 }
 .playlist-list-container hr {
   background-color: var(--font-color-three);
   opacity: 1;
-  height: 1px;
+  height: 2px;
+  width: 104%;
+  margin-left: -5px;
   border: 0;
 }
 
 .playlist-list-container div {
+  margin: 0;
+  margin-top: 5px;
+  margin-bottom: 5px;
   padding: 8px 8px 8px 8px;
   transition: 0.1s ease-in-out;
 }
@@ -1369,7 +1393,15 @@ input[type="checkbox"]:disabled {
   border-radius: var(--border-radius);
   transition: 0.1s ease-in-out;
 }
-
+span.playlist-input-container {
+  margin-right: 0px;
+}
+span.playlist-input-container span {
+  margin-left: 10px;
+}
+span.playlist-input-container button {
+  margin-right: -10px;
+}
 input.new-playlist {
   width: 60% !important;
   height: 42px !important;
@@ -1709,7 +1741,7 @@ img.search-icon:hover {
   }
   #root:has(.music-control-container) {
     .nav-scrollable {
-      height: calc(100vh - 26.5rem);
+      height: calc(100vh - 23.4rem);
     }
     .empty-space {
       height: 130px;

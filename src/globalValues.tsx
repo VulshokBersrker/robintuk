@@ -62,6 +62,19 @@ export function saveQueue(q: Songs[]) {
     localStorage.setItem('last-played-queue', JSON.stringify(q));
     localStorage.setItem('last-played-queue-length', (q.length - 1).toString());
 }
+export function saveShuffledQueue(q: Songs[]) {
+    localStorage.setItem('shuffled-queue', JSON.stringify(q));
+    localStorage.setItem('shuffled-queue-length', (q.length - 1).toString());
+}
 export function savePosition(p: number) {
     localStorage.setItem('last-played-queue-position', p.toString());
+}
+
+export function shuffle(array: Songs[]) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
 }

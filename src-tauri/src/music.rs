@@ -170,7 +170,7 @@ impl MusicPlayer {
 
     pub fn previous_song(&mut self) {
 
-        let mut new_pos = 0;
+        let new_pos;
         // If the new position will be smaller than the starting song, set the pos to the last song in the queue
         if self.position == 0 {
             new_pos = self.queue.len() - 1;

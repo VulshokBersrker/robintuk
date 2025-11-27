@@ -3,7 +3,8 @@ use tauri::{Emitter, State};
 
 // -------------------------- Media Player Commands --------------------------
 
-// Queue Commands
+
+// ----------------- Queue Commands
 
 #[tauri::command]
 pub fn player_set_queue(state: State<AppState, '_>, queue: Vec<SongTable>) -> Result<(), String> {
@@ -64,7 +65,14 @@ pub fn player_get_queue_length(state: State<AppState, '_>) -> Result<usize, Stri
     Ok(q_length)
 }
 
-// Media Control Commands
+#[tauri::command]
+pub fn player_update_queue_and_pos(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String>  {
+    state.player.lock().unwrap().set_queue(queue);
+    state.player.lock().unwrap().update_current_index(index);
+
+    Ok(())
+}
+// ----------------- Media Control Commands
 
 #[tauri::command]
 pub fn player_play(state: State<AppState, '_>) -> Result<(), String> {
@@ -140,7 +148,8 @@ pub fn player_get_song_pos(state: State<AppState, '_>) -> Result<(), String> {
     Ok(())
 }
 
-// Event Listener Commands
+
+// ----------------- Event Listener Commands
 #[tauri::command]
 pub fn update_current_song_played(state: State<AppState, '_>, app: tauri::AppHandle) {
     // Tell the music controls that there is a new song to look at
@@ -156,4 +165,9 @@ pub async fn new_playlist_added(state: State<AppState, '_>, app: tauri::AppHandl
 
     app.emit("new-playlist-created", GetPlaylistList { playlist: q }).unwrap();
     Ok(())
+}
+
+#[tauri::command]
+pub fn set_shuffle_mode(app: tauri::AppHandle, mode: bool) {
+    app.emit("player-shuffle-mode", mode).unwrap();
 }

@@ -114,7 +114,6 @@ export default function AlbumPage() {
                         );        
                     })}                
                 </div>
-
             </div>
         );
     }
@@ -122,8 +121,8 @@ export default function AlbumPage() {
         return(
             <div>
                 <div className="search-filters d-flex justify-content-end vertical-centered"> 
-                    <span className="filter">Sort By: <span className="value">A-Z</span></span>
-                    <span className="filter">Genre: <span className="value">All Genres</span></span>
+                    {/* <span className="filter">Sort By: <span className="value">A-Z</span></span>
+                    <span className="filter">Genre: <span className="value">All Genres</span></span> */}
 
                     <span className="search-bar">
                         <img src={SearchIcon} className="bi search-icon icon-size"/>
@@ -139,7 +138,7 @@ export default function AlbumPage() {
                     {albumList.map(section => {
                         if(section.section.length !== 0) {
                             return(
-                                <div key={section.name}>
+                                <div key={`main-${section.name}`}>
                                     <HashLink to={`/albums#${section.name}-0`} smooth>
                                         {section.name}
                                     </HashLink>
@@ -175,6 +174,7 @@ export default function AlbumPage() {
                         }            
                     })}                
                 </div>
+                <div className="empty-space" />
             </div>
         );
     }    

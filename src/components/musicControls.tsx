@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { GetCurrentSong, savePosition, Songs } from "../globalValues";
+import { GetCurrentSong, savePosition, saveShuffledQueue, shuffle, Songs } from "../globalValues";
 import ImageWithFallBack from "./imageFallback";
 
 // Images
@@ -38,7 +38,6 @@ Create icons for playlists with no custom cover
 */
 
 
-
 export default function MusicControls() {
 
     const [displayFullscreen, setDisplayFullscreen] = useState<boolean>(false);
@@ -70,43 +69,52 @@ export default function MusicControls() {
             pauseMusic();
         }
         if(qPosition !== null && queue !== null) {
-            sendQueueToBackend(JSON.parse(queue), JSON.parse(qPosition));
+            const shuffleMode: string | null = localStorage.getItem('shuffle-mode');
+            if(shuffleMode !== null) {
+                const shuffle: boolean = JSON.parse(shuffleMode);
+                const shuffledQueue: string = localStorage.getItem("shuffled-queue")!;
+                if(shuffle) {
+                    setIsShuffle(true);
+                    sendQueueToBackend(JSON.parse(shuffledQueue), JSON.parse(qPosition));
+                }
+                else {
+                    sendQueueToBackend(JSON.parse(queue), JSON.parse(qPosition));
+                }
+            }            
         }
         else {
             setIsLoaded(false);
         }
         if(storedVolume !== null) {
             updateVolume(JSON.parse(storedVolume));
-        }
-
-        
+        }        
     }, []);
 
     // Just for listeners
     useEffect(() => {
         // Load the queue (song / album / playlist) from the backend
-        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); console.log("Getting new song");});
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); });
         
         // Listen for when the MediaPlayPause shortcut is pressed
         const unlisten_play_pause = listen("controls-play-pause", async() => { 
             const isPaused = await invoke("player_is_paused");
-            if(!isPaused) {
-                pauseMusic();
-            }
-            else {
-                playMusic();
-            }
+            if(!isPaused) { pauseMusic(); }
+            else { playMusic(); }
         });
         // Listen for when the MediaTrackNext shortcut is pressed
         const unlisten_next_song = listen<GetCurrentSong>("controls-next-song", () => { nextSong(); });
         // Listen for when the MediaTrackPrevious shortcut is pressed
         const unlisten_previous_song = listen<GetCurrentSong>("controls-prev-song", () => { previousSong() });
+
+        // Listen for when the MediaTrackPrevious shortcut is pressed
+        const unlisten_shuffle_setting = listen<boolean>("player-shuffle-mode", (event) => { setIsShuffle(event.payload) });
         
         return () => {
             unlisten_get_current_song.then(f => f());
             unlisten_play_pause.then(f => f());
             unlisten_next_song.then(f => f());
             unlisten_previous_song.then(f => f());
+            unlisten_shuffle_setting.then(f => f());
         }        
     }, []);
 
@@ -284,9 +292,30 @@ export default function MusicControls() {
 
     // Function to update the volume of the music player
     async function updateShuffleMode() {
-        setIsShuffle(!isShuffle);
-        // await invoke("player_set_shuffle", { mode: mode });
-        localStorage.setItem("shuffle-mode", JSON.stringify(!isShuffle));
+        try {
+            if(isShuffle) {
+                setIsShuffle(false);
+                const q: Songs[] = JSON.parse(localStorage.getItem("last-played-queue")!);
+                // Index of the current song
+                const index: number = q.map(e => e.path).indexOf(songDetails!.path);
+                await invoke("player_update_queue_and_pos", { queue: q, index: index } );
+            }
+            else {
+                setIsShuffle(true);
+                const shuffledQueue: Songs[] = JSON.parse(localStorage.getItem("last-played-queue")!);
+                shuffle(shuffledQueue);
+                // Index of the current song
+                const index: number = shuffledQueue.map(e => e.path).indexOf(songDetails!.path);
+                await invoke("player_update_queue_and_pos", { queue: shuffledQueue, index: index } );
+                saveShuffledQueue(shuffledQueue);
+            }
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+             localStorage.setItem("shuffle-mode", JSON.stringify(!isShuffle));
+        }
     }
 
     async function seekSong(value: number) {

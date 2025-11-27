@@ -30,7 +30,7 @@ export default function PlaylistPage() {
     }, [])
 
     const navigateToPlaylistOverview = (name: string) => {
-        navigate("/playlist/overview", {state: {name: name}});
+        navigate("/playlists/overview", {state: {name: name}});
     }
 
     async function playPlaylist(album_name: string) {

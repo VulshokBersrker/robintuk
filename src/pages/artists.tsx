@@ -8,8 +8,6 @@ import ImageWithFallBack from "../components/imageFallback.js";
 import { Songs } from "../globalValues";
 
 // Images
-import EllipsisIcon from '../images/ellipsis-solid-full.svg';
-import PlayIcon from '../images/play-icon-outline.svg';
 import SearchIcon from '../images/search_icon.svg';
 
 interface ArtistRes {
@@ -82,8 +80,6 @@ export default function ArtistsPage() {
                                 return(
                                     <div key={`${section.name}-${i}`} className="album-link" id={`${section.name}-${i}`}>
                                         <div className="album-image-container">
-                                            {/* <div className="play-album"><img src={PlayIcon} className="icon-size" /></div> */}
-                                            {/* <div className="options"><img src={EllipsisIcon} className="icon-size" /></div> */}
                                             
                                             <div className="container" onClick={() => navigateToArtistOverview(entry.album_artist)} >
                                                 <ImageWithFallBack image={entry.cover} alt={entry.album_artist} image_type={"artist"} />

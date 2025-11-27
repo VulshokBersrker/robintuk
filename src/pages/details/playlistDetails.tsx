@@ -6,12 +6,15 @@ import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 
 // Custom Components
-import { GetCurrentSong, savePosition, saveQueue, Songs } from "../../globalValues";
+import { GetCurrentSong, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Images
+import EditIcon from '../../images/pen-to-square-regular-full.svg';
+import DeleteIcon from '../../images/trash-can-regular-full.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import PlayIcon from '../../images/play-icon-outline.svg';
+import ArrowBackIcon from '../../images/arrow-left.svg';
 
 interface PlaylistDetails {
     name: string,
@@ -102,8 +105,10 @@ export default function PlaylistOverviewPage() {
         }
     }
 
+    // Add are you sure part
     async function deletePlaylist() {
         try {
+            isLoading(true);
             await invoke("delete_playlist", {name: playlistDetails.name});
             await invoke('new_playlist_added');
         }
@@ -142,7 +147,7 @@ export default function PlaylistOverviewPage() {
     }
 
     // Load the song the user clicked on but also queue the entire album
-    async function playSong(index: number) {
+    async function playPlaylist(index: number) {
         try {
             await invoke('player_load_album', {queue: playlist, index: index});
             await invoke('update_current_song_played', {path: playlist[index].path});
@@ -153,6 +158,10 @@ export default function PlaylistOverviewPage() {
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
+        }
+        finally {
+            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+            await invoke("set_shuffle_mode", { mode: false });
         }
     }
 
@@ -189,10 +198,27 @@ export default function PlaylistOverviewPage() {
         setCheckBoxNumber(tempArr);
     }
 
+    async function shufflePlaylist() {
+        try {
+            let shufflePlaylist = playlist.slice();
+            shuffle(shufflePlaylist);
+            await invoke('player_load_album', { queue: shufflePlaylist, index: 0 });
+            await invoke('update_current_song_played', { path: shufflePlaylist[0].path });
+            await invoke('update_current_song_played');
+            saveQueue(playlist);
+            saveShuffledQueue(shufflePlaylist);
+            savePosition(0);
+            // Update the music controls state somehow
+        }
+        catch (err) {
+            alert(`Failed to play song: ${err}`);
+        }
+        finally {
+            localStorage.setItem("shuffle-mode", JSON.stringify(true) );
+            await invoke("set_shuffle_mode", { mode: true });
+        }
+    }
 
-    
-
-    
 
 
     if(loading === true) {
@@ -205,6 +231,9 @@ export default function PlaylistOverviewPage() {
     else if(loading === false && playlist.length !== 0) {
         return(
             <div className="album-container">
+                <div className="d-flex top-row justify-content-between">
+                    <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
+                </div>
                 {/* Album Details */}
                 <div className="d-flex">
                     <div className="album-details d-flex">   
@@ -221,11 +250,10 @@ export default function PlaylistOverviewPage() {
                             </span>
                             
                             <div className="section-15 d-flex album-commmands">
-                                <span><button className="font-1 borderless" onClick={() => playSong(0)}><img src={PlayIcon} className=""    /></button></span>
-                                <span><button className="font-1 borderless"                            ><img src={ShuffleIcon} className="" /></button></span>
-                                <span><button className="font-1">+ Add to</button></span>
-                                <span><button className="font-1">Edit</button></span>
-                                <span><button className="font-1" onClick={deletePlaylist}>Delete</button></span>
+                                <span><button className="font-1 borderless" onClick={() => playPlaylist(0)}><img src={PlayIcon} className=""    /></button></span>
+                                <span><button className="font-1 borderless" onClick={shufflePlaylist}><img src={ShuffleIcon} className="" /></button></span>
+                                <span><button className="font-1 borderless"><img src={EditIcon} className="icon"/></button></span>
+                                <span><button className="font-1 borderless" onClick={deletePlaylist}><img src={DeleteIcon} className="icon"/></button></span>
                             </div>
                         </span>
                     </div>
@@ -235,7 +263,7 @@ export default function PlaylistOverviewPage() {
                 <div className="song-list">
                     <div className="grid-20 position-relative">
                         <span className="section-2"></span>
-                        <span className="section-9 vertical-centered font-0 details">Track</span>
+                        <span className="section-9 vertical-centered font-0 details">Name</span>
                         <span className="section-4 vertical-centered font-0 details">Album</span>
                         <span className="section-4 vertical-centered font-0 details">Artist</span>
                         <span className="section-1 details">Length</span>
@@ -250,10 +278,10 @@ export default function PlaylistOverviewPage() {
                                             <input
                                                 type="checkbox" id={`select-${i}`} name={`select-${i}`}
                                                 onClick={(e) => editSelection(song, e.currentTarget.checked, i)}
-                                                checked={checkBoxNumber[i]}
+                                                checked={checkBoxNumber[i]} onChange={() => {}}
                                             />
                                         </span>
-                                        <img src={PlayIcon} onClick={() => playSong(i)} />
+                                        <img src={PlayIcon} onClick={() => playPlaylist(i)} />
                                     </span>
                                     <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={song.cover} alt="" image_type="playlist-song" /></span>
                                     <span className="section-9 font-0 name">{song.name}</span>

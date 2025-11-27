@@ -135,6 +135,7 @@ pub fn run() -> Result<(), String> {
             commands::player_load_album,
             commands::player_get_queue_length,
             commands::player_get_current_position,
+            commands::player_update_queue_and_pos,
             // Other Media Player Functions
             commands::player_get_song_pos,
             commands::player_check_repeat,
@@ -144,6 +145,7 @@ pub fn run() -> Result<(), String> {
             // Event Caller Functions
             commands::update_current_song_played,
             commands::new_playlist_added,
+            commands::set_shuffle_mode
         ])        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -203,6 +205,7 @@ async fn scan_directory() -> Result<ScanResults, String> {
                 // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
                 if entry.path().display().to_string().contains(".mp3")
                     || entry.path().display().to_string().contains(".wav")
+                    || entry.path().display().to_string().contains(".flac")
                 {
                     let song_res = get_song_data(entry.path().display().to_string(), size).await;
 
