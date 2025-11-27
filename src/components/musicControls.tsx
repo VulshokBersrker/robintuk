@@ -38,7 +38,6 @@ Create icons for playlists with no custom cover
 
 */
 
-
 export default function MusicControls() {
 
     const [displayFullscreen, setDisplayFullscreen] = useState<boolean>(false);
@@ -321,11 +320,15 @@ export default function MusicControls() {
 
     async function seekSong(value: number) {
         try {
+            setIsPlaying(false);
             setSongProgress(value);
             await invoke("player_set_seek", { pos: value });
         }
         catch(e) {
             console.log(e);
+        }
+        finally {
+            setIsPlaying(true);
         }
     }
 
@@ -353,9 +356,12 @@ export default function MusicControls() {
     useEffect(() => {
         const progress = new Date(songProgress * 1000).toISOString().slice(12, 19)
         if(progress === songLengthFormatted) {
-            console.log("end of song - going to next song -> ");
-            setIsPlaying(false);
-            nextSong();
+            // wait 0.5s before playing next song, this is the test the song cutout issue
+            setTimeout(function() {
+                console.log("end of song - going to next song -> ");
+                setIsPlaying(false);
+                nextSong();
+            }, 500);            
         }
     }, [songProgress]);
 
