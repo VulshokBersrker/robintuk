@@ -47,7 +47,7 @@ export default function CustomWindowsBar() {
     return(
         <div className="titlebar">
             <div data-tauri-drag-region></div>
-            <div className="logo"><img src={AppLogo} className="window-logo"/></div>
+            {/* <div className="logo"><img src={AppLogo} className="window-logo"/></div> */}
             <div className="controls">
                 <Link to="/settings" className="" id="titlebar-settings" title="settings">
                     <img src={SettingsIcon} className="icon"/>

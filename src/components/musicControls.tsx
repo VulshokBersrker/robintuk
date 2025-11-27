@@ -17,6 +17,7 @@ import RepeatButton from '../images/repeat-solid-full.svg';
 import PauseButton from '../images/pause-solid-full.svg';
 import PlayButton from '../images/play-solid-full.svg';
 import RepeatOneIcon from '../images/repeat-one.svg';
+import Circle from '../images/circle.svg';
 
 
 // One first install - needs to be blank - or be hidden when there is no music setup
@@ -406,22 +407,23 @@ export default function MusicControls() {
                                 </div>
 
                                 
-                                <div className="play-button" id="play-pause">
+                                <div className="play-button d-flex align-items-center justify-content-center" id="play-pause">
                                     {(isPlaying === false || isPlaying === undefined) &&
                                         <div className="play-container" onClick={playMusic}>
                                             <img
                                                 src={PlayButton} alt="play icon"
-                                                className={`icon ${songDetails === undefined ? "disabled" : ""}`}
+                                                className={`play-pause-icon icon ${songDetails === undefined ? "disabled" : ""}`}
                                             />
+                                            <img src={Circle} className="circle"/>
                                         </div>
-                                        
                                     }                           
                                     {isPlaying === true &&
                                         <div className="play-container" onClick={pauseMusic}>
                                             <img
                                                 src={PauseButton} alt=""
-                                                className={`icon ${songDetails === undefined ? "disabled" : ""}`}
+                                                className={`play-pause-icon icon ${songDetails === undefined ? "disabled" : ""}`}
                                             />
+                                            <img src={Circle} className="circle"/>
                                         </div>                                    
                                     }
                                 </div>

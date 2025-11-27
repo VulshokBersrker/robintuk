@@ -5,16 +5,17 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { GetCurrentSong, savePosition, saveQueue, Songs } from "../../globalValues";
+import { GetCurrentSong, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Image Components
 import QueueIcon from '../../images/rectangle-list-regular-full.svg';
-import CloseIcon from '../../images/x.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
+import AddIcon from '../../images/plus-solid-full.svg';
 import SearchIcon from '../../images/search_icon.svg';
+import CloseIcon from '../../images/x.svg';
 
 interface AlbumDetails {
     name: string,
@@ -118,6 +119,27 @@ export default function AlbumOverviewPage() {
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
+        }
+    }
+
+    async function shuffleAlbum() {
+        try {
+            let shufflePlaylist = albumList.slice();
+            shuffle(shufflePlaylist);
+            await invoke('player_load_album', { queue: shufflePlaylist, index: 0 });
+            await invoke('update_current_song_played', { path: shufflePlaylist[0].path });
+            await invoke('update_current_song_played');
+            saveQueue(albumList);
+            saveShuffledQueue(shufflePlaylist);
+            savePosition(0);
+            // Update the music controls state somehow
+        }
+        catch (err) {
+            alert(`Failed to play song: ${err}`);
+        }
+        finally {
+            localStorage.setItem("shuffle-mode", JSON.stringify(true) );
+            await invoke("set_shuffle_mode", { mode: true });
         }
     }
 
@@ -240,42 +262,41 @@ export default function AlbumOverviewPage() {
         return(
             <div className="album-container">
                 {/* Song Selection Bar */}
-                    {songSelection.length !== 0 && 
-                        <div className="selection-popup-container grid-20">
-                            <div className="section-8">{songSelection.length} items selected</div>
-                            <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
-                            <div className="section-6 position-relative">
-                                <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
-                                {displayAddToMenu &&
-                                    <div className="playlist-list-container header-font">
-                                        <div className="d-flex align-items-center" onClick={addToQueue}>
-                                            <img src={QueueIcon} className="icon icon-size"/>
-                                            <span>&nbsp;Queue</span>
+                <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
+                    <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                    <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
+                    <div className="section-6 position-relative">
+                        <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
+                        {displayAddToMenu &&
+                            <div className="playlist-list-container header-font">
+                                <div className="d-flex align-items-center" onClick={addToQueue}>
+                                    <img src={QueueIcon} className="icon icon-size"/>
+                                    <span>&nbsp;Queue</span>
+                                </div>
+                                <hr/>
+                                <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                    <input
+                                        id="new_playlist_input" type="text" placeholder="New Playlist"
+                                        className="new-playlist" value={newPlaylistName}
+                                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                                    />
+                                    <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                </span>
+                                
+                                {playlistList?.map((playlist) => {
+                                    return(
+                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            {playlist.name}
                                         </div>
-                                        <hr/>
-                                        <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                            <input
-                                                id="new_playlist_input" type="text" placeholder="New Playlist"
-                                                className="new-playlist" value={newPlaylistName}
-                                                onChange={(e) => setNewPlaylistName(e.target.value)}
-                                            />
-                                            <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
-                                        </span>
-                                        
-                                        {playlistList?.map((playlist) => {
-                                            return(
-                                                <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                                    {playlist.name}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                }
+                                    );
+                                })}
                             </div>
-                            <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} className="icon"/></span>
-                        </div>
-                    }
-                    {/* End of Song Selection Bar */}
+                        }
+                    </div>
+                    <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} className="icon"/></span>
+                </div>                    
+                {/* End of Song Selection Bar */}
+                
                 <div>
                     <div className="d-flex top-row justify-content-between">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
@@ -303,9 +324,9 @@ export default function AlbumOverviewPage() {
                                 </span>
                                 
                                 <div className="section-15 d-flex album-commmands">
-                                    <span><button className="font-1 borderless" onClick={() => playSong(0)}><img src={PlayIcon} className=""    /></button></span>
-                                    <span><button className="font-1 borderless"                            ><img src={ShuffleIcon} className="" /></button></span>
-                                    <span><button className="font-1 position-relative">+ Add to</button></span>
+                                    <span><button className="font-1 borderless" onClick={() => playSong(0)}><img src={PlayIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={shuffleAlbum} ><img src={ShuffleIcon} /></button></span>
+                                    <span><button className="font-1 borderless" ><img src={AddIcon} className="icon"/> </button></span>
                                 </div>
                             </span>
                         </div>

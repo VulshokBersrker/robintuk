@@ -98,9 +98,9 @@ export default function AlbumPage() {
                 </div>
 
                 <div className="d-flex flex-wrap">
-                    {[...Array(70)].map(i => {
+                    {[...Array(70)].map((_entry, i: number) => {
                         return(
-                            <div key={i} className="album-link placeholder">
+                            <div key={`place-${i}`} className="album-link placeholder" id={`place-${i}`}>
                                 <div className="album-image-container placeholder">                                                
                                     <div className="album-image placeholder">
                                         {/* <div className="activity"/> */}
@@ -111,7 +111,7 @@ export default function AlbumPage() {
                                 </div>
                                 </div>
                             </div>
-                        );        
+                        );
                     })}                
                 </div>
             </div>
