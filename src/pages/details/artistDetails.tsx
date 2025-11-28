@@ -11,6 +11,8 @@ import ImageWithFallBack from "../../components/imageFallback";
 import EllipsisIcon from '../../images/ellipsis-solid-full.svg';
 import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
+import AddIcon from '../../images/plus-solid-full.svg';
+import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 
 export default function ArtistOverviewPage() {
 
@@ -197,8 +199,8 @@ export default function ArtistOverviewPage() {
                             
                             <div className="section-15 d-flex album-commmands">
                                 <span><button className="font-1 d-flex align-items-center" ><img src={PlayIcon} />Play All</button></span>
-                                <span><button className="font-1">Shuffle play</button></span>
-                                <span><button className="font-1">+ Add to</button></span>
+                                <span><button className="font-1 borderless" ><img src={ShuffleIcon} /></button></span>
+                                <span><button className="font-1 borderless" ><img src={AddIcon} /> </button></span>
                             </div>
                         </span>
                     </div>

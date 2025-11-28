@@ -46,25 +46,25 @@ Made with Tauri (React and Rust).
 - [ ] Notification of version update
 - [ ] Song details screen
 - [ ] Smoother music progress bar
-- [ ] Remove HTML selection ability
 - [ ] Custom context menu when hovering on songs/albums
 - [ ] Installer Wizard
 - [ ] Open with (in file explorer)
-- [ ] Search (on songs, albums, and artists pages)
 - [ ] Mini Player
 - [ ] Remember last 100 played songs/albums
 - [ ] Custom Home/Welcome screen
-- [ ] Shuffle Controls
-- [ ] Display the queue
 - [ ] New default playlist icons
 - [ ] New default image for missing album artwork
 - [ ] Remember scroll position on page back
 - [ ] Force scrollbar to stop before music control section
-- [ ] Update Play/Pause icon design
-- [ ] Support for flac and wav
+- [ ] Add support for flac and wav
 - [ ] Create a Genre section
-- [ ] Improve sidebar active navigation styles
 - [ ] Lock navigation when scanning for new music from settings?
+- [x] Search (on songs, albums, and artists pages)
+- [x] Shuffle Controls
+- [x] Display the queue
+- [x] Update Play/Pause icon design
+- [x] Improve sidebar active navigation styles
+- [x] Remove HTML selection ability
 - [x] Reorganize Albums page
 - [x] Repeat Controls
 - [x] Volume Controls
@@ -74,7 +74,6 @@ Made with Tauri (React and Rust).
 
 ## Known Issues
 
-- [ ] Songs end one second early sometimes
 - [ ] Songs have hiccups randomly (maybe due to refreshes in dev mode)
 - [ ] CSS Optimization
 - [ ] Application Optimizations (streamlining, data caching, etc.)
@@ -84,4 +83,5 @@ Made with Tauri (React and Rust).
 - [ ] Albums displaying Disc 0 when metadata has no disc value
 - [ ] Blank pages on route change while it grabs the data from the backend
 - [ ] Fix songs page search results formatting
+- [x] Songs end one second early sometimes
 - [x] Wrong icon shown when resizing window with double click or drag

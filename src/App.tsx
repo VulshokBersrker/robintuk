@@ -27,27 +27,31 @@ function App() {
   }
 
   return(
-    <BrowserRouter>
-      <CustomWindowsBar />
-      <RightSideBar />
-      <MusicControls />
-      <div className="content">
-        <Routes>
-          <Route path="/" element={ <Home /> }/>
-          <Route path="/songs" element={ <SongPage /> }/>
-          <Route path="/albums" element={ <AlbumPage /> }/>
-          <Route path="/artists" element={ <ArtistsPage /> }/>
-          <Route path="/queue" element={ <QueueOverviewPage /> }/>
-          <Route path="/playlists" element={ <PlaylistPage /> }/>
-          <Route path="/settings" element={ <Settings /> }/>
+    <div 
+      // onContextMenu={(e) => { e.preventDefault(); }}
+    >
+      <BrowserRouter>
+        <CustomWindowsBar />
+        <RightSideBar />
+        <MusicControls />
+        <div className="content">
+          <Routes>
+            <Route path="/" element={ <Home /> }/>
+            <Route path="/songs" element={ <SongPage /> }/>
+            <Route path="/albums" element={ <AlbumPage /> }/>
+            <Route path="/artists" element={ <ArtistsPage /> }/>
+            <Route path="/queue" element={ <QueueOverviewPage /> }/>
+            <Route path="/playlists" element={ <PlaylistPage /> }/>
+            <Route path="/settings" element={ <Settings /> }/>
 
-          <Route path="/albums/overview" element={ <AlbumOverviewPage />} />
-          <Route path="/artists/overview" element={ <ArtistOverviewPage />} />
-          <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
-        </Routes>
-      </div>
-        
-    </BrowserRouter>
+            <Route path="/albums/overview" element={ <AlbumOverviewPage />} />
+            <Route path="/artists/overview" element={ <ArtistOverviewPage />} />
+            <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
+          </Routes>
+        </div>
+          
+      </BrowserRouter>
+    </div>
   );
 }
 

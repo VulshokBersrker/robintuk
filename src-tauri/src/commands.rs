@@ -68,10 +68,12 @@ pub fn player_get_queue_length(state: State<AppState, '_>) -> Result<usize, Stri
 #[tauri::command]
 pub fn player_update_queue_and_pos(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String>  {
     state.player.lock().unwrap().set_queue(queue);
-    state.player.lock().unwrap().update_current_index(index);
+    let _ = state.player.lock().unwrap().update_current_index(index);
 
     Ok(())
 }
+
+
 // ----------------- Media Control Commands
 
 #[tauri::command]

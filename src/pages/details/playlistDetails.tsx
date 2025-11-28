@@ -1,20 +1,26 @@
 // Core Libraries
 import { useLocation, useNavigate } from "react-router-dom";
 import { open } from '@tauri-apps/plugin-dialog';
+import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
-import { listen } from "@tauri-apps/api/event";
+
 
 // Custom Components
-import { GetCurrentSong, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
+import { ContextMenu, GetCurrentSong, PlaylistList, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
+import CustomContextMenu from "../../components/customContextMenu";
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Images
+import QueueIcon from '../../images/rectangle-list-regular-full.svg';
 import EditIcon from '../../images/pen-to-square-regular-full.svg';
 import DeleteIcon from '../../images/trash-can-regular-full.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
+import AddIcon from '../../images/plus-solid-full.svg';
+import CloseIcon from '../../images/x.svg';
+
 
 interface PlaylistDetails {
     name: string,
@@ -41,9 +47,16 @@ export default function PlaylistOverviewPage() {
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
 
+    // Playlist Values
+    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
+    const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
+    const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
+
     const[isCurrent, setIsCurrent] = useState<Songs>({ id: "", name: "", path: "", cover: "", release: "", track: 0, album: "",
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0
     });
+
+    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0 });
 
     // On first load get the playlits details
     useEffect(() => {
@@ -56,9 +69,17 @@ export default function PlaylistOverviewPage() {
 
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
+
+        const handler = (e: any) => {
+            if(!contextMenu.isToggled) {
+                resetContextMenu();
+            }
+        }
+        document.addEventListener('click', handler);
         
         return () => {
             unlisten_get_current_song.then(f => f());
+            document.removeEventListener('click', handler);
         }
     }, []);
 
@@ -69,10 +90,15 @@ export default function PlaylistOverviewPage() {
         const checkCurrentSong = localStorage.getItem("last-played-song");
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
-        }
-
-        
+        }        
     }, [location.state.name]);
+
+    function navigateToAlbum(album: string) {
+        navigate("/albums/overview", {state: {name: album}});
+    }
+    function navigateToArtist(artist: string) {
+        navigate("/artists/overview", {state: {name: artist}});
+    }
 
     // --------------------------- Playlist Functions ---------------------------
 
@@ -166,12 +192,87 @@ export default function PlaylistOverviewPage() {
     }
 
 
+    // ------------ Selection Bar Functions ------------
+    useEffect(() => {
+        const fetchData = async() => {
+            const list: PlaylistList[] | undefined = await getAllPlaylists();
+            if(list !== undefined) {
+                setPlaylistList(list);
+            }
+        }
+        fetchData();        
+    }, []);
+
+    async function addToQueue() {
+        try {
+            const q = localStorage.getItem("last-played-queue")
+            if(q !== null) {
+                const oldQ = JSON.parse(q);
+
+                await invoke('player_add_to_queue', {queue: songSelection});
+                const newQ = [...oldQ, songSelection];
+                localStorage.setItem("last-played-queue", JSON.stringify(newQ) );
+            }
+            
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            const test = await invoke('player_get_queue');
+            console.log(test)
+            clearSelection();
+        }
+    }
+    
+    async function addToPlaylist(name: string) {
+        try {
+            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            setDisplayAddToMenu(false);
+            clearSelection();
+        }
+    }
+
+    async function createPlaylist(name: string) {
+        try {
+            await invoke('create_playlist', {name: name});
+            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            setDisplayAddToMenu(false);
+            clearSelection();
+        }
+    }
+
+    async function getAllPlaylists() {
+        try {
+            const playlists: PlaylistList[] = await invoke('get_all_playlists');
+            if(playlists.length !== 0) {
+                return playlists;
+            }
+            else {
+                return [];
+            }            
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
     // Selection Function
     function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
-            console.log("Adding song: " + song.name);
             setSongSelection([...songSelection, song]);
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = true;
@@ -181,7 +282,6 @@ export default function PlaylistOverviewPage() {
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            console.log("Removing song: " + song.name);
             setSongSelection(songSelection.filter(item => item.id !== song.id));
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
@@ -197,6 +297,8 @@ export default function PlaylistOverviewPage() {
         }
         setCheckBoxNumber(tempArr);
     }
+
+    // ------------ End of Selection Bar Functions ------------
 
     async function shufflePlaylist() {
         try {
@@ -219,6 +321,20 @@ export default function PlaylistOverviewPage() {
         }
     }
 
+    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+        if(e.pageX < window.innerWidth / 2) {
+            setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+        }
+        else {
+            setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+        }
+    }
+
+    function resetContextMenu() {
+        console.log("Resetting Context Menu");
+        setContextMenu({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0});
+    }
+
 
 
     if(loading === true) {
@@ -231,10 +347,56 @@ export default function PlaylistOverviewPage() {
     else if(loading === false && playlist.length !== 0) {
         return(
             <div className="album-container">
+                
+                {/* Song Selection Bar */}
+                <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
+                    <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                    <div className="section-4 position-relative">
+                        <button className="d-flex align-items-center">
+                            <img src={PlayIcon} />
+                            &nbsp;Play
+                        </button>
+                    </div>
+                    <div className="section-6 position-relative">
+                        <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
+                            <img src={AddIcon} />
+                             &nbsp;Add to
+                        </button>
+
+                        {displayAddToMenu &&
+                            <div className="playlist-list-container header-font">
+                                <div className="d-flex align-items-center" onClick={addToQueue}>
+                                    <img src={QueueIcon} className="icon-size"/>
+                                    &nbsp;Queue
+                                </div>
+                                <hr/>
+                                <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                    <input
+                                        id="new_playlist_input" type="text" placeholder="New Playlist"
+                                        className="new-playlist" value={newPlaylistName}
+                                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                                    />
+                                    <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                </span>
+                                
+                                {playlistList?.map((playlist) => {
+                                    return(
+                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            {playlist.name}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        }
+                    </div>
+                    <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
+                </div>                    
+                {/* End of Song Selection Bar */}
+
                 <div className="d-flex top-row justify-content-between">
                     <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                 </div>
-                {/* Album Details */}
+                {/* Playlist Details */}
                 <div className="d-flex">
                     <div className="album-details d-flex">   
                         <div onClick={AddCustomPlaylistArtwork} className="image-upload">
@@ -252,8 +414,8 @@ export default function PlaylistOverviewPage() {
                             <div className="section-15 d-flex album-commmands">
                                 <span><button className="font-1 borderless" onClick={() => playPlaylist(0)}><img src={PlayIcon} className=""    /></button></span>
                                 <span><button className="font-1 borderless" onClick={shufflePlaylist}><img src={ShuffleIcon} className="" /></button></span>
-                                <span><button className="font-1 borderless"><img src={EditIcon} className="icon"/></button></span>
-                                <span><button className="font-1 borderless" onClick={deletePlaylist}><img src={DeleteIcon} className="icon"/></button></span>
+                                <span><button className="font-1 borderless"><img src={EditIcon} /></button></span>
+                                <span><button className="font-1 borderless" onClick={() => {}}><img src={DeleteIcon} /></button></span>
                             </div>
                         </span>
                     </div>
@@ -265,14 +427,20 @@ export default function PlaylistOverviewPage() {
                         <span className="section-2"></span>
                         <span className="section-9 vertical-centered font-0 details">Name</span>
                         <span className="section-4 vertical-centered font-0 details">Album</span>
-                        <span className="section-4 vertical-centered font-0 details">Artist</span>
+                        <span className="section-4 vertical-centered font-0 details">Album Artist</span>
                         <span className="section-1 details">Length</span>
                     </div>
                     <hr />
                     {playlist.map((song, i) => {
                         return(
                             <div key={i}>
-                                <div className={`grid-20 song-row playlist align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}>
+                                <div 
+                                    className={`grid-20 song-row playlist align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        handleContextMenu(e, song.album, song.album_artist, i);
+                                    }}
+                                >
                                     <span className="section-1 play">
                                         <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
                                             <input
@@ -285,8 +453,8 @@ export default function PlaylistOverviewPage() {
                                     </span>
                                     <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={song.cover} alt="" image_type="playlist-song" /></span>
                                     <span className="section-9 font-0 name">{song.name}</span>
-                                    <span className="section-4 font-0 line-clamp-2 artist">{song.album}</span>
-                                    <span className="section-4 font-0 line-clamp-2 artist">{song.artist}</span>
+                                    <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(song.album)}>{song.album}</span>
+                                    <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(song.album_artist)}>{song.album_artist}</span>
                                     <span className="section-1 header-font duration">{new Date(song.duration * 1000).toISOString().slice(14, 19)}</span>
                                 </div>
                                 <hr />
@@ -294,135 +462,21 @@ export default function PlaylistOverviewPage() {
                         );
                     })}
                 </div>
+
+                <CustomContextMenu
+                    isToggled={contextMenu.isToggled}
+                    context_type={contextMenu.context_type}
+                    song={playlist[contextMenu.index]}
+                    album={contextMenu.album}
+                    artist={contextMenu.artist}
+                    index={contextMenu.index}
+                    posX={contextMenu.posX}
+                    posY={contextMenu.posY}
+                    play={playPlaylist}
+                    editSelection={editSelection}
+                    isBeingAdded={checkBoxNumber[contextMenu.index]}
+                />
             </div>
         );
     }
 }
-
-type P = {
-    selection: Songs[],
-    clearSelection: () => void
-}
-interface PlaylistList {
-    name: string
-}
-
-function SelectionPopup({selection, clearSelection}: P) {
-
-    const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
-    const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
-
-    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
-
-    useEffect(() => {
-
-        const fetchData = async() => {
-            const list: PlaylistList[] | undefined = await getAllPlaylists();
-            if(list !== undefined) {
-                setPlaylistList(list);
-                console.log("Playlist names: ");
-                console.log(list);
-            }
-        }
-        fetchData();        
-    }, []);
-
-    async function addToQueue() {
-        try {
-            await invoke('player_add_to_queue', {queue: selection});
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            await invoke('get_appended_queue');
-            clearSelection();
-        }
-    }
-    
-    async function addToPlaylist(name: string) {
-        try {
-            await invoke('add_to_playlist', {songs: selection, playlist_name: name});
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            clearSelection();
-        }
-    }
-
-    async function createPlaylist(name: string) {
-        try {
-            await invoke('create_playlist', {name: name});
-            await invoke('add_to_playlist', {songs: selection, playlist_name: name});
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            clearSelection();
-        }
-    }
-
-    async function getAllPlaylists() {
-        try {
-            const playlists: PlaylistList[] = await invoke('get_all_playlists',);
-            console.log(playlists);
-            if(playlists.length !== 0) {
-                return playlists;
-            }
-            else {
-                return [];
-            }            
-        }
-        catch(e) {
-            console.log(e);
-        }
-    }
-
-    function Playlist_List() {
-        return(
-            <div className="playlist-list-container">
-                <div className="" onClick={addToQueue}> Queue </div>
-                <hr/>
-                <span className="d-flex justify-content-center align-items-center">
-                    <input
-                        id="new_playlist_input"
-                        type="text"
-                        className="new-playlist"
-                        placeholder="New Playlist"
-                        value={newPlaylistName}
-                        onChange={(e) => setNewPlaylistName(e.target.value)}
-                    />
-                    <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
-                </span>
-                
-                {playlistList?.map((playlist) => {
-                    return(
-                        <div onClick={() => addToPlaylist(playlist.name)}>
-                            {playlist.name}
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    }
-
-    return(
-        <div className="selection-popup-container vertical-centered grid-20">
-            <div className="section-4">{selection.length} items selected</div>
-            <div className="section-3"><button className="d-flex align-items-center"><img src={PlayIcon} />Play</button></div>
-            <div className="section-3 position-relative">
-                <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
-                {displayAddToMenu && <Playlist_List />}
-            </div>
-
-            {/* Only show when you are on a playlist or queue */}
-            <div className="section-3"><button>Remove</button></div>
-            <span className="section-1" onClick={clearSelection}>X</span>
-        </div>
-    );
-}
-
-

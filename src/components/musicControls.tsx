@@ -409,7 +409,7 @@ export default function MusicControls() {
                                 </div>
 
                                 <div className="play-button" id="previous">
-                                    <img src={BackwardButton} alt="" className={`icon ${songDetails === undefined ? "disabled" : ""}`}  onClick={previousSong}/>
+                                    <img src={BackwardButton} alt="" className={`${songDetails === undefined ? "disabled" : ""}`}  onClick={previousSong}/>
                                 </div>
 
                                 
@@ -418,7 +418,7 @@ export default function MusicControls() {
                                         <div className="play-container" onClick={playMusic}>
                                             <img
                                                 src={PlayButton} alt="play icon"
-                                                className={`play-pause-icon icon ${songDetails === undefined ? "disabled" : ""}`}
+                                                className={`play-pause-icon ${songDetails === undefined ? "disabled" : ""}`}
                                             />
                                             <img src={Circle} className="circle"/>
                                         </div>
@@ -427,7 +427,7 @@ export default function MusicControls() {
                                         <div className="play-container" onClick={pauseMusic}>
                                             <img
                                                 src={PauseButton} alt=""
-                                                className={`play-pause-icon icon ${songDetails === undefined ? "disabled" : ""}`}
+                                                className={`play-pause-icon ${songDetails === undefined ? "disabled" : ""}`}
                                             />
                                             <img src={Circle} className="circle"/>
                                         </div>                                    
@@ -435,7 +435,7 @@ export default function MusicControls() {
                                 </div>
 
                                 <div className="play-button" id="next">
-                                    <img src={ForwardButton} alt="" className={`icon icon-flip ${songDetails === undefined ? "disabled" : ""}`} onClick={nextSong}/>
+                                    <img src={ForwardButton} alt="" className={`icon-flip ${songDetails === undefined ? "disabled" : ""}`} onClick={nextSong}/>
                                 </div>
 
                                 <div className="play-button" id="repeat">
@@ -470,8 +470,8 @@ export default function MusicControls() {
                         </div>
                         <div className="section-4 d-flex align-items-center justify-content-end"> 
                             <div className="d-flex">
-                                {volume === 0 && <img src={VolumeEmpty} alt="" className="icon volume-icon"/>}
-                                {(volume > 0 ) && <img src={VolumeStandard} alt="" className="icon volume-icon" onClick={() => updateVolume(0)}/>}
+                                {volume === 0 && <img src={VolumeEmpty} alt="" className="volume-icon"/>}
+                                {(volume > 0 ) && <img src={VolumeStandard} alt="" className="volume-icon" onClick={() => updateVolume(0)}/>}
 
                                 <input
                                     type="range" min={0} max={60}

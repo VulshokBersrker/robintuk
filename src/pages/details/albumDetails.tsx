@@ -5,8 +5,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { GetCurrentSong, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
+import { ContextMenu, GetCurrentSong, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
+import CustomContextMenu from "../../components/customContextMenu";
 
 // Image Components
 import QueueIcon from '../../images/rectangle-list-regular-full.svg';
@@ -16,6 +17,7 @@ import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import SearchIcon from '../../images/search_icon.svg';
 import CloseIcon from '../../images/x.svg';
+
 
 interface AlbumDetails {
     name: string,
@@ -57,6 +59,8 @@ export default function AlbumOverviewPage() {
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0
     });
 
+    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+
     // On first load get the album details
     useEffect(() => {
         getAlbum();
@@ -67,7 +71,19 @@ export default function AlbumOverviewPage() {
         }
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
-        return () => { unlisten_get_current_song.then(f => f()); } 
+
+        const handler = (e: any) => {
+            if(!contextMenu.isToggled) {
+                resetContextMenu();
+            }
+        }
+        document.addEventListener('click', handler);
+
+
+        return () => {
+            unlisten_get_current_song.then(f => f());
+            document.removeEventListener('click', handler);
+        } 
     }, []);
 
     async function getAlbum() {
@@ -215,6 +231,7 @@ export default function AlbumOverviewPage() {
             console.log(e);
         }
         finally {
+            setDisplayAddToMenu(false);
             clearSelection();
         }
     }
@@ -229,6 +246,7 @@ export default function AlbumOverviewPage() {
             console.log(e);
         }
         finally {
+            setDisplayAddToMenu(false);
             clearSelection();
         }
     }
@@ -250,6 +268,20 @@ export default function AlbumOverviewPage() {
 
     // ------------ End of Selection Bar Functions ------------
 
+    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+        if(e.pageX < window.innerWidth / 2) {
+            setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+        }
+        else {
+            setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+        }
+    }
+
+    function resetContextMenu() {
+        console.log("Resetting Context Menu");
+        setContextMenu({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0});
+    }
+
 
     if(loading === true) {
         return(
@@ -261,6 +293,7 @@ export default function AlbumOverviewPage() {
     else if(loading === false && albumList.length !== 0 && discs.length > 0) {
         return(
             <div className="album-container">
+
                 {/* Song Selection Bar */}
                 <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
                     <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
@@ -293,7 +326,7 @@ export default function AlbumOverviewPage() {
                             </div>
                         }
                     </div>
-                    <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} className="icon"/></span>
+                    <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
                 </div>                    
                 {/* End of Song Selection Bar */}
                 
@@ -326,7 +359,7 @@ export default function AlbumOverviewPage() {
                                 <div className="section-15 d-flex album-commmands">
                                     <span><button className="font-1 borderless" onClick={() => playSong(0)}><img src={PlayIcon} /></button></span>
                                     <span><button className="font-1 borderless" onClick={shuffleAlbum} ><img src={ShuffleIcon} /></button></span>
-                                    <span><button className="font-1 borderless" ><img src={AddIcon} className="icon"/> </button></span>
+                                    <span><button className="font-1 borderless" ><img src={AddIcon} /> </button></span>
                                 </div>
                             </span>
                         </div>
@@ -365,7 +398,13 @@ export default function AlbumOverviewPage() {
                                     if(disc_number === song.disc_number) {
                                         return(
                                             <div key={i}>
-                                                <div className={`grid-20 song-row align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}>
+                                                <div
+                                                    className={`grid-20 song-row align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}
+                                                    onContextMenu={(e) => {
+                                                        e.preventDefault();
+                                                        handleContextMenu(e, song.album, song.album_artist, i);
+                                                    }}
+                                                >
                                                     <span className="section-1 play">
                                                         <span className="form-control">
                                                             <input
@@ -392,6 +431,19 @@ export default function AlbumOverviewPage() {
                     })}
 
                     <div className="empty-space" />
+                    <CustomContextMenu
+                        isToggled={contextMenu.isToggled}
+                        context_type={contextMenu.context_type}
+                        song={albumList[contextMenu.index]}
+                        album={contextMenu.album}
+                        artist={contextMenu.artist}
+                        index={contextMenu.index}
+                        posX={contextMenu.posX}
+                        posY={contextMenu.posY}
+                        play={playSong}
+                        editSelection={editSelection}
+                        isBeingAdded={checkBoxNumber[contextMenu.index]}
+                    />
                 </div>
             </div>
         );

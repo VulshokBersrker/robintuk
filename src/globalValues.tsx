@@ -48,6 +48,16 @@ export interface PlaylistList {
     name: string
 }
 
+export interface ContextMenu {
+    isToggled: boolean,
+    context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
+    album: string,
+    artist: string,
+    index: number,
+    posX: number,
+    posY: number
+}
+
 export type GetCurrentSong = { q: Songs; };
 
 

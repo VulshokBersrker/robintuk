@@ -44,17 +44,10 @@ export default function ListVirtualization({song_data}: Props) {
 
             <div ref={parentRef} className="virtual-scroller" >
                 <div
-                    style={{
-                        height: virtualizer.getTotalSize(),
-                        width: '100%',
-                        position: 'relative',
-                    }}
+                    style={{ height: virtualizer.getTotalSize(),  width: '100%', position: 'relative', }}
                 >
                     <div className=""
-                        style={{
-                            width: '100%',
-                            transform: `translateY(${items[0]?.start ?? 0}px)`,
-                        }}
+                        style={{ width: '100%', transform: `translateY(${items[0]?.start ?? 0}px)`, }}
                     >
                         {items.map((virtualRow) => (
                             <div
@@ -63,10 +56,7 @@ export default function ListVirtualization({song_data}: Props) {
                                 ref={virtualizer.measureElement}
                                 className={`song-list`}
                             >
-                                
                                 <RowComponent song={song_data[virtualRow.index]}/>
-                                {/* <div>Row {virtualRow.index} - {song_data[virtualRow.index].name}</div> */}
-                                
                             </div>
                         ))}
                         <div className="empty-space" />

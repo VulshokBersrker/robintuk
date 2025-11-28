@@ -287,10 +287,10 @@ button {
   user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 
   border-radius: var(--border-radius);
-  border: 1px solid #fff;
-  color: #fff;
+  border: 2px solid var(--font-color-three);
+  color: var(--font-color-one);
   background-color: rgba(0, 0, 0, 0.0);
-  padding: 12px;
+  padding: 8px 14px 8px 14px;
 }
 
 button:hover {
@@ -451,6 +451,10 @@ img.off {
   filter: brightness(0) saturate(100%) invert(36%) sepia(94%) saturate(0%) hue-rotate(210deg) brightness(95%) contrast(94%);
 }
 
+.disable-scroll {
+  overflow-y: hidden !important;
+}
+
 /* Padding for when the sidebar is collapsed */
 .content {
   position: relative;
@@ -501,7 +505,7 @@ img.off {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: 700;
 }
 .titlebar > .controls {
   display: flex;
@@ -530,22 +534,23 @@ img.off {
   background-color: transparent;
   color: var(--font-color-one);
 }
-.titlebar button .icon {
+.titlebar button img {
   /* appearance: none; */
   width: 20px;
   height: auto;
 }
-.titlebar button:hover {
-  background: rgba(0, 0, 0, 0.6);
+.titlebar button:hover,
+#titlebar-settings:hover {
+  background: rgba(0, 0, 0, 0.8);
 }
 #titlebar-close:hover {
-  background: rgba(211, 0, 0, 0.5);
+  background: rgba(211, 0, 0, 0.6);
 }
 #titlebar-settings {
   padding: 0px;
-  padding-left: 9px;
-  padding-right: 9px;
-  margin: 0px;
+  margin-left: 9px;
+  margin-right: 10px;
+  /* margin: 0px; */
   border: none;
   display: inline-flex;
   justify-content: center;
@@ -555,7 +560,7 @@ img.off {
   background-color: transparent;
   color: var(--font-color-one);
 }
-#titlebar-settings .icon {
+#titlebar-settings img {
   /* appearance: none; */
   width: 20px;
   height: auto;
@@ -1272,10 +1277,9 @@ input[type="checkbox"]:disabled {
 
 .selection-popup-container {
   z-index: 98;
-  position: sticky;
+  position: fixed;
   border-radius: var(--border-radius);
-  top: 35px;
-  left: 50%;
+  left: 55%;
   transform: translateX(-50%);
   width: 500px;
   height: 50px;
@@ -1284,8 +1288,9 @@ input[type="checkbox"]:disabled {
   align-items: center;
   align-content: center;
   /* To offset it's effect on other elements */
-  margin-bottom: -54px;
+  /* margin-bottom: -54px; */
 }
+
 
 .selection-popup-container.closed {
   opacity: 0;
@@ -1295,7 +1300,7 @@ input[type="checkbox"]:disabled {
 
 .selection-popup-container.open {
   opacity: 1;
-  top: 35px;
+  top: 55px;
   transition: 0.2s ease-in-out;
 }
 
@@ -1304,6 +1309,10 @@ input[type="checkbox"]:disabled {
 }
 .selection-popup-container span {
   margin-right: 25px;
+}
+.selection-popup-container img {
+  height: 20px;
+  width: 20px;
 }
 
 button img {
@@ -1368,6 +1377,11 @@ button img {
   border: 0;
 }
 
+.song-row .artist:hover,
+.song-row .album:hover {
+  cursor: pointer;
+}
+
 .virtual-scroller {
   padding-top: 20px;
   position: relative !important;
@@ -1384,7 +1398,7 @@ button img {
 .playlist-list-container {
   position: absolute;
   top: 50%;
-  transform: translate(-43%, 12%);
+  transform: translate(-43%, 15%);
   left: 0px;
   width: 250px;
   background: var(--gradient-two);
@@ -1686,7 +1700,44 @@ input.new-playlist {
 }
 
 
+/* ---------- Context Menu Styles ---------- */
+.context-menu-container {
+  width: 150px;
+  background: var(--gradient-two);
+  border: 2px solid var(--font-color-three);
+  padding: 0px 5px 10px 5px;
+  border-radius: var(--border-radius);
+}
 
+
+
+.context-menu-container li {
+  list-style: none;
+  margin: 0;
+  margin-top: 5px;
+  padding: 8px 8px 8px 8px;
+  transition: 0.1s ease-in-out;
+}
+.context-menu-container img {
+  height: 20px;
+  width: 20px;
+}
+
+.context-menu-container li:hover {
+  cursor: pointer;
+  background-color: var(--gradient-one);
+  border-radius: var(--border-radius);
+  transition: 0.1s ease-in-out;
+}
+
+.context-menu-container hr {
+  background-color: var(--font-color-three);
+  opacity: 1;
+  height: 2px;
+  width: 104%;
+  margin-left: -5px;
+  border: 0;
+}
 
 /*  Old Search values */
 .search-filters {

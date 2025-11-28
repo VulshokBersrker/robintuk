@@ -47,20 +47,20 @@ export default function CustomWindowsBar() {
     return(
         <div className="titlebar">
             <div data-tauri-drag-region></div>
-            {/* <div className="logo"><img src={AppLogo} className="window-logo"/></div> */}
+            <div className="logo"><img src={AppLogo} className="window-logo"/></div>
             <div className="controls">
                 <Link to="/settings" className="" id="titlebar-settings" title="settings">
-                    <img src={SettingsIcon} className="icon"/>
+                    <img src={SettingsIcon} />
                 </Link>
                 <button className="" id="titlebar-minimize" title="minimize" onClick={() => appWindow.minimize()}>
-                    <img src={MinimizeWindowIcon} className="icon"/>
+                    <img src={MinimizeWindowIcon} />
                 </button>
                 <button id="titlebar-maximize" title="maximize" className="border" onClick={() => { setIsMaximized(!isMaximized); appWindow.toggleMaximize(); }}>
-                    {isMaximized === false && <img src={FullscreenWindowIcon} className="icon"/>}
-                    {isMaximized === true && <img src={TabWindowIcon} className="icon"/>}
+                    {isMaximized === false && <img src={FullscreenWindowIcon} />}
+                    {isMaximized === true && <img src={TabWindowIcon} />}
                 </button>
                 <button id="titlebar-close" title="close" onClick={() => appWindow.close()}>
-                    <img src={CloseWindowIcon} className="icon"/>
+                    <img src={CloseWindowIcon} />
                 </button>
             </div>
         </div>

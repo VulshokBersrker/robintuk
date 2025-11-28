@@ -4,14 +4,14 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { saveQueue, Songs, savePosition, AlbumRes } from "../globalValues";
+import { saveQueue, Songs, savePosition, AlbumRes, ContextMenu } from "../globalValues";
+import CustomContextMenu from '../components/customContextMenu.js';
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
 import EllipsisIcon from '../images/ellipsis-solid-full.svg';
 import PlayIcon from '../images/play-icon-outline.svg';
 import SearchIcon from '../images/search_icon.svg';
-
 
 // Need to add filtering, should be easy because all the data is there
 // Begin work on caching data
@@ -28,6 +28,9 @@ export default function AlbumPage() {
     const [searchValue, setSearchValue] = useState<string>("");
 
     const [filteredAlbums, setFilteredAlbums] = useState<AlbumRes[]>([]);
+
+    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "album", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+
 
     async function getAlbums() {
         try {
@@ -78,6 +81,20 @@ export default function AlbumPage() {
             temp.push({ name: albumList[i].name, section: temp_section });
         }
         setFilteredAlbums(temp);
+    }
+
+    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+        if(e.pageX < window.innerWidth / 2) {
+            setContextMenu({ isToggled: true, context_type: "album", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+        }
+        else {
+            setContextMenu({ isToggled: true, context_type: "album", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+        }
+    }
+
+    function resetContextMenu() {
+        console.log("Resetting Context Menu");
+        setContextMenu({ isToggled: false, context_type: "album", album: "", artist: "", index: 0, posX: 0, posY: 0});
     }
 
     if(loading) {
@@ -175,6 +192,19 @@ export default function AlbumPage() {
                     })}                
                 </div>
                 <div className="empty-space" />
+                {/* <CustomContextMenu
+                    isToggled={contextMenu.isToggled}
+                    context_type={contextMenu.context_type}
+                    song={albumList[contextMenu.index]}
+                    album={contextMenu.album}
+                    artist={contextMenu.artist}
+                    index={contextMenu.index}
+                    posX={contextMenu.posX}
+                    posY={contextMenu.posY}
+                    play={playSong}
+                    editSelection={editSelection}
+                    isBeingAdded={checkBoxNumber[contextMenu.index]}
+                /> */}
             </div>
         );
     }    
