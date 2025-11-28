@@ -181,7 +181,7 @@ export default function AlbumPage() {
                                                 </div>
                                                 <div className="album-image-name header-font">
                                                     <div className="album-name">{entry.album}</div>
-                                                    <div className="artist-name">{entry.artist}</div>
+                                                    <div className="artist-name">{entry.album_artist}</div>
                                                 </div>
                                             </div>
                                         </div>

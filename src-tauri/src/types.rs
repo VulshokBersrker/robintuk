@@ -66,7 +66,7 @@ pub struct DirsTable {
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct AllAlbumResults {
     pub album: String,
-    pub artist: String,
+    pub album_artist: String,
     pub cover: String,
 }
 

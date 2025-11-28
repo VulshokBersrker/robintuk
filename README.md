@@ -16,17 +16,17 @@ A beautiful and colorful music player for **Windows**.
 
 ## Main Features
 
-- Play most music formats (mp3 at the moment)
-- Smooth performance even with 11,000 songs loaded
-- Add custom playlist artwork
+- Play most music formats (only mp3 at the moment)
+- Good performance even with 11,000 songs loaded
+- Custom playlist artwork
 - Customize the look with multiple theme colors
 
-## [Screenshots](./assets/index.md)
+## [Screenshots](./assets/screenshots/index.md)
 
 
 ![](./assets/screenshots/1.png)
 ![](./assets/screenshots/2.png)
-![](./assets/screenshots/3.png)
+![](./assets/screenshots/6.png)
 
 
 More: [See all screenshots](./assets/screenshots/index.md)
@@ -46,19 +46,18 @@ Made with Tauri (React and Rust).
 - [ ] Notification of version update
 - [ ] Song details screen
 - [ ] Smoother music progress bar
-- [ ] Custom context menu when hovering on songs/albums
+- [ ] Custom context menu when hovering on songs/albums (In progress)
 - [ ] Installer Wizard
 - [ ] Open with (in file explorer)
 - [ ] Mini Player
 - [ ] Remember last 100 played songs/albums
-- [ ] Custom Home/Welcome screen
 - [ ] New default playlist icons
-- [ ] New default image for missing album artwork
 - [ ] Remember scroll position on page back
 - [ ] Force scrollbar to stop before music control section
 - [ ] Add support for flac and wav
 - [ ] Create a Genre section
 - [ ] Lock navigation when scanning for new music from settings?
+- [x] Home/Welcome screen
 - [x] Search (on songs, albums, and artists pages)
 - [x] Shuffle Controls
 - [x] Display the queue

@@ -28,7 +28,7 @@ export interface AlbumRes {
 
 export interface AlbumDetails {
     album: string,
-    artist: string,
+    album_artist: string,
     cover: string
 }
 
@@ -46,6 +46,12 @@ export interface Playlists {
 
 export interface PlaylistList {
     name: string
+}
+
+export interface PlaylistFull {
+    name: string,
+    image: string,
+    songs: Songs[],
 }
 
 export interface ContextMenu {

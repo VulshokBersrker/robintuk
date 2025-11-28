@@ -374,6 +374,7 @@ export default function MusicControls() {
                         <input
                             type="range"
                             min={0}
+                            step="0.01"
                             max={songDetails?.duration}
                             className="progress-bar"
                             value={songProgress}

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 
 // Custom Components
-import { ContextMenu, GetCurrentSong, PlaylistList, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
+import { ContextMenu, GetCurrentSong, PlaylistFull, PlaylistList, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
 import CustomContextMenu from "../../components/customContextMenu";
 import ImageWithFallBack from "../../components/imageFallback";
 
@@ -27,12 +27,6 @@ interface PlaylistDetails {
     total_duration: number,
     image: string,
     num_songs: number,
-}
-
-interface PlaylistFull {
-    name: string,
-    image: string,
-    songs: Songs[],
 }
 
 export default function PlaylistOverviewPage() {

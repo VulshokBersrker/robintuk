@@ -34,7 +34,6 @@ export default function ArtistOverviewPage() {
     // On first load get the album details
     useEffect(() => {
         getAlbums();
-
     }, []);
 
     async function getAlbums() {
@@ -198,7 +197,7 @@ export default function ArtistOverviewPage() {
                             </span>
                             
                             <div className="section-15 d-flex album-commmands">
-                                <span><button className="font-1 d-flex align-items-center" ><img src={PlayIcon} />Play All</button></span>
+                                <span><button className="font-1 d-flex align-items-center" ><img src={PlayIcon} />&nbsp;Play All</button></span>
                                 <span><button className="font-1 borderless" ><img src={ShuffleIcon} /></button></span>
                                 <span><button className="font-1 borderless" ><img src={AddIcon} /> </button></span>
                             </div>
@@ -222,7 +221,7 @@ export default function ArtistOverviewPage() {
                                         </div>
                                         <div className="album-image-name header-font">
                                             <div className="album-name">{entry.album}</div>
-                                            <div className="artist-name">{entry.artist}</div>
+                                            <div className="artist-name">{entry.album_artist}</div>
                                         </div>
                                     </div>
                                 </div>

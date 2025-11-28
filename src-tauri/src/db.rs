@@ -217,6 +217,18 @@ pub async fn get_song_by_path(state: State<AppState, '_>, path: String) -> Resul
     Ok(temp)
 }
 
+#[tauri::command(rename_all = "snake_case")]
+pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<SongTable>, String> {
+
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>(
+        "SELECT * FROM songs ORDER BY name ASC LIMIT $1")
+        .bind(limit)
+        .fetch_all(&state.pool)
+        .await
+        .unwrap();
+
+    Ok(temp)
+}
 
 // Add a song to the database
 // -- Check the song to make sure no duplicate songs are being added?
@@ -255,7 +267,7 @@ pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AlbumRes>,
 
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
         "
-        SELECT DISTINCT album, artist, cover FROM songs
+        SELECT DISTINCT album, album_artist, cover FROM songs
         GROUP BY album ORDER BY album ASC;",
     )
     .fetch_all(&state.pool)
@@ -309,6 +321,20 @@ pub async fn get_album(state: State<AppState, '_>, name: String) -> Result<Vec<S
 }
 
 #[tauri::command(rename_all = "snake_case")]
+pub async fn get_albums_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<AllAlbumResults>, String> {
+
+    let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
+        "SELECT DISTINCT album, album_artist, cover FROM songs
+        GROUP BY album ORDER BY album ASC LIMIT $1")
+        .bind(limit)
+        .fetch_all(&state.pool)
+        .await
+        .unwrap();
+
+    Ok(temp)
+}
+
+#[tauri::command(rename_all = "snake_case")]
 pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: String) -> Result<ArtistDetailsResults, String> {
 
     let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album_artist=$1 ORDER BY album ASC;")
@@ -318,16 +344,17 @@ pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: String) ->
         .unwrap();
 
     let albums: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT DISTINCT album, artist, cover FROM songs WHERE album_artist=$1
+        "SELECT DISTINCT album, album_artist, cover FROM songs WHERE album_artist=$1
         GROUP BY album ORDER BY album ASC;",
     ).bind(&artist).fetch_all(&state.pool).await.unwrap();
 
     let mut duration: u64 = 0;
+    let album_artist: String = albums[0].album_artist.clone();
     for song in &temp {
         duration += song.duration;
     }
 
-    Ok(ArtistDetailsResults{ num_tracks: temp.len(), total_duration: duration, album_artist: artist, albums })
+    Ok(ArtistDetailsResults{ num_tracks: temp.len(), total_duration: duration, album_artist, albums })
 }
 
 // ------------------------------------ Genre Functions ------------------------------------
@@ -481,6 +508,19 @@ pub async fn get_playlist(state: State<AppState, '_>, name: String) -> Result<Pl
     }
 
     Ok(PlaylistFull{ name: playlist_details.name, image: playlist_details.image, songs: song_arr })
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn get_playlists_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<PlaylistTable>, String> {
+
+    let temp: Vec<PlaylistTable> = sqlx::query_as::<_, PlaylistTable>(
+        "SELECT * FROM playlists ORDER BY name ASC LIMIT $1")
+        .bind(limit)
+        .fetch_all(&state.pool)
+        .await
+        .unwrap();
+
+    Ok(temp)
 }
 
 #[tauri::command(rename_all = "snake_case")]

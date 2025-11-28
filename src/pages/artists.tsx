@@ -95,6 +95,7 @@ export default function ArtistsPage() {
                     }            
                 })}                
             </div>
+            <div className="empty-space" />
         </div>
     );
 }

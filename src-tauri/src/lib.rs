@@ -94,10 +94,12 @@ pub fn run() -> Result<(), String> {
             db::add_directory,
             db::remove_directory,
             // Song Functions - SQLITE
+            db::get_songs_with_limit,
             db::get_all_songs,
             db::get_song_by_path,
             db::get_song,
             // Album Functions - SQLITE
+            db::get_albums_with_limit,
             db::get_all_albums,
             db::get_album,
             // Genre Functions - SQLITE
@@ -108,6 +110,7 @@ pub fn run() -> Result<(), String> {
             db::get_all_artists,
             db::get_artist,
             // Playlist Functions - SQLITE
+            db::get_playlists_with_limit,
             db::get_all_playlists,
             db::add_to_playlist,
             db::get_playlist,
