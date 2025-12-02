@@ -64,7 +64,7 @@ export default function PlaylistOverviewPage() {
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
 
-        const handler = (e: any) => {
+        const handler = () => {
             if(!contextMenu.isToggled) {
                 resetContextMenu();
             }
@@ -260,7 +260,8 @@ export default function PlaylistOverviewPage() {
         }
     }
 
-    // Selection Function
+    // ------------ Start of Selection Bar Functions ------------
+    
     function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {

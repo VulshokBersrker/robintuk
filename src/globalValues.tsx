@@ -95,6 +95,26 @@ export function shuffle(array: Songs[]) {
     }
 }
 
+export async function playSelection(array: Songs[]) {
+    try {
+        console.log("playSelection");
+        console.log(array);
+        // Load the music to be played and saved
+        await invoke('player_load_album', {queue: array, index: 0});
+        await invoke('update_current_song_played');
+        saveQueue(array);
+        savePosition(0);
+    }
+    catch(e) {
+        console.log(e);
+    }
+    finally {
+        localStorage.setItem("shuffled-queue", JSON.stringify([]));
+        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+        await invoke("set_shuffle_mode", { mode: false });
+    }
+}
+
 export async function playAlbum(album_name: string) {
     try {
         const albumRes: Songs[] = await invoke('get_album', { name: album_name });
@@ -123,7 +143,6 @@ export async function playPlaylist(playlist_name: string) {
         await invoke('update_current_song_played');
         saveQueue(res.songs);
         savePosition(0);
-        await invoke('create_queue', { songs: res.songs });
     }
     catch (err) {
         alert(`Failed to play song: ${err}`);

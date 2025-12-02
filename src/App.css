@@ -1251,8 +1251,21 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   position: absolute;
 }
 
-/* -------------------------- Album Overview Page -------------------------- */
+.checkbox-container {
+  position: absolute;
+  top: 10px;
+  left: 4px;
+}
 
+.album-link:hover input[type="checkbox"] {
+  opacity: 1;
+}
+
+.checkbox-container input[type="checkbox"] {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* -------------------------- Album Overview Page -------------------------- */
 
 .top-row {
   padding-top: 5px;
@@ -1812,6 +1825,7 @@ input.new-playlist {
 
 /* ---------- Context Menu Styles ---------- */
 .context-menu-container {
+  z-index: 200;
   width: 150px;
   background: var(--gradient-two);
   border: 2px solid var(--font-color-three);
