@@ -210,7 +210,6 @@ export default function MusicControls() {
                 saveSong(details);
                 resetSongValues(true);
                 setSongLengthFormatted(new Date(details.duration * 1000).toISOString().slice(12, 19));
-                await invoke('add_song_to_history', { path: details.path });
             }
             
         }
