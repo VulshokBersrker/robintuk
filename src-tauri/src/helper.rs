@@ -4,8 +4,6 @@ use std::{
     hash::{DefaultHasher, Hash, Hasher},
     path::{Path, PathBuf},
 };
-// use base64::prelude::*;
-use uuid::Uuid;
 
 // Song Metadata Libraries
 use symphonia::core::formats::FormatOptions;
@@ -23,12 +21,6 @@ pub const ALPHABETICALLY_ORDERED: [char; 29] = [
     'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
     'W', 'X', 'Y', 'Z', '.'
 ];
-
-// Generates a unique UUID tag for the entry's id
-pub fn generate_uuid() -> String {
-    let id = Uuid::new_v4().to_string();
-    return id;
-}
 
 pub fn generate_cover_hash(value: u64) -> String {
     let mut s = DefaultHasher::new();
@@ -58,7 +50,7 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
         .map(|x| x.to_string())
         .unwrap();
 
-    let hash: String = generate_uuid();
+    // let hash: String = generate_uuid();
 
     // Create a probe hint using the file's extension. [Optional]
     let mut hint: Hint = Hint::new();
@@ -69,7 +61,6 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
     let fmt_opts: FormatOptions = Default::default(); // Get the instantiated format reader.
 
     let mut song_data: SongTableUpload = SongTableUpload {
-        id: Some(hash),
         path: path.to_string(),
         ..SongTableUpload::default()
     };
@@ -110,18 +101,65 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                             TrackTitle => {
                                 // If there is no name to the track, give it the name of the filename
                                 if Some(tag.value.to_string()) == None {
-                                    song_data.name = Some(
-                                        file_name.clone()
-                                            .replace(".mp3", "")
-                                            .replace(".flac", "")
-                                            .replace(".wav", ""),
-                                    );
-                                } else {
+                                    song_data.name = Some(file_name.clone().replace(".mp3", "").replace(".flac", "").replace(".wav", ""));
+
+                                    let name: String = file_name.clone().replace(".mp3", "").replace(".flac", "").replace(".wav", "");
+                                    let char_array: Vec<char> = name.chars().collect();
+                                    let first_char: char = char_array[0];
+                                    
+                                    // Special Characters
+                                    if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
+                                        || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
+                                        || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
+                                    {
+                                        song_data.song_section = Some(0);
+                                    }
+                                    // 0 - 9
+                                    else if first_char.is_ascii_digit() {
+                                        song_data.song_section = Some(1);
+                                    }
+                                    //  A - Z
+                                    else if first_char.is_ascii_alphabetic() {
+                                        let section = first_char as i32;
+                                        song_data.song_section = Some(section);
+                                    }
+                                    // Non-ascii values
+                                    else {
+                                        song_data.song_section = Some(300);
+                                    }
+                                }
+                                else {
                                     song_data.name = Some(tag.value.to_string());
+       
+                                    let name: String = tag.value.to_string();
+                                    let char_array: Vec<char> = name.chars().collect();
+                                    let first_char: char = char_array[0];
+
+                                    // Special Characters
+                                    if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
+                                        || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
+                                        || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
+                                    {
+                                        song_data.song_section = Some(0);
+                                    }
+                                    // 0 - 9
+                                    else if first_char.is_ascii_digit() {
+                                        song_data.song_section = Some(1);
+                                    }
+                                    //  A - Z
+                                    else if first_char.is_ascii_alphabetic() {
+                                        let section = first_char as i32;
+                                        song_data.song_section = Some(section);
+                                    }
+                                    // Non-ascii values
+                                    else {
+                                        song_data.song_section = Some(300);
+                                    }
+                                    
                                 }
                             }
                             Artist => song_data.artist = Some(tag.value.to_string()),
-                            Album => song_data.album = Some(tag.value.to_string()),
+                            Album =>  song_data.album = Some(tag.value.to_string()),
                             AlbumArtist => song_data.album_artist = Some(tag.value.to_string()),
                             Date => song_data.release = Some(tag.value.to_string()),
                             Genre => song_data.genre = Some(tag.value.to_string()),
@@ -132,13 +170,16 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                                     if value.find("/") != None {
                                         let disc_num = value.split('/').next().unwrap();
                                         song_data.disc = Some(disc_num.parse::<i32>().unwrap());
-                                    } else if value.find("/") == None {
+                                    }
+                                    else if value.find("/") == None {
                                         let disc_num = value.as_str();
                                         song_data.disc = Some(disc_num.parse::<i32>().unwrap());
-                                    } else {
+                                    }
+                                    else {
                                         song_data.disc = None;
                                     }
-                                } else {
+                                }
+                                else {
                                     song_data.disc = None;
                                 }
                             }
@@ -149,20 +190,22 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                                     if value.find("/") != None {
                                         let track_num = value.split('/').next().unwrap();
                                         song_data.track = Some(track_num.parse::<i32>().unwrap());
-                                    } else if value.find("/") == None {
+                                    }
+                                    else if value.find("/") == None {
                                         if value.find(".") != None {
                                             let track_num = value.split('.').next().unwrap();
-                                            song_data.track =
-                                                Some(track_num.parse::<i32>().unwrap());
-                                        } else {
-                                            let track_num = value.as_str();
-                                            song_data.track =
-                                                Some(track_num.parse::<i32>().unwrap());
+                                            song_data.track =  Some(track_num.parse::<i32>().unwrap());
                                         }
-                                    } else {
+                                        else {
+                                            let track_num = value.as_str();
+                                            song_data.track = Some(track_num.parse::<i32>().unwrap());
+                                        }
+                                    }
+                                    else {
                                         song_data.track = None;
                                     }
-                                } else {
+                                }
+                                else {
                                     song_data.track = None;
                                 }
                             }
@@ -211,7 +254,8 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                 }
             }
         }
-    } else {
+    }
+    else {
         return Ok(SongDataResults {
             song_data,
             error_details: "Mismatched tag types".to_string(),
@@ -229,20 +273,3 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
 //  Anicrad
 // unsupported format: IoError(Custom { kind: UnexpectedEof, error: "out of bounds" })
-
-
-
-
-
-
-// This checker function will need to be also see if there are any values in the song metadata that are
-// different from the current entry in the DB and update those tags
-async fn file_checker(path: String) {
-    // Use the path of the file because that is unique to every song
-
-    // First check if exists in the database
-
-    // Next check if the file has any differences from the database version
-
-    // If there are no differences, tell the scan function to skip to the next iteration of the loop
-}

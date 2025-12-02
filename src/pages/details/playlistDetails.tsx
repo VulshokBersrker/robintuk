@@ -46,7 +46,7 @@ export default function PlaylistOverviewPage() {
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const[isCurrent, setIsCurrent] = useState<Songs>({ id: "", name: "", path: "", cover: "", release: "", track: 0, album: "",
+    const[isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "",
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0
     });
 
@@ -174,7 +174,6 @@ export default function PlaylistOverviewPage() {
             await invoke('update_current_song_played');
             saveQueue(playlist);
             savePosition(index);
-            // Update the music controls state somehow
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
@@ -184,7 +183,6 @@ export default function PlaylistOverviewPage() {
             await invoke("set_shuffle_mode", { mode: false });
         }
     }
-
 
     // ------------ Selection Bar Functions ------------
     useEffect(() => {
@@ -276,7 +274,7 @@ export default function PlaylistOverviewPage() {
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            setSongSelection(songSelection.filter(item => item.id !== song.id));
+            setSongSelection(songSelection.filter(item => item.path !== song.path));
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
             setCheckBoxNumber(tempArr);
@@ -304,7 +302,6 @@ export default function PlaylistOverviewPage() {
             saveQueue(playlist);
             saveShuffledQueue(shufflePlaylist);
             savePosition(0);
-            // Update the music controls state somehow
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
@@ -387,7 +384,7 @@ export default function PlaylistOverviewPage() {
                 </div>                    
                 {/* End of Song Selection Bar */}
 
-                <div className="d-flex top-row justify-content-between">
+                <div className="top-row">
                     <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                 </div>
                 {/* Playlist Details */}
@@ -429,7 +426,7 @@ export default function PlaylistOverviewPage() {
                         return(
                             <div key={i}>
                                 <div 
-                                    className={`grid-20 song-row playlist align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}
+                                    className={`grid-20 song-row playlist align-items-center ${song.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
                                     onContextMenu={(e) => {
                                         e.preventDefault();
                                         handleContextMenu(e, song.album, song.album_artist, i);

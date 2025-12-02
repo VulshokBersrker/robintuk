@@ -1,10 +1,12 @@
 import { Routes, Route, BrowserRouter } from "react-router-dom";
+
 import "./App.css";
 
 // Components
 import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
 import MusicControls from "./components/musicControls";
 import RightSideBar from "./components/rightSideBar";
+import SimpleBar from "simplebar-react";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
@@ -34,7 +36,7 @@ function App() {
         <CustomWindowsBar />
         <RightSideBar />
         <MusicControls />
-        <div className="content">
+        <SimpleBar forceVisible="y" autoHide={false} className="content">
           <Routes>
             <Route path="/" element={ <Home /> }/>
             <Route path="/songs" element={ <SongPage /> }/>
@@ -48,7 +50,8 @@ function App() {
             <Route path="/artists/overview" element={ <ArtistOverviewPage />} />
             <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
           </Routes>
-        </div>
+          <div className="empty-space"></div>
+        </SimpleBar>
           
       </BrowserRouter>
     </div>

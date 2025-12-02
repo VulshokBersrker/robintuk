@@ -10,8 +10,9 @@ import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
 import EllipsisIcon from '../images/ellipsis-solid-full.svg';
-import PlayIcon from '../images/play-icon-outline.svg';
+import PlayIcon from '../images/play-solid-full.svg';
 import SearchIcon from '../images/search_icon.svg';
+import Circle from '../images/circle.svg';
 
 // Need to add filtering, should be easy because all the data is there
 // Begin work on caching data
@@ -36,7 +37,7 @@ export default function AlbumPage() {
         try {
             setLoading(true);
             const list = await invoke<AlbumRes[]>('get_all_albums');
-            // console.log(list);
+            console.log(list);
             setAlbumList(list);
             setFilteredAlbums(list);
         }
@@ -65,9 +66,12 @@ export default function AlbumPage() {
             await invoke('update_current_song_played');
             saveQueue(albumRes);
             savePosition(0);
+            await invoke('create_queue', { songs: albumRes });
         }
         catch(e) {
             console.log(e);
+        }
+        finally {
         }
     }
 
@@ -100,9 +104,7 @@ export default function AlbumPage() {
     if(loading) {
         return(
             <div>
-                <div className="search-filters d-flex justify-content-end vertical-centered"> 
-                    <span className="filter">Sort By: <span className="value">A-Z</span></span>
-                    <span className="filter">Genre: <span className="value">All Genres</span></span>
+                <div className="search-filters d-flex justify-content-end vertical-centered">
 
                     <span className="search-bar">
                         <img src={SearchIcon} className="bi search-icon icon-size"/>
@@ -138,8 +140,6 @@ export default function AlbumPage() {
         return(
             <div>
                 <div className="search-filters d-flex justify-content-end vertical-centered"> 
-                    {/* <span className="filter">Sort By: <span className="value">A-Z</span></span>
-                    <span className="filter">Genre: <span className="value">All Genres</span></span> */}
 
                     <span className="search-bar">
                         <img src={SearchIcon} className="bi search-icon icon-size"/>
@@ -155,17 +155,18 @@ export default function AlbumPage() {
                     {albumList.map(section => {
                         if(section.section.length !== 0) {
                             return(
-                                <div key={`main-${section.name}`}>
-                                    <HashLink to={`/albums#${section.name}-0`} smooth>
+                                <HashLink to={`/albums#${section.name}-0`} smooth key={`main-${section.name}`}>
+                                    <div key={`main-${section.name}`}>
                                         {section.name}
-                                    </HashLink>
-                                </div>
+                                    </div>
+                                </HashLink>                                
                             );
                         }                    
                     })}
                 </div>
 
                 <div className="d-flex flex-wrap">
+                    {filteredAlbums.length === 0 && <div> No Albums</div>}
                     {filteredAlbums.map(part => {
                         if(part.section.length > 0) {
                             return(
@@ -173,8 +174,11 @@ export default function AlbumPage() {
                                     return(
                                         <div key={`${part.name}-${i}`} className="album-link" id={`${part.name}-${i}`}>
                                             <div className="album-image-container">
-                                                <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playAlbum(entry.album)}/></div>
-                                                <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
+                                                <div className="play-album" onClick={() => playAlbum(entry.album)}>
+                                                    <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
+                                                    <img src={Circle} className="circle"/>
+                                                </div>
+                                                {/* <div className="options"><img src={EllipsisIcon} className="icon-size" /></div> */}
                                                 
                                                 <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
                                                     <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />
@@ -189,9 +193,8 @@ export default function AlbumPage() {
                                 })
                             );
                         }            
-                    })}                
+                    })}                 
                 </div>
-                <div className="empty-space" />
                 {/* <CustomContextMenu
                     isToggled={contextMenu.isToggled}
                     context_type={contextMenu.context_type}

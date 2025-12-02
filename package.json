@@ -22,6 +22,7 @@
     "react-router-dom": "^7.9.4",
     "react-router-hash-link": "^2.4.3",
     "react-virtualized": "^9.22.6",
+    "simplebar-react": "^3.3.2",
     "tauri-plugin-cache-api": "^0.1.5"
   },
   "devDependencies": {

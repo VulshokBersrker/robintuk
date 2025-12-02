@@ -17,8 +17,6 @@ export default function RightSideBar() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const [isSidebarCollapsed, setIsSideBarCollapsed] = useState<Boolean>(false);
-
     const [playlistLists, setPlaylistLists] = useState<Playlists[]>([]);
 
     // Used to keep the correct link active
@@ -52,43 +50,43 @@ export default function RightSideBar() {
     }
 
     return(
-        <div className={`grid-10 side-navbar ${isSidebarCollapsed === true ? "closed" : "open"}`} >
+        <div className="grid-10 side-navbar" >
 
             <div className="section-10">
                 <Link to={"/"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/" ? "active" : ""}`} >
                     {/* <img src={HomeIcon} className="bi icon icon-size" aria-hidden="true" /> */}
-                    <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Home </span>
+                    <span className="nav-font" > Home </span>
                 </Link>
 
                 <Link to={"/songs"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/songs" ? "active" : ""}`} >
                     {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
-                    <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Songs </span>
+                    <span className="nav-font" > Songs </span>
                 </Link>
 
                 <Link to={"/albums"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/albums" ? "active" : ""}`} >
                     {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
-                    <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Albums </span>
+                    <span className="nav-font" > Albums </span>
                 </Link>
 
                 <Link to={"/artists"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/artists" ? "active" : ""}`} >
                     {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
-                    <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > Artists </span>
+                    <span className="nav-font" > Artists </span>
                 </Link>
 
                 <hr />
                 <Link to={"/queue"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/queue" ? "active" : ""}`} >
                     {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
-                    <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} >Queue </span>
+                    <span className="nav-font" >Queue </span>
                 </Link>
                 <Link to={"/playlists"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/playlists" ? "active" : ""}`} >
                     {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
-                    <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} >Playlists </span>
+                    <span className="nav-font" >Playlists </span>
                 </Link>
             </div>
             
 
             {/* Playlist Section */}
-            <div className={`nav-scrollable section-10 ${isSidebarCollapsed === true ? "" : "mobile-viewable"}`} >
+            <div className="nav-scrollable section-10" >
                 <nav className="grid-10" >
                     {playlistLists.map((item, i) => {
                         return(
@@ -98,7 +96,7 @@ export default function RightSideBar() {
                                 id={item.name}
                             >
                                 <ImageWithFallBack image={item.image} alt="" image_type="sidebar-playlist-image"/>
-                                <span className="nav-font" onClick={() => { if(isSidebarCollapsed === true) {setIsSideBarCollapsed(!isSidebarCollapsed)} }} > {item.name} </span>
+                                <span className="nav-font" > {item.name} </span>
                             </div>
                         );
                     })}

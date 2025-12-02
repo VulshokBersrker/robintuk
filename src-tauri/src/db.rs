@@ -8,9 +8,8 @@ use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Row, Sqlite, SqlitePool};
 use tauri::{State};
 
 use crate::types::{
-    AlbumRes, AllAlbumResults, AllArtistResults, ArtistDetailsResults,
-    DirsTable, History, PlaylistDetailTable, PlaylistFull, PlaylistTable,
-    SongRes, SongTable, SongTableUpload, ArtistRes
+    AlbumRes, AllAlbumResults, AllArtistResults, ArtistDetailsResults, ArtistRes, DirsTable, History,
+    PlaylistDetailTable, PlaylistFull, PlaylistTable, SongRes, SongTable, SongTableUpload
 };
 use crate::{AppState, helper::ALPHABETICALLY_ORDERED};
 
@@ -152,7 +151,9 @@ pub async fn remove_directory(state: State<AppState, '_>, directory_name: String
 #[tauri::command]
 pub async fn get_all_songs(state: State<AppState, '_>) -> Result<Vec<SongRes>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs ORDER BY name ASC;")
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT
+    name, path, cover, album, artist, album_artist, duration
+    FROM songs ORDER BY name ASC;")
         .fetch_all(&state.pool)
         .await
         .unwrap();
@@ -232,16 +233,11 @@ pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Res
 
 // Add a song to the database
 // -- Check the song to make sure no duplicate songs are being added?
-pub async fn add_song(
-    entry: SongTableUpload,
-    pool: &Pool<Sqlite>,
-) -> Result<SqliteQueryResult, String> {
-    // let pool = establish_connection().await?;
-
+pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<SqliteQueryResult, String> {
+    
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
-        (id, name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)")
-        .bind(entry.id)
+        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section) 
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)")
         .bind(entry.name)
         .bind(entry.path)
         .bind(entry.cover)
@@ -253,9 +249,35 @@ pub async fn add_song(
         .bind(entry.album_artist)
         .bind(entry.disc)
         .bind(entry.duration)
+        .bind(false)
+        .bind(entry.song_section)
         .execute(pool)
         .await;
-    // .map_err(|e| format!("Error saving song: {}", e))?;
+
+    Ok(res.unwrap())
+}
+
+// Gonna be used to update values in the DB
+pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<SqliteQueryResult, String> {
+    
+    let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR REPLACE INTO songs
+        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section) 
+        VALUES (?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)")
+        .bind(entry.name)
+        .bind(entry.path)
+        .bind(entry.cover)
+        .bind(entry.release)
+        .bind(entry.track)
+        .bind(entry.album)
+        .bind(entry.artist)
+        .bind(entry.genre)
+        .bind(entry.album_artist)
+        .bind(entry.disc)
+        .bind(entry.duration)
+        .bind(false)
+        .bind(entry.song_section)
+        .execute(pool)
+        .await;
 
     Ok(res.unwrap())
 }
@@ -266,9 +288,7 @@ pub async fn add_song(
 pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AlbumRes>, String> {
 
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "
-        SELECT DISTINCT album, album_artist, cover FROM songs
-        GROUP BY album ORDER BY album ASC;",
+        "SELECT album, album_artist, cover FROM songs GROUP BY album ORDER BY album ASC;",
     )
     .fetch_all(&state.pool)
     .await
@@ -303,7 +323,6 @@ pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AlbumRes>,
         }
         output.push(AlbumRes{name: letter.to_string(), section: t});
     }
-    
 
     Ok(output)
 }
@@ -324,7 +343,7 @@ pub async fn get_album(state: State<AppState, '_>, name: String) -> Result<Vec<S
 pub async fn get_albums_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<AllAlbumResults>, String> {
 
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT DISTINCT album, album_artist, cover FROM songs
+        "SELECT album, album_artist, cover FROM songs
         GROUP BY album ORDER BY album ASC LIMIT $1")
         .bind(limit)
         .fetch_all(&state.pool)
@@ -498,7 +517,7 @@ pub async fn get_playlist(state: State<AppState, '_>, name: String) -> Result<Pl
     // Get the songs in the playlist
     let mut song_arr: Vec<SongTable> = vec![];
     for item in temp {
-        let temp_item: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE id = ?")
+        let temp_item: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE path = ?")
         .bind(&item.track_id)
         .fetch_one(&state.pool)
         .await
@@ -552,7 +571,7 @@ pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, 
             (playlist_name, track_id, position) 
             VALUES (?1, ?2, ?3)")
             .bind(&playlist_name)
-            .bind(&song.id)
+            .bind(&song.path)
             .bind(&i)
             .execute(&state.pool).await;
         i = i + 1;
@@ -624,18 +643,23 @@ pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, p
 
 // Create a history of songs played -- no idea what for yet
 #[tauri::command(rename_all = "snake_case")]
-pub async fn add_song_to_history(state: State<AppState, '_>, song: SongTable) -> Result<(), String> {
+pub async fn add_song_to_history(state: State<AppState, '_>, path: String) -> Result<(), String> {
     let history: History = History {
         id: Utc::now().timestamp_millis().to_string(),
         date_played: Utc::now(),
-        song,
+        song_id: path,
     };
-    sqlx::query("INSERT INTO history (id, date_played, song_id) VALUES (?, ?, ?)")
+    
+    let _ = sqlx::query("INSERT INTO history (id, created_at, song_id) VALUES (?1, ?2, ?3)")
         .bind(history.id)
         .bind(history.date_played.to_rfc3339())
-        .bind(history.song.id)
+        .bind(history.song_id)
         .execute(&state.pool)
-        .await
-        .map_err(|e| e.to_string())?;
+        .await;
+
+    let _ = sqlx::query("DELETE FROM history WHERE id NOT IN (SELECT id FROM history ORDER BY created_at DESC LIMIT 100)")
+        .execute(&state.pool)
+        .await;
+
     Ok(())
 }

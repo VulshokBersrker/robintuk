@@ -55,7 +55,7 @@ export default function AlbumOverviewPage() {
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
     const[isCurrent, setIsCurrent] = useState<Songs>({
-        id: "", name: "", path: "", cover: "", release: "", track: 0, album: "",
+        name: "", path: "", cover: "", release: "", track: 0, album: "",
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0
     });
 
@@ -72,7 +72,7 @@ export default function AlbumOverviewPage() {
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
 
-        const handler = (e: any) => {
+        const handler = () => {
             if(!contextMenu.isToggled) {
                 resetContextMenu();
             }
@@ -131,7 +131,7 @@ export default function AlbumOverviewPage() {
             await invoke('update_current_song_played');
             saveQueue(albumList);
             savePosition(index);
-            // Update the music controls state somehow
+            localStorage.setItem("shuffle-queue", JSON.stringify([]));
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
@@ -148,7 +148,6 @@ export default function AlbumOverviewPage() {
             saveQueue(albumList);
             saveShuffledQueue(shufflePlaylist);
             savePosition(0);
-            // Update the music controls state somehow
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
@@ -158,7 +157,6 @@ export default function AlbumOverviewPage() {
             await invoke("set_shuffle_mode", { mode: true });
         }
     }
-
 
     // Selection Function
     function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
@@ -174,7 +172,7 @@ export default function AlbumOverviewPage() {
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            setSongSelection(songSelection.filter(item => item.id !== song.id));
+            setSongSelection(songSelection.filter(item => item.path !== song.path));
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
             setCheckBoxNumber(tempArr);
@@ -217,8 +215,6 @@ export default function AlbumOverviewPage() {
             console.log(e);
         }
         finally {
-            const test = await invoke('player_get_queue');
-            console.log(test)
             clearSelection();
         }
     }
@@ -399,7 +395,7 @@ export default function AlbumOverviewPage() {
                                         return(
                                             <div key={i}>
                                                 <div
-                                                    className={`grid-20 song-row align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}
+                                                    className={`grid-20 song-row align-items-center ${song.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
                                                     onContextMenu={(e) => {
                                                         e.preventDefault();
                                                         handleContextMenu(e, song.album, song.album_artist, i);
@@ -429,8 +425,6 @@ export default function AlbumOverviewPage() {
                             </div>
                         );               
                     })}
-
-                    <div className="empty-space" />
                     <CustomContextMenu
                         isToggled={contextMenu.isToggled}
                         context_type={contextMenu.context_type}

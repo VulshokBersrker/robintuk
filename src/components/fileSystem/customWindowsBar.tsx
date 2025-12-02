@@ -9,12 +9,30 @@ import FullscreenWindowIcon from '../../images/maximize.svg';
 import TabWindowIcon from '../../images/minimize.svg'
 import CloseWindowIcon from '../../images/x.svg';
 import AppLogo from '../../images/logo.svg';
+import { invoke } from '@tauri-apps/api/core';
 
-// Visual Error when dragging a Maximized window - it will minimize and still show the Minimize icon - when it should show Maximize icon
+interface ScanResults {
+    success: number,
+    error: number,
+    error_dets: ErrorInfo[],
+}
+interface ErrorInfo {
+    file_name: string,
+    error_type: string,
+}
+interface DirectoryInfo {
+    dir_path: string
+}
+
+
 export default function CustomWindowsBar() {
 
-    const [isMaximized, setIsMaximized] = useState<boolean>();
     const appWindow = getCurrentWindow();
+    const [isMaximized, setIsMaximized] = useState<boolean>();
+    
+
+    const [loading, setLoading] = useState<boolean>(false);
+    const [scanResults, setScanResults] = useState<ScanResults>();
 
     useEffect(() => {
         if(isMaximized === null || isMaximized === undefined) {
@@ -31,6 +49,26 @@ export default function CustomWindowsBar() {
 
         listen_window_resize();
         return () => unlisten && unlisten();         
+    }, []);
+
+    // Used to scan for updated files or new files on first load
+    useEffect(() => {
+
+        async function checkForUpdates() {
+            setLoading(true);
+            try {
+                const scannedFiles = await invoke<ScanResults>('scan_directory');
+                // console.log(scannedFiles);
+                setScanResults(scannedFiles);
+            } catch (err) {
+                alert(`Failed to scan folder: ${err}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        // checkForUpdates();
+               
     }, []);
 
     async function getMaximizedStatus() {
@@ -62,6 +100,12 @@ export default function CustomWindowsBar() {
                 <button id="titlebar-close" title="close" onClick={() => appWindow.close()}>
                     <img src={CloseWindowIcon} />
                 </button>
+            </div>
+
+            {/* Scanning for new files section */}
+            <div className={`scan-container ${loading === true ? "" : "display-none"}`}>
+                <span style={{paddingRight: '5px'}}><span className="loader" /> </span>
+                <span>Scanning for changes...</span>
             </div>
         </div>
     );

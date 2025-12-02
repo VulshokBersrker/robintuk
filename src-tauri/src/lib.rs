@@ -89,6 +89,7 @@ pub fn run() -> Result<(), String> {
         .invoke_handler(tauri::generate_handler![
             greet,
             scan_directory,
+            db::add_song_to_history,
             // Music Directory Functions - SQLITE
             db::get_directory,
             db::add_directory,

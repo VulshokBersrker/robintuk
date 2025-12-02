@@ -81,6 +81,7 @@ function RowComponent({song}: P) {
             await invoke('update_current_song_played', {path: arr[0].path});
             await invoke('get_queue', {q: arr, index: 0});
             saveQueue(arr);
+            await invoke('create_stored_queue', { songs: arr, shuffled: false });
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
@@ -88,7 +89,7 @@ function RowComponent({song}: P) {
     }
 
     const[isCurrent, setIsCurrent] = useState<Songs>({
-        id: "", name: "", path: "", cover: "", release: "", track: 0, album: "",
+        name: "", path: "", cover: "", release: "", track: 0, album: "",
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0
     });
 
@@ -113,7 +114,7 @@ function RowComponent({song}: P) {
         return (
             <div className="flex items-center justify-between">
                 <div className="song-link">
-                    <div className={`grid-20 song-row ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}>
+                    <div className={`grid-20 song-row ${song.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}>
                         
                         <span className="section-1 vertical-centered play ">
                             <span style={{paddingRight: '3px', paddingLeft: "3px"}}>

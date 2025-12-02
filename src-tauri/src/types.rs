@@ -7,7 +7,6 @@ use serde_with::{serde_as, DisplayFromStr};
 // This struct is just for uploading data to the database
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
 pub struct SongTableUpload {
-    pub id: Option<String>,
     pub name: Option<String>,
     pub path: String,
     pub cover: Option<String>,
@@ -19,12 +18,12 @@ pub struct SongTableUpload {
     pub album_artist: Option<String>,
     pub disc: Option<i32>,
     pub duration: String,
+    pub song_section: Option<i32>
 }
 
 // This struct is for data retreived from the database
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SongTable {
-    pub id: String,
     pub name: String,
     pub path: String,
     pub cover: String,
@@ -67,7 +66,7 @@ pub struct DirsTable {
 pub struct AllAlbumResults {
     pub album: String,
     pub album_artist: String,
-    pub cover: String,
+    pub cover: String
 }
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
@@ -109,7 +108,7 @@ pub struct History {
     pub id: String,
     #[serde_as(as = "DisplayFromStr")]
     pub date_played: DateTime<Utc>,
-    pub song: SongTable,
+    pub song_id: String,
 }
 
 

@@ -35,13 +35,14 @@ export default function PlaylistPage() {
 
     async function playPlaylist(album_name: string) {
         try {
-            const albumRes: Songs[] = await invoke('get_album', { name: album_name });
-            console.log(albumRes);
+            const playlistRes: Songs[] = await invoke('get_album', { name: album_name });
+            console.log(playlistRes);
             // Load the music to be played and saved
-            await invoke('player_load_album', {queue: albumRes, index: 0});
+            await invoke('player_load_album', {queue: playlistRes, index: 0});
             await invoke('update_current_song_played');
-            saveQueue(albumRes);
+            saveQueue(playlistRes);
             savePosition(0);
+            await invoke('create_queue', { songs: playlistRes });
         }
         catch(e) {
             console.log(e);

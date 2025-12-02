@@ -1,13 +1,12 @@
 -- Your SQL goes here
 
 -- Create the tables for all the Music
-CREATE TABLE IF NOT EXISTS songs (  
-    id TEXT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS songs (
     -- The name of the song
     name TEXT NOT NULL,
     -- The system path to the song
-    path TEXT NOT NULL UNIQUE,
-    -- The image of the album (song), base64 encoded ( is the system path to the album artwork otherwise )
+    path TEXT NOT NULL PRIMARY KEY,
+    -- The image of the album (song)
     cover TEXT,
     -- --------------------- Extra metadata of the songs
     release TEXT,
@@ -18,7 +17,10 @@ CREATE TABLE IF NOT EXISTS songs (
     genre TEXT,
     album_artist TEXT,
     disc_number INTEGER,
-    duration INTEGER
+    duration INTEGER,
+    -- Favorited value - might not use
+    favorited BOOLEAN,
+    song_section INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS playlists (
@@ -43,21 +45,20 @@ CREATE TABLE IF NOT EXISTS dirs (
     dir_path TEXT NOT NULL UNIQUE
 );
 
-
-CREATE TABLE IF NOT EXISTS history_songs (
+CREATE TABLE IF NOT EXISTS history (
     id TEXT PRIMARY KEY,
-    date_played TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
     song_id TEXT NOT NULL,
-    FOREIGN KEY(song_id) REFERENCES songs(id) ON DELETE CASCADE
+    FOREIGN KEY(song_id) REFERENCES songs(path) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS history_albums (
-    id TEXT PRIMARY KEY,
-    date_played TEXT NOT NULL,
-    album_name TEXT NOT NULL,
-    FOREIGN KEY(album_name) REFERENCES songs(album) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS queue (
+    position INTEGER PRIMARY KEY,
+    song_id TEXT NOT NULL,
+    FOREIGN KEY(song_id) REFERENCES songs(path) ON DELETE CASCADE
 );
 
--- CREATE INDEX idx_songs_artist ON songs(artist);
--- CREATE INDEX idx_songs_album ON songs(album);
--- CREATE INDEX idx_history_date_played ON history(date_played);
+-- Indexes can increase query speed, but increase DB file size
+CREATE INDEX idx_song_album ON songs(album);
+CREATE INDEX idx_song_artist ON songs(artist);
+CREATE INDEX idx_song_name ON songs(name);

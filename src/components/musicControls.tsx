@@ -30,13 +30,7 @@ import Circle from '../images/circle.svg';
 // Event listener for media controls
 // https://github.com/vleerapp/Vleer/blob/1da2d9b229dd5d072b57924ed45848aad4e4e2a8/app.vue#L13
 
-/* --------------------------------------------- CURRENT UPDATES NEEDED ---------------------------------------------
 
-Create icons for playlists with no custom cover
-
---------- Sometimes a song gets cut off at the end by a second or two
-
-*/
 
 export default function MusicControls() {
 
@@ -161,6 +155,7 @@ export default function MusicControls() {
             setIsPlaying(false);
         }
         finally {
+            await invoke('add_song_to_history', { path: q.path });
             setIsLoaded(true);
             setIsPlaying(true);
         }
@@ -215,6 +210,7 @@ export default function MusicControls() {
                 saveSong(details);
                 resetSongValues(true);
                 setSongLengthFormatted(new Date(details.duration * 1000).toISOString().slice(12, 19));
+                await invoke('add_song_to_history', { path: details.path });
             }
             
         }
@@ -299,6 +295,7 @@ export default function MusicControls() {
                 // Index of the current song
                 const index: number = q.map(e => e.path).indexOf(songDetails!.path);
                 await invoke("player_update_queue_and_pos", { queue: q, index: index } );
+                localStorage.setItem("shuffled-queue", JSON.stringify([]));
             }
             else {
                 setIsShuffle(true);

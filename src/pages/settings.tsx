@@ -37,7 +37,7 @@ export default function Settings() {
         setLoading(true);
         try {
             const scannedFiles = await invoke<ScanResults>('scan_directory');
-            console.log(scannedFiles);
+            // console.log(scannedFiles);
             setScanResults(scannedFiles);
         } catch (err) {
             alert(`Failed to scan folder: ${err}`);
@@ -47,7 +47,7 @@ export default function Settings() {
             setShowResults(true);
             setTimeout(() => {
                 setShowResults(false);
-            }, 3000);
+            }, 5000);
         }
     }
 
@@ -60,7 +60,7 @@ export default function Settings() {
     async function get_directories() {
         try {
             const directory_list = await invoke<DirectoryInfo[]>('get_directory');
-            console.log(directory_list);
+            // console.log(directory_list);
             if(directoryList !== null) {
                 setDirectoryList(directory_list);
             }            
@@ -72,7 +72,7 @@ export default function Settings() {
     async function add_directory() {
         try {
             const folder_path = await open({ multiple: false, directory: true });
-            console.log(folder_path);
+            // console.log(folder_path);
             if(folder_path !== null) {
                 updateDirectoryList(folder_path.toString());
                 await invoke("add_directory", { directory_name: folder_path.toString() });
