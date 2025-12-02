@@ -45,14 +45,12 @@ function App() {
             <Route path="/queue" element={ <QueueOverviewPage /> }/>
             <Route path="/playlists" element={ <PlaylistPage /> }/>
             <Route path="/settings" element={ <Settings /> }/>
-
             <Route path="/albums/overview" element={ <AlbumOverviewPage />} />
             <Route path="/artists/overview" element={ <ArtistOverviewPage />} />
             <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
           </Routes>
           <div className="empty-space"></div>
         </SimpleBar>
-          
       </BrowserRouter>
     </div>
   );

@@ -23,14 +23,7 @@ import Circle from '../images/circle.svg';
 // One first install - needs to be blank - or be hidden when there is no music setup
 // On app launches - needs to find the last played queue and preload the song and where it was last at in the song
 
-// https://github.com/itsakeyfut/music-player/blob/main/my-app/src-tauri/src/main.rs
-// https://github.com/CyanFroste/meowsic/blob/master/src/players.tsx
-// https://github.com/vleerapp/Vleer/blob/main/src-tauri/src/api/commands.rs
-
-// Event listener for media controls
-// https://github.com/vleerapp/Vleer/blob/1da2d9b229dd5d072b57924ed45848aad4e4e2a8/app.vue#L13
-
-
+// Update Volume Mute to return the volume to what is was before the mute
 
 export default function MusicControls() {
 
@@ -405,7 +398,7 @@ export default function MusicControls() {
                                     />
                                 </div>
 
-                                <div className="play-button" id="previous">
+                                <div className="play-button cursor-pointer" id="previous">
                                     <img src={BackwardButton} alt="" className={`${songDetails === undefined ? "disabled" : ""}`}  onClick={previousSong}/>
                                 </div>
 
@@ -431,7 +424,7 @@ export default function MusicControls() {
                                     }
                                 </div>
 
-                                <div className="play-button" id="next">
+                                <div className="play-button cursor-pointer" id="next">
                                     <img src={ForwardButton} alt="" className={`icon-flip ${songDetails === undefined ? "disabled" : ""}`} onClick={nextSong}/>
                                 </div>
 
@@ -467,8 +460,8 @@ export default function MusicControls() {
                         </div>
                         <div className="section-4 d-flex align-items-center justify-content-end"> 
                             <div className="d-flex">
-                                {volume === 0 && <img src={VolumeEmpty} alt="" className="volume-icon"/>}
-                                {(volume > 0 ) && <img src={VolumeStandard} alt="" className="volume-icon" onClick={() => updateVolume(0)}/>}
+                                {volume === 0 && <img src={VolumeEmpty} alt="" className="volume-icon cursor-pointer"/>}
+                                {(volume > 0 ) && <img src={VolumeStandard} alt="" className="volume-icon cursor-pointer" onClick={() => updateVolume(0)}/>}
 
                                 <input
                                     type="range" min={0} max={60}

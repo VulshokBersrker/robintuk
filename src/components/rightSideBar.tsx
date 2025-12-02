@@ -1,5 +1,5 @@
 // Core Components
-import { Link, NavigateFunction, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
@@ -9,11 +9,8 @@ import ImageWithFallBack from "./imageFallback";
 import { Playlists, playPlaylist } from "../globalValues";
 
 // Images
-import SelectIcon from '../images/circle-check-regular-full.svg';
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
-import ArtistIcon from '../images/user-regular-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
-import AddIcon from '../images/plus-solid-full.svg';
 
 type NewPlaylistList = {
     playlist: Playlists[]
@@ -186,7 +183,7 @@ function ContextMenuSideBar({ navigateToPlaylistOverview, isToggled, playlist, p
                 </li>
 
                 <li className="d-flex align-items-center" onClick={() => navigateToPlaylistOverview(playlist)} >
-                    <img src={AddIcon} />
+                    <img src={AlbumIcon} />
                     &nbsp; View
                 </li>                
             </div>

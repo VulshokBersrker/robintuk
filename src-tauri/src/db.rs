@@ -85,30 +85,6 @@ pub async fn establish_connection() -> Result<Pool<sqlx::Sqlite>, std::string::S
 
 // ----------------------------------------------------- Edit SQLITE Database -----------------------------------------------------
 
-// The goal here is check if the song already exists in the database ---------------------- NEEDS WORK
-// Used for updating or adding a song
-// Outputs a boolean value
-pub async fn check_for_value() -> Result<bool, String> {
-    let pool = establish_connection().await?;
-
-    let temp = sqlx::query(
-        "SELECT COUNT(*) FROM songs 
-        WHERE path = ?;",
-    )
-    .bind("")
-    .fetch_all(&pool)
-    .await
-    .unwrap();
-
-    for t in temp.iter() {
-        for x in t.columns() {
-            println!("{:?}", x);
-        }
-    }
-
-    Ok(false)
-}
-
 #[tauri::command(rename_all = "snake_case")]
 pub async fn add_directory(state: State<AppState, '_>, directory_name: String) -> Result<(), String> {
 
