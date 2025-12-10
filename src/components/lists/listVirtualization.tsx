@@ -26,44 +26,27 @@ export default function ListVirtualization({song_data}: Props) {
         estimateSize: () => 35,
     });
 
-    // const randomNumber = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-    // const sentences = new Array(length).fill(true).map(() => randomNumber(20, 70));
-    // const count = sentences.length;
-
     const items = virtualizer.getVirtualItems();
 
     return(
-        <div>
-            {/* <button onClick={() => { virtualizer.scrollToIndex(0) }} > scroll to the top </button>
-            <span style={{ padding: '0 4px' }} />
-            <button onClick={() => { virtualizer.scrollToIndex(count / 2) }} > scroll to the middle </button>
-            <span style={{ padding: '0 4px' }} />
-            <button onClick={() => { virtualizer.scrollToIndex(count - 1) }} > scroll to the end </button>
-            <span style={{ padding: '0 4px' }} /> */}
+        <div ref={parentRef} className="virtual-scroller" >
+            <div style={{ height: virtualizer.getTotalSize(),  width: '100%', position: 'relative', }} >
 
-            <div ref={parentRef} className="virtual-scroller" >
-                <div
-                    style={{ height: virtualizer.getTotalSize(),  width: '100%', position: 'relative', }}
-                >
-                    <div className=""
-                        style={{ width: '100%', transform: `translateY(${items[0]?.start ?? 0}px)`, }}
-                    >
-                        {items.map((virtualRow) => (
-                            <div
-                                key={virtualRow.key}
-                                data-index={virtualRow.index}
-                                ref={virtualizer.measureElement}
-                                className={`song-list`}
-                            >
-                                <RowComponent song={song_data[virtualRow.index]}/>
-                            </div>
-                        ))}
-                        <div className="empty-space" />
-                    </div>
+                <div style={{ width: '100%', transform: `translateY(${items[0]?.start ?? 0}px)`, }} >
+                    {items.map((virtualRow) => (
+                        <div
+                            key={virtualRow.key}
+                            data-index={virtualRow.index}
+                            ref={virtualizer.measureElement}
+                            className={`song-list`}
+                        >
+                            <RowComponent song={song_data[virtualRow.index]}/>
+                        </div>
+                    ))}
+                    <div className="empty-space" />
                 </div>
             </div>
-        </div>       
+        </div>      
     );
 };
 

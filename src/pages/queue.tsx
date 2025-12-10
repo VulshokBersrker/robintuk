@@ -22,9 +22,7 @@ export default function QueueOverviewPage() {
 
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
-    const[isCurrent, setIsCurrent] = useState<Songs>({ id: "", name: "", path: "", cover: "", release: "", track: 0, album: "",
-        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0
-    });
+    const[isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "", artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0 });
 
 
     // On first load get the album details
@@ -101,7 +99,7 @@ export default function QueueOverviewPage() {
         else {
             // Find the location of the song in the array with filter and only return the other songs
             console.log("Removing song: " + song.name);
-            setSongSelection(songSelection.filter(item => item.id !== song.id));
+            setSongSelection(songSelection.filter(item => item.path !== song.path));
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
             setCheckBoxNumber(tempArr);
@@ -164,7 +162,7 @@ export default function QueueOverviewPage() {
                     {queue.map((song, i) => {
                         return(
                             <div key={i}>
-                                <div className={`grid-20 song-row playlist align-items-center ${song.id.localeCompare(isCurrent.id) ? "" : "current-song"}`}>
+                                <div className={`grid-20 song-row playlist align-items-center ${song.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}>
                                     <span className="section-1 play">
                                         <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
                                             <input

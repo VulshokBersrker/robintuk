@@ -159,7 +159,35 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                                 }
                             }
                             Artist => song_data.artist = Some(tag.value.to_string()),
-                            Album =>  song_data.album = Some(tag.value.to_string()),
+                            Album => {
+                                
+                                song_data.album = Some(tag.value.to_string());
+
+                                let name = tag.value.to_string();                                    
+                                let char_array: Vec<char> = name.chars().collect();
+                                let first_char = char_array[0];
+
+                                // Special Characters
+                                if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
+                                    || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
+                                    || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
+                                {
+                                    song_data.album_section = Some(0);
+                                }
+                                // 0 - 9
+                                else if first_char.is_ascii_digit() {
+                                    song_data.album_section = Some(1);
+                                }
+                                //  A - Z
+                                else if first_char.is_ascii_alphabetic() {
+                                    let section = first_char as i32;
+                                    song_data.album_section = Some(section);
+                                }
+                                // Non-ascii values
+                                else {
+                                    song_data.album_section = Some(300);
+                                }
+                            },
                             AlbumArtist => song_data.album_artist = Some(tag.value.to_string()),
                             Date => song_data.release = Some(tag.value.to_string()),
                             Genre => song_data.genre = Some(tag.value.to_string()),

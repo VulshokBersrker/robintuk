@@ -1,10 +1,23 @@
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@tauri-apps/api/core";
+import { JSX } from "react";
+
+import {
+  Grid as _Grid,
+  GridCellProps,
+  WindowScroller as _WindowScroller,
+  AutoSizer as _AutoSizer,
+} from "react-virtualized";
 
 
 export interface FileInfo {
     path: string,
     size: number,
     data: Songs
+}
+
+export interface SongRes {
+    name: string,
+    song_list: Songs[]
 }
 
 export interface Songs {
@@ -29,7 +42,13 @@ export interface AlbumRes {
 export interface AlbumDetails {
     album: string,
     album_artist: string,
-    cover: string
+    cover: string,
+    album_section: number
+}
+
+export interface ArtistRes {
+    name: string,
+    section: Songs[]
 }
 
 export interface ArtistDetails {
@@ -68,9 +87,11 @@ export type GetCurrentSong = { q: Songs; };
 
 // &, 0-9, A-Z, ...
 export const alphabeticallyOrdered = [
-    0, 1, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
+    0, 1,
+    65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
     75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86,
-    87, 88, 89, 90, 300
+    87, 88, 89, 90,
+    300
 ];
 
 
@@ -152,4 +173,20 @@ export async function playPlaylist(playlist_name: string) {
         localStorage.setItem("shuffle-mode", JSON.stringify(false) );
         await invoke("set_shuffle_mode", { mode: false });
     }
+}
+
+
+
+
+export interface VirtualizedGridProps<AlbumDetails> {
+  items: AlbumDetails[];
+  itemHeight: number;
+  itemMinWidth: number;
+  renderItem: (props: VirtualizedGridItemProps<AlbumDetails>) => JSX.Element;
+  numColumns?: number; // explicitly set number of columns
+}
+
+export interface VirtualizedGridItemProps<AlbumDetails> extends GridCellProps {
+  items: AlbumDetails[];
+  columnCount: number;
 }

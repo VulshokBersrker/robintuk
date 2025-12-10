@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS songs (
     duration INTEGER,
     -- Favorited value - might not use
     favorited BOOLEAN,
-    song_section INTEGER NOT NULL
+    song_section INTEGER NOT NULL,
+    album_section INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS playlists (
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS playlist_tracks (
     position INTEGER NOT NULL,
     PRIMARY KEY (playlist_name, track_id),
     FOREIGN KEY (playlist_name) REFERENCES playlists(name) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (track_id) REFERENCES songs(path) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Stores the directory path a user as selected to scan music
@@ -48,12 +50,6 @@ CREATE TABLE IF NOT EXISTS dirs (
 CREATE TABLE IF NOT EXISTS history (
     id TEXT PRIMARY KEY,
     created_at TIMESTAMP NOT NULL,
-    song_id TEXT NOT NULL,
-    FOREIGN KEY(song_id) REFERENCES songs(path) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS queue (
-    position INTEGER PRIMARY KEY,
     song_id TEXT NOT NULL,
     FOREIGN KEY(song_id) REFERENCES songs(path) ON DELETE CASCADE
 );

@@ -5,21 +5,20 @@ import { useEffect, useState } from "react";
 
 // Custom Components
 import ImageWithFallBack from "../components/imageFallback.js";
-import { Songs } from "../globalValues";
+import { Songs, ArtistRes } from "../globalValues";
 
 // Images
 import SearchIcon from '../images/search_icon.svg';
 
-interface ArtistRes {
-    name: string,
-    section: Songs[]
+type P = {
+    artists: ArtistRes[];
 }
 
-export default function ArtistsPage() {
+export default function ArtistsPage({artists}: P) {
 
     const navigate = useNavigate();
     // const [loading, setLoading] = useState(false);
-    const [artistList, setArtistList] = useState<ArtistRes[]>([]);
+    const [artistList, setArtistList] = useState<ArtistRes[]>(artists);
     const [searchValue, setSearchValue] = useState<string>("");
 
     async function getArtists() {
@@ -34,7 +33,7 @@ export default function ArtistsPage() {
     }
 
     useEffect(() => {
-        getArtists();
+        // getArtists();
     }, []);
 
     const navigateToArtistOverview = (name: string) => {

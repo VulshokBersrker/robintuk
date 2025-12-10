@@ -22,6 +22,7 @@
     "react-router-dom": "^7.9.4",
     "react-router-hash-link": "^2.4.3",
     "react-virtualized": "^9.22.6",
+    "react-virtuoso": "^4.17.0",
     "simplebar-react": "^3.3.2",
     "tauri-plugin-cache-api": "^0.1.5"
   },
@@ -30,6 +31,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/react-router-hash-link": "^2.4.9",
+    "@types/react-virtualized": "^9.22.3",
     "@vitejs/plugin-react": "^4.6.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"

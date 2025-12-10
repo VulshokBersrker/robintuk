@@ -1,10 +1,13 @@
 import { HashLink } from 'react-router-hash-link';
-import { useNavigate } from 'react-router-dom';
+import { NavigateFunction, useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
+import { VirtuosoGrid } from 'react-virtuoso';
 import { useEffect, useState } from "react";
+import SimpleBar from 'simplebar-react';
+import { forwardRef } from 'react'
 
 // Custom Components
-import { saveQueue, Songs, savePosition, AlbumRes, PlaylistList, playSelection } from "../globalValues";
+import { saveQueue, Songs, savePosition, AlbumRes, PlaylistList, playSelection, AlbumDetails, alphabeticallyOrdered } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -18,7 +21,6 @@ import SearchIcon from '../images/search_icon.svg';
 import Circle from '../images/circle.svg';
 import CloseIcon from '../images/x.svg';
 
-
 // Need to add filtering, should be easy because all the data is there
 // Begin work on caching data
 
@@ -28,54 +30,54 @@ interface CheckBoxSelection {
     section: boolean[]
 }
 
-export default function AlbumPage() {
+type P = {
+    albums: AlbumDetails[];
+}
+
+export default function AlbumPage({albums}: P) {
 
     const navigate = useNavigate();
+
+    // Used to add SimpleBar to React Virtuoso
+    const [scrollParent, setScrollParent] = useState<any>(null);
+
     const [loading, setLoading] = useState(false);
-    const [albumList, setAlbumList] = useState<AlbumRes[]>([]);
+    const [albumList, setAlbumList] = useState<AlbumDetails[]>(albums);
     const [searchValue, setSearchValue] = useState<string>("");
 
-    const [filteredAlbums, setFilteredAlbums] = useState<AlbumRes[]>([]);
+    const [filteredAlbums, setFilteredAlbums] = useState<AlbumDetails[]>(albums);
 
     const [albumSelection, setAlbumSelection] = useState<String[]>([]);
-    const [checkBoxNumber, setCheckBoxNumber] = useState<CheckBoxSelection[]>([]);
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, context_type: "album", album: "", artist: "", index: 0, outer_index: 0, posX: 0, posY: 0 });
+    const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: "", artist: "", index: 0, posX: 0, posY: 0 });
 
     // Playlist Values
     const [newPlaylistName, setNewPlaylistName] = useState<string>("");
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
+    useEffect(() => {
+        async function setupAlbumList() {
+            try {
+                setLoading(true);
 
-    async function getAlbums() {
-        try {
-            setLoading(true);
-            const list = await invoke<AlbumRes[]>('get_all_albums');
-            console.log(list);
-            setAlbumList(list);
-            setFilteredAlbums(list);
-
-            let checkboxArr: CheckBoxSelection[] = [];
-            let i = 0;
-            for(let j = 0; j < list.length; j++) {
-                let temp: boolean[] = [];
-                list[j].section.forEach(() => { temp[i] = false; i++; });
-                i = 0;
-                checkboxArr.push({section: temp});
+                // let checkboxArr: CheckBoxSelection[] = [];
+                // for(let j = 0; j < filteredAlbums.length; j++) {
+                //     let temp: boolean[] = Array(filteredAlbums[j].section.length).fill(false);
+                //     checkboxArr.push({section: temp});
+                // }
+                // setCheckBoxNumber(checkboxArr);
+                console.log("checkbox");
+                // console.log(checkboxArr);
             }
-            setCheckBoxNumber(checkboxArr);
-            
-        }
-        catch (err) {
-            alert(`Failed to scan folder: ${err}`);
-        }
-        finally {
+            catch(e) {
+                console.log(e);
+            }
             setLoading(false);
         }
-    }
-
-    useEffect(() => {
+        // setupAlbumList();
         getAlbums();
+        
 
         const handler = () => {
             if(!contextMenu.isToggled) {
@@ -88,6 +90,26 @@ export default function AlbumPage() {
             document.removeEventListener('click', handler);
         }
     }, []);
+
+    async function getAlbums() {
+        try {
+            setLoading(true);
+            const list = await invoke<AlbumDetails[]>('get_all_albums');
+            // console.log(list);
+            setAlbumList(list);
+            setFilteredAlbums(list);
+
+            setCheckBoxNumber(Array(list.length).fill(false));
+            
+        }
+        catch (err) {
+            alert(`Failed to scan folder: ${err}`);
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
 
     const navigateToAlbumOverview = (name: string) => {
         navigate("/albums/overview", {state: {name: name}});
@@ -114,39 +136,39 @@ export default function AlbumPage() {
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
-        let temp: AlbumRes[] = [];
-        for(let i = 0; i < albumList.length; i++) {            
-            const temp_section = albumList[i].section.filter((entry) => {
-                return entry.album.toLowerCase().includes(value.toLowerCase());
-            });
-            temp.push({ name: albumList[i].name, section: temp_section });
-        }
-        setFilteredAlbums(temp);
+        // let temp: AlbumRes[] = [];
+        // for(let i = 0; i < albumList.length; i++) {            
+        //     const temp_section = albumList[i].section.filter((entry) => {
+        //         return entry.album.toLowerCase().includes(value.toLowerCase());
+        //     });
+        //     temp.push({ name: albumList[i].name, section: temp_section });
+        // }
+        // setFilteredAlbums(temp);
     }
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number, outer_index: number) {
+    function handleContextMenu(e: any, album: string, artist: string, index: number) {
         if(e.pageX < window.innerWidth / 2) {
-            setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[outer_index].section[index], context_type: "album", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, outer_index: outer_index});
+            setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
         }
         else {
-            setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[outer_index].section[index], context_type: "album", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY, outer_index: outer_index});
+            setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
         }
     }
 
     function resetContextMenu() {
         console.log("Resetting Context Menu");
-        setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "album", album: "", artist: "", index: 0, outer_index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, isBeingAdded: false, album: "", artist: "", index: 0, posX: 0, posY: 0});
     }
 
     // ------------ Start of Selection Bar Functions ------------
     
-    function editSelection(album: String, isBeingAdded: boolean, index: number, outer_index: number) {
+    function editSelection(album: String, isBeingAdded: boolean, index: number) {
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
             setAlbumSelection([...albumSelection, album]);
-            let tempArr: CheckBoxSelection[] = checkBoxNumber;
-            tempArr[outer_index].section[index] = true;
+            let tempArr: boolean[] = checkBoxNumber;
+            tempArr[index] = true;
             setCheckBoxNumber(tempArr);
 
         }
@@ -154,8 +176,8 @@ export default function AlbumPage() {
         else {
             // Find the location of the song in the array with filter and only return the other songs
             setAlbumSelection(albumSelection.filter(item => item !== album));
-            let tempArr: CheckBoxSelection[] = checkBoxNumber;
-            tempArr[outer_index].section[index] = false;
+            let tempArr: boolean[] = checkBoxNumber;
+            tempArr[index] = false;
             setCheckBoxNumber(tempArr);;
         }
         resetContextMenu();
@@ -163,15 +185,7 @@ export default function AlbumPage() {
 
     function clearSelection() {
         setAlbumSelection([]);
-        let tempArr: CheckBoxSelection[] = [];
-        for(let j = 0; j < checkBoxNumber.length; j++) {
-            let temp: boolean[] = [];
-            for(let i = 0; i < checkBoxNumber[j].section.length; i++) {
-                temp[i] = false;
-            }
-            tempArr.push({section: temp});
-        }
-        setCheckBoxNumber(tempArr);
+        setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
     }
 
     // ------------ End of Selection Bar Functions ------------
@@ -269,6 +283,8 @@ export default function AlbumPage() {
         }        
     }
 
+    
+
     if(loading) {
         return(
             <div>
@@ -354,7 +370,6 @@ export default function AlbumPage() {
 
 
                 <div className="search-filters d-flex justify-content-end vertical-centered"> 
-
                     <span className="search-bar">
                         <img src={SearchIcon} className="bi search-icon icon-size"/>
                         <input
@@ -366,67 +381,66 @@ export default function AlbumPage() {
                 </div>
 
                 <div className="section-list">
-                    {albumList.map(section => {
-                        if(section.section.length !== 0) {
-                            return(
-                                <HashLink to={`/albums#${section.name}-0`} smooth key={`main-${section.name}`}>
-                                    <div key={`main-${section.name}`}>
-                                        {section.name}
-                                    </div>
-                                </HashLink>                                
-                            );
-                        }                    
+                    {alphabeticallyOrdered.map(section => {
+                        return(
+                            <HashLink to={`/albums#${section}-0`} smooth key={`main-${section}`}>
+                                <div key={`main-${section}`}>
+                                    {section === 0 && "&"}
+                                    {section === 1 && "#"}
+                                    {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
+                                    {section === 300 && "..."}
+                                </div>
+                            </HashLink>                                
+                        );                                          
                     })}
                 </div>
 
-                <div className="d-flex flex-wrap">
-                    {filteredAlbums.length === 0 && <div> No Albums</div>}
-                    {filteredAlbums.map((part, j) => {
-                        if(part.section.length > 0) {
-                            return(
-                                part.section.map((entry, i) => {
-                                    return(
-                                        <div key={`${part.name}-${i}`} className="album-link" id={`${part.name}-${i}`} >
-                                            <div className="album-image-container"
-                                                onContextMenu={(e) => {
-                                                    e.preventDefault();
-                                                    handleContextMenu(e, entry.album, entry.album_artist, i, j);
-                                                }}
-                                            >
-                                                <span className="checkbox-container">
-                                                    <input
-                                                        type="checkbox" id={`select-${i}`} name={`select-${i}`}
-                                                        onClick={(e) => editSelection(entry.album, e.currentTarget.checked, i, j)}
-                                                        checked={checkBoxNumber[j].section[i]} onChange={() => {}}
-                                                    />
-                                                </span>
-                                                <div className="play-album" onClick={() => playAlbum(entry.album)}>
-                                                    <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
-                                                    <img src={Circle} className="circle"/>
-                                                </div>
-                                                
-                                                <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
-                                                    <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />
-                                                </div>
-                                                <div className="album-image-name header-font">
-                                                    <div className="album-name">{entry.album}</div>
-                                                    <div className="artist-name">{entry.album_artist}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );                                        
-                                })
-                            );
-                        }            
-                    })}                 
-                </div>
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+                    <VirtuosoGrid
+                        style={{ paddingBottom: '170px' }}
+                        totalCount={filteredAlbums.length}
+                        components={gridComponents}
+                        increaseViewportBy={{ top: 210, bottom: 420 }}
+                        itemContent={(index) =>
+                            <div className="album-link" key={index} id={`${filteredAlbums[index].album_section}-${index}`}>
+                                <div className="album-image-container"
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        handleContextMenu(e, filteredAlbums[index].album, filteredAlbums[index].album_artist, index);
+                                    }}
+                                >
+                                    <span className="checkbox-container">
+                                        <input
+                                            type="checkbox"
+                                            id={`select-${index}`} name={`select-${index}`}
+                                            onClick={(e) => editSelection(filteredAlbums[index].album, e.currentTarget.checked, index)}
+                                            checked={checkBoxNumber[index]} onChange={() => {}}
+                                        />
+                                    </span>
+                                    <div className="play-album" onClick={() => playAlbum(filteredAlbums[index].album)}>
+                                        <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
+                                        <img src={Circle} className="circle"/>
+                                    </div>
+                                    
+                                    <div className="container" onClick={() => navigateToAlbumOverview(filteredAlbums[index].album)} >
+                                        <ImageWithFallBack image={filteredAlbums[index].cover} alt={filteredAlbums[index].album} image_type={"album"} />
+                                    </div>
+                                    <div className="album-image-name header-font">
+                                        <div className="album-name">{filteredAlbums[index].album}</div>
+                                        <div className="artist-name">{filteredAlbums[index].album_artist}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                    />
+                </SimpleBar>
+                
                 <ContextMenuAlbums
                     isToggled={contextMenu.isToggled}
-                    context_type={contextMenu.context_type}
                     album={contextMenu.album}
                     artist={contextMenu.artist}
                     index={contextMenu.index}
-                    outer_index={contextMenu.outer_index}
                     posX={contextMenu.posX}
                     posY={contextMenu.posY}
                     play={playAlbum}
@@ -438,21 +452,20 @@ export default function AlbumPage() {
     }    
 }
 
+
 type Props = {
     isToggled: boolean,
-    context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
     album: string,
     artist: string,
     index: number,
-    outer_index: number,
     play: (album_name: string) => void, // playSong / playAlbum function
-    editSelection: (album: string, isBeingAdded: boolean, index: number, outer_index: number) => void,
+    editSelection: (album: string, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
     posY: number
 }
 
-function ContextMenuAlbums({ isToggled, context_type, album, artist, index, play, editSelection, isBeingAdded, posX, posY, outer_index }: Props) {
+function ContextMenuAlbums({ isToggled, album, artist, index, play, editSelection, isBeingAdded, posX, posY }: Props) {
 
     const navigate = useNavigate();
 
@@ -481,38 +494,43 @@ function ContextMenuAlbums({ isToggled, context_type, album, artist, index, play
                 onContextMenu={(e) => {  e.preventDefault(); }}
             >
                 <li className="d-flex align-items-center"
-                    onClick={() => editSelection(album, !isBeingAdded, index, outer_index) }
+                    onClick={() => editSelection(album, !isBeingAdded, index) }
                 >
-                    <img src={SelectIcon} />
-                    &nbsp; Select
+                    <img src={SelectIcon} /> &nbsp; Select
                 </li>
 
                 <li onClick={() => {play(album)}} className="d-flex align-items-center">
-                    <img src={PlayIcon} />
-                    &nbsp; Play
+                    <img src={PlayIcon} />  &nbsp; Play
                 </li>
 
                 <li className="d-flex align-items-center">
-                    <img src={AddIcon} />
-                    &nbsp; Add to
+                    <img src={AddIcon} /> &nbsp; Add to
                 </li>
 
-                {context_type !== "playlist" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                        <img src={AlbumIcon} />
-                        &nbsp; Show Album
-                    </li>
-                }
-                {context_type !== "artist" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
-                        <img src={ArtistIcon} />
-                        &nbsp; Show Artist
-                    </li>
-                }
-
-                
+                <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
+                    <img src={AlbumIcon} /> &nbsp; Show Album
+                </li>
+            
+                <li className="d-flex align-items-center" onClick={NavigateToArtist} >
+                    <img src={ArtistIcon} /> &nbsp; Show Artist
+                </li>
             </div>
         );
     }
     else { return; }
+}
+
+// For the Virtual Grid
+const gridComponents = {
+    List: forwardRef(({ style, children, ...props }: any, ref) => (
+        <div ref={ref} {...props} style={{ display: "flex", flexWrap: "wrap", ...style, }} >
+            {children}
+        </div>
+    )),
+
+  Item: ({ children, ...props }: any) => (
+    <div {...props} style={{  width: "168px", display: "flex", flex: "none", boxSizing: "border-box", }} >
+        {children}
+    </div>
+  )
 }

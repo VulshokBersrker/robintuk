@@ -445,6 +445,15 @@ button.borderless {
 .display-none {
   display: none;
 }
+.overflow-hidden {
+  overflow: hidden !important;
+}
+.overflow-y-hidden {
+  overflow-y: hidden !important;
+}
+.overflow-x-hidden {
+  overflow-x: hidden !important;
+}
 
 .icon {
   filter: invert(100%) sepia(2%) saturate(726%) hue-rotate(333deg) brightness(94%) contrast(89%);
@@ -1128,8 +1137,9 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 }
 .album-link {
   margin: 4px;
-  padding: 4px;
+  padding: 0px 4px 0px 4px;
   width: 155px;
+  height: 190px;
 }
 
 .album-link:hover {
@@ -1143,8 +1153,8 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 .album-image-container .container {
   padding-top: 8px;
   margin: auto;
-  width: 147px;
-  height: 147px;
+  width: 144px;
+  height: 144px;
   border-radius: var(--border-radius);
   overflow: hidden;
 }
@@ -1508,13 +1518,16 @@ button img {
 .virtual-scroller {
   padding-top: 20px;
   position: relative !important;
-  height: calc(100vh - 320px);
+  height: calc(100vh - 330px);
   overflow-y: auto;
   contain: strict;
   width: 100%;
   padding-bottom: 210px;
 }
 
+.List {
+  box-sizing: border-box;
+}
 
 /* -------------------------- Playlist Pages Styles -------------------------- */
 
@@ -1959,7 +1972,7 @@ img.search-icon:hover {
 }
 
 .simplebar-scrollable-y {
-  margin-top: 30px;
+  margin-top: 10px;
   height: calc(100vh - 30px);
   overflow-y: auto;
 }
@@ -2077,7 +2090,7 @@ img.search-icon:hover {
   bottom: 0;
   pointer-events: none;
   overflow: hidden;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 110px);
 }
 
 #root:has(.music-control-container) {
@@ -2088,7 +2101,7 @@ img.search-icon:hover {
     bottom: 0;
     pointer-events: none;
     overflow: hidden;
-    height: calc(100vh - 130px);
+    height: calc(100vh - 200px);
   }
 }
 
@@ -2204,7 +2217,7 @@ img.search-icon:hover {
 
 
 /* styles for smaller Phones */
-  @media screen and (min-width: 320px) and (max-width: 765px) {
+@media screen and (min-width: 320px) and (max-width: 765px) {
 
 
   .nav-item {

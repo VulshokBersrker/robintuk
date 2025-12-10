@@ -160,15 +160,15 @@ type Props = {
 
 function ContextMenuSideBar({ navigateToPlaylistOverview, isToggled, playlist, play, posX, posY }: Props) {
 
-    useEffect(() => {
-        const element = document.getElementsByClassName("content");
-        if(isToggled) {
-            element[0].classList.add("disable-scroll");
-        }
-        else {
-            element[0].classList.remove("disable-scroll");
-        }
-    }, [isToggled]);
+    // useEffect(() => {
+    //     const element = document.getElementsByClassName("content");
+    //     if(isToggled) {
+    //         element[0].classList.add("disable-scroll");
+    //     }
+    //     else {
+    //         element[0].classList.remove("disable-scroll");
+    //     }
+    // }, [isToggled]);
 
     if(isToggled) {
         return(

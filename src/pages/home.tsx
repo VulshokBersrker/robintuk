@@ -12,6 +12,7 @@ import EllipsisIcon from '../images/ellipsis-solid-full.svg';
 import PlayIcon from '../images/play-icon-outline.svg';
 import Circle from '../images/circle.svg';
 
+
 export default function Home() {
 
     const navigate = useNavigate();
@@ -101,94 +102,104 @@ export default function Home() {
         navigate("/playlist/overview", {state: {name: name}});
     }
 
-    return(
-        <div className="grid-20">
-            {/* Albums */}
-            <div className="section-20 home albums">
-                <div className="header-font font-3">Albums</div>
-                <div className={`list ${albums.length === 0 ? "": "d-flex flex-wrap"}`}>
-                    {albums.length === 0 && <div className="text-center font-secondary">No Albums</div>}
+    if(loading) {
+        return(
+            <div>
 
-                    {albums.map((entry, i) => {
-                        return(
-                            <div key={`album-${i}`} className="album-link" id={`album-${i}`}>
-                                <div className="album-image-container">
-                                    <div className="play-album" onClick={() => playAlbum(entry.album)}>
-                                        <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
-                                        <img src={Circle} className="circle"/>
-                                    </div>
-                                    <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
-                                    
-                                    <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
-                                        <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />
-                                    </div>
-                                    <div className="album-image-name header-font">
-                                        <div className="album-name">{entry.album}</div>
-                                        <div className="artist-name">{entry.album_artist}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
             </div>
+        );
+    }
+    else {
+        return(
+            <div className="grid-20">
+                {/* Albums */}
+                <div className="section-20 home albums">
+                    <div className="header-font font-3">Albums</div>
+                    <div className={`list ${albums.length === 0 ? "": "d-flex flex-wrap"}`}>
+                        {albums.length === 0 && <div className="text-center font-secondary">No Albums</div>}
 
-
-            {/* Songs */}
-            <div className="section-10 home songs">
-                <div className="header-font font-3">Songs</div>
-                <div className={`list ${songs.length === 0 ? "": "d-flex flex-wrap"}`}>
-                    {songs.length === 0 && <div className="text-center font-secondary">No Songs</div>}
-
-                    {songs.map((song, i) => {
-                        return(
-                            <div key={`song-${i}`} className="song grid-10">
-                                <span className="section-2 d-flex position-relative" onClick={() => playSong(song)}>
-                                    <img src={PlayIcon} className="play"/>
-                                    <ImageWithFallBack image={song.cover} alt={""} image_type={"album"}/>
-                                </span>
-                                <span className="section-8">
-                                    <div className="song-name line-clamp-1">{song.name}</div>
-                                    <div className="album line-clamp-1">{song.album}</div>
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Playlists - History*/}
-            <div className="section-10 playlists-history grid-10">
-                {/* Playlists */}
-                <div className="section-10 home playlists">
-                    <div className="header-font font-3">Playlists</div>
-                    <div className={`list ${playlists.length === 0 ? "": "d-flex flex-wrap"}`}>
-                        {playlists.length === 0 && <div className="text-center font-secondary">No Playlists</div>}
-                        
-                        {playlists.map((item, i) => {
+                        {albums.map((entry, i) => {
                             return(
-                                <div key={i} className="album-link playlist">
-                                    <div className="album-image-container ">
-                                        <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playPlaylist(item.name)}/></div>
+                                <div key={`album-${i}`} className="album-link" id={`album-${i}`}>
+                                    <div className="album-image-container">
+                                        <div className="play-album" onClick={() => playAlbum(entry.album)}>
+                                            <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
+                                            <img src={Circle} className="circle"/>
+                                        </div>
                                         <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
                                         
-                                        <div className="container" onClick={() => navigateToPlaylistOverview(item.name)} >
-                                            <ImageWithFallBack image={item.image} alt={item.name} image_type={"album"} />
+                                        <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
+                                            <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />
                                         </div>
                                         <div className="album-image-name header-font">
-                                            <div className="album-name">{item.name}</div>
+                                            <div className="album-name">{entry.album}</div>
+                                            <div className="artist-name">{entry.album_artist}</div>
                                         </div>
-                                    </div>                                    
+                                    </div>
                                 </div>
                             );
                         })}
                     </div>
                 </div>
-                {/* History */}
-                {/* <div className="section-10 border history home">
-                    <div className="header-font font-3">History</div>
-                </div> */}
+
+
+                {/* Songs */}
+                <div className="section-10 home songs">
+                    <div className="header-font font-3">Songs</div>
+                    <div className={`list ${songs.length === 0 ? "": "d-flex flex-wrap"}`}>
+                        {songs.length === 0 && <div className="text-center font-secondary">No Songs</div>}
+
+                        {songs.map((song, i) => {
+                            return(
+                                <div key={`song-${i}`} className="song grid-10">
+                                    <span className="section-2 d-flex position-relative" onClick={() => playSong(song)}>
+                                        <img src={PlayIcon} className="play"/>
+                                        <ImageWithFallBack image={song.cover} alt={""} image_type={"album"}/>
+                                    </span>
+                                    <span className="section-8">
+                                        <div className="song-name line-clamp-1">{song.name}</div>
+                                        <div className="album line-clamp-1">{song.album}</div>
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Playlists - History*/}
+                <div className="section-10 playlists-history grid-10">
+                    {/* Playlists */}
+                    <div className="section-10 home playlists">
+                        <div className="header-font font-3">Playlists</div>
+                        <div className={`list ${playlists.length === 0 ? "": "d-flex flex-wrap"}`}>
+                            {playlists.length === 0 && <div className="text-center font-secondary">No Playlists</div>}
+                            
+                            {playlists.map((item, i) => {
+                                return(
+                                    <div key={i} className="album-link playlist">
+                                        <div className="album-image-container ">
+                                            <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playPlaylist(item.name)}/></div>
+                                            <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
+                                            
+                                            <div className="container" onClick={() => navigateToPlaylistOverview(item.name)} >
+                                                <ImageWithFallBack image={item.image} alt={item.name} image_type={"album"} />
+                                            </div>
+                                            <div className="album-image-name header-font">
+                                                <div className="album-name">{item.name}</div>
+                                            </div>
+                                        </div>                                    
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    {/* History */}
+                    {/* <div className="section-10 border history home">
+                        <div className="header-font font-3">History</div>
+                    </div> */}
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
+    
 }

@@ -2,14 +2,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 import ListVirtualization from '../components/lists/listVirtualization.js';
-import { Songs } from "../globalValues";
+import { SongRes, Songs } from "../globalValues";
 
 import SearchIcon from '../images/search_icon.svg';
 
-interface SongRes {
-    name: string,
-    song_list: Songs[]
-}
+
 
 export default function SongPage() {
 

@@ -16,7 +16,7 @@ const ImageWithFallBack = (props: Props) => {
             <img
                 src={props.image !== undefined ? ConvertFileToImage(props.image) : PlaceHolderAlbumArt}
                 alt={props.alt}
-                loading="eager"
+                loading="lazy"
                 onError={(e) => e.currentTarget.src = PlaceHolderAlbumArt}
                 className="album-image"
             />

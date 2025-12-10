@@ -1,6 +1,6 @@
 // Core Libraries
 import { useNavigate } from 'react-router-dom';
-import {  useEffect } from 'react';
+import { useEffect } from 'react';
 
 // Custom Components
 import { Songs } from '../globalValues';
