@@ -9,7 +9,7 @@ import ImageWithFallBack from '../components/imageFallback';
 
 // Images
 import EllipsisIcon from '../images/ellipsis-solid-full.svg';
-import PlayIcon from '../images/play-icon-outline.svg';
+import PlayIcon from '../images/play-solid-full.svg';
 import Circle from '../images/circle.svg';
 
 
@@ -102,13 +102,7 @@ export default function Home() {
         navigate("/playlist/overview", {state: {name: name}});
     }
 
-    if(loading) {
-        return(
-            <div>
-
-            </div>
-        );
-    }
+    if(loading) { return( <></> ); }
     else {
         return(
             <div className="grid-20">
@@ -126,7 +120,6 @@ export default function Home() {
                                             <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                             <img src={Circle} className="circle"/>
                                         </div>
-                                        <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
                                         
                                         <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
                                             <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />

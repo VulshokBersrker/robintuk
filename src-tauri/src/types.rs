@@ -73,8 +73,7 @@ pub struct AllAlbumResults {
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct AllArtistResults {
-    pub album_artist: String,
-    pub name: String
+    pub album_artist: String
 }
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]

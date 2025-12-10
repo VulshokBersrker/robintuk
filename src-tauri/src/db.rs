@@ -390,10 +390,10 @@ pub async fn get_genre(name: String) -> Result<SongTable, String> {
 // ------------------------------------ Artist Functions ------------------------------------
 
 #[tauri::command]
-pub async fn get_all_artists(state: State<AppState, '_>) -> Result<Vec<ArtistRes>, String> {
+pub async fn get_all_artists(state: State<AppState, '_>) -> Result<Vec<AllArtistResults>, String> {
 
     let temp: Vec<AllArtistResults> = sqlx::query_as::<_, AllArtistResults>(
-        "SELECT DISTINCT name, album_artist FROM songs
+        "SELECT DISTINCT album_artist FROM songs WHERE album_artist IS NOT NULL
         GROUP BY album_artist
         ORDER BY album_artist ASC;",
     )
@@ -401,50 +401,50 @@ pub async fn get_all_artists(state: State<AppState, '_>) -> Result<Vec<ArtistRes
     .await
     .unwrap();
 
-    let mut output: Vec<ArtistRes> = vec![];
+    // let mut output: Vec<ArtistRes> = vec![];
 
-    for letter in ALPHABETICALLY_ORDERED {
-        let mut t: Vec<AllArtistResults> = vec![];
-        for item in temp.clone() {
+    // for letter in ALPHABETICALLY_ORDERED {
+    //     let mut t: Vec<AllArtistResults> = vec![];
+    //     for item in temp.clone() {
 
-            // A check for when an artist is null or empty
-            if Some(&item.album_artist) == None || item.album_artist == "".to_string() {
-                if letter == '.' {
-                    t.push(AllArtistResults{ album_artist: "Unknown Artist".to_string(), name: "".to_string() } );
-                    continue;
-                }
-            }
-            else if Some(&item.album_artist) != None || item.album_artist != "".to_string() {
-                // Special Characters
-                if letter == '&' &&
-                    (item.album_artist.as_str().starts_with('#') || item.album_artist.as_str().starts_with('!') || item.album_artist.as_str().starts_with('#')
-                    || item.album_artist.as_str().starts_with('[') || item.album_artist.as_str().starts_with(']') || item.album_artist.as_str().starts_with('\\')
-                    || item.album_artist.as_str().starts_with('-') || item.album_artist.as_str().starts_with('_') || item.album_artist.as_str().starts_with('\"')
-                    || item.album_artist.as_str().starts_with('\'') || item.album_artist.as_str().starts_with('&') || item.album_artist.as_str().starts_with('$')
-                    || item.album_artist.as_str().starts_with('+') || item.album_artist.as_str().starts_with('%') || item.album_artist.as_str().starts_with('*') || item.album_artist.as_str().starts_with('.') ) {
-                    t.push(item);
-                }
-                // Other Characters outside ascii values
-                else if letter == '.' && !item.album_artist.as_bytes()[0].is_ascii() {
-                    t.push(item);
-                }
-                // 0 - 9
-                else if letter == '#' && item.album_artist.as_str().chars().next().unwrap().is_numeric() {
-                    t.push(item);
-                }
-                // A - Z
-                else if letter.is_alphabetic() && item.album_artist.starts_with(letter) {
-                    t.push(item);
+    //         // A check for when an artist is null or empty
+    //         if Some(&item.album_artist) == None || item.album_artist == "".to_string() {
+    //             if letter == '.' {
+    //                 t.push(AllArtistResults{ album_artist: "Unknown Artist".to_string(), name: "".to_string() } );
+    //                 continue;
+    //             }
+    //         }
+    //         else if Some(&item.album_artist) != None || item.album_artist != "".to_string() {
+    //             // Special Characters
+    //             if letter == '&' &&
+    //                 (item.album_artist.as_str().starts_with('#') || item.album_artist.as_str().starts_with('!') || item.album_artist.as_str().starts_with('#')
+    //                 || item.album_artist.as_str().starts_with('[') || item.album_artist.as_str().starts_with(']') || item.album_artist.as_str().starts_with('\\')
+    //                 || item.album_artist.as_str().starts_with('-') || item.album_artist.as_str().starts_with('_') || item.album_artist.as_str().starts_with('\"')
+    //                 || item.album_artist.as_str().starts_with('\'') || item.album_artist.as_str().starts_with('&') || item.album_artist.as_str().starts_with('$')
+    //                 || item.album_artist.as_str().starts_with('+') || item.album_artist.as_str().starts_with('%') || item.album_artist.as_str().starts_with('*') || item.album_artist.as_str().starts_with('.') ) {
+    //                 t.push(item);
+    //             }
+    //             // Other Characters outside ascii values
+    //             else if letter == '.' && !item.album_artist.as_bytes()[0].is_ascii() {
+    //                 t.push(item);
+    //             }
+    //             // 0 - 9
+    //             else if letter == '#' && item.album_artist.as_str().chars().next().unwrap().is_numeric() {
+    //                 t.push(item);
+    //             }
+    //             // A - Z
+    //             else if letter.is_alphabetic() && item.album_artist.starts_with(letter) {
+    //                 t.push(item);
                     
-                }
-            }
+    //             }
+    //         }
             
-        }
-        output.push(ArtistRes{name: letter.to_string(), section: t});
-    }
+    //     }
+    //     output.push(ArtistRes{name: letter.to_string(), section: t});
+    // }
     
 
-    Ok(output)
+    Ok(temp)
 }
 
 #[tauri::command(rename_all = "snake_case")]

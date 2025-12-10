@@ -1,13 +1,13 @@
 import { HashLink } from 'react-router-hash-link';
-import { NavigateFunction, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
-import { forwardRef } from 'react'
+import { forwardRef } from 'react';
 
 // Custom Components
-import { saveQueue, Songs, savePosition, AlbumRes, PlaylistList, playSelection, AlbumDetails, alphabeticallyOrdered } from "../globalValues";
+import { saveQueue, Songs, savePosition, PlaylistList, playSelection, AlbumDetails, alphabeticallyOrdered } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -26,9 +26,8 @@ import CloseIcon from '../images/x.svg';
 
 // List virtualization might be good for these lists
 
-interface CheckBoxSelection {
-    section: boolean[]
-}
+// AT THE MOMENT ---- THE SECTION BUTTONS ON THE SIDE DO NOT WORK
+// ALSO NEED TO ADD SCROLL RESTORATION AT SOME POINT
 
 type P = {
     albums: AlbumDetails[];
@@ -60,23 +59,15 @@ export default function AlbumPage({albums}: P) {
         async function setupAlbumList() {
             try {
                 setLoading(true);
-
-                // let checkboxArr: CheckBoxSelection[] = [];
-                // for(let j = 0; j < filteredAlbums.length; j++) {
-                //     let temp: boolean[] = Array(filteredAlbums[j].section.length).fill(false);
-                //     checkboxArr.push({section: temp});
-                // }
-                // setCheckBoxNumber(checkboxArr);
-                console.log("checkbox");
-                // console.log(checkboxArr);
+                setCheckBoxNumber(Array(albumList.length).fill(false));
             }
             catch(e) {
                 console.log(e);
             }
             setLoading(false);
         }
-        // setupAlbumList();
-        getAlbums();
+        setupAlbumList();
+        // getAlbums();
         
 
         const handler = () => {

@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import SimpleBar from "simplebar-react";
 
 // Custom Components
-import { AlbumDetails, AlbumRes, ArtistRes, SongRes, Songs } from "./globalValues";
+import { AlbumDetails, AlbumRes, AllArtistResults, ArtistRes, SongRes, Songs } from "./globalValues";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
@@ -35,7 +35,7 @@ function App() {
   const [albumList, setAlbumList] = useState<AlbumDetails[]>([]);
   const [homeAlbums, setHomeAlbums] = useState<AlbumDetails[]>([]);
 
-  const [artistList, setArtistList] = useState<ArtistRes[]>([]);
+  const [artistList, setArtistList] = useState<AllArtistResults[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -111,7 +111,7 @@ function App() {
   // get all data for the media player's main pages
   async function getArtists() {
     try {
-      const list = await invoke<ArtistRes[]>('get_all_artists');
+      const list = await invoke<AllArtistResults[]>('get_all_artists');
       // console.log(list);
       setArtistList(list);
     }

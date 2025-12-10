@@ -51,6 +51,11 @@ export interface ArtistRes {
     section: Songs[]
 }
 
+export interface AllArtistResults {
+    album_artist: string,
+    name: string
+}
+
 export interface ArtistDetails {
     num_tracks: number,
     total_duration: number,

@@ -1,29 +1,40 @@
 import { HashLink } from 'react-router-hash-link';
 import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
+import { VirtuosoGrid } from 'react-virtuoso';
 import { useEffect, useState } from "react";
+import SimpleBar from 'simplebar-react';
+import { forwardRef } from 'react';
 
 // Custom Components
+import { saveQueue, Songs, savePosition, PlaylistList, playSelection, AlbumDetails, alphabeticallyOrdered, ArtistRes, AllArtistResults } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback.js";
-import { Songs, ArtistRes } from "../globalValues";
 
 // Images
 import SearchIcon from '../images/search_icon.svg';
+import PlaceholderArtistImage from '../images/placeholder_artist.png';
 
 type P = {
-    artists: ArtistRes[];
+    artists: AllArtistResults[];
 }
 
 export default function ArtistsPage({artists}: P) {
 
     const navigate = useNavigate();
+
+    // Used to add SimpleBar to React Virtuoso
+    const [scrollParent, setScrollParent] = useState<any>(null);
+
+    console.log(artists)
+
     // const [loading, setLoading] = useState(false);
-    const [artistList, setArtistList] = useState<ArtistRes[]>(artists);
+    const [artistList, setArtistList] = useState<AllArtistResults[]>(artists);
+    const [filteredArtists, setFilteredArtists] = useState<AllArtistResults[]>(artists);
     const [searchValue, setSearchValue] = useState<string>("");
 
     async function getArtists() {
         try {
-            const list = await invoke<ArtistRes[]>('get_all_artists');
+            const list = await invoke<AllArtistResults[]>('get_all_artists');
             // console.log(list);
             setArtistList(list);
         }
@@ -57,7 +68,7 @@ export default function ArtistsPage({artists}: P) {
 
             </div>
 
-            <div className="section-list">
+            {/* <div className="section-list">
                 {artistList.map(section => {
                     if(section.section.length !== 0) {
                         return(
@@ -69,9 +80,9 @@ export default function ArtistsPage({artists}: P) {
                         );
                     }                    
                 })}
-            </div>
+            </div> */}
 
-            <div className="d-flex flex-wrap">
+            {/* <div className="d-flex flex-wrap">
                 {artistList.map(section => {
                     if(section.section.length > 0) {
                         return(
@@ -93,7 +104,49 @@ export default function ArtistsPage({artists}: P) {
                         );
                     }            
                 })}                
-            </div>
+            </div> */}
+
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+                    <VirtuosoGrid
+                        style={{ paddingBottom: '170px' }}
+                        totalCount={filteredArtists.length}
+                        components={gridComponents}
+                        increaseViewportBy={{ top: 210, bottom: 420 }}
+                        itemContent={(index) =>
+                            <div className="album-link" key={index} id={`${filteredArtists[index].album_artist}-${index}`}>
+                                <div className="album-image-container"
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
+                                    }}
+                                >                                    
+                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist)} >
+                                        <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].album_artist} image_type={"album"} />
+                                    </div>
+                                    <div className="album-image-name header-font">
+                                        <div className="album-name">{filteredArtists[index].album_artist}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                    />
+                </SimpleBar>
         </div>
     );
+}
+
+// For the Virtual Grid
+const gridComponents = {
+    List: forwardRef(({ style, children, ...props }: any, ref) => (
+        <div ref={ref} {...props} style={{ display: "flex", flexWrap: "wrap", ...style, }} >
+            {children}
+        </div>
+    )),
+
+  Item: ({ children, ...props }: any) => (
+    <div {...props} style={{  width: "168px", display: "flex", flex: "none", boxSizing: "border-box", }} >
+        {children}
+    </div>
+  )
 }

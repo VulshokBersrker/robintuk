@@ -21,7 +21,6 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.9.4",
     "react-router-hash-link": "^2.4.3",
-    "react-virtualized": "^9.22.6",
     "react-virtuoso": "^4.17.0",
     "simplebar-react": "^3.3.2",
     "tauri-plugin-cache-api": "^0.1.5"
