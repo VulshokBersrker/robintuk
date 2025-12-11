@@ -1,15 +1,25 @@
-import { useEffect, useState } from "react";
-import { invoke } from '@tauri-apps/api/core';
+// Core Libraries
 import { open } from '@tauri-apps/plugin-dialog';
+import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useState } from "react";
+import SimpleBar from 'simplebar-react';
 
+// Custom Components
+import ImageWithFallBack from '../components/imageFallback';
+import ThemeOptions from "../components/themeOptions";
+
+// Images
 import CheckIcon from '../images/circle-check-regular-full.svg';
 import ErrorIcon from '../images/circle-xmark-regular-full.svg';
-import ThemeOptions from "../components/themeOptions";
+import logo from '../images/logo.svg';
+
+
+
 
 interface ScanResults {
     success: number,
     error: number,
-    error_dets: ErrorInfo[],
+    error_dets: ErrorInfo[] | null,
 }
 interface ErrorInfo {
     file_name: string,
@@ -19,9 +29,8 @@ interface DirectoryInfo {
     dir_path: string
 }
 
-// Add check to remove any directories that are child folders of other already inputted directories
-
-// Disable the scan button if the dirs are empty
+// Add function to remove all entries if the list is emptied
+// Add an "Are you sure" message to list the user know all the music will be gone
 
 export default function Settings() {
 
@@ -32,6 +41,9 @@ export default function Settings() {
 
     const [scanResults, setScanResults] = useState<ScanResults>();
 
+    const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme')!);
+
+
 
     async function scanMusic() {
         setLoading(true);
@@ -39,9 +51,11 @@ export default function Settings() {
             const scannedFiles = await invoke<ScanResults>('scan_directory');
             // console.log(scannedFiles);
             setScanResults(scannedFiles);
-        } catch (err) {
+        }
+        catch (err) {
             alert(`Failed to scan folder: ${err}`);
-        } finally {
+        }
+        finally {
             setLoading(false);
             // Show the popup with the results for 3 seconds
             setShowResults(true);
@@ -57,7 +71,7 @@ export default function Settings() {
     }
 
     // Rust async commands for the dirs table
-    async function get_directories() {
+    async function getDirectories() {
         try {
             const directory_list = await invoke<DirectoryInfo[]>('get_directory');
             // console.log(directory_list);
@@ -69,13 +83,28 @@ export default function Settings() {
             alert(`Failed find any directories: ${err}`);
         }
     }
-    async function add_directory() {
+    async function addDirectory() {
         try {
             const folder_path = await open({ multiple: false, directory: true });
             // console.log(folder_path);
             if(folder_path !== null) {
-                updateDirectoryList(folder_path.toString());
-                await invoke("add_directory", { directory_name: folder_path.toString() });
+                let dup: boolean = false;
+                for(let i = 0; i < directoryList.length; i++) {
+                    if(folder_path.includes(directoryList[i].dir_path)) {
+                        console.log("subfolder detected - cannot add subfolder to directory list");
+                        dup = true;
+                    }
+                }
+                if(dup === false) {
+                    updateDirectoryList(folder_path.toString());
+                    await invoke("add_directory", { directory_name: folder_path.toString() });
+                }
+                else {
+                    setShowResults(true);
+                    setTimeout(() => {
+                        setShowResults(false);
+                    }, 5000);
+                }          
             }            
         }
         catch(err) {
@@ -87,18 +116,30 @@ export default function Settings() {
         await invoke("remove_directory", { directory_name: value })
     }
 
+    function setTheme(theme: string) {
+        setThemeColor(theme);
+        document.querySelector('body')?.setAttribute("data-theme", theme);
+        localStorage.setItem('theme', theme);
+    }
+
     // Get the list of directories on load
     useEffect(() => {
-        get_directories();
+        getDirectories();
     }, []);
 
 
     return(
-        <main className="container">
-            {(showResults === true && scanResults !== undefined) && <ScanResultsPopup success={scanResults.success} error={scanResults.error} error_dets={scanResults.error_dets} />}
-            <div className="">
+        <SimpleBar forceVisible="y" autoHide={false} className="scrollbar-settings-content" >
+
+            {(showResults === true && scanResults !== undefined) &&
+                <ErrorPopup success={scanResults.success} error={scanResults.error} error_dets={scanResults.error_dets} type={0} />
+            }
+            {(showResults === true && scanResults === undefined) &&
+                <ErrorPopup success={0} error={1} error_dets={null} type={1} />
+            }
+            <div className="settings-section">
                 <span className="header-font font-3">Folders to Scan</span>
-                <p className="font-1">Select the folders that have your music</p>
+                <p className="sub-font font-0">Select the folders that have your music</p>
                 {directoryList.map((dir, i) => {
                     return(
                         <div className="directory-padding" key={i} >
@@ -112,20 +153,31 @@ export default function Settings() {
 
                 {/* Buttons to add folders and scan for music */}
                 <div className="directory-padding">
-                    <button className="scan-folder-button header-font" onClick={add_directory} disabled={loading}>+ Add Folder</button>
+                    <button className="white header-font" onClick={addDirectory} disabled={loading}>+ Add Folder</button>
                 </div>
 
                 <div>
-                    <button className="scan-folder-button header-font d-flex" onClick={scanMusic} disabled={loading || directoryList.length === 0}>
+                    <button className="white header-font d-flex" onClick={scanMusic} disabled={loading || directoryList.length === 0}>
                         {loading === true && <span style={{paddingRight: '5px'}}><span className="loader" /> </span>}
                         <span>Scan Music</span>
                     </button>
                 </div>
             </div>
 
-            <div className="theme-container">
+            <div className="settings-section theme-container">
                 <div className="header-font font-3">Choose Theme</div>
-                <div className="theme-options">
+                {/* Update to dropdown */}
+                <select name="themes" id={`theme-${themeColor}`} value={themeColor} onChange={(e) => setTheme(e.target.value)} >
+                    
+                    <option value="red" id="theme-red"> Red </option>
+                    <option value="blue" id="theme-blue"> Blue </option>
+                    <option value="purple" id="theme-purple"> Purple </option>
+                    <option value="orange" id="theme-orange"> Orange </option>
+                    <option value="green" id="theme-green"> Green </option>
+                    <option value="dark-wave" id="theme-dark-wave"> Dark Wave </option>
+                </select>
+
+                {/* <div className="theme-options">
                     <span>
                         <ThemeOptions theme="red" />
                         <div id="theme-name">Red</div>
@@ -150,26 +202,68 @@ export default function Settings() {
                         <ThemeOptions theme="dark-wave" />
                         <div id="theme-name">Dark Wave</div>
                     </span>
+                </div> */}
+            </div>
+
+            {/* Key Bindings */}
+            <div className="settings-section keys-container">
+                <div className="header-font font-3">Global Key Bindings</div>
+
+                <div className="grid-20 vertical-centered">
+                    <span className="key-binding header-font section-2 text-center">FN + Play</span>
+                    <span className="section-8">Toggle Play and Pause Music</span>
+                </div>
+                <div className="grid-20 vertical-centered">
+                    <span className="key-binding header-font section-2 text-center">FN + Previous</span>
+                    <span className="section-8">Previous Song</span>
+                </div>
+                <div className="grid-20 vertical-centered">
+                    <span className="key-binding header-font section-2 text-center">FN + Next</span>
+                    <span className="section-8">Next Song</span>
                 </div>
             </div>
 
-                   
-        </main>
-    )
-}
+            {/* Backup Restore */}
+            <div className="settings-section">
+                <div className="header-font font-3">Data Backup/Restore</div>
 
+                <div className="">
+                    <div className="sub-font font-0">Backup and Restore all your data on Robintuk, including your playlists</div>
+                    <span> <button className="white">Backup Database</button> </span>
+                    <span> <button className="white">Restore Database</button> </span>
+                    <span> <button className="white">Reset Database</button> </span>
+                </div>
+            </div>
+
+
+            <div className="settings-section">
+                <div className="header-font font-3">About</div>
+
+                <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
+                <div className="header-font">Robintuk v0.1 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="sub-font font-0">Open Source Music Player</div>    
+                <div> <button className="white">View Github</button> </div>
+            </div>
+
+            <div className="empty-space"></div>
+            <div className="empty-space"></div>
+        </SimpleBar>
+    );
+}
 
 
 type Props = {
     success: number,
     error: number,
-    error_dets: ErrorInfo[],
+    error_dets: ErrorInfo[] | null,
+    type: number,
 };
 
-const ScanResultsPopup = (props: Props) => {
+const ErrorPopup = ({success, error, error_dets, type}: Props) => {
 
-    if(props !== undefined || props !== null) {
-        if(props.error !== 0) {
+    // 0 - Directory Scan
+    if(type === 0) {
+        if(error !== 0) {
             return(
                 <div className="status-container error d-flex vertical-centered">
                     <span>
@@ -177,23 +271,39 @@ const ScanResultsPopup = (props: Props) => {
                     </span>
                     <span style={{paddingLeft: "10px"}}>
                         <div>Folders Scanned</div>
-                        <div>Scanned {props.error + props.success} songs - {props.error} songs had errors</div>                    
+                        <div>Scanned {error + success} songs - {error} songs had errors</div>                    
                     </span>
                 </div>
             );
         }
         else {
-           return(
+            return(
                 <div className="status-container success d-flex vertical-centered">
                     <span>
                         <img src={CheckIcon} alt={"ff"} className="scan-status-icon success"/>
                     </span>
                     <span style={{paddingLeft: "10px"}}>
                         <div>Folders Scanned</div>
-                        <div>Scanned {props.error + props.success} songs - {props.error} songs had errors</div>                    
+                        <div>Scanned {error + success} songs - {error} songs had errors</div>                    
                     </span>
                 </div>
             );
         }
     }
+    // Duplicate/Subfolder added to directory list
+    else if(type === 1) {
+        return(
+            <div className="status-container error d-flex vertical-centered">
+                <span>
+                    <img src={ErrorIcon} alt={"ff"} className="scan-status-icon error"/>
+                </span>
+                <span style={{paddingLeft: "10px"}}>
+                    <div>Overlapping Folders Detected</div>
+                    <div>Cannot add subfolder to list, files would be scanned twice</div>                    
+                </span>
+            </div>
+        );
+    }
+        
+    
 }
