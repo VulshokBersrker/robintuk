@@ -1,19 +1,29 @@
 import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
+import SimpleBar from 'simplebar-react';
 
 // Custom Components
 import { saveQueue, Songs, savePosition, Playlists } from "../globalValues.js";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
-import EllipsisIcon from '../images/ellipsis-solid-full.svg';
-import PlayIcon from '../images/play-icon-outline.svg';
+import PlayIcon from '../images/play-solid-full.svg';
+import PlusIcon from '../images/plus-solid-full.svg';
+import Circle from '../images/circle.svg';
+import { listen } from '@tauri-apps/api/event';
+
+
+type NewPlaylistList = {
+    playlist: Playlists[]
+}
 
 export default function PlaylistPage() {
 
     const navigate = useNavigate();
     const [playlistList, setPlaylistList] = useState<Playlists[]>([]);
+    const [displayCreate, setDisplayCreate] = useState<boolean>(false);
+    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
 
     async function getAlbums() {
         try {
@@ -27,7 +37,17 @@ export default function PlaylistPage() {
 
     useEffect(() => {
         getAlbums();
-    }, [])
+    }, []);
+
+    // Just for listeners
+    useEffect(() => {
+        // Load the new playlist from the backend
+        const unlisten_get_playlists= listen<NewPlaylistList>("new-playlist-created", (event) => { console.log(event.payload.playlist); setPlaylistList(event.payload.playlist); });
+        
+        return () => {
+            unlisten_get_playlists.then(f => f());
+        }        
+    }, []);
 
     const navigateToPlaylistOverview = (name: string) => {
         navigate("/playlists/overview", {state: {name: name}});
@@ -49,19 +69,57 @@ export default function PlaylistPage() {
         }
     }
 
+    async function createPlaylist(name: string) {
+        try {
+            await invoke('create_playlist', {name: name});
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
     return(
-        <>
+        <SimpleBar forceVisible="y" autoHide={false} >
             <div className="header-font font-4 page-header d-flex align-items-center">Playlists</div>
 
-            <div className="playlist-button"> <button onClick={() => {}}>+ New Playlist</button> </div>
+            <div className="playlist-buttons d-flex align-items-center">
+                <span className="">
+                    <button className="white d-flex align-items-center" onClick={() => {setDisplayCreate(!displayCreate)}}>
+                        <img src={PlusIcon} alt={""} /> &nbsp; New Playlist
+                    </button>
+                </span>
+                
+                {displayCreate &&
+                    <>
+                        <input
+                            id="playlist-name"
+                            type="text"
+                            placeholder="Playlist Name"
+                            value={newPlaylistName}
+                            className=""
+                            style={{width: '280px'}}
+                            onChange={(e) => setNewPlaylistName(e.target.value)}
+                        />
+                        <span>
+                            <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName)}}>
+                                Create
+                            </button>
+                        </span>
+                    </>
+                }
+            </div>
+            
 
             <div className="d-flex flex-wrap">
                 {playlistList.map((item, i) => {
                     return(
                         <div key={i} className="album-link playlist">
                             <div className="album-image-container playlist">
-                                <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playPlaylist(item.name)}/></div>
-                                <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
+                                <div className="play-album" onClick={() => playPlaylist(item.name)} >
+                                    <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
+                                    <img src={Circle} className="circle"/>
+                                </div>
                                 
                                 <div className="container" onClick={() => navigateToPlaylistOverview(item.name)} >
                                     <ImageWithFallBack image={item.image} alt={item.name} image_type={"album"} />
@@ -76,6 +134,9 @@ export default function PlaylistPage() {
                         
                 })}
             </div>
-        </>
+
+            
+            <div className="empty-space" />
+        </ SimpleBar>
     );
 }

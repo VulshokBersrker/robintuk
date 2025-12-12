@@ -101,7 +101,6 @@ export default function AlbumPage({albums}: P) {
         }
     }
 
-
     const navigateToAlbumOverview = (name: string) => {
         navigate("/albums/overview", {state: {name: name}});
     }
@@ -127,14 +126,10 @@ export default function AlbumPage({albums}: P) {
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
-        // let temp: AlbumRes[] = [];
-        // for(let i = 0; i < albumList.length; i++) {            
-        //     const temp_section = albumList[i].section.filter((entry) => {
-        //         return entry.album.toLowerCase().includes(value.toLowerCase());
-        //     });
-        //     temp.push({ name: albumList[i].name, section: temp_section });
-        // }
-        // setFilteredAlbums(temp);
+        const temp_section = albumList.filter((entry): any => {
+            return entry.album.toLowerCase().includes(value.toLowerCase());
+        })
+        setFilteredAlbums(temp_section);
     }
 
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
@@ -216,7 +211,12 @@ export default function AlbumPage({albums}: P) {
     
     async function addToPlaylist(name: string) {
         try {
-            await invoke('add_to_playlist', {songs: albumSelection, playlist_name: name});
+            let songList: Songs[] = [];
+            for(let i = 0; i < albumSelection.length; i++) {
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
+                songList.push(...temp);
+            }
+            await invoke('add_to_playlist', {songs: songList, playlist_name: name});
         }
         catch(e) {
             console.log(e);
@@ -229,8 +229,13 @@ export default function AlbumPage({albums}: P) {
 
     async function createPlaylist(name: string) {
         try {
+            let songList: Songs[] = [];
+            for(let i = 0; i < albumSelection.length; i++) {
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
+                songList.push(...temp);
+            }
             await invoke('create_playlist', {name: name});
-            await invoke('add_to_playlist', {songs: albumSelection, playlist_name: name});
+            await invoke('add_to_playlist', {songs: songList, playlist_name: name});
             await invoke('new_playlist_added');
         }
         catch(e) {
@@ -279,21 +284,24 @@ export default function AlbumPage({albums}: P) {
     if(loading) {
         return(
             <div>
-                <div className="search-filters d-flex justify-content-end vertical-centered">
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+                    <div className="search-filters d-flex justify-content-end vertical-centered"> 
+                        <span className="search-bar">
+                            <img src={SearchIcon} className="bi search-icon icon-size"/>
+                            <input
+                                type="text" placeholder="Search Albums" id="search_albums"
+                                value={searchValue}
+                                onChange={(e) => updateSearchResults(e.target.value)}
+                            />
+                        </span>
+                    </div>
 
-                    <span className="search-bar">
-                        <img src={SearchIcon} className="bi search-icon icon-size"/>
-                        <input
-                            type="text" placeholder="Search Albums" id="search_albums"
-                            value={searchValue}
-                            onChange={(e) => updateSearchResults(e.target.value)}
-                        />
-                    </span>
-                </div>
-
-                <div className="d-flex flex-wrap">
-                    {[...Array(70)].map((_entry, i: number) => {
-                        return(
+                    <VirtuosoGrid
+                        style={{ paddingBottom: '170px' }}
+                        totalCount={Array(70).length}
+                        components={gridComponents}
+                        increaseViewportBy={{ top: 210, bottom: 420 }}
+                        itemContent={(i) =>
                             <div key={`place-${i}`} className="album-link placeholder" id={`place-${i}`}>
                                 <div className="album-image-container placeholder">                                                
                                     <div className="album-image placeholder">
@@ -305,9 +313,10 @@ export default function AlbumPage({albums}: P) {
                                 </div>
                                 </div>
                             </div>
-                        );
-                    })}                
-                </div>
+                        }
+                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                    />
+                </SimpleBar>
             </div>
         );
     }
@@ -359,34 +368,33 @@ export default function AlbumPage({albums}: P) {
                 </div>                    
                 {/* End of Song Selection Bar */}
 
-
-                <div className="search-filters d-flex justify-content-end vertical-centered"> 
-                    <span className="search-bar">
-                        <img src={SearchIcon} className="bi search-icon icon-size"/>
-                        <input
-                            type="text" placeholder="Search Albums" id="search_albums"
-                            value={searchValue}
-                            onChange={(e) => updateSearchResults(e.target.value)}
-                        />
-                    </span>
-                </div>
-
-                <div className="section-list">
-                    {alphabeticallyOrdered.map(section => {
-                        return(
-                            <HashLink to={`/albums#${section}-0`} smooth key={`main-${section}`}>
-                                <div key={`main-${section}`}>
-                                    {section === 0 && "&"}
-                                    {section === 1 && "#"}
-                                    {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
-                                    {section === 300 && "..."}
-                                </div>
-                            </HashLink>                                
-                        );                                          
-                    })}
-                </div>
-
                 <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+                    <div className="search-filters d-flex justify-content-end vertical-centered"> 
+                        <span className="search-bar">
+                            <img src={SearchIcon} className="bi search-icon icon-size"/>
+                            <input
+                                type="text" placeholder="Search Albums" id="search_albums"
+                                value={searchValue}
+                                onChange={(e) => updateSearchResults(e.target.value)}
+                            />
+                        </span>
+                    </div>
+
+                    <div className="section-list">
+                        {alphabeticallyOrdered.map(section => {
+                            return(
+                                <HashLink to={`/albums#${section}-0`} smooth key={`main-${section}`}>
+                                    <div key={`main-${section}`}>
+                                        {section === 0 && "&"}
+                                        {section === 1 && "#"}
+                                        {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
+                                        {section === 300 && "..."}
+                                    </div>
+                                </HashLink>                                
+                            );                                          
+                        })}
+                    </div>
+
                     <VirtuosoGrid
                         style={{ paddingBottom: '170px' }}
                         totalCount={filteredAlbums.length}
@@ -468,12 +476,12 @@ function ContextMenuAlbums({ isToggled, album, artist, index, play, editSelectio
     }
 
     useEffect(() => {
-        const element = document.getElementsByClassName("content");
+        const element = document.getElementsByClassName("simplebar-content-wrapper");
         if(isToggled) {
-            element[0].classList.add("disable-scroll");
+            element[0].classList.add("overflow-y-hidden");
         }
         else {
-            element[0].classList.remove("disable-scroll");
+            element[0].classList.remove("overflow-y-hidden");
         }
     }, [isToggled]);
 

@@ -4,17 +4,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 
-// Custom Components
-import ImageWithFallBack from '../components/imageFallback';
-import ThemeOptions from "../components/themeOptions";
-
 // Images
 import CheckIcon from '../images/circle-check-regular-full.svg';
 import ErrorIcon from '../images/circle-xmark-regular-full.svg';
 import logo from '../images/logo.svg';
-
-
-
 
 interface ScanResults {
     success: number,
@@ -36,13 +29,10 @@ export default function Settings() {
 
     const [loading, setLoading] = useState<boolean>(false);
     const [showResults, setShowResults] = useState<boolean>(false);
-
     const [directoryList, setDirectoryList] = useState<DirectoryInfo[]>([]);
-
     const [scanResults, setScanResults] = useState<ScanResults>();
 
     const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme')!);
-
 
 
     async function scanMusic() {
@@ -168,7 +158,6 @@ export default function Settings() {
                 <div className="header-font font-3">Choose Theme</div>
                 {/* Update to dropdown */}
                 <select name="themes" id={`theme-${themeColor}`} value={themeColor} onChange={(e) => setTheme(e.target.value)} >
-                    
                     <option value="red" id="theme-red"> Red </option>
                     <option value="blue" id="theme-blue"> Blue </option>
                     <option value="purple" id="theme-purple"> Purple </option>
@@ -176,33 +165,6 @@ export default function Settings() {
                     <option value="green" id="theme-green"> Green </option>
                     <option value="dark-wave" id="theme-dark-wave"> Dark Wave </option>
                 </select>
-
-                {/* <div className="theme-options">
-                    <span>
-                        <ThemeOptions theme="red" />
-                        <div id="theme-name">Red</div>
-                    </span>
-                    <span>
-                        <ThemeOptions theme="blue" />
-                        <div id="theme-name">Blue</div>
-                    </span>
-                    <span>
-                        <ThemeOptions theme="purple" />
-                        <div id="theme-name">Purple</div>
-                    </span>
-                    <span>
-                        <ThemeOptions theme="orange" />
-                        <div id="theme-name">Orange</div>
-                    </span>
-                    <span>
-                        <ThemeOptions theme="green" />
-                        <div id="theme-name">Green</div>
-                    </span>
-                    <span>
-                        <ThemeOptions theme="dark-wave" />
-                        <div id="theme-name">Dark Wave</div>
-                    </span>
-                </div> */}
             </div>
 
             {/* Key Bindings */}
@@ -259,7 +221,7 @@ type Props = {
     type: number,
 };
 
-const ErrorPopup = ({success, error, error_dets, type}: Props) => {
+const ErrorPopup = ({success, error, type}: Props) => {
 
     // 0 - Directory Scan
     if(type === 0) {

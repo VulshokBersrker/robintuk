@@ -7,7 +7,7 @@ import SimpleBar from 'simplebar-react';
 import { forwardRef } from 'react';
 
 // Custom Components
-import { saveQueue, Songs, savePosition, PlaylistList, playSelection, AlbumDetails, alphabeticallyOrdered, ArtistRes, AllArtistResults } from "../globalValues";
+import {alphabeticallyOrdered, AllArtistResults } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -25,7 +25,7 @@ export default function ArtistsPage({artists}: P) {
     // Used to add SimpleBar to React Virtuoso
     const [scrollParent, setScrollParent] = useState<any>(null);
 
-    console.log(artists)
+    // console.log(artists)
 
     // const [loading, setLoading] = useState(false);
     const [artistList, setArtistList] = useState<AllArtistResults[]>(artists);
@@ -47,92 +47,72 @@ export default function ArtistsPage({artists}: P) {
         // getArtists();
     }, []);
 
+    function updateSearchResults(value: string) {
+        setSearchValue(value);
+        const temp_section = artistList.filter((entry): any => {
+            return entry.album_artist.toLowerCase().includes(value.toLowerCase());
+        })
+        setFilteredArtists(temp_section);
+    }
+
     const navigateToArtistOverview = (name: string) => {
         navigate("/artists/overview", {state: {name: name}});
     }
 
     return(
-        <div>
+        <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
             <div className="search-filters d-flex justify-content-end vertical-centered"> 
-                <span className="filter">Sort By: <span className="value">A-Z</span></span>
-                <span className="filter">Genre: <span className="value">All Genres</span></span>
-
                 <span className="search-bar">
                     <img src={SearchIcon} className="bi search-icon icon-size"/>
                     <input
-                        type="text" placeholder="Search Albums" id="search_albums"
+                        type="text" placeholder="Search Artists" id="search_albums"
                         value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
+                        onChange={(e) => updateSearchResults(e.target.value)}
                     />
                 </span>
-
             </div>
 
-            {/* <div className="section-list">
-                {artistList.map(section => {
-                    if(section.section.length !== 0) {
-                        return(
-                            <div key={section.name}>
-                                <HashLink to={`/artists#${section.name}-0`} smooth>
-                                    {section.name}
-                                </HashLink>
+            <div className="section-list">
+                {alphabeticallyOrdered.map(section => {
+                    return(
+                        <HashLink to={`/artists#${section}-0`} smooth key={`main-${section}`}>
+                            <div key={`main-${section}`}>
+                                {section === 0 && "&"}
+                                {section === 1 && "#"}
+                                {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
+                                {section === 300 && "..."}
                             </div>
-                        );
-                    }                    
+                        </HashLink>                                
+                    );                                          
                 })}
-            </div> */}
+            </div>
 
-            {/* <div className="d-flex flex-wrap">
-                {artistList.map(section => {
-                    if(section.section.length > 0) {
-                        return(
-                            section.section.map((entry, i) => {
-                                return(
-                                    <div key={`${section.name}-${i}`} className="album-link" id={`${section.name}-${i}`}>
-                                        <div className="album-image-container">
-                                            
-                                            <div className="container" onClick={() => navigateToArtistOverview(entry.album_artist)} >
-                                                <ImageWithFallBack image={entry.cover} alt={entry.album_artist} image_type={"artist"} />
-                                            </div>
-                                            <div className="album-image-name header-font">
-                                                <div className="album-name">{entry.album_artist}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );                                        
-                            })
-                        );
-                    }            
-                })}                
-            </div> */}
-
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
-                    <VirtuosoGrid
-                        style={{ paddingBottom: '170px' }}
-                        totalCount={filteredArtists.length}
-                        components={gridComponents}
-                        increaseViewportBy={{ top: 210, bottom: 420 }}
-                        itemContent={(index) =>
-                            <div className="album-link" key={index} id={`${filteredArtists[index].album_artist}-${index}`}>
-                                <div className="album-image-container"
-                                    onContextMenu={(e) => {
-                                        e.preventDefault();
-                                        // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
-                                    }}
-                                >                                    
-                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist)} >
-                                        <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].album_artist} image_type={"album"} />
-                                    </div>
-                                    <div className="album-image-name header-font">
-                                        <div className="album-name">{filteredArtists[index].album_artist}</div>
-                                    </div>
-                                </div>
+            
+            <VirtuosoGrid
+                style={{ paddingBottom: '170px' }}
+                totalCount={filteredArtists.length}
+                components={gridComponents}
+                increaseViewportBy={{ top: 210, bottom: 420 }}
+                itemContent={(index) =>
+                    <div className="album-link" key={index} id={`${filteredArtists[index].album_artist}-${index}`}>
+                        <div className="album-image-container"
+                            onContextMenu={(e) => {
+                                e.preventDefault();
+                                // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
+                            }}
+                        >                                    
+                            <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist)} >
+                                <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].album_artist} image_type={"album"} />
                             </div>
-                        }
-                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                    />
-                </SimpleBar>
-        </div>
+                            <div className="album-image-name header-font">
+                                <div className="album-name">{filteredArtists[index].album_artist}</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+            />
+        </SimpleBar>
     );
 }
 

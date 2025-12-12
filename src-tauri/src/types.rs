@@ -85,23 +85,10 @@ pub struct ArtistDetailsResults {
 }
 
 #[derive(Serialize)]
-pub struct AlbumRes {
-    pub name: String,
-    pub section: Vec<AllAlbumResults>
-}
-
-#[derive(Serialize)]
-pub struct ArtistRes {
-    pub name: String,
-    pub section: Vec<AllArtistResults>
-}
-
-#[derive(Serialize)]
 pub struct SongRes {
     pub name: String,
     pub song_list: Vec<SongTable> 
 }
-
 
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -110,6 +97,20 @@ pub struct History {
     #[serde_as(as = "DisplayFromStr")]
     pub date_played: DateTime<Utc>,
     pub song_id: String,
+}
+
+#[serde_as]
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
+pub struct SongHistory {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    pub cover: String,
+    pub release: String,
+    pub album: String,
+    pub artist: String,
+    pub album_artist: String,
+    pub duration: u64,
 }
 
 

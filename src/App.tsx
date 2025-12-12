@@ -8,22 +8,23 @@ import MusicControls from "./components/musicControls";
 import RightSideBar from "./components/rightSideBar";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
-import SimpleBar from "simplebar-react";
 
 // Custom Components
-import { AlbumDetails, AlbumRes, AllArtistResults, ArtistRes, SongRes, Songs } from "./globalValues";
+import { AlbumDetails, AllArtistResults, Songs } from "./globalValues";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
 import ArtistOverviewPage from "./pages/details/artistDetails";
 import AlbumOverviewPage from "./pages/details/albumDetails";
 import QueueOverviewPage from "./pages/queue";
+import PlayHistoryPage from "./pages/history";
 import PlaylistPage from "./pages/playlist";
 import ArtistsPage from "./pages/artists";
 import Settings from "./pages/settings";
 import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
 import Home from "./pages/home";
+
 
 // https://www.dhiwise.com/blog/design-converter/mastering-react-scrollrestoration-for-better-navigation
 
@@ -130,7 +131,6 @@ function App() {
         <CustomWindowsBar />
         <RightSideBar />
         <MusicControls />
-        {/* <SimpleBar forceVisible="y" autoHide={false} className="content"> */}
         <div className="content">
           <Routes>
             <Route path="/" element={ <Home /> }/>
@@ -138,6 +138,7 @@ function App() {
             <Route path="/albums" element={ <AlbumPage albums={albumList}/> }/>
             <Route path="/artists" element={ <ArtistsPage artists={artistList}/> }/>
             <Route path="/queue" element={ <QueueOverviewPage /> }/>
+            <Route path="/history" element={ <PlayHistoryPage /> }/>
             <Route path="/playlists" element={ <PlaylistPage /> }/>
             <Route path="/settings" element={ <Settings /> }/>
             <Route path="/albums/overview" element={ <AlbumOverviewPage />} />
@@ -145,8 +146,6 @@ function App() {
             <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
           </Routes>
         </div>
-          {/* <div className="empty-space"></div> */}
-        {/* </SimpleBar> */}
       </BrowserRouter>
     </div>
   );

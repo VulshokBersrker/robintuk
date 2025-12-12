@@ -13,6 +13,7 @@ import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
+import SimpleBar from "simplebar-react";
 
 export default function ArtistOverviewPage() {
 
@@ -88,7 +89,7 @@ export default function ArtistOverviewPage() {
         else {
             // Find the location of the song in the array with filter and only return the other songs
             console.log("Removing song: " + song.name);
-            setSongSelection(songSelection.filter(item => item.id !== song.id));
+            setSongSelection(songSelection.filter(item => item.path !== song.path));
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
             setCheckBoxNumber(tempArr);
@@ -180,56 +181,59 @@ export default function ArtistOverviewPage() {
     }
     else {
         return(
-            <div className="album-container">
-                <div className="d-flex top-row justify-content-start">
-                    <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
-                </div>
-
-                {/* Album Details */}
-                <div className="d-flex">
-                    <div className="album-details d-flex">   
-                        <ImageWithFallBack image={""} alt={""} image_type={"artist"}/>
-
-                        <span style={{paddingLeft: "10px"}} className="grid-15">
-                            <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">{artistDetails.album_artist}</div>
-                            <span className="section-15 font-0 misc-details">
-                                {artistDetails.albums.length} album{artistDetails.albums.length !== 0 && <span>s</span>} &#x2022; {artistDetails.num_tracks} songs &#x2022; {new Date(artistDetails.total_duration * 1000).toISOString().slice(11, 19)} total runtime
-                            </span>
-                            
-                            <div className="section-15 d-flex album-commmands">
-                                <span><button className="font-1 d-flex align-items-center" ><img src={PlayIcon} />&nbsp;Play All</button></span>
-                                <span><button className="font-1 borderless" ><img src={ShuffleIcon} /></button></span>
-                                <span><button className="font-1 borderless" ><img src={AddIcon} /> </button></span>
-                            </div>
-                        </span>
+            <SimpleBar forceVisible="y" autoHide={false} >
+                <div className="album-container">
+                    <div className="d-flex top-row justify-content-start">
+                        <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                     </div>
-                </div>
 
-                {/* Song list */}
-                <div className="song-list">
-                    <hr />                    
-                    <div className="d-flex flex-wrap">
-                        {artistDetails.albums.map((entry, i) => {
-                            return(
-                                <div key={i} className="album-link" id={`${entry.album}-${i}`}>
-                                    <div className="album-image-container">
-                                        <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playAlbum(entry.album)}/></div>
-                                        <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
-                                        
-                                        <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
-                                            <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />
-                                        </div>
-                                        <div className="album-image-name header-font">
-                                            <div className="album-name">{entry.album}</div>
-                                            <div className="artist-name">{entry.album_artist}</div>
+                    {/* Album Details */}
+                    <div className="d-flex">
+                        <div className="album-details d-flex">   
+                            <ImageWithFallBack image={""} alt={""} image_type={"artist"}/>
+
+                            <span style={{paddingLeft: "10px"}} className="grid-15">
+                                <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">{artistDetails.album_artist}</div>
+                                <span className="section-15 font-0 misc-details">
+                                    {artistDetails.albums.length} album{artistDetails.albums.length !== 0 && <span>s</span>} &#x2022; {artistDetails.num_tracks} songs &#x2022; {new Date(artistDetails.total_duration * 1000).toISOString().slice(11, 19)} total runtime
+                                </span>
+                                
+                                <div className="section-15 d-flex album-commmands">
+                                    <span><button className="font-1 d-flex align-items-center" ><img src={PlayIcon} />&nbsp;Play All</button></span>
+                                    <span><button className="font-1 borderless" ><img src={ShuffleIcon} /></button></span>
+                                    <span><button className="font-1 borderless" ><img src={AddIcon} /> </button></span>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Song list */}
+                    <div className="song-list">
+                        <hr />                    
+                        <div className="d-flex flex-wrap">
+                            {artistDetails.albums.map((entry, i) => {
+                                return(
+                                    <div key={i} className="album-link" id={`${entry.album}-${i}`}>
+                                        <div className="album-image-container">
+                                            <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playAlbum(entry.album)}/></div>
+                                            <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
+                                            
+                                            <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
+                                                <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />
+                                            </div>
+                                            <div className="album-image-name header-font">
+                                                <div className="album-name">{entry.album}</div>
+                                                <div className="artist-name">{entry.album_artist}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
-            </div>
+                <div className="empty-space"/>
+            </SimpleBar>
         );
     }
 }

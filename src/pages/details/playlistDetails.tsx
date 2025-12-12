@@ -20,6 +20,7 @@ import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import CloseIcon from '../../images/x.svg';
+import SimpleBar from "simplebar-react";
 
 
 interface PlaylistDetails {
@@ -338,137 +339,188 @@ export default function PlaylistOverviewPage() {
     }
     else if(loading === false && playlist.length !== 0) {
         return(
-            <div className="album-container">
-                
-                {/* Song Selection Bar */}
-                <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                    <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
-                    <div className="section-4 position-relative">
-                        <button className="d-flex align-items-center">
-                            <img src={PlayIcon} />
-                            &nbsp;Play
-                        </button>
-                    </div>
-                    <div className="section-6 position-relative">
-                        <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
-                            <img src={AddIcon} />
-                             &nbsp;Add to
-                        </button>
+            <SimpleBar forceVisible="y" autoHide={false} >
+                <div className="album-container">
+                    
+                    {/* Song Selection Bar */}
+                    <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
+                        <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                        <div className="section-4 position-relative">
+                            <button className="d-flex align-items-center">
+                                <img src={PlayIcon} />
+                                &nbsp;Play
+                            </button>
+                        </div>
+                        <div className="section-6 position-relative">
+                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
+                                <img src={AddIcon} />
+                                &nbsp;Add to
+                            </button>
 
-                        {displayAddToMenu &&
-                            <div className="playlist-list-container header-font">
-                                <div className="d-flex align-items-center" onClick={addToQueue}>
-                                    <img src={QueueIcon} className="icon-size"/>
-                                    &nbsp;Queue
+                            {displayAddToMenu &&
+                                <div className="playlist-list-container header-font">
+                                    <div className="d-flex align-items-center" onClick={addToQueue}>
+                                        <img src={QueueIcon} className="icon-size"/>
+                                        &nbsp;Queue
+                                    </div>
+                                    <hr/>
+                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                        <input
+                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                            className="new-playlist" value={newPlaylistName}
+                                            onChange={(e) => setNewPlaylistName(e.target.value)}
+                                        />
+                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                    </span>
+                                    
+                                    {playlistList?.map((playlist) => {
+                                        return(
+                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                                {playlist.name}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <hr/>
-                                <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                    <input
-                                        id="new_playlist_input" type="text" placeholder="New Playlist"
-                                        className="new-playlist" value={newPlaylistName}
-                                        onChange={(e) => setNewPlaylistName(e.target.value)}
-                                    />
-                                    <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                            }
+                        </div>
+                        <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
+                    </div>                    
+                    {/* End of Song Selection Bar */}
+
+                    <div className="top-row">
+                        <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
+                    </div>
+                    {/* Playlist Details */}
+                    <div className="d-flex">
+                        <div className="album-details d-flex">   
+                            <div onClick={AddCustomPlaylistArtwork} className="image-upload">
+                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
+                            </div>
+                            
+
+                            <span style={{paddingLeft: "10px"}} className="grid-15">
+                                <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">{location.state.name}</div>
+                                <span className="section-15 font-0 misc-details">
+                                    {playlistDetails.num_songs && <> {playlistDetails.num_songs} songs &#x2022;</>}
+                                    {playlistDetails.total_duration && <> {new Date(playlistDetails.total_duration * 1000).toISOString().slice(11, 19)} total runtime </>}
                                 </span>
                                 
-                                {playlistList?.map((playlist) => {
-                                    return(
-                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                            {playlist.name}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        }
-                    </div>
-                    <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                </div>                    
-                {/* End of Song Selection Bar */}
-
-                <div className="top-row">
-                    <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
-                </div>
-                {/* Playlist Details */}
-                <div className="d-flex">
-                    <div className="album-details d-flex">   
-                        <div onClick={AddCustomPlaylistArtwork} className="image-upload">
-                            <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
-                        </div>
-                        
-
-                        <span style={{paddingLeft: "10px"}} className="grid-15">
-                            <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">{location.state.name}</div>
-                            <span className="section-15 font-0 misc-details">
-                                {playlistDetails.num_songs && <> {playlistDetails.num_songs} songs &#x2022;</>}
-                                {playlistDetails.total_duration && <> {new Date(playlistDetails.total_duration * 1000).toISOString().slice(11, 19)} total runtime </>}
-                            </span>
-                            
-                            <div className="section-15 d-flex album-commmands">
-                                <span><button className="font-1 borderless" onClick={() => playPlaylist(0)}><img src={PlayIcon} className=""    /></button></span>
-                                <span><button className="font-1 borderless" onClick={shufflePlaylist}><img src={ShuffleIcon} className="" /></button></span>
-                                <span><button className="font-1 borderless"><img src={EditIcon} /></button></span>
-                                <span><button className="font-1 borderless" onClick={() => {}}><img src={DeleteIcon} /></button></span>
-                            </div>
-                        </span>
-                    </div>
-                </div>
-
-                {/* Song list */}
-                <div className="song-list">
-                    <div className="grid-20 position-relative">
-                        <span className="section-2"></span>
-                        <span className="section-9 vertical-centered font-0 details">Name</span>
-                        <span className="section-4 vertical-centered font-0 details">Album</span>
-                        <span className="section-4 vertical-centered font-0 details">Album Artist</span>
-                        <span className="section-1 details">Length</span>
-                    </div>
-                    <hr />
-                    {playlist.map((song, i) => {
-                        return(
-                            <div key={i}>
-                                <div 
-                                    className={`grid-20 song-row playlist align-items-center ${song.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
-                                    onContextMenu={(e) => {
-                                        e.preventDefault();
-                                        handleContextMenu(e, song.album, song.album_artist, i);
-                                    }}
-                                >
-                                    <span className="section-1 play">
-                                        <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
-                                            <input
-                                                type="checkbox" id={`select-${i}`} name={`select-${i}`}
-                                                onClick={(e) => editSelection(song, e.currentTarget.checked, i)}
-                                                checked={checkBoxNumber[i]} onChange={() => {}}
-                                            />
-                                        </span>
-                                        <img src={PlayIcon} onClick={() => playPlaylist(i)} />
-                                    </span>
-                                    <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={song.cover} alt="" image_type="playlist-song" /></span>
-                                    <span className="section-9 font-0 name">{song.name}</span>
-                                    <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(song.album)}>{song.album}</span>
-                                    <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(song.album_artist)}>{song.album_artist}</span>
-                                    <span className="section-1 header-font duration">{new Date(song.duration * 1000).toISOString().slice(14, 19)}</span>
+                                <div className="section-15 d-flex album-commmands">
+                                    <span><button className="font-1 borderless" onClick={() => playPlaylist(0)}><img src={PlayIcon} className=""    /></button></span>
+                                    <span><button className="font-1 borderless" onClick={shufflePlaylist}><img src={ShuffleIcon} className="" /></button></span>
+                                    <span><button className="font-1 borderless"><img src={EditIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={() => {}}><img src={DeleteIcon} /></button></span>
                                 </div>
-                                <hr />
-                            </div>
-                        );
-                    })}
-                </div>
+                            </span>
+                        </div>
+                    </div>
 
-                <CustomContextMenu
-                    isToggled={contextMenu.isToggled}
-                    context_type={contextMenu.context_type}
-                    song={playlist[contextMenu.index]}
-                    album={contextMenu.album}
-                    artist={contextMenu.artist}
-                    index={contextMenu.index}
-                    posX={contextMenu.posX}
-                    posY={contextMenu.posY}
-                    play={playPlaylist}
-                    editSelection={editSelection}
-                    isBeingAdded={checkBoxNumber[contextMenu.index]}
-                />
-            </div>
+                    {/* Song list */}
+                    <div className="song-list">
+                        <div className="grid-20 position-relative">
+                            <span className="section-2"></span>
+                            <span className="section-9 vertical-centered font-0 details">Name</span>
+                            <span className="section-4 vertical-centered font-0 details">Album</span>
+                            <span className="section-4 vertical-centered font-0 details">Album Artist</span>
+                            <span className="section-1 details">Length</span>
+                        </div>
+                        <hr />
+                        {playlist.map((song, i) => {
+                            return(
+                                <div key={i}>
+                                    <div 
+                                        className={`grid-20 song-row playlist align-items-center ${song.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            handleContextMenu(e, song.album, song.album_artist, i);
+                                        }}
+                                    >
+                                        <span className="section-1 play">
+                                            <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
+                                                <input
+                                                    type="checkbox" id={`select-${i}`} name={`select-${i}`}
+                                                    onClick={(e) => editSelection(song, e.currentTarget.checked, i)}
+                                                    checked={checkBoxNumber[i]} onChange={() => {}}
+                                                />
+                                            </span>
+                                            <img src={PlayIcon} onClick={() => playPlaylist(i)} />
+                                        </span>
+                                        <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={song.cover} alt="" image_type="playlist-song" /></span>
+                                        <span className="section-9 font-0 name">{song.name}</span>
+                                        <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(song.album)}>{song.album}</span>
+                                        <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(song.album_artist)}>{song.album_artist}</span>
+                                        <span className="section-1 header-font duration">{new Date(song.duration * 1000).toISOString().slice(14, 19)}</span>
+                                    </div>
+                                    <hr />
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <CustomContextMenu
+                        isToggled={contextMenu.isToggled}
+                        context_type={contextMenu.context_type}
+                        song={playlist[contextMenu.index]}
+                        album={contextMenu.album}
+                        artist={contextMenu.artist}
+                        index={contextMenu.index}
+                        posX={contextMenu.posX}
+                        posY={contextMenu.posY}
+                        play={playPlaylist}
+                        editSelection={editSelection}
+                        isBeingAdded={checkBoxNumber[contextMenu.index]}
+                    />
+                </div>
+                <div className="empty-space" />
+            </SimpleBar>
+        );
+    }
+    else if(loading === false && playlist.length === 0) {
+        return(
+            <SimpleBar forceVisible="y" autoHide={false} >
+                <div className="album-container">
+
+                    <div className="top-row">
+                        <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
+                    </div>
+                    {/* Playlist Details */}
+                    <div className="d-flex">
+                        <div className="album-details d-flex">   
+                            <div onClick={AddCustomPlaylistArtwork} className="image-upload">
+                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
+                            </div>
+                            
+
+                            <span style={{paddingLeft: "10px"}} className="grid-15">
+                                <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">{location.state.name}</div>
+                                <span className="section-15 font-0 misc-details">
+                                    0 songs
+                                </span>
+                                
+                                <div className="section-15 d-flex album-commmands">
+                                    <span><button className="font-1 borderless" disabled ><img src={PlayIcon} className=""    /></button></span>
+                                    <span><button className="font-1 borderless" disabled ><img src={ShuffleIcon} className="" /></button></span>
+                                    <span><button className="font-1 borderless" ><img src={EditIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={() => {}}><img src={DeleteIcon} /></button></span>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Song list */}
+                    <div className="song-list">
+                        <div className="grid-20 position-relative">
+                            <span className="section-2"></span>
+                            <span className="section-9 vertical-centered font-0 details">Name</span>
+                            <span className="section-4 vertical-centered font-0 details">Album</span>
+                            <span className="section-4 vertical-centered font-0 details">Album Artist</span>
+                            <span className="section-1 details">Length</span>
+                        </div>
+                        <hr />
+                    </div>
+                </div>
+                <div className="empty-space" />
+            </SimpleBar>
         );
     }
 }

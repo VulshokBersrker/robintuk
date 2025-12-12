@@ -74,12 +74,12 @@ export default function CustomContextMenu({ isToggled, context_type, song, album
     }
 
     useEffect(() => {
-        const element = document.getElementsByClassName("content");
+        const element = document.getElementsByClassName("simplebar-content-wrapper");
         if(isToggled) {
-            element[0].classList.add("disable-scroll");
+            element[0].classList.add("overflow-y-hidden");
         }
         else {
-            element[0].classList.remove("disable-scroll");
+            element[0].classList.remove("overflow-y-hidden");
         }
     }, [isToggled]);
 

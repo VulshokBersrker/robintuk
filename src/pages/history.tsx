@@ -15,14 +15,13 @@ import ArrowBackIcon from '../images/arrow-left.svg';
 import CloseIcon from '../images/x.svg';
 import { Virtuoso } from "react-virtuoso";
 
-export default function QueueOverviewPage() {
+export default function PlayHistoryPage() {
 
     const navigate = useNavigate();
     const [scrollParent, setScrollParent] = useState<any>(null);
 
     const [loading, isLoading] = useState<boolean>(false);
     const [queue, setQueue] = useState<Songs[]>([]);
-    const [duration, setDuration] = useState<number>(0);
 
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
@@ -35,7 +34,7 @@ export default function QueueOverviewPage() {
 
     // On first load get the album details
     useEffect(() => {
-        getQueue();
+        getHistory();
 
         const checkCurrentSong = localStorage.getItem("last-played-song");
         if(checkCurrentSong !== null) {
@@ -50,18 +49,16 @@ export default function QueueOverviewPage() {
         }  
     }, []);
 
-    async function getQueue() {
+    async function getHistory() {
         isLoading(true);
         try{
-            const res: Songs[] = await invoke("player_get_queue");
+            const res: Songs[] = await invoke("get_play_history", { limit: -1 });
             // console.log(res);
             setQueue(res);
-            let dur = 0;
             let checkboxArr: boolean[] = [];
             let i = 0;
-            res.forEach((x) => { dur += x.duration; checkboxArr[i] = false; i++; });
+            res.forEach(() => { checkboxArr[i] = false; i++; });
             setCheckBoxNumber(checkboxArr);
-            setDuration(dur);
         }
         catch(e) {
             alert(e)
@@ -189,7 +186,7 @@ export default function QueueOverviewPage() {
     }
     else {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+            <SimpleBar forceVisible="y" autoHide={false}  ref={setScrollParent}>
                 <div className="album-container">
                     <div className="d-flex top-row justify-content-start">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
@@ -232,15 +229,7 @@ export default function QueueOverviewPage() {
                         <div className="album-details d-flex">
 
                             <span style={{paddingLeft: "10px"}} className="grid-15">
-                                <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">Music Queue</div>
-                                <span className="section-15 font-0 misc-details">
-                                    {queue.length} songs &#x2022; {new Date(duration * 1000).toISOString().slice(11, 19)} total runtime
-                                </span>
-                                
-                                <div className="section-15 d-flex album-commmands">
-                                    <span><button className="white font-1 d-flex align-items-center" ><img src={PlayIcon} />Clear</button></span>
-                                    <span><button className="white font-1">+ Add to</button></span>
-                                </div>
+                                <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">Play History</div>
                             </span>
                         </div>
                     </div>
@@ -263,25 +252,25 @@ export default function QueueOverviewPage() {
                             itemContent={(index) => {
                                 return(
                                     <div key={index}>
-                                        <div className={`grid-20 song-row playlist align-items-center ${queue[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}>
-                                            <span className="section-1 play">
-                                                <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
-                                                    <input
-                                                        type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                        onClick={(e) => editSelection(queue[index], e.currentTarget.checked, index)}
-                                                        checked={checkBoxNumber[index]} onChange={() => {}}
-                                                    />
-                                                </span>
-                                                <img src={PlayIcon} onClick={() => playSong(index)} />
+                                    <div className={`grid-20 song-row playlist align-items-center ${queue[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}>
+                                        <span className="section-1 play">
+                                            <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
+                                                <input
+                                                    type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                    onClick={(e) => editSelection(queue[index], e.currentTarget.checked, index)}
+                                                    checked={checkBoxNumber[index]} onChange={() => {}}
+                                                />
                                             </span>
-                                            <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={queue[index].cover} alt="" image_type="playlist-song" /></span>
-                                            <span className="section-9 font-0 name">{queue[index].name}</span>
-                                            <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbumOverview(queue[index].album)}>{queue[index].album}</span>
-                                            <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtistOverview(queue[index].album_artist)}>{queue[index].album_artist}</span>
-                                            <span className="section-1 header-font duration">{new Date(queue[index].duration * 1000).toISOString().slice(14, 19)}</span>
-                                        </div>
-                                        <hr />
+                                            <img src={PlayIcon} onClick={() => playSong(index)} />
+                                        </span>
+                                        <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={queue[index].cover} alt="" image_type="playlist-song" /></span>
+                                        <span className="section-9 font-0 name">{queue[index].name}</span>
+                                        <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbumOverview(queue[index].album)}>{queue[index].album}</span>
+                                        <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtistOverview(queue[index].album_artist)}>{queue[index].album_artist}</span>
+                                        <span className="section-1 header-font duration">{new Date(queue[index].duration * 1000).toISOString().slice(14, 19)}</span>
                                     </div>
+                                    <hr />
+                                </div>
                                 );                                
                             }}
                             customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}

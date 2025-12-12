@@ -343,6 +343,9 @@ button:disabled {
   pointer-events: none;
   cursor: auto;
 }
+button:disabled img{
+  filter: brightness(40%);
+}
 button.borderless {
   border: transparent;
   padding: 5px;
@@ -503,18 +506,14 @@ img.off {
   filter: brightness(0) saturate(100%) invert(36%) sepia(94%) saturate(0%) hue-rotate(210deg) brightness(95%) contrast(94%);
 }
 
-.disable-scroll {
-  overflow-y: hidden !important;
-}
-
 /* Padding for when the sidebar is collapsed */
 .content {
   position: relative;
   transition: 0s ease-in-out;
   height: calc(100vh - 30px);
-  width: calc(100vw - 146px);
+  width: calc(100vw - 156px);
   margin-top: 30px;
-  margin-left: 140px;
+  margin-left: 150px;
   /* Scrollbar Styles */
 }
 /* Allows for the blur for the music controls and the weird padding fix */
@@ -816,14 +815,23 @@ img.off {
 }
 
 /* Playlists */
+.playlists.home .list {
+  height: 240px;
+  overflow: hidden;
+  row-gap: 70px;
+}
+.playlists.home .album-link {
+  width: 130px;
+  height: 165px;
+}
 
 .playlists.home img.album-image {
-  width: 113px;
-  height: 113px;
+  width: 120px;
+  height: 120px;
 }
 
 .playlists.home .playlist {
-  width: 120px;
+  width: 130px;
   padding-bottom: 0px;
 }
 
@@ -832,9 +840,39 @@ img.off {
   height: 120px;
 }
 
-.playlists.home .play-album,
-.playlists.home .options {
-  bottom: 45px;
+.playlists.home .play-album {
+  bottom: 46px;
+  left: 13px;
+}
+
+/* History */
+.history.home .list {
+  max-height: 150px;
+  overflow: hidden;
+}
+.history.home img.album-image {
+  width: 95px;
+  height: 95px;
+}
+.history.home .container {
+  width: 110px;
+  height: 110px;
+}
+.history.home .album-link {
+  width: 100px;
+  height: 142px;
+}
+.history.home .play-album {
+  bottom: 60px;
+  left: 10px;
+}
+.history.home .play-pause-icon {
+  width: 20px;
+  height: 20px
+}
+.history.home .circle {
+  width: 35px;
+  height: 35px;
 }
 
 /* -------------- Music Controls Styles -------------- */
@@ -1279,8 +1317,8 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   border-radius: 50%;
 }
 
-.album-image-container:hover .play-album,
-.album-image-container:hover .options {
+.album-link:hover .play-album,
+.album-link:hover .options {
   opacity: 1;
 }
 
@@ -1552,6 +1590,16 @@ button img {
   padding-bottom: 210px;
 }
 
+/* .song-list * {
+  position: relative !important;
+} */
+
+
+
+div[data-testid="virtuoso-item-list"] {
+  /* padding-top: 0px !important; */
+}
+
 .List {
   box-sizing: border-box;
 }
@@ -1609,8 +1657,13 @@ input.new-playlist {
   width: 35px !important;
 }
 
-.playlist-button {
+.playlist-buttons {
   padding-left: 10px;
+}
+
+.playlist-buttons span,
+.playlist-buttons input {
+  margin-left: 10px;
 }
 
 .image-upload:hover {
@@ -1632,16 +1685,20 @@ input.new-playlist {
   margin: 4px;
   padding-left: 4px;
   padding-right: 4px;
-  padding-bottom: 4px;
-  width: 180px;
+  padding-bottom: 35px;
+  width: 190px;
 }
 
 .album-image-container.playlist .container {
-  margin-top: 8px;
-  width: 170px;
-  height: 170px;
+  margin-top: 3px;
+  width: 180px;
+  height: 180px;
   border-radius: var(--border-radius);
   overflow: hidden;
+}
+.playlist .playlist .album-name {
+  margin-top: 5px;
+  font-size: 18px;
 }
 
 /* -------------------------- Settings Page -------------------------- */
@@ -2213,7 +2270,7 @@ img.search-icon:hover {
     bottom: 0;
     pointer-events: none;
     overflow: hidden;
-    height: calc(100vh - 200px);
+    height: calc(100vh - 124px);
   }
   /* Settings Page */
   .scrollbar-settings-content .simplebar-track {
@@ -2224,6 +2281,17 @@ img.search-icon:hover {
     pointer-events: none;
     overflow: hidden;
     height: calc(100vh - 124px);
+  }
+  .simplebar-scrollable-y:has(.album-container) {
+    .simplebar-track {
+      z-index: 1;
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      overflow: hidden;
+      height: calc(100vh - 124px);
+    }
   }
 }
 

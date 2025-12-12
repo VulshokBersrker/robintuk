@@ -1,12 +1,4 @@
 import { invoke } from "@tauri-apps/api/core";
-import { JSX } from "react";
-
-import {
-  Grid as _Grid,
-  GridCellProps,
-  WindowScroller as _WindowScroller,
-  AutoSizer as _AutoSizer,
-} from "react-virtualized";
 
 
 export interface FileInfo {
@@ -86,6 +78,21 @@ export interface ContextMenu {
     index: number,
     posX: number,
     posY: number
+}
+
+export interface PlayHistory {
+    id: string,
+    name: string,
+    path: string,
+    cover: string,
+    release: string,
+    track: number,
+    album: string,
+    artist: string,
+    genre: string,
+    album_artist: string,
+    disc_number: number,
+    duration: number
 }
 
 export type GetCurrentSong = { q: Songs; };
@@ -180,18 +187,3 @@ export async function playPlaylist(playlist_name: string) {
     }
 }
 
-
-
-
-export interface VirtualizedGridProps<AlbumDetails> {
-  items: AlbumDetails[];
-  itemHeight: number;
-  itemMinWidth: number;
-  renderItem: (props: VirtualizedGridItemProps<AlbumDetails>) => JSX.Element;
-  numColumns?: number; // explicitly set number of columns
-}
-
-export interface VirtualizedGridItemProps<AlbumDetails> extends GridCellProps {
-  items: AlbumDetails[];
-  columnCount: number;
-}

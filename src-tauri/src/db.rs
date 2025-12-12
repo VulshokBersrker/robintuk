@@ -4,11 +4,11 @@ use std::path::Path;
 
 use chrono::Utc;
 // SQLITE Libraries
-use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Row, Sqlite, SqlitePool};
+use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite, SqlitePool};
 use tauri::{State};
 
 use crate::types::{
-    AlbumRes, AllAlbumResults, AllArtistResults, ArtistDetailsResults, ArtistRes, DirsTable, History,
+    AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, SongHistory,
     PlaylistDetailTable, PlaylistFull, PlaylistTable, SongRes, SongTable, SongTableUpload
 };
 use crate::{AppState, helper::ALPHABETICALLY_ORDERED};
@@ -127,9 +127,7 @@ pub async fn remove_directory(state: State<AppState, '_>, directory_name: String
 #[tauri::command]
 pub async fn get_all_songs(state: State<AppState, '_>) -> Result<Vec<SongRes>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT
-    *
-    FROM songs ORDER BY name ASC;")
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs ORDER BY name ASC;")
         .fetch_all(&state.pool)
         .await
         .unwrap();
@@ -307,7 +305,7 @@ pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AllAlbumRe
 #[tauri::command(rename_all = "snake_case")]
 pub async fn get_album(state: State<AppState, '_>, name: String) -> Result<Vec<SongTable>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY track ASC, disc_number ASC;")
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC;")
         .bind(name)
         .fetch_all(&state.pool)
         .await
@@ -399,50 +397,7 @@ pub async fn get_all_artists(state: State<AppState, '_>) -> Result<Vec<AllArtist
     )
     .fetch_all(&state.pool)
     .await
-    .unwrap();
-
-    // let mut output: Vec<ArtistRes> = vec![];
-
-    // for letter in ALPHABETICALLY_ORDERED {
-    //     let mut t: Vec<AllArtistResults> = vec![];
-    //     for item in temp.clone() {
-
-    //         // A check for when an artist is null or empty
-    //         if Some(&item.album_artist) == None || item.album_artist == "".to_string() {
-    //             if letter == '.' {
-    //                 t.push(AllArtistResults{ album_artist: "Unknown Artist".to_string(), name: "".to_string() } );
-    //                 continue;
-    //             }
-    //         }
-    //         else if Some(&item.album_artist) != None || item.album_artist != "".to_string() {
-    //             // Special Characters
-    //             if letter == '&' &&
-    //                 (item.album_artist.as_str().starts_with('#') || item.album_artist.as_str().starts_with('!') || item.album_artist.as_str().starts_with('#')
-    //                 || item.album_artist.as_str().starts_with('[') || item.album_artist.as_str().starts_with(']') || item.album_artist.as_str().starts_with('\\')
-    //                 || item.album_artist.as_str().starts_with('-') || item.album_artist.as_str().starts_with('_') || item.album_artist.as_str().starts_with('\"')
-    //                 || item.album_artist.as_str().starts_with('\'') || item.album_artist.as_str().starts_with('&') || item.album_artist.as_str().starts_with('$')
-    //                 || item.album_artist.as_str().starts_with('+') || item.album_artist.as_str().starts_with('%') || item.album_artist.as_str().starts_with('*') || item.album_artist.as_str().starts_with('.') ) {
-    //                 t.push(item);
-    //             }
-    //             // Other Characters outside ascii values
-    //             else if letter == '.' && !item.album_artist.as_bytes()[0].is_ascii() {
-    //                 t.push(item);
-    //             }
-    //             // 0 - 9
-    //             else if letter == '#' && item.album_artist.as_str().chars().next().unwrap().is_numeric() {
-    //                 t.push(item);
-    //             }
-    //             // A - Z
-    //             else if letter.is_alphabetic() && item.album_artist.starts_with(letter) {
-    //                 t.push(item);
-                    
-    //             }
-    //         }
-            
-    //     }
-    //     output.push(ArtistRes{name: letter.to_string(), section: t});
-    // }
-    
+    .unwrap();    
 
     Ok(temp)
 }
@@ -639,4 +594,28 @@ pub async fn add_song_to_history(state: State<AppState, '_>, path: String) -> Re
         .await;
 
     Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<Vec<SongHistory>, String> {
+    if limit == -1 {
+        let history: Vec<SongHistory> = sqlx::query_as::<_, SongHistory>("
+            SELECT h.id, s.name, s.path, s.album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist FROM history h 
+            INNER JOIN songs s ON s.path = h.song_id ORDER BY h.id DESC")
+        .fetch_all(&state.pool)
+        .await.unwrap();
+
+        Ok(history)
+    }
+    else {
+
+        let history: Vec<SongHistory> = sqlx::query_as::<_, SongHistory>("
+            SELECT h.id, s.name, s.path, s.album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist FROM history h 
+            INNER JOIN songs s ON s.path = h.song_id ORDER BY h.id DESC LIMIT $1")
+        .bind(limit)
+        .fetch_all(&state.pool)
+        .await.unwrap();
+
+        Ok(history)        
+    }    
 }

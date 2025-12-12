@@ -89,7 +89,6 @@ pub fn run() -> Result<(), String> {
         .invoke_handler(tauri::generate_handler![
             greet,
             scan_directory,
-            db::add_song_to_history,
             // Music Directory Functions - SQLITE
             db::get_directory,
             db::add_directory,
@@ -120,7 +119,10 @@ pub fn run() -> Result<(), String> {
             db::create_playlist,
             db::delete_playlist,
             db::add_playlist_cover, // Custom Playlist artwork
-            // Media Player Functions
+            // History Functions
+            db::add_song_to_history,
+            db::get_play_history,
+            // -- Media Player Functions
             // Standard Media Functions
             commands::player_play,
             commands::player_pause,
