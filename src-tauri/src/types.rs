@@ -85,12 +85,6 @@ pub struct ArtistDetailsResults {
     pub albums: Vec<AllAlbumResults>
 }
 
-#[derive(Serialize)]
-pub struct SongRes {
-    pub name: String,
-    pub song_list: Vec<SongTable> 
-}
-
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct History {
@@ -108,10 +102,14 @@ pub struct SongHistory {
     pub path: String,
     pub cover: String,
     pub release: String,
+    pub track: i32,
     pub album: String,
     pub artist: String,
+    pub genre: String,
     pub album_artist: String,
+    pub disc_number: i32,
     pub duration: u64,
+    pub song_section: u64
 }
 
 

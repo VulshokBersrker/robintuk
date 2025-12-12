@@ -164,6 +164,7 @@ pub fn run() -> Result<(), String> {
 #[derive(serde::Serialize)]
 struct ScanResults {
     pub success: i64,
+    pub updated: i64,
     pub error: i64,
     pub error_dets: Vec<ErrorInfo>,
 }
@@ -184,15 +185,19 @@ pub struct SongDataResults {
 // use the path value to check, since that is a unique value in each entry (files cannot share paths)
 
 #[tauri::command]
-async fn scan_directory() -> Result<ScanResults, String> {
+async fn scan_directory(app: tauri::AppHandle) -> Result<ScanResults, String> {
     let mut error_details: Vec<ErrorInfo> = Vec::new();
     // Keep track of how many entires pass or fail
     let mut num_added = 0;
     let mut num_error = 0;
+    let mut num_updated = 0;
 
     let pool = establish_connection().await?;
 
     let directories = db::get_directory().await.unwrap();
+
+    app.emit("scan-started", true).unwrap();
+    println!("Scan has started");
 
     // Run the loop for every directory selected in the dirs table
     for path in directories {
@@ -203,44 +208,76 @@ async fn scan_directory() -> Result<ScanResults, String> {
 
             // If this entry is a file
             if metadata.is_file() {
-                //  ---------- Here we will check if the value already exists inside the database (if exists, check for differences, if no difs: skip)
-
                 // Use the size of the file for hashing the album artwork (if the song has no album name)
                 let size: u64 = metadata.len();
 
                 // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
-                if entry.path().display().to_string().contains(".mp3")
-                    || entry.path().display().to_string().contains(".wav")
-                    || entry.path().display().to_string().contains(".flac")
-                {
-                    let song_res = get_song_data(entry.path().display().to_string(), size).await;
+                if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".wav") || entry.path().display().to_string().contains(".flac") {
+                    
+                    let does_exist = db::does_entry_exist(&pool, &entry.path().display().to_string()).await.unwrap();
+                    // If song already exists in the database, update its values
+                    if does_exist {
 
-                    // If the was no error getting the song metadata
-                    if song_res.is_ok() {
-                        let res = db::add_song(song_res.unwrap().song_data, &pool).await;
-                        // If the song was added with no errors
-                        if res.is_ok() {
-                            num_added += 1;
+                        let song_res = get_song_data(entry.path().display().to_string(), size).await;
+
+                        if song_res.is_ok() {
+                            let res = db::update_song(song_res.unwrap().song_data, &pool).await;
+                            // If the song was added with no errors
+                            if res.is_ok() {
+                                num_updated += 1;
+                            }
+                            // If there was an error adding the song to the db
+                            else {
+                                num_error += 1;
+                                error_details.push(ErrorInfo {
+                                    file_name: entry.path().display().to_string(),
+                                    error_type: res.unwrap().last_insert_rowid().to_string(),
+                                });
+                            }
                         }
-                        // If there was an error adding the song to the db
+                        // If there was an error getting the song metadata
                         else {
+                            let res = song_res.unwrap();
                             num_error += 1;
                             error_details.push(ErrorInfo {
                                 file_name: entry.path().display().to_string(),
-                                error_type: res.unwrap().last_insert_rowid().to_string(),
+                                error_type: res.error_details,
                             });
+                            continue;
                         }
                     }
-                    // If there was an error getting the song metadata
+                    // If the song does not exist in the database, add it
                     else {
-                        let res = song_res.unwrap();
-                        num_error += 1;
-                        error_details.push(ErrorInfo {
-                            file_name: entry.path().display().to_string(),
-                            error_type: res.error_details,
-                        });
-                        continue;
+                        let song_res = get_song_data(entry.path().display().to_string(), size).await;
+
+                        // If the was no error getting the song metadata
+                        if song_res.is_ok() {
+                            let res = db::add_song(song_res.unwrap().song_data, &pool).await;
+                            // If the song was added with no errors
+                            if res.is_ok() {
+                                num_added += 1;
+                            }
+                            // If there was an error adding the song to the db
+                            else {
+                                num_error += 1;
+                                error_details.push(ErrorInfo {
+                                    file_name: entry.path().display().to_string(),
+                                    error_type: res.unwrap().last_insert_rowid().to_string(),
+                                });
+                            }
+                        }
+                        // If there was an error getting the song metadata
+                        else {
+                            let res = song_res.unwrap();
+                            num_error += 1;
+                            error_details.push(ErrorInfo {
+                                file_name: entry.path().display().to_string(),
+                                error_type: res.error_details,
+                            });
+                            continue;
+                        }
                     }
+                    
                 }
             }
         }
@@ -248,9 +285,13 @@ async fn scan_directory() -> Result<ScanResults, String> {
 
     // println!("\n Added {} song(s) - Errors on {} song(s)", num_added, num_error );
 
+    app.emit("scan-finished", true).unwrap();
+    println!("Scan has finished = {:?} added - {:?} updated - {:?} errors", &num_added, &num_updated, &num_error);
+
     // At the end, will return the number of successes and failures
     Ok(ScanResults {
         success: num_added,
+        updated: num_updated,
         error: num_error,
         error_dets: error_details,
     })

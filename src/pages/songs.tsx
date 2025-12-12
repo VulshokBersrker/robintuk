@@ -4,7 +4,7 @@ import { Virtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
 
-import { alphabeticallyOrdered, SongsFull } from "../globalValues";
+import { alphabeticallyOrdered, saveQueue, Songs, SongsFull } from "../globalValues";
 
 // Images
 import PlayIcon from '../images/play-icon-outline.svg';
@@ -73,6 +73,21 @@ export default function SongPage() {
         setFilteredSongs(temp_section);
     }
 
+    async function playSong(index: number) {
+        try {
+            const arr: Songs[] = [filteredSongs[index]];
+            // Update the music controls state somehow
+            await invoke('player_load_album', {queue: arr, index: 0});
+            await invoke('update_current_song_played', {path: arr[0].path});
+            await invoke('get_queue', {q: arr, index: 0});
+            saveQueue(arr);
+            await invoke('create_stored_queue', { songs: arr, shuffled: false });
+        }
+        catch (err) {
+            alert(`Failed to play song: ${err}`);
+        }
+    }
+
 
 
     return(
@@ -126,7 +141,7 @@ export default function SongPage() {
                                                                     <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
                                                                         <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike" onChange={() => {}} />
                                                                     </span>
-                                                                    <img src={PlayIcon} onClick={() => {}}/>
+                                                                    <img src={PlayIcon} onClick={() => {playSong(index)}}/>
                                                                 </span>
                                                                 
                                                                 <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
@@ -142,49 +157,6 @@ export default function SongPage() {
                                                 </>
                                             );
                                         }
-                                        // else if(index === 0) {
-                                        //     return(
-                                        //         <>
-                                        //             <div className="grid-20 position-relative">
-                                        //                 <span className="section-20 header-font font-3" key={j}>
-                                        //                     {alphabeticallyOrdered[j] === 0 && <h1 className="header-3">&</h1>}
-                                        //                     {alphabeticallyOrdered[j] === 1 && <h1 className="header-3">#</h1>}
-                                        //                     {alphabeticallyOrdered[j] > 1 && alphabeticallyOrdered[j] > 300 && <h1 className="header-3">String.fromCharCode(alphabeticallyOrdered[j])</h1>}
-                                        //                     {alphabeticallyOrdered[j] === 300 && <h1 className="header-3">...</h1>}
-                                        //                 </span>
-                                        //                 <span className="section-1"></span>
-                                        //                 <span className="section-6 details">Name</span>
-                                        //                 <span className="section-4 details">Album</span>
-                                        //                 <span className="section-4 details">Album Artist</span>
-                                        //                 <span className="section-2 details">Release</span>
-                                        //                 <span className="section-2 details">Genre</span>
-                                        //                 <span className="section-1 details">Length</span>
-                                        //             </div>
-                                        //             <hr />
-                                        //             <div className="flex items-center justify-between">
-                                        //                 <div className="song-link">
-                                        //                     <div className={`grid-20 song-row`}>
-                                                                
-                                        //                         <span className="section-1 vertical-centered play ">
-                                        //                             <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
-                                        //                                 <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike" onChange={() => {}} />
-                                        //                             </span>
-                                        //                             <img src={PlayIcon} onClick={() => {}}/>
-                                        //                         </span>
-                                                                
-                                        //                         <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
-                                        //                         <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                        //                         <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].artist}</span>
-                                        //                         <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
-                                        //                         <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
-                                        //                         <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
-                                        //                     </div>
-                                        //                     <hr />
-                                        //                 </div>
-                                        //             </div>
-                                        //         </>
-                                        //     );
-                                        // }
                                         totalIndex += songSections[j];
                                     }
                             return(
@@ -196,7 +168,7 @@ export default function SongPage() {
                                                 <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
                                                     <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike" onChange={() => {}} />
                                                 </span>
-                                                <img src={PlayIcon} onClick={() => {}}/>
+                                                <img src={PlayIcon} onClick={() => {playSong(index)}}/>
                                             </span>
                                             
                                             <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>

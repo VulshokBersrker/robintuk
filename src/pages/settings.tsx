@@ -11,6 +11,7 @@ import logo from '../images/logo.svg';
 
 interface ScanResults {
     success: number,
+    updated: number,
     error: number,
     error_dets: ErrorInfo[] | null,
 }
@@ -39,7 +40,7 @@ export default function Settings() {
         setLoading(true);
         try {
             const scannedFiles = await invoke<ScanResults>('scan_directory');
-            // console.log(scannedFiles);
+            console.log(scannedFiles);
             setScanResults(scannedFiles);
         }
         catch (err) {
@@ -122,10 +123,10 @@ export default function Settings() {
         <SimpleBar forceVisible="y" autoHide={false} className="scrollbar-settings-content" >
 
             {(showResults === true && scanResults !== undefined) &&
-                <ErrorPopup success={scanResults.success} error={scanResults.error} error_dets={scanResults.error_dets} type={0} />
+                <ErrorPopup success={scanResults.success} updated={scanResults.updated} error={scanResults.error} error_dets={scanResults.error_dets} type={0} />
             }
             {(showResults === true && scanResults === undefined) &&
-                <ErrorPopup success={0} error={1} error_dets={null} type={1} />
+                <ErrorPopup success={0} updated={0} error={1} error_dets={null} type={1} />
             }
             <div className="settings-section">
                 <span className="header-font font-3">Folders to Scan</span>
@@ -155,7 +156,7 @@ export default function Settings() {
             </div>
 
             <div className="settings-section theme-container">
-                <div className="header-font font-3">Choose Theme</div>
+                <div className="header-font font-3" style={{marginBottom: '15px'}}>Choose Theme</div>
                 {/* Update to dropdown */}
                 <select name="themes" id={`theme-${themeColor}`} value={themeColor} onChange={(e) => setTheme(e.target.value)} >
                     <option value="red" id="theme-red"> Red </option>
@@ -187,17 +188,17 @@ export default function Settings() {
 
             {/* Backup Restore */}
             <div className="settings-section">
-                <div className="header-font font-3">Data Backup/Restore</div>
+                <div className="header-font font-3" style={{marginBottom: '5px'}}>Data Backup/Restore</div>
 
                 <div className="">
-                    <div className="sub-font font-0">Backup and Restore all your data on Robintuk, including your playlists</div>
-                    <span> <button className="white">Backup Database</button> </span>
-                    <span> <button className="white">Restore Database</button> </span>
-                    <span> <button className="white">Reset Database</button> </span>
+                    <div className="sub-font font-0" style={{marginBottom: '10px'}}>Backup and Restore all your data on Robintuk, including your playlists</div>
+                    <span style={{marginRight: '10px'}}> <button className="white">Backup</button> </span>
+                    <span style={{marginRight: '10px'}}> <button className="white">Restore</button> </span>
+                    <span> <button className="white">Reset</button> </span>
                 </div>
             </div>
 
-
+            {/* About */}
             <div className="settings-section">
                 <div className="header-font font-3">About</div>
 
@@ -208,7 +209,6 @@ export default function Settings() {
             </div>
 
             <div className="empty-space"></div>
-            <div className="empty-space"></div>
         </SimpleBar>
     );
 }
@@ -216,12 +216,13 @@ export default function Settings() {
 
 type Props = {
     success: number,
+    updated: number,
     error: number,
     error_dets: ErrorInfo[] | null,
     type: number,
 };
 
-const ErrorPopup = ({success, error, type}: Props) => {
+const ErrorPopup = ({success, error, updated, type}: Props) => {
 
     // 0 - Directory Scan
     if(type === 0) {
@@ -233,7 +234,7 @@ const ErrorPopup = ({success, error, type}: Props) => {
                     </span>
                     <span style={{paddingLeft: "10px"}}>
                         <div>Folders Scanned</div>
-                        <div>Scanned {error + success} songs - {error} songs had errors</div>                    
+                        <div>Scanned {error + success + updated} songs - {success} songs added - {updated} songs updated - {error} songs had errors</div>                    
                     </span>
                 </div>
             );

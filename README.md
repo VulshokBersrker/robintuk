@@ -80,7 +80,7 @@ Made with Tauri (React and Rust).
 - [ ] Playback errors
 - [ ] Better error handling
 - [ ] Blank pages on route change while it grabs the data from the backend
-- [ ] Fix songs page search results formatting
+- [x] Fix songs page search results formatting
 - [x] Albums displaying Disc 0 when metadata has no disc value
 - [x] Protections on adding child directories to scan music
 - [x] Songs end one second early sometimes

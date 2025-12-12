@@ -332,6 +332,27 @@ button.white:disabled {
   cursor: auto;
   transition: 0.2s ease-in-out;
 }
+button.red {
+  border: 1px solid rgb(194, 0, 0);
+  background-color: rgba(0, 0, 0, 0.0) !important;
+  color: rgb(194, 0, 0);
+  border-radius: rgb(194, 0, 0);
+  /* Padding */
+  padding: 10px 15px 10px 15px;
+  transition: 0.2s ease-in-out;
+}
+button.red:hover {
+  border: 1px solid rgb(194, 0, 0);
+  background-color: rgba(172, 172, 172, 0.1) !important;
+  color: rgb(194, 0, 0);
+  border-radius: rgb(194, 0, 0);
+  /* Padding */
+  padding: 10px 15px 10px 15px;
+  transition: 0.2s ease-in-out;
+}
+button.red img {
+  filter: brightness(0) saturate(100%) invert(8%) sepia(95%) saturate(7476%) hue-rotate(4deg) brightness(86%) contrast(108%);
+}
 
 button:hover {
   cursor: pointer;
@@ -705,6 +726,23 @@ img.off {
   display: none;  /* Older Safari and Chromium */
 }
 
+.scan-status-container {
+  position: fixed;
+  bottom: 105px;
+  left: 10px;
+  border-radius: var(--border-radius);
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 10px 16px 10px 16px;
+  font-size: 12px;
+}
+
+.scan-status-container.loaded {
+  visibility: visible;
+}
+.scan-status-container.unloaded {
+  visibility: hidden;
+}
+
 /* -------------- Home Section Styles -------------- */
 
 /* Albums */
@@ -860,7 +898,7 @@ img.off {
 }
 .history.home .album-link {
   width: 100px;
-  height: 142px;
+  height: 105px;
 }
 .history.home .play-album {
   bottom: 60px;
@@ -1352,7 +1390,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 }
 
 .album-container {
-  width: 96%;
+  width: 98%;
   padding: 0px;
   margin-top: 10px;
   position: relative;
@@ -1444,8 +1482,8 @@ input[type="checkbox"] {
   margin-top: 4px;
   font: inherit;
   color: var(--checkbox-checked-color);
-  width: 25px;
-  height: 25px;
+  width: 24px;
+  height: 24px;
   border: 2px solid var(--checkbox-checked-color);
   border-radius: var(--border-radius);
   transform: translateY(-0.075em);
@@ -1582,16 +1620,6 @@ button img {
 
 /* -------------------------- Song Page Styles -------------------------- */
 
-.virtual-scroller {
-  padding-top: 20px;
-  position: relative !important;
-  height: calc(100vh - 330px);
-  overflow-y: auto;
-  contain: strict;
-  width: 100%;
-  padding-bottom: 210px;
-}
-
 .song-page-list .song-list {
   margin-left: 5px;
   margin-right: 45px;
@@ -1689,6 +1717,11 @@ input.new-playlist {
   border-radius: var(--border-radius);
   overflow: hidden;
 }
+.album-image-container.playlist .play-album {
+  bottom: 52px;
+  left: 12px
+}
+
 .playlist .playlist .album-name {
   margin-top: 5px;
   font-size: 18px;

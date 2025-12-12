@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 
 // Custom Components
@@ -13,7 +14,6 @@ import ImageWithFallBack from "../components/imageFallback";
 import PlayIcon from '../images/play-icon-outline.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
 import CloseIcon from '../images/x.svg';
-import { Virtuoso } from "react-virtuoso";
 
 export default function PlayHistoryPage() {
 
@@ -238,7 +238,7 @@ export default function PlayHistoryPage() {
                     <div className="song-list">
                         <div>
                             <div className="grid-20 position-relative">
-                                <span className="section-2"></span>
+                                <span className="section-1" style={{width: '65px'}}>&nbsp;</span>
                                 <span className="section-9 vertical-centered font-0 details">Track</span>
                                 <span className="section-4 vertical-centered font-0 details">Album</span>
                                 <span className="section-4 vertical-centered font-0 details">Album Artist</span>
@@ -254,7 +254,7 @@ export default function PlayHistoryPage() {
                                     <div key={index}>
                                     <div className={`grid-20 song-row playlist align-items-center ${queue[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}>
                                         <span className="section-1 play">
-                                            <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
+                                            <span style={{marginLeft: "3px"}}>
                                                 <input
                                                     type="checkbox" id={`select-${index}`} name={`select-${index}`}
                                                     onClick={(e) => editSelection(queue[index], e.currentTarget.checked, index)}
@@ -264,7 +264,8 @@ export default function PlayHistoryPage() {
                                             <img src={PlayIcon} onClick={() => playSong(index)} />
                                         </span>
                                         <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={queue[index].cover} alt="" image_type="playlist-song" /></span>
-                                        <span className="section-9 font-0 name">{queue[index].name}</span>
+                                        
+                                        <span className="section-8 font-0 name">{queue[index].name}</span>
                                         <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbumOverview(queue[index].album)}>{queue[index].album}</span>
                                         <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtistOverview(queue[index].album_artist)}>{queue[index].album_artist}</span>
                                         <span className="section-1 header-font duration">{new Date(queue[index].duration * 1000).toISOString().slice(14, 19)}</span>

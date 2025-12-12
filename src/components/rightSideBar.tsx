@@ -24,6 +24,8 @@ export default function RightSideBar() {
     const [playlistLists, setPlaylistLists] = useState<Playlists[]>([]);
     const [contextMenu, setContextMenu] = useState({ isToggled: false, playlist: "", posX: 0, posY: 0 });
 
+    const [scanOnGoing, setScanOnGoing] = useState<boolean>(false);
+
 
     // Used to keep the correct link active
     useEffect(() => {
@@ -46,10 +48,15 @@ export default function RightSideBar() {
     // Just for listeners
     useEffect(() => {
         // Load the new playlist from the backend
-        const unlisten_get_playlists= listen<NewPlaylistList>("new-playlist-created", (event) => { console.log(event.payload.playlist); setPlaylistLists(event.payload.playlist); });
+        const unlisten_get_playlists = listen<NewPlaylistList>("new-playlist-created", (event) => { setPlaylistLists(event.payload.playlist); });
+
+        const unlisten_scan_started = listen("scan-started", () => { console.log("scan started"); setScanOnGoing(true); });
+        const unlisten_scan_finished = listen("scan-finished", () => { console.log("scan ended"); setScanOnGoing(false); });
         
         return () => {
             unlisten_get_playlists.then(f => f());
+            unlisten_scan_started.then(f => f());
+            unlisten_scan_finished.then(f => f());
         }        
     }, []);
 
@@ -137,6 +144,13 @@ export default function RightSideBar() {
                     })}
                 </nav>
             </div>
+
+            {/* Scan Status Marker */}
+            <div className={`scan-status-container vertical-centered ${scanOnGoing ? "loaded" : "unloaded"}`}>
+                <span style={{paddingRight: '5px'}}><span className="loader" /> </span>
+                <span>Scanning...</span>
+            </div>
+
             <ContextMenuSideBar
                 isToggled={contextMenu.isToggled}
                 playlist={contextMenu.playlist}

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
@@ -11,8 +12,7 @@ import ImageWithFallBack from "../components/imageFallback.js";
 import PlayIcon from '../images/play-solid-full.svg';
 import PlusIcon from '../images/plus-solid-full.svg';
 import Circle from '../images/circle.svg';
-import { listen } from '@tauri-apps/api/event';
-
+import CloseIcon from '../images/x.svg';
 
 type NewPlaylistList = {
     playlist: Playlists[]
@@ -85,8 +85,9 @@ export default function PlaylistPage() {
 
             <div className="playlist-buttons d-flex align-items-center">
                 <span className="">
-                    <button className="white d-flex align-items-center" onClick={() => {setDisplayCreate(!displayCreate)}}>
-                        <img src={PlusIcon} alt={""} /> &nbsp; New Playlist
+                    <button className={`d-flex align-items-center ${displayCreate ? "red" : "white"}`} onClick={() => {setDisplayCreate(!displayCreate)}}>
+                        {!displayCreate && <> <img src={PlusIcon} alt={""} /> &nbsp; New Playlist </>}
+                        {displayCreate && <> <img src={CloseIcon} alt={""} /> &nbsp; Cancel</>}
                     </button>
                 </span>
                 
@@ -98,20 +99,20 @@ export default function PlaylistPage() {
                             placeholder="Playlist Name"
                             value={newPlaylistName}
                             className=""
+                            autoComplete="off"
                             style={{width: '280px'}}
                             onChange={(e) => setNewPlaylistName(e.target.value)}
                         />
                         <span>
-                            <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName)}}>
+                            <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName); setDisplayCreate(false)}}>
                                 Create
                             </button>
                         </span>
                     </>
                 }
             </div>
-            
 
-            <div className="d-flex flex-wrap">
+            <div className="d-flex flex-wrap" style={{marginTop: '10px'}}>
                 {playlistList.map((item, i) => {
                     return(
                         <div key={i} className="album-link playlist">
@@ -134,8 +135,6 @@ export default function PlaylistPage() {
                         
                 })}
             </div>
-
-            
             <div className="empty-space" />
         </ SimpleBar>
     );

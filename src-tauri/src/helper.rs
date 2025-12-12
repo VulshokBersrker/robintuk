@@ -16,12 +16,6 @@ use StandardTagKey::*;
 // How you import in files that aren't lib or main
 use crate::{types::SongTableUpload, SongDataResults};
 
-pub const ALPHABETICALLY_ORDERED: [char; 29] = [
-    '&', '#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-    'W', 'X', 'Y', 'Z', '.'
-];
-
 pub fn generate_cover_hash(value: u64) -> String {
     let mut s = DefaultHasher::new();
     value.hash(&mut s);
@@ -105,7 +99,7 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
                                     let name: String = file_name.clone().replace(".mp3", "").replace(".flac", "").replace(".wav", "");
                                     let char_array: Vec<char> = name.chars().collect();
-                                    let first_char: char = char_array[0];
+                                    let first_char: char = char_array[0].to_ascii_uppercase();
                                     
                                     // Special Characters
                                     if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
@@ -133,7 +127,7 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
        
                                     let name: String = tag.value.to_string();
                                     let char_array: Vec<char> = name.chars().collect();
-                                    let first_char: char = char_array[0];
+                                    let first_char: char = char_array[0].to_ascii_uppercase();
 
                                     // Special Characters
                                     if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'

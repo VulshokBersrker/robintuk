@@ -132,7 +132,6 @@ export default function AlbumOverviewPage() {
         try {
             await invoke('player_load_album', {queue: albumList, index: index});
             await invoke('update_current_song_played', {path: albumList[index].path});
-            await invoke('update_current_song_played');
             saveQueue(albumList);
             savePosition(index);
             localStorage.setItem("shuffle-queue", JSON.stringify([]));
@@ -374,7 +373,7 @@ export default function AlbumOverviewPage() {
                                                 <>
                                                     <div className="grid-20 position-relative" style={{marginTop: '20px'}}>
                                                         <span className="section-20 header-font font-3" key={j}>Disc {j}</span>
-                                                        <span className="section-1"></span>
+                                                        <span className="section-1" style={{width: '68px'}}>&nbsp;</span>
                                                         <span className="section-1 track details">#</span>
                                                         <span className="section-9 details">Name</span>
                                                         <span className="section-8 details">Artist</span>
@@ -415,7 +414,7 @@ export default function AlbumOverviewPage() {
                                                 <>
                                                     <div className="grid-20 position-relative">
                                                         <span className="section-20 header-font font-3" key={1}>Disc {1}</span>
-                                                        <span className="section-1"></span>
+                                                        <span className="section-1" style={{width: '68px'}}>&nbsp;</span>
                                                         <span className="section-1 track details">#</span>
                                                         <span className="section-9 details">Name</span>
                                                         <span className="section-8 details">Artist</span>
@@ -585,7 +584,7 @@ export default function AlbumOverviewPage() {
                     <div className="song-list">
                         <>
                             <div className="grid-20 position-relative">
-                                <span className="section-1"></span>
+                                <span className="section-1" style={{width: '68px'}}>&nbsp;</span>
                                 <span className="section-1 track details">#</span>
                                 <span className="section-9 details">Name</span>
                                 <span className="section-8 details">Artist</span>

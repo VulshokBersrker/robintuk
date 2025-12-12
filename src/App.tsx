@@ -24,9 +24,12 @@ import Settings from "./pages/settings";
 import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
 import Home from "./pages/home";
+import { listen } from "@tauri-apps/api/event";
 
 
 // https://www.dhiwise.com/blog/design-converter/mastering-react-scrollrestoration-for-better-navigation
+
+// Update 
 
 function App() {
 
@@ -47,10 +50,16 @@ function App() {
     if(selectedTheme) {
       document.querySelector("body")?.setAttribute("data-theme", selectedTheme);
     }
-    
-
     getValues();
+  }, []);
 
+  useEffect(() => {
+    // Listen for when the current folder scan has finished
+    const unlisten_scan_finished = listen<boolean>("scan-finished", () => { getValues(); });
+    
+    return () => {
+      unlisten_scan_finished.then(f => f());
+    }
 
   }, []);
 

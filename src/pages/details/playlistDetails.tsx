@@ -4,6 +4,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { Virtuoso } from "react-virtuoso";
 
 
 // Custom Components
@@ -34,6 +35,8 @@ export default function PlaylistOverviewPage() {
 
     const location = useLocation();
     const navigate = useNavigate();
+    const [scrollParent, setScrollParent] = useState<any>(null);
+
     const [playlist, setPlaylist] = useState<Songs[]>([]);
 
     const [loading, isLoading] = useState<boolean>(false);
@@ -339,7 +342,7 @@ export default function PlaylistOverviewPage() {
     }
     else if(loading === false && playlist.length !== 0) {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} >
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
                 <div className="album-container">
                     
                     {/* Song Selection Bar */}
@@ -418,43 +421,49 @@ export default function PlaylistOverviewPage() {
                     {/* Song list */}
                     <div className="song-list">
                         <div className="grid-20 position-relative">
-                            <span className="section-2"></span>
+                            <span className="section-2" style={{width: '125px'}}>&nbsp;</span>
                             <span className="section-9 vertical-centered font-0 details">Name</span>
                             <span className="section-4 vertical-centered font-0 details">Album</span>
                             <span className="section-4 vertical-centered font-0 details">Album Artist</span>
                             <span className="section-1 details">Length</span>
                         </div>
                         <hr />
-                        {playlist.map((song, i) => {
-                            return(
-                                <div key={i}>
-                                    <div 
-                                        className={`grid-20 song-row playlist align-items-center ${song.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
-                                        onContextMenu={(e) => {
-                                            e.preventDefault();
-                                            handleContextMenu(e, song.album, song.album_artist, i);
-                                        }}
-                                    >
-                                        <span className="section-1 play">
-                                            <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
-                                                <input
-                                                    type="checkbox" id={`select-${i}`} name={`select-${i}`}
-                                                    onClick={(e) => editSelection(song, e.currentTarget.checked, i)}
-                                                    checked={checkBoxNumber[i]} onChange={() => {}}
-                                                />
+
+                        <Virtuoso 
+                            totalCount={playlist.length}
+                            itemContent={(index) => {
+                                return(
+                                    <div key={index} >
+                                        <div
+                                            className={`grid-20 song-row align-items-center ${playlist[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
+                                            onContextMenu={(e) => {
+                                                e.preventDefault();
+                                                handleContextMenu(e, playlist[index].album, playlist[index].album_artist, index);
+                                            }}
+                                        >
+                                            <span className="section-1 play">
+                                                <span className="form-control">
+                                                    <input
+                                                        type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                        onClick={(e) => editSelection(playlist[index], e.currentTarget.checked, index)}
+                                                        onChange={() => {}}
+                                                        checked={checkBoxNumber[index]}
+                                                    />
+                                                </span>
+                                                <img src={PlayIcon} onClick={() => playPlaylist(index)} />
                                             </span>
-                                            <img src={PlayIcon} onClick={() => playPlaylist(i)} />
-                                        </span>
-                                        <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={song.cover} alt="" image_type="playlist-song" /></span>
-                                        <span className="section-9 font-0 name">{song.name}</span>
-                                        <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(song.album)}>{song.album}</span>
-                                        <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(song.album_artist)}>{song.album_artist}</span>
-                                        <span className="section-1 header-font duration">{new Date(song.duration * 1000).toISOString().slice(14, 19)}</span>
+                                            <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={playlist[index].cover} alt="" image_type="playlist-song" /></span>
+                                            <span className="section-9 font-0 name">{playlist[index].name}</span>
+                                            <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(playlist[index].album)}>{playlist[index].album}</span>
+                                            <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(playlist[index].album_artist)}>{playlist[index].album_artist}</span>
+                                            <span className="section-1 header-font duration">{new Date(playlist[index].duration * 1000).toISOString().slice(14, 19)}</span>
+                                        </div>
+                                        <hr />
                                     </div>
-                                    <hr />
-                                </div>
-                            );
-                        })}
+                                );                                
+                            }}
+                            customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                        />
                     </div>
 
                     <CustomContextMenu
@@ -510,7 +519,7 @@ export default function PlaylistOverviewPage() {
                     {/* Song list */}
                     <div className="song-list">
                         <div className="grid-20 position-relative">
-                            <span className="section-2"></span>
+                            <span className="section-2" style={{width: '125px'}}>&nbsp;</span>
                             <span className="section-9 vertical-centered font-0 details">Name</span>
                             <span className="section-4 vertical-centered font-0 details">Album</span>
                             <span className="section-4 vertical-centered font-0 details">Album Artist</span>

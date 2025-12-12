@@ -1,24 +1,32 @@
 // Core Libraries
-import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
+import { VirtuosoGrid } from "react-virtuoso";
+import { useEffect, useState } from "react";
+import SimpleBar from "simplebar-react";
+import { forwardRef } from 'react';
 
 // Custom Components
-import { ArtistDetails, PlaylistList, savePosition, saveQueue, Songs } from "../../globalValues";
+import { ArtistDetails, PlaylistList, playSelection, savePosition, saveQueue, shuffle, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Images
-import EllipsisIcon from '../../images/ellipsis-solid-full.svg';
-import PlayIcon from '../../images/play-icon-outline.svg';
+import ShuffleIcon from '../../images/shuffle-solid-full.svg';
+import PlayIcon from '../../images/play-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
-import ShuffleIcon from '../../images/shuffle-solid-full.svg';
-import SimpleBar from "simplebar-react";
+import Circle from '../../images/circle.svg';
+
+// Add To needs to be added
+// Context Menu needs to be done
 
 export default function ArtistOverviewPage() {
 
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Used to add SimpleBar to React Virtuoso
+    const [scrollParent, setScrollParent] = useState<any>(null);
 
     const [loading, isLoading] = useState<boolean>(false);
     const [artistDetails, setArtistDetails] = useState<ArtistDetails>({ total_duration: 0, album_artist: "", albums: [], num_tracks: 0});
@@ -72,6 +80,42 @@ export default function ArtistOverviewPage() {
         }
     }
 
+    async function playArtist() {
+        try {
+            let albums_songs_arr: Songs[] = [];
+            for(let i = 0; i < artistDetails.albums.length; i++) {
+                const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { name: artistDetails.albums[i].album });
+                albums_songs_arr = albums_songs_arr.concat(temp_arr);
+            }
+            playSelection(albums_songs_arr);
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            clearSelection();
+        }
+    }
+
+    async function shuffleArtist() {
+        try {
+            let albums_songs_arr: Songs[] = [];
+            for(let i = 0; i < artistDetails.albums.length; i++) {
+                const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { name: artistDetails.albums[i].album });
+                albums_songs_arr = albums_songs_arr.concat(temp_arr);
+            }
+            let shufflePlaylist = albums_songs_arr.slice();
+            shuffle(shufflePlaylist);
+            playSelection(shufflePlaylist);
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            clearSelection();
+        }
+    }
+
 
     // Selection Function
     function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
@@ -106,7 +150,7 @@ export default function ArtistOverviewPage() {
     }
 
     // ------------ Selection Bar Functions ------------
-     useEffect(() => {
+    useEffect(() => {
         const fetchData = async() => {
             const list: PlaylistList[] | undefined = await getAllPlaylists();
             if(list !== undefined) {
@@ -181,7 +225,7 @@ export default function ArtistOverviewPage() {
     }
     else {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} >
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
                 <div className="album-container">
                     <div className="d-flex top-row justify-content-start">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
@@ -199,8 +243,8 @@ export default function ArtistOverviewPage() {
                                 </span>
                                 
                                 <div className="section-15 d-flex album-commmands">
-                                    <span><button className="font-1 d-flex align-items-center" ><img src={PlayIcon} />&nbsp;Play All</button></span>
-                                    <span><button className="font-1 borderless" ><img src={ShuffleIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={playArtist}><img src={PlayIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={shuffleArtist}><img src={ShuffleIcon} /></button></span>
                                     <span><button className="font-1 borderless" ><img src={AddIcon} /> </button></span>
                                 </div>
                             </span>
@@ -209,31 +253,64 @@ export default function ArtistOverviewPage() {
 
                     {/* Song list */}
                     <div className="song-list">
-                        <hr />                    
-                        <div className="d-flex flex-wrap">
-                            {artistDetails.albums.map((entry, i) => {
-                                return(
-                                    <div key={i} className="album-link" id={`${entry.album}-${i}`}>
-                                        <div className="album-image-container">
-                                            <div className="play-album"><img src={PlayIcon} className="icon-size" onClick={() => playAlbum(entry.album)}/></div>
-                                            <div className="options"><img src={EllipsisIcon} className="icon-size" /></div>
-                                            
-                                            <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
-                                                <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />
-                                            </div>
-                                            <div className="album-image-name header-font">
-                                                <div className="album-name">{entry.album}</div>
-                                                <div className="artist-name">{entry.album_artist}</div>
-                                            </div>
+                        <hr />        
+                        <VirtuosoGrid
+                            style={{ paddingBottom: '170px' }}
+                            totalCount={artistDetails.albums.length}
+                            components={gridComponents}
+                            increaseViewportBy={{ top: 210, bottom: 420 }}
+                            itemContent={(index) =>
+                                <div className="album-link" key={index} id={`${artistDetails.albums[index].album_section}-${index}`}>
+                                    <div className="album-image-container"
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            // handleContextMenu(e, artistDetails.albums[index].album, artistDetails.albums[index].album_artist, index);
+                                        }}
+                                    >
+                                        <span className="checkbox-container">
+                                            <input
+                                                type="checkbox"
+                                                id={`select-${index}`} name={`select-${index}`}
+                                                // onClick={(e) => editSelection(artistDetails.albums[index].album, e.currentTarget.checked, index)}
+                                                checked={checkBoxNumber[index]} onChange={() => {}}
+                                            />
+                                        </span>
+                                        <div className="play-album" onClick={() => playAlbum(artistDetails.albums[index].album)}>
+                                            <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
+                                            <img src={Circle} className="circle"/>
+                                        </div>
+                                        
+                                        <div className="container" onClick={() => navigateToAlbumOverview(artistDetails.albums[index].album)} >
+                                            <ImageWithFallBack image={artistDetails.albums[index].cover} alt={artistDetails.albums[index].album} image_type={"album"} />
+                                        </div>
+                                        <div className="album-image-name header-font">
+                                            <div className="album-name">{artistDetails.albums[index].album}</div>
+                                            <div className="artist-name">{artistDetails.albums[index].album_artist}</div>
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                </div>
+                            }
+                            customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                        />
                     </div>
                 </div>
-                <div className="empty-space"/>
             </SimpleBar>
         );
     }
+}
+
+
+// For the Virtual Grid
+const gridComponents = {
+    List: forwardRef(({ style, children, ...props }: any, ref) => (
+        <div ref={ref} {...props} style={{ display: "flex", flexWrap: "wrap", ...style, }} >
+            {children}
+        </div>
+    )),
+
+  Item: ({ children, ...props }: any) => (
+    <div {...props} style={{  width: "168px", display: "flex", flex: "none", boxSizing: "border-box", }} >
+        {children}
+    </div>
+  )
 }
