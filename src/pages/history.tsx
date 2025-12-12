@@ -25,7 +25,7 @@ export default function PlayHistoryPage() {
 
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
-    const [isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "", artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0 });
+    const [isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "", artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0 });
 
     // Playlist Values
     const [newPlaylistName, setNewPlaylistName] = useState<string>("");

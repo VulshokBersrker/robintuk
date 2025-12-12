@@ -23,7 +23,23 @@ export interface Songs {
     genre: string,
     album_artist: string,
     disc_number: number,
-    duration: number
+    duration: number,
+    song_section: number
+}
+
+export interface SongsFull {
+    name: string,
+    path: string,
+    cover: string,
+    release: string,
+    track: number,
+    album: string,
+    artist: string,
+    genre: string,
+    album_artist: string,
+    disc_number: number,
+    duration: number,
+    song_section: number
 }
 
 export interface AlbumRes {
@@ -92,7 +108,8 @@ export interface PlayHistory {
     genre: string,
     album_artist: string,
     disc_number: number,
-    duration: number
+    duration: number,
+    song_section: number
 }
 
 export type GetCurrentSong = { q: Songs; };

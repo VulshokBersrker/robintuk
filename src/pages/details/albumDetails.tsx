@@ -58,7 +58,7 @@ export default function AlbumOverviewPage() {
 
     const[isCurrent, setIsCurrent] = useState<Songs>({
         name: "", path: "", cover: "", release: "", track: 0, album: "",
-        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0
+        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0
     });
 
     const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0 });

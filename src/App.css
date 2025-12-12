@@ -1580,6 +1580,8 @@ button img {
   cursor: pointer;
 }
 
+/* -------------------------- Song Page Styles -------------------------- */
+
 .virtual-scroller {
   padding-top: 20px;
   position: relative !important;
@@ -1590,18 +1592,9 @@ button img {
   padding-bottom: 210px;
 }
 
-/* .song-list * {
-  position: relative !important;
-} */
-
-
-
-div[data-testid="virtuoso-item-list"] {
-  /* padding-top: 0px !important; */
-}
-
-.List {
-  box-sizing: border-box;
+.song-page-list .song-list {
+  margin-left: 5px;
+  margin-right: 45px;
 }
 
 /* -------------------------- Playlist Pages Styles -------------------------- */
@@ -2291,6 +2284,17 @@ img.search-icon:hover {
       pointer-events: none;
       overflow: hidden;
       height: calc(100vh - 124px);
+    }
+  }
+  .simplebar-scrollable-y:has(.song-page-list) {
+    .simplebar-track {
+      z-index: 1;
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      overflow: hidden;
+      height: calc(100vh - 134px);
     }
   }
 }

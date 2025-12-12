@@ -36,6 +36,7 @@ pub struct SongTable {
     pub album_artist: String,
     pub disc_number: i32,
     pub duration: u64,
+    pub song_section: u64
 }
 
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]

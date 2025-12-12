@@ -125,45 +125,14 @@ pub async fn remove_directory(state: State<AppState, '_>, directory_name: String
 
 // Get all songs from the database and all of their data
 #[tauri::command]
-pub async fn get_all_songs(state: State<AppState, '_>) -> Result<Vec<SongRes>, String> {
+pub async fn get_all_songs(state: State<AppState, '_>) -> Result<Vec<SongTable>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs ORDER BY name ASC;")
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs ORDER BY song_section ASC, name ASC;")
         .fetch_all(&state.pool)
         .await
         .unwrap();
 
-    let mut output: Vec<SongRes> = vec![];
-
-    for letter in ALPHABETICALLY_ORDERED {
-        let mut t: Vec<SongTable> = vec![];
-        for item in temp.clone() {
-            // Special Characters
-            if letter == '&' &&
-                (item.name.as_str().starts_with('#') || item.name.as_str().starts_with('!') || item.name.as_str().starts_with('#')
-                || item.name.as_str().starts_with('[') || item.name.as_str().starts_with(']') || item.name.as_str().starts_with('\\')
-                || item.name.as_str().starts_with('-') || item.name.as_str().starts_with('_') || item.name.as_str().starts_with('\"')
-                || item.name.as_str().starts_with('\'') || item.name.as_str().starts_with('&') || item.name.as_str().starts_with('$') || item.name.as_str().starts_with('?')
-                || item.name.as_str().starts_with('+') || item.name.as_str().starts_with('%') || item.name.as_str().starts_with('*') || item.name.as_str().starts_with('.') ) {
-                t.push(item);
-            }
-            // Other Characters outside ascii values
-            else if letter == '.' && !item.name.as_bytes()[0].is_ascii() {
-                t.push(item);
-            }
-            // 0 - 9
-            else if letter == '#' && item.name.as_str().chars().next().unwrap().is_numeric() {
-                t.push(item);
-            }
-            // A - Z
-            else if letter.is_alphabetic() && item.name.starts_with(letter) {
-                t.push(item);
-            }
-        }
-        output.push(SongRes{name: letter.to_string(), song_list: t});
-    }
-
-
-    Ok(output)
+    Ok(temp)
 }
 
 // Get a single song from the database ---------------------- NEEDS WORK (Should use path or id instead of name)
