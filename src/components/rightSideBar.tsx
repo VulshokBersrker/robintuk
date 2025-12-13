@@ -51,7 +51,7 @@ export default function RightSideBar() {
         const unlisten_get_playlists = listen<NewPlaylistList>("new-playlist-created", (event) => { setPlaylistLists(event.payload.playlist); });
 
         const unlisten_scan_started = listen("scan-started", () => { console.log("scan started"); setScanOnGoing(true); });
-        const unlisten_scan_finished = listen("scan-finished", () => { console.log("scan ended"); setScanOnGoing(false); });
+        const unlisten_scan_finished = listen("scan-finished", () => { console.log("scan ended"); setScanOnGoing(false); localStorage.setItem("folder-scan", JSON.stringify(false)); });
         
         return () => {
             unlisten_get_playlists.then(f => f());

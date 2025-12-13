@@ -1,8 +1,7 @@
-import { HashLink } from 'react-router-hash-link';
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 import { forwardRef } from 'react';
 
@@ -39,12 +38,14 @@ export default function AlbumPage({albums}: P) {
 
     // Used to add SimpleBar to React Virtuoso
     const [scrollParent, setScrollParent] = useState<any>(null);
+    const virtuoso = useRef<any>(null);
 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [albumList, setAlbumList] = useState<AlbumDetails[]>(albums);
     const [searchValue, setSearchValue] = useState<string>("");
 
     const [filteredAlbums, setFilteredAlbums] = useState<AlbumDetails[]>(albums);
+    const [albumSections, setAlbumSections] = useState<number[]>([]);    
 
     const [albumSelection, setAlbumSelection] = useState<String[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
@@ -56,14 +57,21 @@ export default function AlbumPage({albums}: P) {
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
     useEffect(() => {
-        async function setupAlbumList() {
-            try {
-                setLoading(true);
-                setCheckBoxNumber(Array(albumList.length).fill(false));
+        function setupAlbumList() {
+            
+            setLoading(true);
+            setCheckBoxNumber(Array(albumList.length).fill(false));
+
+            let tempSectionArray: number[] = [];
+            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, albumList.map((o: AlbumDetails) => { return o.album_section})) );
+            console.log(maxSection);
+
+            for(let i = 0; i < maxSection; i++) {
+                const results = albumList.filter(obj => obj.album_section === alphabeticallyOrdered[i] ).length;
+                tempSectionArray[i] = results;
             }
-            catch(e) {
-                console.log(e);
-            }
+            setAlbumSections(tempSectionArray);
+            
             setLoading(false);
         }
         setupAlbumList();
@@ -81,25 +89,6 @@ export default function AlbumPage({albums}: P) {
             document.removeEventListener('click', handler);
         }
     }, []);
-
-    async function getAlbums() {
-        try {
-            setLoading(true);
-            const list = await invoke<AlbumDetails[]>('get_all_albums');
-            // console.log(list);
-            setAlbumList(list);
-            setFilteredAlbums(list);
-
-            setCheckBoxNumber(Array(list.length).fill(false));
-            
-        }
-        catch (err) {
-            alert(`Failed to scan folder: ${err}`);
-        }
-        finally {
-            setLoading(false);
-        }
-    }
 
     const navigateToAlbumOverview = (name: string) => {
         navigate("/albums/overview", {state: {name: name}});
@@ -130,6 +119,15 @@ export default function AlbumPage({albums}: P) {
             return entry.album.toLowerCase().includes(value.toLowerCase());
         })
         setFilteredAlbums(temp_section);
+
+        let tempSectionArray: number[] = [];
+        const maxSection = alphabeticallyOrdered.length;
+
+        for(let i = 0; i < maxSection; i++) {
+            const results = temp_section.filter(obj => obj.album_section === alphabeticallyOrdered[i] ).length;
+            tempSectionArray[i] = results;
+        }
+        setAlbumSections(tempSectionArray);
     }
 
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
@@ -279,7 +277,6 @@ export default function AlbumPage({albums}: P) {
         }        
     }
 
-    
 
     if(loading) {
         return(
@@ -368,7 +365,7 @@ export default function AlbumPage({albums}: P) {
                 </div>                    
                 {/* End of Song Selection Bar */}
 
-                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} clickOnTrack={false} >
                     <div className="search-filters d-flex justify-content-end vertical-centered"> 
                         <span className="search-bar">
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
@@ -381,17 +378,27 @@ export default function AlbumPage({albums}: P) {
                     </div>
 
                     <div className="section-list">
-                        {alphabeticallyOrdered.map(section => {
-                            return(
-                                <HashLink to={`/albums#${section}-0`} smooth key={`main-${section}`}>
-                                    <div key={`main-${section}`}>
-                                        {section === 0 && "&"}
-                                        {section === 1 && "#"}
-                                        {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
-                                        {section === 300 && "..."}
-                                    </div>
-                                </HashLink>                                
-                            );                                          
+                        {alphabeticallyOrdered.map((section, i) => {
+                            let totalIndex = 0;
+                            for(let j = 0; j < i; j++) { totalIndex += albumSections[j]; }
+                            if(albumSections[i] !== 0) {
+                                return(
+                                    <div
+                                        id={`main-${section}`} key={`main-${section}`} className="section-key"
+                                        onClick={() => {
+                                            virtuoso.current.scrollToIndex({ index: totalIndex });
+                                            return false;
+                                        }}
+                                    >
+                                        <span>
+                                            {section === 0 && "&"}
+                                            {section === 1 && "#"}
+                                            {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
+                                            {section === 300 && "..."}
+                                        </span>
+                                    </div>                                
+                                ); 
+                            }                          
                         })}
                     </div>
 
@@ -400,7 +407,8 @@ export default function AlbumPage({albums}: P) {
                         totalCount={filteredAlbums.length}
                         components={gridComponents}
                         increaseViewportBy={{ top: 210, bottom: 420 }}
-                        itemContent={(index) =>
+                        ref={virtuoso}
+                        itemContent={(index) => 
                             <div className="album-link" key={index} id={`${filteredAlbums[index].album_section}-${index}`}>
                                 <div className="album-image-container"
                                     onContextMenu={(e) => {
@@ -429,7 +437,7 @@ export default function AlbumPage({albums}: P) {
                                         <div className="artist-name">{filteredAlbums[index].album_artist}</div>
                                     </div>
                                 </div>
-                            </div>
+                            </div>                           
                         }
                         customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                     />
@@ -533,3 +541,33 @@ const gridComponents = {
     </div>
   )
 }
+
+
+
+// async function getAlbums() {
+//     try {
+//         setLoading(true);
+//         const list = await invoke<AlbumDetails[]>('get_all_albums');
+//         // console.log(list);
+//         setAlbumList(list);
+//         setFilteredAlbums(list);
+
+//         let tempSectionArray: number[] = [];
+//         const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, list.map((o: AlbumDetails) => { return o.album_section})) );
+
+//         for(let i = 0; i < maxSection; i++) {
+//             const results = list.filter(obj => obj.album_section === alphabeticallyOrdered[i] ).length;
+//             tempSectionArray[i] = results;
+//         }
+//         setAlbumSections(tempSectionArray);
+
+//         setCheckBoxNumber(Array(list.length).fill(false));
+        
+//     }
+//     catch (err) {
+//         alert(`Failed to scan folder: ${err}`);
+//     }
+//     finally {
+//         setLoading(false);
+//     }
+// }

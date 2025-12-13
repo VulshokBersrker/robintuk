@@ -40,21 +40,20 @@ Made with Tauri (React and Rust).
 
 ## Features to Be Added
 
+- [ ] Installer Wizard
+- [ ] Open with (in file explorer)
 - [ ] Get artist data from online service for artist page (maybe)
+- [ ] Create a Genre section
 - [ ] Playlist Import/Export as m3u file
-- [ ] Remove a song from the queue
+- [ ] Queue page functions (clear, add to)
 - [ ] Notification of version update
 - [ ] Song details screen
 - [ ] Smoother music progress bar
 - [ ] Custom context menu when hovering on songs/albums (In progress)
-- [ ] Installer Wizard
-- [ ] Open with (in file explorer)
 - [ ] Mini Player?
 - [ ] New default playlist icons
-- [ ] Remember scroll position on page back
 - [ ] Add support for wav
-- [ ] Create a Genre section
-- [ ] Lock navigation when scanning for new music from settings?
+- [x] Lock scan even when you leave the settings page
 - [x] Add support for flac
 - [x] Force scrollbar to stop before music control section
 - [x] Remember last 100 played songs/albums
@@ -80,6 +79,7 @@ Made with Tauri (React and Rust).
 - [ ] Playback errors
 - [ ] Better error handling
 - [ ] Blank pages on route change while it grabs the data from the backend
+- [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
 - [x] Fix songs page search results formatting
 - [x] Albums displaying Disc 0 when metadata has no disc value
 - [x] Protections on adding child directories to scan music

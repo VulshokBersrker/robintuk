@@ -196,8 +196,8 @@ pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Res
 pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<SqliteQueryResult, String> {
     
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
-        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)")
+        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section) 
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)")
         .bind(entry.name)
         .bind(entry.path)
         .bind(entry.cover)
@@ -212,6 +212,7 @@ pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<Sq
         .bind(false)
         .bind(entry.song_section)
         .bind(entry.album_section)
+        .bind(entry.artist_section)
         .execute(pool)
         .await;
 
@@ -223,8 +224,8 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
     
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("UPDATE songs
         SET name = ?1, cover = ?2, release = ?3, track = ?4, album = ?5, artist = ?6, genre = ?7,
-        album_artist = ?8, disc_number = ?9, duration = ?10, song_section = ?11, album_section = ?12
-        WHERE path = ?13
+        album_artist = ?8, disc_number = ?9, duration = ?10, song_section = ?11, album_section = ?12, artist_section = ?12
+        WHERE path = ?14
         ")
         .bind(entry.name)
         .bind(entry.cover)
@@ -238,6 +239,7 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
         .bind(entry.duration)
         .bind(entry.song_section)
         .bind(entry.album_section)
+        .bind(entry.artist_section)
 
         .bind(entry.path)
         .execute(pool)
@@ -257,36 +259,6 @@ pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AllAlbumRe
     .fetch_all(&state.pool)
     .await
     .unwrap();
-
-    // let mut output: Vec<AlbumRes> = vec![];
-
-    // for letter in ALPHABETICALLY_ORDERED {
-    //     let mut t: Vec<AllAlbumResults> = vec![];
-    //     for item in temp.clone() {
-    //         // Special Characters
-    //         if letter == '&' &&
-    //             (item.album.as_str().starts_with('#') || item.album.as_str().starts_with('!') || item.album.as_str().starts_with('#')
-    //             || item.album.as_str().starts_with('[') || item.album.as_str().starts_with(']') || item.album.as_str().starts_with('\\')
-    //             || item.album.as_str().starts_with('-') || item.album.as_str().starts_with('_') || item.album.as_str().starts_with('\"')
-    //             || item.album.as_str().starts_with('\'') || item.album.as_str().starts_with('&') || item.album.as_str().starts_with('$')
-    //             || item.album.as_str().starts_with('+') || item.album.as_str().starts_with('%') || item.album.as_str().starts_with('*') || item.album.as_str().starts_with('.') ) {
-    //             t.push(item);
-    //         }
-    //         // Other Characters outside ascii values
-    //         else if letter == '.' && !item.album.as_bytes()[0].is_ascii() {
-    //             t.push(item);
-    //         }
-    //         // 0 - 9
-    //         else if letter == '#' && item.album.as_str().chars().next().unwrap().is_numeric() {
-    //             t.push(item);
-    //         }
-    //         // A - Z
-    //         else if letter.is_alphabetic() && item.album.starts_with(letter) {
-    //             t.push(item);
-    //         }
-    //     }
-    //     output.push(AlbumRes{name: letter.to_string(), section: t});
-    // }
 
     Ok(temp)
 }
@@ -380,9 +352,9 @@ pub async fn get_genre(name: String) -> Result<SongTable, String> {
 pub async fn get_all_artists(state: State<AppState, '_>) -> Result<Vec<AllArtistResults>, String> {
 
     let temp: Vec<AllArtistResults> = sqlx::query_as::<_, AllArtistResults>(
-        "SELECT DISTINCT album_artist FROM songs WHERE album_artist IS NOT NULL
+        "SELECT DISTINCT album_artist, artist_section FROM songs WHERE album_artist IS NOT NULL
         GROUP BY album_artist
-        ORDER BY album_artist ASC;",
+        ORDER BY artist_section ASC, album_artist ASC;",
     )
     .fetch_all(&state.pool)
     .await

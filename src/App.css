@@ -539,11 +539,7 @@ img.off {
 }
 /* Allows for the blur for the music controls and the weird padding fix */
 .empty-space {
-  height: 30px;
-}
-
-.content:has(.song-page-list) {
-  overflow-y: hidden;
+  height: 70px;
 }
 
 /* ------------------ Custom Window Tab Styles ------------------*/
@@ -1166,7 +1162,6 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   overflow: hidden;
   background: #30052b;
   background: linear-gradient(151deg, var(--gradient-one) 0%, var(--gradient-two) 29%, var(--gradient-three) 100%);
-
 }
 
 .fullscreen-music.open {
@@ -1204,8 +1199,6 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   filter: blur(20px) brightness(0.2);
 }
 
-
-
 #section-header {
   color: var(--slider-color-one);
 }
@@ -1224,7 +1217,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   padding: 3px;
   font-size: 16px;
 }
-.section-list a {
+.section-list .section-key {
   color: var(--font-color-two) !important;
 }
 .section-list div:hover {
@@ -1247,7 +1240,6 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 
 .album-link:hover {
   cursor: pointer;
-  /* Could use work */
   z-index: 10;
   border-radius: var(--border-radius);
   background-color: var(--gradient-one);
@@ -1269,17 +1261,9 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 
 .album-image-name {
   position: relative;
-  /* bottom: 0px;
-  left: 0px; */
   height: 35px;
   width: 100%;
   z-index: 10;
-  /* From https://css.glass */
-  /* background: rgba(0, 0, 0, 0.646);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(14.7px); */
-  /* display: inline-flex; */
-  /* align-items: center; */
 }
 .album-image-name span {
   margin-left: 5px;
@@ -1312,7 +1296,6 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   -webkit-box-orient: vertical;
 }
 
-
 .play-album .play-pause-icon {
   z-index: 4;
   width: 25px;
@@ -1341,7 +1324,6 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 .album-image-container .options img {
   display: block;
   margin: auto;
-  /* width: 70%; */
 }
 
 .album-image-container .options {
@@ -2146,7 +2128,7 @@ img.search-icon:hover {
       height: calc(100vh - 23.4rem);
     }
     .empty-space {
-      height: 130px;
+      height: 110px;
     }
   }
 
@@ -2194,6 +2176,9 @@ img.search-icon:hover {
   width: auto !important;
   height: auto !important;
   z-index: 0;
+}
+.simplebar-content {
+  padding-bottom: 200px;
 }
 
 .simplebar-offset {
@@ -2285,7 +2270,39 @@ img.search-icon:hover {
   bottom: 0;
   pointer-events: none;
   overflow: hidden;
-  height: calc(100vh - 110px);
+  height: calc(100vh - 35px);
+}
+/* Settings Page */
+.scrollbar-settings-content .simplebar-track {
+  z-index: 1;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  height: calc(100vh - 35px);
+}
+.simplebar-scrollable-y:has(.album-container) {
+  .simplebar-track {
+    z-index: 1;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    height: calc(100vh - 35px);
+  }
+}
+.simplebar-scrollable-y:has(.song-page-list) {
+  .simplebar-track {
+    z-index: 1;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    height: calc(100vh - 35px);
+  }
 }
 
 #root:has(.music-control-container) {
@@ -2367,13 +2384,16 @@ img.search-icon:hover {
 .simplebar-scrollbar:before {
   position: absolute;
   content: '';
-  background: var(--scrollbar-color);
   border-radius: 7px;
   left: 2px;
   right: 2px;
   opacity: 0;
   transition: opacity 0.2s 0.5s linear;
   
+}
+
+.simplebar-track.simplebar-vertical .simplebar-scrollbar:before {
+  background: var(--font-color-three);
 }
 
 .simplebar-scrollbar.simplebar-visible:before {
@@ -2518,6 +2538,15 @@ img.search-icon:hover {
     min-height: 30px;
     min-width: 30px;
   }    
+}
+
+@media screen and (min-width: 1000px) {
+  #root:has(.music-control-container) {
+    .empty-space {
+      height: 130px;
+    }
+  }
+  
 }
 /* 4K Resolutions - 3840x2160 */
 @media screen and (min-width: 3840px) {

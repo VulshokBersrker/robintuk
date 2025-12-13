@@ -14,7 +14,7 @@ const ImageWithFallBack = (props: Props) => {
     if(props.image_type === "album") {
         return (
             <img
-                src={props.image !== undefined ? ConvertFileToImage(props.image) : PlaceHolderAlbumArt}
+                src={props.image !== "" ? ConvertFileToImage(props.image!) : PlaceHolderAlbumArt}
                 alt={props.alt}
                 loading="lazy"
                 onError={(e) => e.currentTarget.src = PlaceHolderAlbumArt}
@@ -25,7 +25,7 @@ const ImageWithFallBack = (props: Props) => {
     else if(props.image_type === "album-larger") {
         return (
             <img
-                src={props.image !== undefined ? ConvertFileToImage(props.image) : PlaceHolderAlbumArt}
+                src={props.image !== "" ? ConvertFileToImage(props.image!) : PlaceHolderAlbumArt}
                 alt={props.alt}
                 loading='lazy'
                 onError={(e) => e.currentTarget.src = PlaceHolderAlbumArt}
@@ -36,7 +36,7 @@ const ImageWithFallBack = (props: Props) => {
     else if(props.image_type === "sidebar-playlist-image") {
         return (
             <img
-                src={props.image !== undefined ? ConvertFileToImage(props.image) : PlaceHolderAlbumArt}
+                src={props.image !== "" ? ConvertFileToImage(props.image!) : PlaceHolderAlbumArt}
                 alt={props.alt}
                 loading='lazy'
                 onError={(e) => e.currentTarget.src = PlaceHolderAlbumArt}
@@ -47,7 +47,7 @@ const ImageWithFallBack = (props: Props) => {
     else if(props.image_type === "playlist-song") {
         return (
             <img
-                src={props.image !== undefined ? ConvertFileToImage(props.image) : PlaceHolderAlbumArt}
+                src={props.image !== "" ? ConvertFileToImage(props.image!) : PlaceHolderAlbumArt}
                 alt={props.alt}
                 loading='lazy'
                 onError={(e) => e.currentTarget.src = PlaceHolderAlbumArt}
@@ -58,7 +58,7 @@ const ImageWithFallBack = (props: Props) => {
     else if(props.image_type === "artist") {
         return (
             <img
-                src={props.image !== undefined ? ConvertFileToImage(props.image) : PlaceHolderArtistArt}
+                src={props.image !== "" ? ConvertFileToImage(props.image!) : PlaceHolderArtistArt}
                 alt={props.alt}
                 loading='lazy'
                 onError={(e) => e.currentTarget.src = PlaceHolderArtistArt}
@@ -69,7 +69,7 @@ const ImageWithFallBack = (props: Props) => {
     else {
         return (
             <img
-                src={props.image !== undefined ? ConvertFileToImage(props.image) : PlaceHolderAlbumArt}
+                src={props.image !== "" ? ConvertFileToImage(props.image!) : PlaceHolderAlbumArt}
                 alt={props.alt}
                 loading='lazy'
                 onError={(e) => e.currentTarget.src = PlaceHolderAlbumArt}

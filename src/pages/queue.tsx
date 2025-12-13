@@ -290,6 +290,7 @@ export default function QueueOverviewPage() {
                 </div>
                 <div className="empty-space"/>
                 <div className="empty-space"/>
+                
             </SimpleBar>
         );
     }

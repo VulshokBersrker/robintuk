@@ -1,5 +1,6 @@
 // Core Libraries
 import { open } from '@tauri-apps/plugin-dialog';
+import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
@@ -8,6 +9,7 @@ import SimpleBar from 'simplebar-react';
 import CheckIcon from '../images/circle-check-regular-full.svg';
 import ErrorIcon from '../images/circle-xmark-regular-full.svg';
 import logo from '../images/logo.svg';
+import { DirectoryInfo } from '../globalValues';
 
 interface ScanResults {
     success: number,
@@ -18,9 +20,6 @@ interface ScanResults {
 interface ErrorInfo {
     file_name: string,
     error_type: string,
-}
-interface DirectoryInfo {
-    dir_path: string
 }
 
 // Add function to remove all entries if the list is emptied
@@ -33,11 +32,12 @@ export default function Settings() {
     const [directoryList, setDirectoryList] = useState<DirectoryInfo[]>([]);
     const [scanResults, setScanResults] = useState<ScanResults>();
 
-    const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme')!);
+    const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme') !== null ? localStorage.getItem('theme')! : "red");
 
 
     async function scanMusic() {
         setLoading(true);
+        localStorage.setItem("folder-scan", JSON.stringify(true));
         try {
             const scannedFiles = await invoke<ScanResults>('scan_directory');
             console.log(scannedFiles);
@@ -45,6 +45,7 @@ export default function Settings() {
         }
         catch (err) {
             alert(`Failed to scan folder: ${err}`);
+            localStorage.setItem("folder-scan", JSON.stringify(false));
         }
         finally {
             setLoading(false);
@@ -53,6 +54,7 @@ export default function Settings() {
             setTimeout(() => {
                 setShowResults(false);
             }, 5000);
+            localStorage.setItem("folder-scan", JSON.stringify(false));
         }
     }
 
@@ -115,7 +117,23 @@ export default function Settings() {
 
     // Get the list of directories on load
     useEffect(() => {
+        const isScanOnging = JSON.parse(localStorage.getItem("folder-scan")!);
+        if(isScanOnging === true) {
+            setLoading(true);
+        }
         getDirectories();
+    }, []);
+
+    useEffect(() => {
+        // Load the new playlist from the backend
+
+        const unlisten_scan_started = listen("scan-started", () => { console.log("scan started"); setLoading(true); });
+        const unlisten_scan_finished = listen("scan-finished", () => { console.log("scan ended"); setLoading(false); });
+        
+        return () => {
+            unlisten_scan_started.then(f => f());
+            unlisten_scan_finished.then(f => f());
+        }        
     }, []);
 
 

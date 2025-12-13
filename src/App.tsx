@@ -1,16 +1,15 @@
-import { Routes, Route, BrowserRouter } from "react-router-dom";
-
-import "./App.css";
-
-// Components
+import { Routes, Route, BrowserRouter, ScrollRestoration } from "react-router-dom";
 import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
 import MusicControls from "./components/musicControls";
 import RightSideBar from "./components/rightSideBar";
+import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 
+import "./App.css";
+
 // Custom Components
-import { AlbumDetails, AllArtistResults, Songs } from "./globalValues";
+import { AlbumDetails, AllArtistResults, clearLocalStorage, DirectoryInfo, Songs, SongsFull } from "./globalValues";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
@@ -24,12 +23,6 @@ import Settings from "./pages/settings";
 import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
 import Home from "./pages/home";
-import { listen } from "@tauri-apps/api/event";
-
-
-// https://www.dhiwise.com/blog/design-converter/mastering-react-scrollrestoration-for-better-navigation
-
-// Update 
 
 function App() {
 
@@ -51,6 +44,20 @@ function App() {
       document.querySelector("body")?.setAttribute("data-theme", selectedTheme);
     }
     getValues();
+
+    async function checkForFiles() {
+      try {
+        const res = await invoke<DirectoryInfo[]>('get_directory');
+        if(res.length === 0) {
+          clearLocalStorage();
+        }
+      }
+      catch(e) {
+
+      }
+    }
+
+    checkForFiles();
   }, []);
 
   useEffect(() => {
@@ -65,7 +72,7 @@ function App() {
 
   async function getValues() {
     try {
-      console.log("Loading Start");
+      // console.log("Loading Start");
       setLoading(true);
       getSongs();
       getAlbums();
@@ -76,26 +83,18 @@ function App() {
       alert(`Failed to scan folder: ${e}`);
     }
     finally {
-      console.log("Loading End");
+      // console.log("Loading End");
       setLoading(false);
     }
   }
 
   async function getSongs() {
     try {
-      // const list: SongRes[] = await invoke<SongRes[]>('get_all_songs');
-      // let testV: any[] = [];
-      // for(let i = 0; i < list.length; i++) {
-      //   testV.push(list[i].name);
-      //   for(let j = 0; j < list[i].song_list.length; j++) {
-      //     testV.push(list[i].song_list[j]);
-      //   }
-      // }
-      // console.log(testV)
-      // setSongList(testV);
+      const song_list: SongsFull[] = await invoke<SongsFull[]>('get_all_songs');
 
       const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 30 } );
-      // console.log(list);
+
+      setSongList(song_list);
       setHomeSongs(list);
   }
     catch (err) {
@@ -131,7 +130,6 @@ function App() {
   }
 
 
-
   return(
     <div 
       // onContextMenu={(e) => { e.preventDefault(); }}
@@ -143,9 +141,9 @@ function App() {
         <div className="content">
           <Routes>
             <Route path="/" element={ <Home /> }/>
-            <Route path="/songs" element={ <SongPage  /> }/>
-            <Route path="/albums" element={ <AlbumPage albums={albumList}/> }/>
-            <Route path="/artists" element={ <ArtistsPage artists={artistList}/> }/>
+            <Route path="/songs" element={ <SongPage songs={songList} /> }/>
+            <Route path="/albums" element={ <AlbumPage albums={albumList} /> }/>
+            <Route path="/artists" element={ <ArtistsPage artists={artistList} /> }/>
             <Route path="/queue" element={ <QueueOverviewPage /> }/>
             <Route path="/history" element={ <PlayHistoryPage /> }/>
             <Route path="/playlists" element={ <PlaylistPage /> }/>
@@ -156,6 +154,7 @@ function App() {
           </Routes>
         </div>
       </BrowserRouter>
+      
     </div>
   );
 }

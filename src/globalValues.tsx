@@ -61,7 +61,8 @@ export interface ArtistRes {
 
 export interface AllArtistResults {
     album_artist: string,
-    name: string
+    name: string,
+    artist_section: number
 }
 
 export interface ArtistDetails {
@@ -94,6 +95,10 @@ export interface ContextMenu {
     index: number,
     posX: number,
     posY: number
+}
+
+export interface DirectoryInfo {
+    dir_path: string
 }
 
 export interface PlayHistory {
@@ -204,3 +209,8 @@ export async function playPlaylist(playlist_name: string) {
     }
 }
 
+
+
+export function clearLocalStorage() {
+    localStorage.clear();
+}
