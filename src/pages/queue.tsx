@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 
 // Custom Components
@@ -10,10 +11,12 @@ import { GetCurrentSong, PlaylistList, savePosition, saveQueue, Songs } from "..
 import ImageWithFallBack from "../components/imageFallback";
 
 // Images
-import PlayIcon from '../images/play-icon-outline.svg';
+import ClearIcon from '../images/trash-can-regular-full.svg';
+import PlayIcon from '../images/trash-can-regular-full.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
+import PlusIcon from '../images/plus-solid-full.svg'
 import CloseIcon from '../images/x.svg';
-import { Virtuoso } from "react-virtuoso";
+
 
 export default function QueueOverviewPage() {
 
@@ -62,6 +65,25 @@ export default function QueueOverviewPage() {
             res.forEach((x) => { dur += x.duration; checkboxArr[i] = false; i++; });
             setCheckBoxNumber(checkboxArr);
             setDuration(dur);
+        }
+        catch(e) {
+            alert(e)
+        }
+        finally {
+            isLoading(false);
+        }
+    }
+
+    async function clearQueue() {
+        try{
+            setQueue([]);
+            await invoke("clear_queue");
+            await invoke("player_clear_queue");
+            localStorage.removeItem("last-played-queue-position");
+            localStorage.removeItem("last-played-song");
+            
+            setCheckBoxNumber([]);
+            setDuration(0);
         }
         catch(e) {
             alert(e)
@@ -201,7 +223,7 @@ export default function QueueOverviewPage() {
                         <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
                         <div className="section-6 position-relative">
                             <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
-                            {displayAddToMenu &&
+                            {displayAddToMenu && songSelection.length >= 1 &&
                                 <div className="playlist-list-container header-font">
                                     <hr/>
                                     <span className="playlist-input-container d-flex justify-content-center align-items-center">
@@ -238,8 +260,33 @@ export default function QueueOverviewPage() {
                                 </span>
                                 
                                 <div className="section-15 d-flex album-commmands">
-                                    <span><button className="white font-1 d-flex align-items-center" ><img src={PlayIcon} />Clear</button></span>
-                                    <span><button className="white font-1">+ Add to</button></span>
+                                    <span><button className="borderless font-1 d-flex align-items-center" disabled={queue.length === 0} onClick={clearQueue} ><img src={ClearIcon} /></button></span>
+                                    <span className="position-relative">
+                                        <button className="borderless font-1" disabled={queue.length === 0} onClick={() => setDisplayAddToMenu(!displayAddToMenu)}  ><img src={PlusIcon} /></button>
+                                    
+                                        {displayAddToMenu &&
+                                            <div className="playlist-list-container add header-font">
+                                                <hr/>
+                                                <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                                    <input
+                                                        id="new_playlist_input" type="text" placeholder="New Playlist"
+                                                        className="new-playlist" value={newPlaylistName}
+                                                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                                                    />
+                                                    <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                                </span>
+                                                
+                                                {playlistList?.map((playlist) => {
+                                                    return(
+                                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                                            {playlist.name}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        }
+                                    
+                                    </span>
                                 </div>
                             </span>
                         </div>

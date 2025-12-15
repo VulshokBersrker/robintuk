@@ -22,24 +22,26 @@ CREATE TABLE IF NOT EXISTS songs (
     favorited BOOLEAN,
     song_section INTEGER NOT NULL,
     album_section INTEGER NOT NULL,
-    artist_section INTEGER NOT NULL
+    artist_section INTEGER NOT NULL,
+    keep BOOLEAN NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS playlists (
-    name TEXT PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT UNIQUE NOT NULL,
     image TEXT
 );
 
 -- The playlist's songs
 CREATE TABLE IF NOT EXISTS playlist_tracks (
     -- The name of the playlist
-    playlist_name TEXT NOT NULL,
+    playlist_id INTEGER NOT NULL,
     -- A reference to the song table to get the song's data
     track_id TEXT NOT NULL,
     -- Position in the playlist
     position INTEGER NOT NULL,
-    PRIMARY KEY (playlist_name, track_id),
-    FOREIGN KEY (playlist_name) REFERENCES playlists(name) ON DELETE CASCADE ON UPDATE CASCADE
+    PRIMARY KEY (playlist_id, track_id),
+    FOREIGN KEY (playlist_id) REFERENCES playlists(id) ON DELETE CASCADE ON UPDATE CASCADE
     FOREIGN KEY (track_id) REFERENCES songs(path) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -55,7 +57,19 @@ CREATE TABLE IF NOT EXISTS history (
     FOREIGN KEY(song_id) REFERENCES songs(path) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS queue (
+    position INTEGER PRIMARY KEY,
+    song_id TEXT NOT NULL,
+    FOREIGN KEY(song_id) REFERENCES songs(path) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS queue_shuffled (
+    position INTEGER PRIMARY KEY,
+    song_id TEXT NOT NULL,
+    FOREIGN KEY(song_id) REFERENCES songs(path) ON DELETE CASCADE
+);
+
 -- Indexes can increase query speed, but increase DB file size
 CREATE INDEX idx_song_album ON songs(album);
-CREATE INDEX idx_song_artist ON songs(artist);
+CREATE INDEX idx_song_artist ON songs(album_artist);
 CREATE INDEX idx_song_name ON songs(name);

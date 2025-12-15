@@ -147,6 +147,7 @@ export default function AlbumPage({albums}: P) {
     // ------------ Start of Selection Bar Functions ------------
     
     function editSelection(album: String, isBeingAdded: boolean, index: number) {
+        resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
@@ -164,7 +165,7 @@ export default function AlbumPage({albums}: P) {
             tempArr[index] = false;
             setCheckBoxNumber(tempArr);;
         }
-        resetContextMenu();
+        
     }
 
     function clearSelection() {
@@ -403,7 +404,6 @@ export default function AlbumPage({albums}: P) {
                     </div>
 
                     <VirtuosoGrid
-                        style={{ paddingBottom: '170px' }}
                         totalCount={filteredAlbums.length}
                         components={gridComponents}
                         increaseViewportBy={{ top: 210, bottom: 420 }}
@@ -441,6 +441,8 @@ export default function AlbumPage({albums}: P) {
                         }
                         customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                     />
+                    <div className="empty-space"/>
+                    <div className="empty-space"/>
                 </SimpleBar>
                 
                 <ContextMenuAlbums
@@ -454,6 +456,7 @@ export default function AlbumPage({albums}: P) {
                     editSelection={editSelection}
                     isBeingAdded={contextMenu.isBeingAdded}
                 />
+                
             </div>
         );
     }    

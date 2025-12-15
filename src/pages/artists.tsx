@@ -152,9 +152,7 @@ export default function ArtistsPage({artists}: P) {
                     })}
                 </div>
 
-                
                 <VirtuosoGrid
-                    style={{ paddingBottom: '170px' }}
                     totalCount={filteredArtists.length}
                     components={gridComponents}
                     ref={virtuoso}
@@ -178,6 +176,8 @@ export default function ArtistsPage({artists}: P) {
                     }
                     customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                 />
+                <div className="empty-space"/>
+                <div className="empty-space"/>
             </SimpleBar>
         );
     }

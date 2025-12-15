@@ -49,7 +49,7 @@ export default function PlaylistPage() {
         }        
     }, []);
 
-    const navigateToPlaylistOverview = (name: string) => {
+    const navigateToPlaylistOverview = (name: number) => {
         navigate("/playlists/overview", {state: {name: name}});
     }
 
@@ -76,6 +76,10 @@ export default function PlaylistPage() {
         }
         catch(e) {
             console.log(e);
+        }
+        finally {
+            setDisplayCreate(false);
+            setNewPlaylistName("");
         }
     }
 
@@ -104,7 +108,7 @@ export default function PlaylistPage() {
                             onChange={(e) => setNewPlaylistName(e.target.value)}
                         />
                         <span>
-                            <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName); setDisplayCreate(false)}}>
+                            <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName);}}>
                                 Create
                             </button>
                         </span>
@@ -122,7 +126,7 @@ export default function PlaylistPage() {
                                     <img src={Circle} className="circle"/>
                                 </div>
                                 
-                                <div className="container" onClick={() => navigateToPlaylistOverview(item.name)} >
+                                <div className="container" onClick={() => navigateToPlaylistOverview(item.id)} >
                                     <ImageWithFallBack image={item.image} alt={item.name} image_type={"album"} />
                                 </div>
                                 <div className="album-image-name header-font">

@@ -369,7 +369,11 @@ button:disabled img{
 }
 button.borderless {
   border: transparent;
-  padding: 5px;
+  padding: 5px !important;
+}
+button.borderless:hover {
+  border: transparent;
+  background-color: rgba(172, 172, 172, 0.0) !important;
 }
 
 .cursor-pointer {
@@ -515,6 +519,12 @@ button.borderless {
 .icon-flip{
   transform: rotate(180deg);
 }
+.rotate-up {
+  transform: rotate(90deg);
+}
+.rotate-down {
+  transform: rotate(-90deg);
+}
 .icon-size {
   height: 30px;
   width: 30px;
@@ -539,7 +549,7 @@ img.off {
 }
 /* Allows for the blur for the music controls and the weird padding fix */
 .empty-space {
-  height: 70px;
+  height: 20px;
 }
 
 /* ------------------ Custom Window Tab Styles ------------------*/
@@ -722,9 +732,21 @@ img.off {
   display: none;  /* Older Safari and Chromium */
 }
 
+#root:has(.music-control-container) {
+  .scan-status-container {
+    position: fixed;
+    bottom: 105px;
+    left: 10px;
+    border-radius: var(--border-radius);
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px 16px 10px 16px;
+    font-size: 12px;
+  }
+}
+
 .scan-status-container {
   position: fixed;
-  bottom: 105px;
+  bottom: 10px;
   left: 10px;
   border-radius: var(--border-radius);
   background-color: rgba(0, 0, 0, 0.7);
@@ -1619,7 +1641,14 @@ button img {
   border: 2px solid var(--font-color-three);
   padding: 0px 5px 10px 5px;
   border-radius: var(--border-radius);
+  z-index: 20;
 }
+.playlist-list-container.add {
+  top: 50%;
+  transform: translate(-43%, 15%);
+  left: 100px;
+}
+
 .playlist-list-container hr {
   background-color: var(--font-color-three);
   opacity: 1;
@@ -1725,7 +1754,7 @@ input.new-playlist {
   background-color: rgba(0, 0, 0, 0.6);
   border-radius: var(--border-radius);
   padding: 15px;
-  width: 200px;
+  width: 300px;
   transition: 0.1s ease-in-out;
 }
 .directory-container:hover {
@@ -2088,6 +2117,10 @@ input[type=text] {
   box-sizing: border-box;
   font-size: 14px;
   color: rgb(222, 222, 222);
+}
+
+input[type=text].font-3 {
+  font-size: 25px;
 }
 
 img.search-icon {
@@ -2543,7 +2576,10 @@ img.search-icon:hover {
 @media screen and (min-width: 1000px) {
   #root:has(.music-control-container) {
     .empty-space {
-      height: 130px;
+      height: 92px;
+    }
+    .album-container .empty-space {
+      height: 110px !important;
     }
   }
   

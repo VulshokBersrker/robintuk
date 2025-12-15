@@ -34,7 +34,7 @@ export default function MusicControls() {
     const [songLengthFormatted, setSongLengthFormatted] = useState<String>("");
 
     // Media Player States    
-    const [isLoaded, setIsLoaded] = useState<boolean>(true); // Will hide music player when no music is loaded (but still while paused)
+    const [isLoaded, setIsLoaded] = useState<boolean>(false); // Will hide music player when no music is loaded (but still while paused)
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isShuffle, setIsShuffle] = useState<boolean>(false);
     const [repeatMode, setRepeatMode] = useState<number>(1); // Defaults to on full repeat
@@ -44,34 +44,9 @@ export default function MusicControls() {
 
     // Called only once on load
     useEffect(() => {
-        // Queue info stored in localstorage
-        const qPosition = localStorage.getItem('last-played-queue-position');
-        const queue = localStorage.getItem('last-played-queue');
-        // Stop music from playing if the app refreshs - maybe only good in dev mode
-        const storedVolume: string | null = localStorage.getItem("volume-level");
-        const lastPlayedSong: string | null = localStorage.getItem('last-played-song');
+        firstLoad();
 
-        if(lastPlayedSong !== null) {
-            firstLoad(JSON.parse(lastPlayedSong));
-            pauseMusic();
-        }
-        if(qPosition !== null && queue !== null) {
-            const shuffleMode: string | null = localStorage.getItem('shuffle-mode');
-            if(shuffleMode !== null) {
-                const shuffle: boolean = JSON.parse(shuffleMode);
-                const shuffledQueue: string = localStorage.getItem("shuffled-queue")!;
-                if(shuffle) {
-                    setIsShuffle(true);
-                    sendQueueToBackend(JSON.parse(shuffledQueue), JSON.parse(qPosition));
-                }
-                else {
-                    sendQueueToBackend(JSON.parse(queue), JSON.parse(qPosition));
-                }
-            }            
-        }
-        else {
-            setIsLoaded(false);
-        }
+        const storedVolume: string | null = localStorage.getItem("volume-level");
         if(storedVolume !== null) {
             updateVolume(JSON.parse(storedVolume));
         }        
@@ -81,6 +56,7 @@ export default function MusicControls() {
     useEffect(() => {
         // Load the queue (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); });
+        const check_for_clear = listen("queue-cleared", () => { pauseMusic(); setIsLoaded(false)});
         
         // Listen for when the MediaPlayPause shortcut is pressed
         const unlisten_play_pause = listen("controls-play-pause", async() => { 
@@ -98,6 +74,7 @@ export default function MusicControls() {
         
         return () => {
             unlisten_get_current_song.then(f => f());
+            check_for_clear.then(f => f());
             unlisten_play_pause.then(f => f());
             unlisten_next_song.then(f => f());
             unlisten_previous_song.then(f => f());
@@ -116,17 +93,50 @@ export default function MusicControls() {
         }
     }
     // Similar to the loadQueue, but doesn't play the music because it's just loading the data
-    async function firstLoad(song: Songs) {
-        try {
-            setSongDetails(song);
-            setSongProgress(0);
-            setSongLengthFormatted(new Date(song.duration * 1000).toISOString().slice(12, 19));
-            setIsLoaded(true);
+    async function firstLoad() {
+        const qPosition: string | null = localStorage.getItem('last-played-queue-position');
+        const shuffleMode: boolean = JSON.parse(localStorage.getItem('shuffle-mode')!);
+        console.log(shuffleMode + " " + qPosition );
+        pauseMusic();
+        if(qPosition !== null) {
+            try {
+                // Get the last played song, if exists
+                const queue = await invoke<Songs[]>("get_queue", {shuffled: shuffleMode});
+                console.log(queue);
+
+                if(queue.length === 0) {
+                    setIsLoaded(false);
+                }
+                else {
+                    setSongDetails(queue[JSON.parse(qPosition!)]);
+                    setSongProgress(0);
+                    setSongLengthFormatted(new Date(queue[JSON.parse(qPosition!)].duration * 1000).toISOString().slice(12, 19));
+                    setIsLoaded(true);
+
+                    if(shuffleMode !== null) {
+                        if(shuffleMode) {
+                            setIsShuffle(true);                    
+                            sendQueueToBackend(queue, JSON.parse(qPosition!));
+                        }
+                        else {
+                            sendQueueToBackend(queue, JSON.parse(qPosition!));
+                        }
+                    }
+                    else {
+                        setIsShuffle(false);
+                    }
+                    
+                }
+            }
+            catch(e) {
+                alert(`Failed load music controls: ${e}`);
+                setIsLoaded(false);
+            }
         }
-        catch(e) {
-            alert(`Failed to get song: ${e}`);
+        else {
             setIsLoaded(false);
         }
+        
     }
 
     function saveSong(q: Songs) {
@@ -283,15 +293,14 @@ export default function MusicControls() {
         try {
             if(isShuffle) {
                 setIsShuffle(false);
-                const q: Songs[] = JSON.parse(localStorage.getItem("last-played-queue")!);
+                const q: Songs[] = await invoke<Songs[]>("get_queue", { shuffled: isShuffle });
                 // Index of the current song
                 const index: number = q.map(e => e.path).indexOf(songDetails!.path);
                 await invoke("player_update_queue_and_pos", { queue: q, index: index } );
-                localStorage.setItem("shuffled-queue", JSON.stringify([]));
             }
             else {
                 setIsShuffle(true);
-                const shuffledQueue: Songs[] = JSON.parse(localStorage.getItem("last-played-queue")!);
+                const shuffledQueue: Songs[] = await invoke<Songs[]>("get_queue", { shuffled: isShuffle });
                 shuffle(shuffledQueue);
                 // Index of the current song
                 const index: number = shuffledQueue.map(e => e.path).indexOf(songDetails!.path);
@@ -303,7 +312,7 @@ export default function MusicControls() {
             console.log(e);
         }
         finally {
-             localStorage.setItem("shuffle-mode", JSON.stringify(!isShuffle));
+            localStorage.setItem("shuffle-mode", JSON.stringify(!isShuffle));
         }
     }
 

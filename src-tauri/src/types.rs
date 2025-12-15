@@ -42,19 +42,14 @@ pub struct SongTable {
 
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
 pub struct PlaylistTable {
+    pub id: i64,
     pub name: String,
     pub image: String
 }
 
 #[derive(sqlx::FromRow, Default, Serialize)]
-pub struct PlaylistDetailTable {
-    pub playlist_name: String,
-    pub track_id: String,
-    pub position: i64,
-}
-
-#[derive(sqlx::FromRow, Default, Serialize)]
 pub struct PlaylistFull {
+    pub id: i64,
     pub name: String,
     pub image: String,
     pub songs: Vec<SongTable>

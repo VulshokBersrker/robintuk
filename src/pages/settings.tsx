@@ -153,7 +153,7 @@ export default function Settings() {
                     return(
                         <div className="directory-padding" key={i} >
                             <span className={`directory-container d-flex justify-content-between header-font ${loading ? "disabled" : ""}`}>
-                                <span>{dir.dir_path}</span>
+                                <span className="line-clamp-1">{dir.dir_path}</span>
                                 <span className="remove-directory" onClick={() => remove_directory(dir.dir_path)}>X</span>
                             </span>
                         </div>

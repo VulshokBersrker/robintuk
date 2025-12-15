@@ -22,7 +22,7 @@ export default function RightSideBar() {
     const location = useLocation();
 
     const [playlistLists, setPlaylistLists] = useState<Playlists[]>([]);
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, playlist: "", posX: 0, posY: 0 });
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, playlist: 0, posX: 0, posY: 0 });
 
     const [scanOnGoing, setScanOnGoing] = useState<boolean>(false);
 
@@ -60,7 +60,7 @@ export default function RightSideBar() {
         }        
     }, []);
 
-    function handleContextMenu(e: any, playlist: string) {
+    function handleContextMenu(e: any, playlist: number) {
         if(e.pageX < window.innerWidth / 2) {
             setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY });
         }
@@ -70,7 +70,7 @@ export default function RightSideBar() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, playlist: "", posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, playlist: 0, posX: 0, posY: 0});
     }
 
     async function getPlaylists() {
@@ -83,7 +83,7 @@ export default function RightSideBar() {
         }
     }
 
-    const navigateToPlaylistOverview = (name: string) => {
+    const navigateToPlaylistOverview = (name: number) => {
         navigate("/playlists/overview", {state: {name: name}});
     }
 
@@ -92,32 +92,26 @@ export default function RightSideBar() {
 
             <div className="section-10">
                 <Link to={"/"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/" ? "active" : ""}`} >
-                    {/* <img src={HomeIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" > Home </span>
                 </Link>
 
                 <Link to={"/songs"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/songs" ? "active" : ""}`} >
-                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" > Songs </span>
                 </Link>
 
                 <Link to={"/albums"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/albums" ? "active" : ""}`} >
-                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" > Albums </span>
                 </Link>
 
                 <Link to={"/artists"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/artists" ? "active" : ""}`} >
-                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" > Artists </span>
                 </Link>
 
                 <hr />
                 <Link to={"/queue"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/queue" ? "active" : ""}`} >
-                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" >Queue </span>
                 </Link>
                 <Link to={"/playlists"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/playlists" ? "active" : ""}`} >
-                    {/* <img src={MusicLibraryIcon} className="bi icon icon-size" aria-hidden="true" /> */}
                     <span className="nav-font" >Playlists </span>
                 </Link>
             </div>
@@ -129,12 +123,12 @@ export default function RightSideBar() {
                     {playlistLists.map((item, i) => {
                         return(
                             <div
-                                key={i} onClick={() => navigateToPlaylistOverview(item.name)}
+                                key={i} onClick={() => navigateToPlaylistOverview(item.id)}
                                 className={`section-10 nav-item nav-link d-flex align-items-center ${(location.pathname === "/playlists/overview" && location.state.name === item.name) ? "active" : ""}`}
                                 id={item.name}
                                 onContextMenu={(e) => {
                                     e.preventDefault();
-                                    handleContextMenu(e, item.name);
+                                    handleContextMenu(e, item.id);
                                 }}
                             >
                                 <ImageWithFallBack image={item.image} alt="" image_type="sidebar-playlist-image"/>
@@ -153,7 +147,7 @@ export default function RightSideBar() {
 
             <ContextMenuSideBar
                 isToggled={contextMenu.isToggled}
-                playlist={contextMenu.playlist}
+                playlist_id={contextMenu.playlist}
                 posX={contextMenu.posX}
                 posY={contextMenu.posY}
                 play={playPlaylist}
@@ -164,15 +158,15 @@ export default function RightSideBar() {
 }
 
 type Props = {
-    navigateToPlaylistOverview: (name: string) => void,
+    navigateToPlaylistOverview: (name: number) => void,
     isToggled: boolean,
-    playlist: string,
-    play: (album_name: string) => void, // playSong / playAlbum function
+    playlist_id: number,
+    play: (album_name: number) => void, // playSong / playAlbum function
     posX: number,
     posY: number
 }
 
-function ContextMenuSideBar({ navigateToPlaylistOverview, isToggled, playlist, play, posX, posY }: Props) {
+function ContextMenuSideBar({ navigateToPlaylistOverview, isToggled, playlist_id, play, posX, posY }: Props) {
 
     if(isToggled) {
         return(
@@ -181,12 +175,12 @@ function ContextMenuSideBar({ navigateToPlaylistOverview, isToggled, playlist, p
                 style={{ position: "fixed", left: `${posX}px`, top: `${posY}px`}}
                 onContextMenu={(e) => {  e.preventDefault(); }}
             >
-                <li onClick={() => {play(playlist)}} className="d-flex align-items-center">
+                <li onClick={() => {play(playlist_id)}} className="d-flex align-items-center">
                     <img src={PlayIcon} />
                     &nbsp; Play
                 </li>
 
-                <li className="d-flex align-items-center" onClick={() => navigateToPlaylistOverview(playlist)} >
+                <li className="d-flex align-items-center" onClick={() => navigateToPlaylistOverview(playlist_id)} >
                     <img src={AlbumIcon} />
                     &nbsp; View
                 </li>                

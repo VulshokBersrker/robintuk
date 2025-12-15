@@ -73,11 +73,13 @@ export interface ArtistDetails {
 }
 
 export interface Playlists {
+    id: number,
     name: string,
     image: string,
 }
 
 export interface PlaylistList {
+    id: number,
     name: string
 }
 
@@ -121,20 +123,33 @@ export type GetCurrentSong = { q: Songs; };
 
 // &, 0-9, A-Z, ...
 export const alphabeticallyOrdered = [
-    0, 1, //&, #
+    // &, #
+    0, 1,
+    // A - Z
     65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
     75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86,
     87, 88, 89, 90,
+    // ...
     300
 ];
 
 
-export function saveQueue(q: Songs[]) {
-    localStorage.setItem('last-played-queue', JSON.stringify(q));
+export async function saveQueue(q: Songs[]) {
+    try {
+        invoke('create_queue', {songs: q, shuffled: false});
+    }
+    catch(e) {
+        console.log(e);
+    }
     localStorage.setItem('last-played-queue-length', (q.length - 1).toString());
 }
 export function saveShuffledQueue(q: Songs[]) {
-    localStorage.setItem('shuffled-queue', JSON.stringify(q));
+    try {
+        invoke('create_queue', {songs: q, shuffled: true});
+    }
+    catch(e) {
+        console.log(e);
+    }
     localStorage.setItem('shuffled-queue-length', (q.length - 1).toString());
 }
 export function savePosition(p: number) {
@@ -183,15 +198,14 @@ export async function playAlbum(album_name: string) {
         console.log(e);
     }
     finally {
-        localStorage.setItem("shuffled-queue", JSON.stringify([]));
         localStorage.setItem("shuffle-mode", JSON.stringify(false) );
         await invoke("set_shuffle_mode", { mode: false });
     }
 }
 
-export async function playPlaylist(playlist_name: string) {
+export async function playPlaylist(playlist_id: number) {
     try {
-        const res: PlaylistFull = await invoke("get_playlist", {name: playlist_name});
+        const res: PlaylistFull = await invoke("get_playlist", {id: playlist_id});
         // Load the music to be played and saved
         await invoke('player_load_album', {queue: res.songs, index: 0});
         await invoke('update_current_song_played', {path: res.songs[0].path});
@@ -203,12 +217,10 @@ export async function playPlaylist(playlist_name: string) {
         alert(`Failed to play song: ${err}`);
     }
     finally {
-        localStorage.setItem("shuffled-queue", JSON.stringify([]));
         localStorage.setItem("shuffle-mode", JSON.stringify(false) );
         await invoke("set_shuffle_mode", { mode: false });
     }
 }
-
 
 
 export function clearLocalStorage() {

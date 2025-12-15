@@ -9,7 +9,7 @@ use tauri::{State};
 
 use crate::types::{
     AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, SongHistory,
-    PlaylistDetailTable, PlaylistFull, PlaylistTable, SongTable, SongTableUpload
+    PlaylistFull, PlaylistTable, SongTable, SongTableUpload
 };
 use crate::{AppState};
 
@@ -138,6 +138,16 @@ pub async fn does_entry_exist(pool: &Pool<Sqlite>, path: &String) -> Result<bool
     Ok(res.does_exist)
 }
 
+pub async fn set_keep(pool: &Pool<Sqlite>) -> Result<(), String> {
+
+    let _ = sqlx::query("UPDATE songs SET keep = ?1")
+        .bind(false)
+        .execute(pool)
+        .await;
+
+    Ok(())
+}
+
 // ------------------------------------ Song Functions ------------------------------------
 
 // Get all songs from the database and all of their data
@@ -196,8 +206,8 @@ pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Res
 pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<SqliteQueryResult, String> {
     
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
-        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)")
+        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section, keep) 
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)")
         .bind(entry.name)
         .bind(entry.path)
         .bind(entry.cover)
@@ -213,6 +223,7 @@ pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<Sq
         .bind(entry.song_section)
         .bind(entry.album_section)
         .bind(entry.artist_section)
+        .bind(true)
         .execute(pool)
         .await;
 
@@ -224,8 +235,8 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
     
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("UPDATE songs
         SET name = ?1, cover = ?2, release = ?3, track = ?4, album = ?5, artist = ?6, genre = ?7,
-        album_artist = ?8, disc_number = ?9, duration = ?10, song_section = ?11, album_section = ?12, artist_section = ?12
-        WHERE path = ?14
+        album_artist = ?8, disc_number = ?9, duration = ?10, song_section = ?11, album_section = ?12, artist_section = ?13, keep = ?14
+        WHERE path = ?15
         ")
         .bind(entry.name)
         .bind(entry.cover)
@@ -240,12 +251,24 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
         .bind(entry.song_section)
         .bind(entry.album_section)
         .bind(entry.artist_section)
+        .bind(true)
 
         .bind(entry.path)
         .execute(pool)
         .await;
 
     Ok(res.unwrap())
+}
+
+pub async fn remove_songs(pool: &Pool<Sqlite>) -> Result<(), String> {
+    
+    let res = sqlx::query("DELETE FROM songs WHERE keep = false")
+        .execute(pool)
+        .await;
+
+    println!("{:?}", &res);
+
+    Ok(())
 }
 
 // ------------------------------------ Album Functions ------------------------------------
@@ -314,37 +337,37 @@ pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: String) ->
 
 // ------------------------------------ Genre Functions ------------------------------------
 
-#[tauri::command]
-pub async fn get_all_genres() -> Result<Vec<SongTable>, String> {
-    let pool = establish_connection().await?;
+// #[tauri::command]
+// pub async fn get_all_genres() -> Result<Vec<SongTable>, String> {
+//     let pool = establish_connection().await?;
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>(
-        "
-        SELECT DISTINCT genre, album, artist, cover FROM songs
-        GROUP BY genre
-        ORDER BY genre ASC;",
-    )
-    .fetch_all(&pool)
-    .await
-    .unwrap();
+//     let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>(
+//         "
+//         SELECT DISTINCT genre, album, artist, cover FROM songs
+//         GROUP BY genre
+//         ORDER BY genre ASC;",
+//     )
+//     .fetch_all(&pool)
+//     .await
+//     .unwrap();
 
-    Ok(temp)
-}
+//     Ok(temp)
+// }
 
-#[tauri::command(rename_all = "snake_case")]
-pub async fn get_genre(name: String) -> Result<SongTable, String> {
-    let pool = establish_connection().await?;
+// #[tauri::command(rename_all = "snake_case")]
+// pub async fn get_genre(name: String) -> Result<SongTable, String> {
+//     let pool = establish_connection().await?;
 
-    let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre=$1 ORDER BY genre;")
-        .bind(name)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+//     let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre=$1 ORDER BY genre;")
+//         .bind(name)
+//         .fetch_one(&pool)
+//         .await
+//         .unwrap();
 
-    println!("id={}, album_name={}", temp.name, temp.genre);
+//     println!("id={}, album_name={}", temp.name, temp.genre);
 
-    Ok(temp)
-}
+//     Ok(temp)
+// }
 
 // ------------------------------------ Artist Functions ------------------------------------
 
@@ -391,35 +414,28 @@ pub async fn get_all_playlists(state: State<AppState, '_>) -> Result<Vec<Playlis
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn get_playlist(state: State<AppState, '_>, name: String) -> Result<PlaylistFull, String> {
+pub async fn get_playlist(state: State<AppState, '_>, id: i64) -> Result<PlaylistFull, String> {
 
     // Get the playlist
-    let playlist_details: PlaylistTable = sqlx::query_as::<_, PlaylistTable>("SELECT * FROM playlists WHERE name=$1;")
-        .bind(&name)
+    let playlist_details: PlaylistTable = sqlx::query_as::<_, PlaylistTable>("SELECT * FROM playlists WHERE id=$1;")
+        .bind(&id)
         .fetch_one(&state.pool)
         .await
         .unwrap();
 
     // Get the playlist tracks
-    let temp: Vec<PlaylistDetailTable> = sqlx::query_as::<_, PlaylistDetailTable>("SELECT * FROM playlist_tracks WHERE playlist_name=$1 ORDER BY position;")
-        .bind(&name)
+    let song_arr: Vec<SongTable> = sqlx::query_as::<_, SongTable>("    
+            SELECT s.name, s.path, s.album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist, s.track, s.disc_number, s.song_section
+            FROM playlist_tracks p 
+            INNER JOIN songs s ON s.path = p.track_id 
+            WHERE p.playlist_id = ?1 ORDER BY p.position ASC
+        ")
+        .bind(&id)
         .fetch_all(&state.pool)
         .await
         .unwrap();
 
-    // Get the songs in the playlist
-    let mut song_arr: Vec<SongTable> = vec![];
-    for item in temp {
-        let temp_item: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE path = ?")
-        .bind(&item.track_id)
-        .fetch_one(&state.pool)
-        .await
-        .unwrap();
-
-        song_arr.push(temp_item);
-    }
-
-    Ok(PlaylistFull{ name: playlist_details.name, image: playlist_details.image, songs: song_arr })
+    Ok(PlaylistFull{ id: id, name: playlist_details.name, image: playlist_details.image, songs: song_arr })
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -451,9 +467,14 @@ pub async fn create_playlist(state: State<AppState, '_>, name: String) -> Result
 #[tauri::command(rename_all = "snake_case")]
 pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, playlist_name: String) -> Result<(), String> {
 
-    // Get the last position of the playlist from the list
-    let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM playlist_tracks WHERE playlist_name=$1;")
+    let id: (i64,) = sqlx::query_as("SELECT id FROM playlists WHERE name=$1;")
         .bind(&playlist_name)
+        .fetch_one(&state.pool)
+        .await.unwrap();
+
+    // Get the last position of the playlist from the list
+    let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM playlist_tracks WHERE playlist_id=$1;")
+        .bind(&id.0)
         .fetch_one(&state.pool)
         .await.unwrap();
 
@@ -461,9 +482,9 @@ pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, 
     let mut i = length.0 + 1;
     for song in songs {
         let _ = sqlx::query("INSERT INTO playlist_tracks
-            (playlist_name, track_id, position) 
+            (playlist_id, track_id, position) 
             VALUES (?1, ?2, ?3)")
-            .bind(&playlist_name)
+            .bind(&id.0)
             .bind(&song.path)
             .bind(&i)
             .execute(&state.pool).await;
@@ -475,17 +496,20 @@ pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, 
 
 // Take in the new name of the playlist and update the name value of the playlist
 #[tauri::command(rename_all = "snake_case")]
-pub async fn rename_playlist(old_name: String, new_name: String) -> Result<(), String> {
-    let pool = establish_connection().await?;
+pub async fn rename_playlist(state: State<AppState, '_>, old_name: String, new_name: String) -> Result<(), String> {
 
-    let _: PlaylistTable = sqlx::query_as::<_, PlaylistTable>(
-        "UPDATE playlists SET playlist_name=$1 WHERE playlist_name=$2;",
-    )
-    .bind(new_name)
-    .bind(old_name)
-    .fetch_one(&pool)
-    .await
-    .unwrap();
+    let _ = sqlx::query("UPDATE playlists SET name = $1 WHERE name = $2;")
+    .bind(&new_name)
+    .bind(&old_name)
+    .execute(&state.pool)
+    .await;
+
+    let _ = sqlx::query("UPDATE playlist_tracks SET playlist_name = $1 WHERE playlist_name = $2;")
+    .bind(&new_name)
+    .bind(&old_name)
+    .execute(&state.pool)
+    .await;
+
     Ok(())
 }
 
@@ -508,14 +532,48 @@ pub async fn delete_playlist(state: State<AppState, '_>, name: String) -> Result
 
 // Take in an array of strings (hashes) to update the position values of the playlist  ---------------------- NEEDS WORK
 #[tauri::command(rename_all = "snake_case")]
-pub async fn reorder_playlist(
-    // old_positions: Vec<String>, new_positions: Vec<String>
-) {
-    println!("Reorder Playlist")
+pub async fn reorder_playlist(state: State<AppState, '_>, playlist_id: i64, songs: Vec<SongTable>) -> Result<(), String> {
+
+    let mut i = 1;
+    for item in songs {
+        let _ = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
+            .bind(&i)
+            .bind(&playlist_id)
+            .bind(&item.path)
+            .execute(&state.pool)
+            .await;
+        i += 1;
+    }
+    Ok(())
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, playlist_name: String) -> Result<(), String> {
+pub async fn remove_song_from_playlist(state: State<AppState, '_>, playlist_id: i64, song_path: String, songs: Vec<SongTable>) -> Result<(), String> {
+
+    // Remove the song
+    let _ = sqlx::query("DELETE FROM playlist_tracks WHERE playlist_id = $1 AND track_id = $2")
+        .bind(&playlist_id)
+        .bind(&song_path)
+        .execute(&state.pool)
+        .await;
+
+    let mut i = 1;
+    for item in songs {
+        let _ = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
+            .bind(&i)
+            .bind(&playlist_id)
+            .bind(&item.path)
+            .execute(&state.pool)
+            .await;
+        i += 1;
+    }
+
+    
+    Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, playlist_name: String, playlist_id: i64) -> Result<(), String> {
     // First get the image file and the playlist cover directory
     let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers/";
     let file_type = Path::new(&file_path).extension().and_then(OsStr::to_str).unwrap();
@@ -524,10 +582,123 @@ pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, p
     // Copy the file to the image directory
     let _ = fs::copy(&file_path, &new_path);
 
-    let _ = sqlx::query("UPDATE playlists SET image = $1 WHERE name = $2;")
+    let _ = sqlx::query("UPDATE playlists SET image = $1 WHERE id = $2;")
         .bind(&new_path)
-        .bind(&playlist_name)
+        .bind(&playlist_id)
         .execute(&state.pool).await;
+
+    Ok(())
+}
+
+// Queue DB Commands
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn get_queue(state: State<AppState, '_>, shuffled: bool) -> Result<Vec<SongTable>, String> {
+
+    if shuffled == true {
+        let list: Vec<SongTable> = sqlx::query_as::<_, SongTable>("
+            SELECT q.position, s.name, s.path, s.album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist, s.track, s.disc_number, s.song_section
+            FROM queue_shuffled q 
+            INNER JOIN songs s ON s.path = q.song_id ORDER BY q.position ASC").fetch_all(&state.pool).await.unwrap();
+        Ok(list)
+    }
+    else {
+        let list: Vec<SongTable> = sqlx::query_as::<_, SongTable>("
+            SELECT q.position, s.name, s.path, s.album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist, s.track, s.disc_number, s.song_section
+            FROM queue q 
+            INNER JOIN songs s ON s.path = q.song_id ORDER BY q.position ASC").fetch_all(&state.pool).await.unwrap();
+        Ok(list)
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn create_queue(state: State<AppState, '_>, songs: Vec<SongTable>, shuffled: bool) -> Result<(), String> {
+    
+    
+    // Remove all entries from the table - new adding a new queue
+    sqlx::query("DELETE FROM queue").execute(&state.pool).await.map_err(|e| e.to_string())?;
+
+    // Then add the new queue
+    // Get the last position of the playlist from the list
+    let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM queue").fetch_one(&state.pool).await.unwrap();
+
+    // Now add the new songs to the playlist
+    let mut i = length.0 + 1;
+    for song in &songs {
+        let _ = sqlx::query("INSERT INTO queue (position, song_id) VALUES (?1, ?2)")
+            .bind(&i)
+            .bind(&song.path)
+            .execute(&state.pool).await;
+        i = i + 1;
+    }
+    
+    if shuffled == true {
+        // Remove all entries from the table - new adding a new queue
+        sqlx::query("DELETE FROM queue_shuffled").execute(&state.pool).await.map_err(|e| e.to_string())?;
+
+        // Then add the new queue
+        // Get the last position of the playlist from the list
+        let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM queue_shuffled").fetch_one(&state.pool).await.unwrap();
+
+        // Now add the new songs to the playlist
+        i = length.0 + 1;
+        for song in &songs {
+            let _ = sqlx::query("INSERT INTO queue_shuffled (position, song_id) VALUES (?1, ?2)")
+                .bind(&i)
+                .bind(&song.path)
+                .execute(&state.pool).await;
+            i = i + 1;
+        }
+    }
+    
+
+    Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn add_to_queue(state: State<AppState, '_>, songs: Vec<SongTable>) -> Result<(), String> {
+    
+    // Get the last position of the playlist from the list
+    let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM queue")
+        .fetch_one(&state.pool)
+        .await.unwrap();
+
+    // Now add the new songs to the playlist
+    let mut i = length.0 + 1;
+    for song in &songs {
+        let _ = sqlx::query("INSERT INTO queue
+            (position, song_id) 
+            VALUES (?1, ?2)")
+            .bind(&i)
+            .bind(&song.path)
+            .execute(&state.pool).await;
+        i = i + 1;
+    }
+
+    // Now update the shuffled queue as well
+
+    // Get the last position of the playlist from the list
+    let length_shuff: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM queue_shuffled").fetch_one(&state.pool).await.unwrap();
+
+    // Now add the new songs to the playlist
+    i = length_shuff.0 + 1;
+    for song in &songs {
+        let _ = sqlx::query("INSERT INTO queue_shuffled (position, song_id) VALUES (?1, ?2)")
+            .bind(&i)
+            .bind(&song.path)
+            .execute(&state.pool).await;
+        i = i + 1;
+    }
+    
+
+    Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn clear_queue(state: State<AppState, '_>) -> Result<(), String> {
+    
+    sqlx::query("DELETE FROM queue").execute(&state.pool).await.map_err(|e| e.to_string())?;
+    sqlx::query("DELETE FROM queue_shuffled").execute(&state.pool).await.map_err(|e| e.to_string())?;
 
     Ok(())
 }

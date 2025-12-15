@@ -73,6 +73,15 @@ pub fn player_update_queue_and_pos(state: State<AppState, '_>, queue: Vec<SongTa
     Ok(())
 }
 
+#[tauri::command]
+pub fn player_clear_queue(app: tauri::AppHandle, state: State<AppState, '_>) -> Result<(), String>  {
+    state.player.lock().unwrap().clear_queue();
+
+    let _ = app.emit("queue-cleared", true);
+
+    Ok(())
+}
+
 
 // ----------------- Media Control Commands
 

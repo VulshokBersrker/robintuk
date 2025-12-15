@@ -103,8 +103,8 @@ pub fn run() -> Result<(), String> {
             db::get_all_albums,
             db::get_album,
             // Genre Functions - SQLITE
-            db::get_all_genres,
-            db::get_genre,
+            // db::get_all_genres,
+            // db::get_genre,
             // Artist Functions - SQLITE
             db::get_albums_by_artist,
             db::get_all_artists,
@@ -118,6 +118,7 @@ pub fn run() -> Result<(), String> {
             db::reorder_playlist,
             db::create_playlist,
             db::delete_playlist,
+            db::remove_song_from_playlist,
             db::add_playlist_cover, // Custom Playlist artwork
             // History Functions
             db::add_song_to_history,
@@ -142,6 +143,11 @@ pub fn run() -> Result<(), String> {
             commands::player_get_queue_length,
             commands::player_get_current_position,
             commands::player_update_queue_and_pos,
+            commands::player_clear_queue,
+            db::get_queue,
+            db::create_queue,
+            db::add_to_queue,
+            db::clear_queue,
             // Other Media Player Functions
             commands::player_get_song_pos,
             commands::player_check_repeat,
@@ -199,6 +205,8 @@ async fn scan_directory(app: tauri::AppHandle) -> Result<ScanResults, String> {
     app.emit("scan-started", true).unwrap();
     println!("Scan has started");
 
+    let _ = db::set_keep(&pool).await;
+
     // Run the loop for every directory selected in the dirs table
     for path in directories {
         // walk through the entire directory, sub folders and all
@@ -213,7 +221,7 @@ async fn scan_directory(app: tauri::AppHandle) -> Result<ScanResults, String> {
 
                 // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
                 if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".wav") || entry.path().display().to_string().contains(".flac") {
-                    
+
                     let does_exist = db::does_entry_exist(&pool, &entry.path().display().to_string()).await.unwrap();
                     // If song already exists in the database, update its values
                     if does_exist {
@@ -283,7 +291,9 @@ async fn scan_directory(app: tauri::AppHandle) -> Result<ScanResults, String> {
         }
     }
 
-    // println!("\n Added {} song(s) - Errors on {} song(s)", num_added, num_error );
+    // Remove all songs that are no longer in the directories
+    let _ = db::remove_songs(&pool).await.unwrap();
+
 
     app.emit("scan-finished", true).unwrap();
     println!("Scan has finished = {:?} added - {:?} updated - {:?} errors", &num_added, &num_updated, &num_error);

@@ -502,10 +502,10 @@ export default function AlbumOverviewPage() {
                         editSelection={editSelection}
                         isBeingAdded={checkBoxNumber[contextMenu.index]}
                     />
-                    
+                    <div className="empty-space"/>
+                    <div className="empty-space"/>
                 </div>
-                <div className="empty-space"/>
-                <div className="empty-space"/>
+                
             </SimpleBar>
         );
     }
@@ -643,10 +643,9 @@ export default function AlbumOverviewPage() {
                         editSelection={editSelection}
                         isBeingAdded={checkBoxNumber[contextMenu.index]}
                     />
-                    
+                    <div className="empty-space"/>
+                    <div className="empty-space"/>
                 </div>
-                <div className="empty-space"/>
-                <div className="empty-space"/>
             </SimpleBar>
         );
     }

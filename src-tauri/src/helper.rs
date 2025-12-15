@@ -14,7 +14,7 @@ use symphonia::core::probe::Hint;
 use StandardTagKey::*;
 
 // How you import in files that aren't lib or main
-use crate::{types::SongTableUpload, SongDataResults};
+use crate::{SongDataResults, types::{ SongTableUpload }};
 
 pub fn generate_cover_hash(value: u64) -> String {
     let mut s = DefaultHasher::new();

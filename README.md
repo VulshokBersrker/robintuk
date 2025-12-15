@@ -38,21 +38,17 @@ More: [See all screenshots](./assets/screenshots/index.md)
 Discovered a bug? Please open an [ISSUE](https://github.com/VulshokBersrker/robintuk_player/issues) to get it fixed.
 Made with Tauri (React and Rust).
 
-## Features to Be Added
+## Features to Be Added for V1.0
 
 - [ ] Installer Wizard
-- [ ] Open with (in file explorer)
-- [ ] Get artist data from online service for artist page (maybe)
 - [ ] Create a Genre section
-- [ ] Playlist Import/Export as m3u file
-- [ ] Queue page functions (clear, add to)
-- [ ] Notification of version update
-- [ ] Song details screen
+- [ ] Song details modal
 - [ ] Smoother music progress bar
-- [ ] Custom context menu when hovering on songs/albums (In progress)
-- [ ] Mini Player?
+- [ ] Custom context menu when right clicking on songs/albums (In progress)
 - [ ] New default playlist icons
 - [ ] Add support for wav
+- [x] Playlist functions (create, add, delete, rename, reorder)
+- [x] Queue page functions (clear, add to)
 - [x] Lock scan even when you leave the settings page
 - [x] Add support for flac
 - [x] Force scrollbar to stop before music control section
@@ -70,11 +66,19 @@ Made with Tauri (React and Rust).
 - [x] Keyboard Media Controls
 - [x] Organize albums by track number and disc number
 
+### Future Version Features Planned
+- [ ] Drag and Drop playlist order
+- [ ] Get artist data from online service for artist page
+- [ ] Mini Player?
+- [ ] Playlist Import/Export as m3u file
+- [ ] Notification of version update
+- [ ] Open with (in file explorer)
+- [ ] CSS Optimization
+
 
 ## Known Issues
 
 - [ ] Songs have hiccups randomly (maybe due to refreshes in dev mode)
-- [ ] CSS Optimization
 - [ ] Application Optimizations (streamlining, data caching, etc.)
 - [ ] Playback errors
 - [ ] Better error handling

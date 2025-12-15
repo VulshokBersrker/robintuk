@@ -52,12 +52,17 @@ impl MusicPlayer {
         self.queue = q;
         self.position = 0;
     }
+    // Called when a user clicks play on a song, album, or playlist
+    pub fn clear_queue(&mut self) {
+        self.queue.clear();
+        self.position = 0;
+    }
     // Called when a user adds a song to the queue
     pub fn add_to_queue(&mut self, q: Vec<SongTable>) {
         for song in q {
             self.queue.push(song);
         }
-        println!("{:?}", self.queue);
+        // println!("{:?}", self.queue);
     }
 
     pub fn get_current_queue(&self) -> &Vec<SongTable> {
