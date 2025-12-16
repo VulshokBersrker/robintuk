@@ -44,9 +44,9 @@ Made with Tauri (React and Rust).
 - [ ] Create a Genre section
 - [ ] Song details modal
 - [ ] Smoother music progress bar
-- [ ] Custom context menu when right clicking on songs/albums (In progress)
 - [ ] New default playlist icons
 - [ ] Add support for wav
+- [x] Custom context menu when right clicking on songs/albums
 - [x] Playlist functions (create, add, delete, rename, reorder)
 - [x] Queue page functions (clear, add to)
 - [x] Lock scan even when you leave the settings page

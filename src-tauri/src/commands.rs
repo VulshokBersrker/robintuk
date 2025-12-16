@@ -33,6 +33,29 @@ pub fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTa
 }
 
 #[tauri::command]
+pub fn player_get_queue_length(state: State<AppState, '_>) -> Result<usize, String> {
+    let q_length = state.player.lock().unwrap().get_queue_length();    
+    Ok(q_length)
+}
+
+#[tauri::command]
+pub fn player_update_queue_and_pos(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String>  {
+    state.player.lock().unwrap().set_queue(queue);
+    let _ = state.player.lock().unwrap().update_current_index(index);
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn player_clear_queue(app: tauri::AppHandle, state: State<AppState, '_>) -> Result<(), String>  {
+    state.player.lock().unwrap().clear_queue();
+
+    let _ = app.emit("queue-cleared", true);
+
+    Ok(())
+}
+
+#[tauri::command]
 pub fn player_load_album(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
     state.player.lock().unwrap().set_queue(queue);
     let _ = state.player.lock().unwrap().load_song(index);
@@ -57,29 +80,6 @@ pub fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, 
 pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, String> {
     let current_position = state.player.lock().unwrap().get_current_position();    
     Ok(current_position)
-}
-
-#[tauri::command]
-pub fn player_get_queue_length(state: State<AppState, '_>) -> Result<usize, String> {
-    let q_length = state.player.lock().unwrap().get_queue_length();    
-    Ok(q_length)
-}
-
-#[tauri::command]
-pub fn player_update_queue_and_pos(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String>  {
-    state.player.lock().unwrap().set_queue(queue);
-    let _ = state.player.lock().unwrap().update_current_index(index);
-
-    Ok(())
-}
-
-#[tauri::command]
-pub fn player_clear_queue(app: tauri::AppHandle, state: State<AppState, '_>) -> Result<(), String>  {
-    state.player.lock().unwrap().clear_queue();
-
-    let _ = app.emit("queue-cleared", true);
-
-    Ok(())
 }
 
 

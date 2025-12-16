@@ -116,7 +116,6 @@ export default function RightSideBar() {
                 </Link>
             </div>
             
-
             {/* Playlist Section */}
             <div className="nav-scrollable section-10" >
                 <nav className="grid-10" >
@@ -124,7 +123,7 @@ export default function RightSideBar() {
                         return(
                             <div
                                 key={i} onClick={() => navigateToPlaylistOverview(item.id)}
-                                className={`section-10 nav-item nav-link d-flex align-items-center ${(location.pathname === "/playlists/overview" && location.state.name === item.name) ? "active" : ""}`}
+                                className={`section-10 nav-item nav-link d-flex align-items-center ${(location.pathname === "/playlists/overview" && location.state.name === item.id) ? "active" : ""}`}
                                 id={item.name}
                                 onContextMenu={(e) => {
                                     e.preventDefault();
@@ -132,7 +131,7 @@ export default function RightSideBar() {
                                 }}
                             >
                                 <ImageWithFallBack image={item.image} alt="" image_type="sidebar-playlist-image"/>
-                                <span className="nav-font" > {item.name} </span>
+                                <span className="nav-font line-clamp-1" >{item.name}</span>
                             </div>
                         );
                     })}

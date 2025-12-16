@@ -279,7 +279,6 @@ export default function PlayHistoryPage() {
                     </div>
                 </div>
                 <div className="empty-space"/>
-                <div className="empty-space"/>
             </SimpleBar>
         );
     }

@@ -89,7 +89,6 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                 for tag in rev.tags() {
                     // Get the song details
                     if let Some(key) = tag.std_key {
-                        // println!("{:?} - {}", tag.std_key, tag.value.to_string());
 
                         match key {
                             TrackTitle => {
@@ -124,10 +123,10 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                                 }
                                 else {
                                     song_data.name = Some(tag.value.to_string());
-       
+                                    
                                     let name: String = tag.value.to_string();
                                     let char_array: Vec<char> = name.chars().collect();
-                                    let first_char: char = char_array[0].to_ascii_uppercase();
+                                    let first_char: char = char_array[0].to_ascii_uppercase();                                    
 
                                     // Special Characters
                                     if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
@@ -183,32 +182,39 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                                 }
                             },
                             AlbumArtist => {
-                                song_data.album_artist = Some(tag.value.to_string());
-
-                                let artist: String = tag.value.to_string();
-                                let char_array: Vec<char> = artist.chars().collect();
-                                let first_char: char = char_array[0].to_ascii_uppercase();
-
-                                // Special Characters
-                                if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
-                                    || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
-                                    || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
-                                {
-                                    song_data.artist_section = Some(0);
+                                if Some(tag.value.to_string()) == None {
+                                    song_data.album_artist = Some(tag.value.to_string());
+                                    song_data.artist_section = None;
                                 }
-                                // 0 - 9
-                                else if first_char.is_ascii_digit() {
-                                    song_data.artist_section = Some(1);
-                                }
-                                //  A - Z
-                                else if first_char.is_ascii_alphabetic() {
-                                    let section = first_char as i32;
-                                    song_data.artist_section = Some(section);
-                                }
-                                // Non-ascii values
                                 else {
-                                    song_data.artist_section = Some(300);
+                                    song_data.album_artist = Some(tag.value.to_string());
+
+                                    let artist: String = tag.value.to_string();
+                                    let char_array: Vec<char> = artist.chars().collect();
+                                    let first_char: char = char_array[0].to_ascii_uppercase();
+
+                                    // Special Characters
+                                    if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
+                                        || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
+                                        || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
+                                    {
+                                        song_data.artist_section = Some(0);
+                                    }
+                                    // 0 - 9
+                                    else if first_char.is_ascii_digit() {
+                                        song_data.artist_section = Some(1);
+                                    }
+                                    //  A - Z
+                                    else if first_char.is_ascii_alphabetic() {
+                                        let section = first_char as i32;
+                                        song_data.artist_section = Some(section);
+                                    }
+                                    // Non-ascii values
+                                    else {
+                                        song_data.artist_section = Some(300);
+                                    }
                                 }
+                                
                             },
                             Date => song_data.release = Some(tag.value.to_string()),
                             Genre => song_data.genre = Some(tag.value.to_string()),
@@ -310,6 +316,16 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
             error_details: "Mismatched tag types".to_string(),
         });
     }
+
+    // println!("{:?}\nName: {:?}\nAlbum: {:?}\nTrack: {:?}\nArtist: {:?}\nRelease: {:?}\nDisc: {:?}\n",
+    // &song_data.path,
+    // &song_data.name,
+    // &song_data.album,
+    // &song_data.track, 
+    // &song_data.artist,
+    // &song_data.release,
+    // &song_data.disc
+    // );
 
     return Ok(SongDataResults {
         song_data,

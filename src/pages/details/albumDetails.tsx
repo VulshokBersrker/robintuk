@@ -1,14 +1,14 @@
 // Core Libraries
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 
 // Custom Components
-import { ContextMenu, GetCurrentSong, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
-import ImageWithFallBack from "../../components/imageFallback";
+import { ContextMenu, GetCurrentSong, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs, PlaylistList } from "../../globalValues";
 import CustomContextMenu from "../../components/customContextMenu";
+import ImageWithFallBack from "../../components/imageFallback";
 
 // Image Components
 import QueueIcon from '../../images/rectangle-list-regular-full.svg';
@@ -29,10 +29,6 @@ interface AlbumDetails {
     genre: string,
     num_songs: number,
     hasDiscValue: boolean
-}
-
-interface PlaylistList {
-    name: string
 }
 
 export default function AlbumOverviewPage() {
@@ -62,6 +58,7 @@ export default function AlbumOverviewPage() {
     });
 
     const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const isContextMenuOpen = useRef<any>(null);
 
     // On first load get the album details
     useEffect(() => {
@@ -74,17 +71,17 @@ export default function AlbumOverviewPage() {
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
 
-        const handler = () => {
-            if(!contextMenu.isToggled) {
+        const handler = (e: any) => {
+            if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
                 resetContextMenu();
             }
         }
-        document.addEventListener('click', handler);
+        document.addEventListener('mousedown', handler);
 
 
         return () => {
             unlisten_get_current_song.then(f => f());
-            document.removeEventListener('click', handler);
+            document.removeEventListener('mousedown', handler);
         } 
     }, []);
 
@@ -163,6 +160,7 @@ export default function AlbumOverviewPage() {
 
     // Selection Function
     function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
+        if(songSelection.length === 0) { setDisplayAddToMenu(false); }
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
@@ -189,6 +187,7 @@ export default function AlbumOverviewPage() {
             tempArr[i]= false;
         }
         setCheckBoxNumber(tempArr);
+        setDisplayAddToMenu(false);
     }
 
     // ------------ Selection Bar Functions ------------
@@ -219,6 +218,7 @@ export default function AlbumOverviewPage() {
         }
         finally {
             clearSelection();
+            resetContextMenu();
         }
     }
     
@@ -232,6 +232,7 @@ export default function AlbumOverviewPage() {
         finally {
             setDisplayAddToMenu(false);
             clearSelection();
+            resetContextMenu();
         }
     }
 
@@ -247,6 +248,7 @@ export default function AlbumOverviewPage() {
         finally {
             setDisplayAddToMenu(false);
             clearSelection();
+            resetContextMenu();
         }
     }
 
@@ -352,7 +354,35 @@ export default function AlbumOverviewPage() {
                                     <div className="section-15 d-flex album-commmands">
                                         <span><button className="font-1 borderless" onClick={() => playSong(0)}><img src={PlayIcon} /></button></span>
                                         <span><button className="font-1 borderless" onClick={shuffleAlbum} ><img src={ShuffleIcon} /></button></span>
-                                        <span><button className="font-1 borderless" ><img src={AddIcon} /> </button></span>
+                                        <span className="position-relative">
+                                            <button className="font-1 borderless" disabled={albumList.length === 0} onClick={() => setDisplayAddToMenu(!displayAddToMenu)}   ><img src={AddIcon} /> </button>
+
+                                            {displayAddToMenu && songSelection.length === 0 &&
+                                                <div className="playlist-list-container add header-font">
+                                                    <div className="d-flex align-items-center" onClick={addToQueue}>
+                                                        <img src={QueueIcon} className="icon-size"/>
+                                                        <span>&nbsp;Queue</span>
+                                                    </div>
+                                                    <hr/>
+                                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                                        <input
+                                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                                            className="new-playlist" value={newPlaylistName}
+                                                            onChange={(e) => setNewPlaylistName(e.target.value)}
+                                                        />
+                                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                                    </span>
+                                                    
+                                                    {playlistList?.map((playlist) => {
+                                                        return(
+                                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                                                {playlist.name}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            }
+                                        </span>
                                     </div>
                                 </span>
                             </div>
@@ -362,7 +392,6 @@ export default function AlbumOverviewPage() {
 
                     {/* Song list */}
                     <div className="song-list">
-                        
                         <Virtuoso 
                             totalCount={albumList.length}
                             itemContent={(index) => {
@@ -485,7 +514,6 @@ export default function AlbumOverviewPage() {
                             }}
                             customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                         />
-
                     </div>
                     
                     
@@ -501,8 +529,13 @@ export default function AlbumOverviewPage() {
                         play={playSong}
                         editSelection={editSelection}
                         isBeingAdded={checkBoxNumber[contextMenu.index]}
+                        playlistList={playlistList}
+                        name={""}
+                        createPlaylist={createPlaylist} 
+                        addToPlaylist={addToPlaylist} 
+                        addToQueue={addToQueue}
+                        ref={isContextMenuOpen}
                     />
-                    <div className="empty-space"/>
                     <div className="empty-space"/>
                 </div>
                 
@@ -520,10 +553,10 @@ export default function AlbumOverviewPage() {
                         <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
                         <div className="section-6 position-relative">
                             <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
-                            {displayAddToMenu &&
+                            {displayAddToMenu && songSelection.length >= 1 &&
                                 <div className="playlist-list-container header-font">
                                     <div className="d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon icon-size"/>
+                                        <img src={QueueIcon} className="icon-size"/>
                                         <span>&nbsp;Queue</span>
                                     </div>
                                     <hr/>
@@ -572,7 +605,35 @@ export default function AlbumOverviewPage() {
                                     <div className="section-15 d-flex album-commmands">
                                         <span><button className="font-1 borderless" onClick={() => playSong(0)}><img src={PlayIcon} /></button></span>
                                         <span><button className="font-1 borderless" onClick={shuffleAlbum} ><img src={ShuffleIcon} /></button></span>
-                                        <span><button className="font-1 borderless" ><img src={AddIcon} /> </button></span>
+                                        <span className="position-relative">
+                                            <button className="font-1 borderless" disabled={albumList.length === 0} onClick={() => setDisplayAddToMenu(!displayAddToMenu)}   ><img src={AddIcon} /> </button>
+
+                                            {displayAddToMenu && songSelection.length === 0 &&
+                                                <div className="playlist-list-container add header-font">
+                                                    <div className="d-flex align-items-center" onClick={addToQueue}>
+                                                        <img src={QueueIcon} className="icon-size"/>
+                                                        <span>&nbsp;Queue</span>
+                                                    </div>
+                                                    <hr/>
+                                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                                        <input
+                                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                                            className="new-playlist" value={newPlaylistName}
+                                                            onChange={(e) => setNewPlaylistName(e.target.value)}
+                                                        />
+                                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                                    </span>
+                                                    
+                                                    {playlistList?.map((playlist) => {
+                                                        return(
+                                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                                                {playlist.name}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            }
+                                        </span>
                                     </div>
                                 </span>
                             </div>
@@ -591,8 +652,7 @@ export default function AlbumOverviewPage() {
                                 <span className="section-1 details">Length</span>
                             </div>
                             <hr />
-                        </>
-                        
+                        </>                        
                         <Virtuoso 
                             totalCount={albumList.length}
                             itemContent={(index) => {
@@ -641,13 +701,17 @@ export default function AlbumOverviewPage() {
                         posY={contextMenu.posY}
                         play={playSong}
                         editSelection={editSelection}
-                        isBeingAdded={checkBoxNumber[contextMenu.index]}
+                        isBeingAdded={checkBoxNumber[contextMenu.index]} 
+                        name={""} 
+                        playlistList={playlistList} 
+                        createPlaylist={createPlaylist}
+                        addToPlaylist={addToPlaylist}
+                        addToQueue={addToQueue}
+                        ref={isContextMenuOpen}                    
                     />
-                    <div className="empty-space"/>
                     <div className="empty-space"/>
                 </div>
             </SimpleBar>
         );
     }
-        
 }

@@ -549,7 +549,7 @@ img.off {
 }
 /* Allows for the blur for the music controls and the weird padding fix */
 .empty-space {
-  height: 20px;
+  height: 70px;
 }
 
 /* ------------------ Custom Window Tab Styles ------------------*/
@@ -673,8 +673,7 @@ img.off {
   padding-top: 0.2rem;
   padding-bottom: 0.2rem;
   min-height: 25px;
-  width: 80%;
-  margin: auto;
+  width: 125px;
   margin-bottom: 0.4rem;
   margin-left: 8px;
   font-family: var(--header-family);
@@ -693,6 +692,7 @@ img.off {
   border-radius: var(--border-radius);
 }
 
+
 .side-navbar hr {
   background: linear-gradient(to right, var(--hr-gradient-one),var(--hr-gradient-two), var(--hr-gradient-one));
   margin-left: 8px;
@@ -705,7 +705,6 @@ img.off {
   font-size: 14px;
   color: var(--font-color-one);
   padding-left: 10px;
-  white-space: nowrap;
 }
 .side-navbar img.bi {
   padding-top: 2px;
@@ -765,7 +764,7 @@ img.off {
 
 /* Albums */
 .albums.home {
-  max-height: 400px;
+  max-height: 390px;
   overflow: hidden;
   margin-bottom: 5px;
 }
@@ -969,22 +968,24 @@ img.off {
 }
 .music-controls {
   margin-top: 8px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 .music-details {
   margin-left: 5px;
   font-family: var(--header-family);
 }
 
-.music-details:hover {
-  background-color: rgba(0, 0, 0, 0.3);
+.full-screen-clickable {
+  display: inline-flex;
+  padding-right: 15px;
+}
+.full-screen-clickable:hover {
+  background-color: rgba(0, 0, 0, 0.5);
   border-radius: var(--border-radius);
 }
-
 .song-album-image {
-  position: relative;
-  margin-left: 8px;
-  margin-bottom: 5px;
+  margin-left: 5px;
+  margin-bottom: 1px;
   margin-right: 8px;
 }
 .song-album-image img {
@@ -1521,7 +1522,7 @@ input[type="checkbox"]:disabled {
   border-radius: var(--border-radius);
   left: 55%;
   transform: translateX(-50%);
-  width: 500px;
+  width: 550px;
   height: 50px;
   background-color: var(--gradient-two);
   border: 2px solid var(--font-color-three);
@@ -1647,6 +1648,12 @@ button img {
   top: 50%;
   transform: translate(-43%, 15%);
   left: 100px;
+}
+
+.playlist-list-container.add-context-menu {
+  top: 50%;
+  transform: translate(-43%, -8%);
+  left: 270px;
 }
 
 .playlist-list-container hr {
@@ -2576,10 +2583,13 @@ img.search-icon:hover {
 @media screen and (min-width: 1000px) {
   #root:has(.music-control-container) {
     .empty-space {
-      height: 92px;
+      height: 220px;
+    }
+    .song-page-list .empty-space {
+      height: 250px;
     }
     .album-container .empty-space {
-      height: 110px !important;
+      height: 220px !important;
     }
   }
   

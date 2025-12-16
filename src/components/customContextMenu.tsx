@@ -1,11 +1,13 @@
 // Core Libraries
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Custom Components
-import { Songs } from '../globalValues';
+import { PlaylistList, Songs } from '../globalValues';
 
 // Images
+import DeselectIcon from '../images/circle-xmark-regular-full.svg';
+import QueueIcon from '../images/rectangle-list-regular-full.svg';
 import SelectIcon from '../images/circle-check-regular-full.svg';
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
 import ArtistIcon from '../images/user-regular-full.svg';
@@ -59,10 +61,24 @@ type Props = {
     editSelection: (song: Songs, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
-    posY: number
+    posY: number,
+    // Playlist
+    name: string,
+    playlistList: PlaylistList[],
+    createPlaylist: (name: string) => void,
+    addToPlaylist: (name: string) => void
+    addToQueue: () => void,
+    ref: any
 }
 
-export default function CustomContextMenu({ isToggled, context_type, song, album, artist, index, play, editSelection, isBeingAdded, posX, posY }: Props) {
+export default function CustomContextMenu({ 
+    isToggled, context_type, song, album, artist, index, 
+    play, editSelection, isBeingAdded, posX, posY,
+    name, playlistList, createPlaylist, addToPlaylist, addToQueue, ref
+}: Props) {
+
+    const [displayAddMenu, setDisplayAddMenu] = useState<boolean>(false);
+    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
 
     const navigate = useNavigate();
 
@@ -80,6 +96,7 @@ export default function CustomContextMenu({ isToggled, context_type, song, album
         }
         else {
             element[0].classList.remove("overflow-y-hidden");
+            setDisplayAddMenu(false);
         }
     }, [isToggled]);
 
@@ -89,12 +106,13 @@ export default function CustomContextMenu({ isToggled, context_type, song, album
                 className="context-menu-container header-font font-1"
                 style={{ position: "fixed", left: `${posX}px`, top: `${posY}px`}}
                 onContextMenu={(e) => {  e.preventDefault(); }}
+                ref={ref}
             >
                 <li className="d-flex align-items-center"
                     onClick={() => editSelection(song, !isBeingAdded, index) }
                 >
-                    <img src={SelectIcon} />
-                    &nbsp; Select
+                    {isBeingAdded === true && <><img src={DeselectIcon} />&nbsp;Deselect</>}
+                    {isBeingAdded === false && <><img src={SelectIcon} />&nbsp;Select</>}
                 </li>
 
                 <li onClick={() => {play(index)}} className="d-flex align-items-center">
@@ -102,9 +120,36 @@ export default function CustomContextMenu({ isToggled, context_type, song, album
                     &nbsp; Play
                 </li>
 
-                <li className="d-flex align-items-center">
-                    <img src={AddIcon} />
-                    &nbsp; Add to
+                <li className="position-relative">
+                    <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                        <img src={AddIcon} /> &nbsp; Add to
+                    </span>
+                    {displayAddMenu &&
+                        <div className="playlist-list-container add-context-menu header-font">
+                            <div className="d-flex align-items-center" onClick={addToQueue}>
+                                <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
+                            </div>
+                            <hr/>
+                            <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                <input
+                                    id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
+                                    className="new-playlist" value={newPlaylistName}
+                                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                                />
+                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                            </span>
+                            
+                            {playlistList?.map((playlist) => {
+                                if(playlist.name !== name) {
+                                    return(
+                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            {playlist.name}
+                                        </div>
+                                    );
+                                }                                            
+                            })}
+                        </div>
+                    }
                 </li>
 
                 {context_type !== "playlist" && 
@@ -118,13 +163,9 @@ export default function CustomContextMenu({ isToggled, context_type, song, album
                         <img src={ArtistIcon} />
                         &nbsp; Show Artist
                     </li>
-                }
-
-                
+                }                
             </div>
         );
     }
-    else { return; }
-    
-    
+    else { return; }    
 }

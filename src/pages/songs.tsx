@@ -3,7 +3,6 @@ import { invoke } from '@tauri-apps/api/core';
 import { Virtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
-
 import { alphabeticallyOrdered, saveQueue, Songs, SongsFull } from "../globalValues";
 
 // Images
@@ -204,9 +203,8 @@ export default function SongPage({songs}: Props) {
                         customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                     />
                 </div>
-            </div>
-            <div className="empty-space"/>
-            <div className="empty-space"/>
+                <div className="empty-space"/>
+            </div>            
         </SimpleBar>
     );
 }

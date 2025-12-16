@@ -10,6 +10,7 @@ import { saveQueue, Songs, savePosition, PlaylistList, playSelection, AlbumDetai
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
+import DeselectIcon from '../images/circle-xmark-regular-full.svg';
 import QueueIcon from '../images/rectangle-list-regular-full.svg';
 import SelectIcon from '../images/circle-check-regular-full.svg';
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
@@ -50,6 +51,7 @@ export default function AlbumPage({albums}: P) {
     const [albumSelection, setAlbumSelection] = useState<String[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
     const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const isContextMenuOpen = useRef<any>(null);
 
     // Playlist Values
     const [newPlaylistName, setNewPlaylistName] = useState<string>("");
@@ -78,15 +80,15 @@ export default function AlbumPage({albums}: P) {
         // getAlbums();
         
 
-        const handler = () => {
-            if(!contextMenu.isToggled) {
+        const handler = (e: any) => {
+            if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
                 resetContextMenu();
             }
         }
-        document.addEventListener('click', handler);
+        document.addEventListener('mousedown', handler);
         
         return () => {
-            document.removeEventListener('click', handler);
+            document.removeEventListener('mousedown', handler);
         }
     }, []);
 
@@ -97,13 +99,12 @@ export default function AlbumPage({albums}: P) {
     async function playAlbum(album_name: string) {
         try {
             const albumRes: Songs[] = await invoke('get_album', { name: album_name });
-            // console.log(albumRes);
             // Load the music to be played and saved
             await invoke('player_load_album', {queue: albumRes, index: 0});
             await invoke('update_current_song_played');
             saveQueue(albumRes);
             savePosition(0);
-            await invoke('create_queue', { songs: albumRes });
+            await invoke('create_queue', { songs: albumRes, shuffled: false });
         }
         catch(e) {
             console.log(e);
@@ -188,62 +189,58 @@ export default function AlbumPage({albums}: P) {
 
     async function addToQueue() {
         try {
-            const q = localStorage.getItem("last-played-queue")
-            if(q !== null) {
-                const oldQ = JSON.parse(q);
-
-                await invoke('player_add_to_queue', {queue: albumSelection});
-                const newQ = [...oldQ, albumSelection];
-                localStorage.setItem("last-played-queue", JSON.stringify(newQ) );
-            }
-            
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            const test = await invoke('player_get_queue');
-            console.log(test)
-            clearSelection();
-        }
-    }
-    
-    async function addToPlaylist(name: string) {
-        try {
+            setDisplayAddToMenu(false);
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
                 songList.push(...temp);
             }
+            clearSelection();
+            await invoke('add_to_queue', {songs: songList});
+            await invoke('player_add_to_queue', {queue: songList});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        resetContextMenu();
+    }
+    
+    async function addToPlaylist(name: string) {
+        try {
+            setDisplayAddToMenu(false);
+            let songList: Songs[] = [];
+            for(let i = 0; i < albumSelection.length; i++) {
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
+                songList.push(...temp);
+            }
+            clearSelection();
             await invoke('add_to_playlist', {songs: songList, playlist_name: name});
         }
         catch(e) {
             console.log(e);
         }
         finally {
-            setDisplayAddToMenu(false);
-            clearSelection();
-        }
+            resetContextMenu();
+        }        
     }
 
     async function createPlaylist(name: string) {
         try {
+            setDisplayAddToMenu(false);
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
                 songList.push(...temp);
             }
-            await invoke('create_playlist', {name: name});
+            clearSelection();
+            await invoke('create_playlist', {name: name });
             await invoke('add_to_playlist', {songs: songList, playlist_name: name});
             await invoke('new_playlist_added');
         }
         catch(e) {
             console.log(e);
         }
-        finally {
-            setDisplayAddToMenu(false);
-            clearSelection();
-        }
+        resetContextMenu();
     }
 
     async function getAllPlaylists() {
@@ -442,10 +439,9 @@ export default function AlbumPage({albums}: P) {
                         customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                     />
                     <div className="empty-space"/>
-                    <div className="empty-space"/>
                 </SimpleBar>
                 
-                <ContextMenuAlbums
+                <ContextMenu
                     isToggled={contextMenu.isToggled}
                     album={contextMenu.album}
                     artist={contextMenu.artist}
@@ -455,6 +451,10 @@ export default function AlbumPage({albums}: P) {
                     play={playAlbum}
                     editSelection={editSelection}
                     isBeingAdded={contextMenu.isBeingAdded}
+                    playlistList={playlistList}
+                    name={""}
+                    resetContextMenu={resetContextMenu}
+                    ref={isContextMenuOpen}
                 />
                 
             </div>
@@ -472,10 +472,22 @@ type Props = {
     editSelection: (album: string, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
-    posY: number
+    posY: number,
+    // Playlist
+    name: string,
+    playlistList: PlaylistList[],
+    resetContextMenu: () => void,
+    ref: any
 }
 
-function ContextMenuAlbums({ isToggled, album, artist, index, play, editSelection, isBeingAdded, posX, posY }: Props) {
+function ContextMenu({
+    isToggled, album, artist, index,
+    play, editSelection, isBeingAdded, posX, posY,
+    name, playlistList, resetContextMenu, ref
+}: Props) {
+
+    const [displayAddMenu, setDisplayAddMenu] = useState<boolean>(false);
+    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
 
     const navigate = useNavigate();
 
@@ -486,6 +498,45 @@ function ContextMenuAlbums({ isToggled, album, artist, index, play, editSelectio
         navigate("/artists/overview", {state: {name: artist}});
     }
 
+    async function addToQueue() {
+        try {
+            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album});
+
+            await invoke('add_to_queue', {songs: album_songs});
+            await invoke('player_add_to_queue', {queue: album_songs});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            resetContextMenu();
+        }
+    }
+    
+    async function addToPlaylist(name: string) {
+        try {
+            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album});
+            await invoke('add_to_playlist', {songs: album_songs, playlist_name: name});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        resetContextMenu();
+    }
+
+    async function createPlaylist(name: string) {
+        try {
+            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album});
+            await invoke('create_playlist', {name: name });
+            await invoke('add_to_playlist', {songs: album_songs, playlist_name: name});
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+        resetContextMenu();
+    }
+
     useEffect(() => {
         const element = document.getElementsByClassName("simplebar-content-wrapper");
         if(isToggled) {
@@ -493,6 +544,7 @@ function ContextMenuAlbums({ isToggled, album, artist, index, play, editSelectio
         }
         else {
             element[0].classList.remove("overflow-y-hidden");
+            setDisplayAddMenu(false);
         }
     }, [isToggled]);
 
@@ -502,19 +554,49 @@ function ContextMenuAlbums({ isToggled, album, artist, index, play, editSelectio
                 className="context-menu-container header-font font-1"
                 style={{ position: "fixed", left: `${posX}px`, top: `${posY}px`}}
                 onContextMenu={(e) => {  e.preventDefault(); }}
+                ref={ref}
             >
                 <li className="d-flex align-items-center"
                     onClick={() => editSelection(album, !isBeingAdded, index) }
                 >
-                    <img src={SelectIcon} /> &nbsp; Select
+                    {isBeingAdded === true && <><img src={DeselectIcon} />&nbsp;Deselect</>}
+                    {isBeingAdded === false && <><img src={SelectIcon} />&nbsp;Select</>}
                 </li>
 
                 <li onClick={() => {play(album)}} className="d-flex align-items-center">
                     <img src={PlayIcon} />  &nbsp; Play
                 </li>
 
-                <li className="d-flex align-items-center">
-                    <img src={AddIcon} /> &nbsp; Add to
+                <li className="position-relative">
+                    <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                        <img src={AddIcon} /> &nbsp; Add to
+                    </span>
+                    {displayAddMenu &&
+                        <div className="playlist-list-container add-context-menu header-font">
+                            <div className="d-flex align-items-center" onClick={addToQueue}>
+                                <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
+                            </div>
+                            <hr/>
+                            <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                <input
+                                    id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
+                                    className="new-playlist" value={newPlaylistName}
+                                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                                />
+                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                            </span>
+                            
+                            {playlistList?.map((playlist) => {
+                                if(playlist.name !== name) {
+                                    return(
+                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            {playlist.name}
+                                        </div>
+                                    );
+                                }                                            
+                            })}
+                        </div>
+                    }
                 </li>
 
                 <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
@@ -544,33 +626,3 @@ const gridComponents = {
     </div>
   )
 }
-
-
-
-// async function getAlbums() {
-//     try {
-//         setLoading(true);
-//         const list = await invoke<AlbumDetails[]>('get_all_albums');
-//         // console.log(list);
-//         setAlbumList(list);
-//         setFilteredAlbums(list);
-
-//         let tempSectionArray: number[] = [];
-//         const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, list.map((o: AlbumDetails) => { return o.album_section})) );
-
-//         for(let i = 0; i < maxSection; i++) {
-//             const results = list.filter(obj => obj.album_section === alphabeticallyOrdered[i] ).length;
-//             tempSectionArray[i] = results;
-//         }
-//         setAlbumSections(tempSectionArray);
-
-//         setCheckBoxNumber(Array(list.length).fill(false));
-        
-//     }
-//     catch (err) {
-//         alert(`Failed to scan folder: ${err}`);
-//     }
-//     finally {
-//         setLoading(false);
-//     }
-// }

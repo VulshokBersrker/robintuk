@@ -38,7 +38,7 @@ export default function MusicControls() {
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isShuffle, setIsShuffle] = useState<boolean>(false);
     const [repeatMode, setRepeatMode] = useState<number>(1); // Defaults to on full repeat
-    const [volume, setVolume] = useState<number>(30);
+    const [volume, setVolume] = useState<number>(20);
 
     const [songDetails, setSongDetails] = useState<Songs>();
 
@@ -384,14 +384,16 @@ export default function MusicControls() {
 
                     <div className="grid-15 music-controls">
                         {/* Current Song Details */}
-                        <div className="section-5 music-details d-flex" onClick={() => setDisplayFullscreen(!displayFullscreen)} >
-                            <span className="song-album-image">
-                                <ImageWithFallBack image={songDetails?.cover} alt={"player album"} image_type={"player"} />
-                            </span>
-                            <span>
-                                <div className="song-name">{songDetails?.name}</div>
-                                <div className="song-album">{songDetails?.album}</div>
-                                <div className="song-album">{songDetails?.artist}</div>                 
+                        <div className="section-5 music-details d-flex">
+                            <span className="full-screen-clickable" onClick={() => setDisplayFullscreen(!displayFullscreen)} >
+                                <span className="song-album-image">
+                                    <ImageWithFallBack image={songDetails?.cover} alt={"player album"} image_type={"player"} />
+                                </span>
+                                <span>
+                                    <div className="song-name">{songDetails?.name}</div>
+                                    <div className="song-album">{songDetails?.album}</div>
+                                    <div className="song-album">{songDetails?.artist}</div>                 
+                                </span>
                             </span>
                         </div>
 

@@ -111,7 +111,7 @@ pub async fn get_directory() -> Result<Vec<DirsTable>, String> {
         .fetch_all(&pool)
         .await
         .unwrap();
-
+ 
     Ok(temp)
 }
 
@@ -208,24 +208,25 @@ pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<Sq
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
         (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section, keep) 
         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)")
-        .bind(entry.name)
-        .bind(entry.path)
-        .bind(entry.cover)
-        .bind(entry.release)
-        .bind(entry.track)
-        .bind(entry.album)
-        .bind(entry.artist)
-        .bind(entry.genre)
-        .bind(entry.album_artist)
-        .bind(entry.disc)
-        .bind(entry.duration)
+        .bind(&entry.name)
+        .bind(&entry.path)
+        .bind(&entry.cover)
+        .bind(&entry.release)
+        .bind(&entry.track)
+        .bind(&entry.album)
+        .bind(&entry.artist)
+        .bind(&entry.genre)
+        .bind(&entry.album_artist)
+        .bind(&entry.disc)
+        .bind(&entry.duration)
         .bind(false)
-        .bind(entry.song_section)
-        .bind(entry.album_section)
-        .bind(entry.artist_section)
+        .bind(&entry.song_section)
+        .bind(&entry.album_section)
+        .bind(&entry.artist_section)
         .bind(true)
         .execute(pool)
         .await;
+
 
     Ok(res.unwrap())
 }

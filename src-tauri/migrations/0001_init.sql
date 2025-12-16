@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS songs (
     -- Favorited value - might not use
     favorited BOOLEAN,
     song_section INTEGER NOT NULL,
-    album_section INTEGER NOT NULL,
-    artist_section INTEGER NOT NULL,
+    album_section INTEGER,
+    artist_section INTEGER,
     keep BOOLEAN NOT NULL
 );
 

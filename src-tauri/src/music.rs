@@ -62,7 +62,6 @@ impl MusicPlayer {
         for song in q {
             self.queue.push(song);
         }
-        // println!("{:?}", self.queue);
     }
 
     pub fn get_current_queue(&self) -> &Vec<SongTable> {

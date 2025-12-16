@@ -177,7 +177,6 @@ export default function ArtistsPage({artists}: P) {
                     customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                 />
                 <div className="empty-space"/>
-                <div className="empty-space"/>
             </SimpleBar>
         );
     }
@@ -197,14 +196,3 @@ const gridComponents = {
     </div>
   )
 }
-
-// async function getArtists() {
-//     try {
-//         const list = await invoke<AllArtistResults[]>('get_all_artists');
-//         // console.log(list);
-//         setArtistList(list);
-//     }
-//     catch (err) {
-//         alert(`Failed to scan folder: ${err}`);
-//     }
-// }

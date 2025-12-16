@@ -12,7 +12,7 @@ import ImageWithFallBack from "../components/imageFallback";
 
 // Images
 import ClearIcon from '../images/trash-can-regular-full.svg';
-import PlayIcon from '../images/trash-can-regular-full.svg';
+import PlayIcon from '../images/play-icon-outline.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
 import PlusIcon from '../images/plus-solid-full.svg'
 import CloseIcon from '../images/x.svg';
@@ -284,8 +284,7 @@ export default function QueueOverviewPage() {
                                                     );
                                                 })}
                                             </div>
-                                        }
-                                    
+                                        }                                    
                                     </span>
                                 </div>
                             </span>
@@ -335,9 +334,7 @@ export default function QueueOverviewPage() {
                         />
                     </div>
                 </div>
-                <div className="empty-space"/>
-                <div className="empty-space"/>
-                
+                <div className="empty-space"/>                
             </SimpleBar>
         );
     }

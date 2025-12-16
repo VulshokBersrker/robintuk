@@ -5,11 +5,12 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 
+import { DirectoryInfo } from '../globalValues';
+
 // Images
 import CheckIcon from '../images/circle-check-regular-full.svg';
 import ErrorIcon from '../images/circle-xmark-regular-full.svg';
 import logo from '../images/logo.svg';
-import { DirectoryInfo } from '../globalValues';
 
 interface ScanResults {
     success: number,
