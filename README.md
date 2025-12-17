@@ -84,6 +84,7 @@ Made with Tauri (React and Rust).
 - [ ] Better error handling
 - [ ] Blank pages on route change while it grabs the data from the backend
 - [ ] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
+- [ ] Cancelling changing playlist cover art will remove any current artwork until the page is reloaded
 - [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
 - [x] Fix songs page search results formatting
 - [x] Albums displaying Disc 0 when metadata has no disc value
