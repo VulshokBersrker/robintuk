@@ -3,11 +3,15 @@ import { invoke } from '@tauri-apps/api/core';
 import { Virtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
-import { alphabeticallyOrdered, saveQueue, Songs, SongsFull } from "../globalValues";
+import { alphabeticallyOrdered, ContextMenu, PlaylistList, saveQueue, Songs, SongsFull } from "../globalValues";
+import CustomContextMenu from "../components/customContextMenu";
 
 // Images
+import QueueIcon from '../images/rectangle-list-regular-full.svg';
 import PlayIcon from '../images/play-icon-outline.svg';
+import AddIcon from '../images/plus-solid-full.svg';
 import SearchIcon from '../images/search_icon.svg';
+import CloseIcon from '../images/x.svg';
 
 type Props = {
     songs: SongsFull[]
@@ -24,6 +28,17 @@ export default function SongPage({songs}: Props) {
 
     const [filteredSongs, setFilteredSongs] = useState<SongsFull[]>(songs);
     const [songSections, setSongSections] = useState<number[]>([]);
+
+    // Playlist Values
+    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
+    const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
+    const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
+    
+    const [songSelection, setSongSelection] = useState<Songs[]>([]);
+    const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
+
+    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "song", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const isContextMenuOpen = useRef<any>(null);
 
     
     useEffect(() => {
@@ -82,6 +97,138 @@ export default function SongPage({songs}: Props) {
         }
     }
 
+    // ------------ Start of Selection Bar Functions ------------
+
+    useEffect(() => {
+        const fetchData = async() => {
+            const list: PlaylistList[] | undefined = await getAllPlaylists();
+            if(list !== undefined) {
+                setPlaylistList(list);
+            }
+        }
+        fetchData();        
+    }, []);
+
+    async function addToQueue() {
+        try {
+            setDisplayAddToMenu(false);
+            let songList: Songs[] = [];
+            for(let i = 0; i < songSelection.length; i++) {
+                const temp: Songs = await invoke<Songs>('get_song', {song_path: songSelection[i].path});
+                songList.push(temp);
+            }
+            clearSelection();
+            await invoke('add_to_queue', {songs: songList});
+            await invoke('player_add_to_queue', {queue: songList});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        resetContextMenu();
+    }
+    
+    async function addToPlaylist(name: string) {
+        try {
+            setDisplayAddToMenu(false);
+            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            
+            clearSelection();
+        }
+        resetContextMenu();
+    }
+
+    async function createPlaylist(name: string) {
+        try {
+            setDisplayAddToMenu(false);
+            await invoke('create_playlist', {name: name});
+            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            
+            clearSelection();
+        }
+        resetContextMenu();
+    }
+
+    async function getAllPlaylists() {
+        try {
+            const playlists: PlaylistList[] = await invoke('get_all_playlists');
+            if(playlists.length !== 0) {
+                return playlists;
+            }
+            else {
+                return [];
+            }            
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+    
+    function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
+        resetContextMenu();
+        // If we are adding to the array of selected songs
+        if(isBeingAdded === true) {
+            // Append to the array
+            setSongSelection([...songSelection, song]);
+            const tempArr: boolean[] = checkBoxNumber;
+            tempArr[index] = true;
+            setCheckBoxNumber(tempArr);
+
+        }
+        // If we are removing a song from the array
+        else {
+            // Find the location of the song in the array with filter and only return the other songs
+            setSongSelection(songSelection.filter(item => item.path !== song.path));
+            const tempArr: boolean[] = checkBoxNumber;
+            tempArr[index] = false;
+            setCheckBoxNumber(tempArr);
+        }
+    }
+
+    function clearSelection() {
+        setSongSelection([]);
+        setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
+    }
+
+    // ------------ End of Selection Bar Functions ------------
+
+    // Context Menu Functions
+
+    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+        if(e.pageX < window.innerWidth / 2) {
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 180});
+            }
+        }
+        else {
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 180});
+            }
+        }
+    }
+
+    function resetContextMenu() {
+        console.log("Resetting Context Menu");
+        setContextMenu({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0});
+        setDisplayAddToMenu(false);
+    }
+
 
 
     return(
@@ -92,11 +239,58 @@ export default function SongPage({songs}: Props) {
                         <img src={SearchIcon} className="bi search-icon icon-size"/>
                         <input
                             type="text" placeholder="Search Albums" id="search_albums"
+                            autoComplete="off"
                             value={searchValue}
                             onChange={(e) => updateSearchResults(e.target.value)}
                         />
                     </span>
                 </div>
+
+                {/* Song Selection Bar */}
+                    <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
+                        <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                        <div className="section-5 position-relative">
+                            <button className="d-flex align-items-center">
+                                <img src={PlayIcon} />
+                                &nbsp;Play
+                            </button>
+                        </div>
+                        <div className="section-6 position-relative">
+                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
+                                <img src={AddIcon} />
+                                &nbsp;Add
+                            </button>
+
+                            {displayAddToMenu &&
+                                <div className="playlist-list-container header-font">
+                                    <div className="d-flex align-items-center" onClick={addToQueue}>
+                                        <img src={QueueIcon} className="icon-size"/>
+                                        &nbsp;Queue
+                                    </div>
+                                    <hr/>
+                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                        <input
+                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                            className="new-playlist" value={newPlaylistName}
+                                            onChange={(e) => setNewPlaylistName(e.target.value)}
+                                        />
+                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                    </span>
+                                    
+                                    {playlistList?.map((playlist) => {
+                                        return(
+                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                                {playlist.name}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            }
+                        </div>
+
+                        <span className="vertical-centered section-1" onClick={clearSelection}> <img src={CloseIcon} /></span>
+                    </div>                    
+                    {/* End of Song Selection Bar */}
 
                 <div className="section-list">
                     {alphabeticallyOrdered.map((section, i) => {
@@ -151,12 +345,21 @@ export default function SongPage({songs}: Props) {
                                             </div>
                                             <hr />
                                             <div className="flex items-center justify-between">
-                                                <div className="song-link">
+                                                <div className="song-link"
+                                                    onContextMenu={(e) => {
+                                                        e.preventDefault();
+                                                        handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index);
+                                                    }}
+                                                >
                                                     <div className={`grid-20 song-row`}>
                                                         
                                                         <span className="section-1 vertical-centered play ">
-                                                            <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
-                                                                <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike" onChange={() => {}} />
+                                                            <span className="form-control">
+                                                                <input
+                                                                    type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                                    onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked, index)}
+                                                                    onChange={() => {}} checked={checkBoxNumber[index]}
+                                                                />
                                                             </span>
                                                             <img src={PlayIcon} onClick={() => {playSong(index)}}/>
                                                         </span>
@@ -178,12 +381,21 @@ export default function SongPage({songs}: Props) {
                             }
                             return(
                                 <div className="flex items-center justify-between">
-                                    <div className="song-link">
+                                    <div className="song-link"
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index);
+                                        }}
+                                    >
                                         <div className={`grid-20 song-row`}>
                                             
                                             <span className="section-1 vertical-centered play ">
-                                                <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
-                                                    <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike" onChange={() => {}} />
+                                                <span className="form-control">
+                                                    <input
+                                                        type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                        onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked, index)}
+                                                        onChange={() => {}} checked={checkBoxNumber[index]}
+                                                    />
                                                 </span>
                                                 <img src={PlayIcon} onClick={() => {playSong(index)}}/>
                                             </span>
@@ -204,29 +416,27 @@ export default function SongPage({songs}: Props) {
                     />
                 </div>
                 <div className="empty-space"/>
+
+                <CustomContextMenu
+                    isToggled={contextMenu.isToggled}
+                    context_type={contextMenu.context_type}
+                    song={filteredSongs[contextMenu.index]}
+                    album={contextMenu.album}
+                    artist={contextMenu.artist}
+                    index={contextMenu.index}
+                    play={playSong}
+                    editSelection={editSelection}
+                    isBeingAdded={checkBoxNumber[contextMenu.index]}
+                    posX={contextMenu.posX}
+                    posY={contextMenu.posY}
+                    name={""}
+                    playlistList={playlistList}
+                    createPlaylist={createPlaylist}
+                    addToPlaylist={addToPlaylist}
+                    addToQueue={addToQueue}
+                    ref={isContextMenuOpen}                
+                />
             </div>            
         </SimpleBar>
     );
 }
-
-
-// async function getSongs() {
-//     try {
-//         const list: SongsFull[] = await invoke<SongsFull[]>('get_all_songs');
-
-//         let tempSectionArray: number[] = [];
-//         const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, list.map((o: SongsFull) => { return o.song_section})) );
-//         console.log(maxSection)
-
-//         for(let i = 0; i < maxSection; i++) {
-//             const results = list.filter(obj => obj.song_section === alphabeticallyOrdered[i] ).length;
-//             tempSectionArray[i] = results;
-//         }
-//         setSongSections(tempSectionArray);
-//         setSongList(list);
-//         setFilteredSongs(list);
-//     }
-//     catch (err) {
-//         alert(`Failed to scan folder: ${err}`);
-//     }
-// }

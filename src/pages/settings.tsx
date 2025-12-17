@@ -1,4 +1,5 @@
 // Core Libraries
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
@@ -207,7 +208,7 @@ export default function Settings() {
 
             {/* Backup Restore */}
             <div className="settings-section">
-                <div className="header-font font-3" style={{marginBottom: '5px'}}>Data Backup/Restore</div>
+                <div className="header-font font-3 sub-font" style={{marginBottom: '5px'}}>Data Backup/Restore (Not implemented yet)</div>
 
                 <div className="">
                     <div className="sub-font font-0" style={{marginBottom: '10px'}}>Backup and Restore all your data on Robintuk, including your playlists</div>
@@ -224,7 +225,14 @@ export default function Settings() {
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
                 <div className="header-font">Robintuk v0.1 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
-                <div> <button className="white">View Github</button> </div>
+                <div>
+                    <button
+                        className="white"
+                        onClick={() => openUrl("https://github.com/VulshokBersrker/robintuk_player")}
+                    >
+                        View Github
+                    </button>
+                </div>
             </div>
 
             <div className="empty-space"></div>

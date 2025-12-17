@@ -108,11 +108,9 @@ export default function CustomContextMenu({
                 onContextMenu={(e) => {  e.preventDefault(); }}
                 ref={ref}
             >
-                <li className="d-flex align-items-center"
-                    onClick={() => editSelection(song, !isBeingAdded, index) }
-                >
-                    {isBeingAdded === true && <><img src={DeselectIcon} />&nbsp;Deselect</>}
-                    {isBeingAdded === false && <><img src={SelectIcon} />&nbsp;Select</>}
+                <li className="d-flex align-items-center" onClick={() => editSelection(song, !isBeingAdded, index) } >
+                    {!isBeingAdded === false && <><img src={DeselectIcon} />&nbsp;Deselect</>}
+                    {!isBeingAdded === true && <><img src={SelectIcon} />&nbsp;Select</>}
                 </li>
 
                 <li onClick={() => {play(index)}} className="d-flex align-items-center">

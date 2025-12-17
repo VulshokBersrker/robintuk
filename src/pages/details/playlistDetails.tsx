@@ -1,10 +1,11 @@
 // Core Libraries
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
+import SimpleBar from "simplebar-react";
 
 // Custom Components
 import { ContextMenu, GetCurrentSong, PlaylistFull, PlaylistList, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
@@ -23,7 +24,7 @@ import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import CloseIcon from '../../images/x.svg';
-import SimpleBar from "simplebar-react";
+
 
 interface PlaylistDetails {
     name: string,
@@ -207,21 +208,29 @@ export default function PlaylistOverviewPage() {
             let temp: Songs[] = playlist;
             temp = playlist.filter((song) => song.path !== playlist[index].path)
             setPlaylist(temp);
-            invoke("remove_song_from_playlist", {playlist_id: location.state.name, song_path: playlist[index].path, songs: temp });
+            await invoke("remove_song_from_playlist", {playlist_id: location.state.name, song_path: playlist[index].path, songs: temp });       
         }
         catch (err) {
             alert(`Failed remove song from playlist: ${err}`);
         }
         resetContextMenu();
     }
-    async function removeSelectedSongs(selection: Songs[]) {
+    async function removeSelectedSongs() {
         try {
-            // setPlaylist(playlist.filter((song) => song.path !== playlist[index].path));
+            const selection = songSelection;
+            clearSelection();
+            const newList = removeFromArray(selection);
+            setPlaylist(newList);
+            await invoke("remove_multiple_songs_from_playlist", {playlist_id: location.state.name, songs: selection });
             
         }
         catch (err) {
             alert(`Failed remove song from playlist: ${err}`);
         }
+    }
+
+    function removeFromArray(args: Songs[]) {
+        return playlist.filter(e => !args.some(j => j.path === e.path));
     }
 
     // ------------ Selection Bar Functions ------------
@@ -237,23 +246,18 @@ export default function PlaylistOverviewPage() {
 
     async function addToQueue() {
         try {
-            const q = localStorage.getItem("last-played-queue")
-            if(q !== null) {
-                const oldQ = JSON.parse(q);
-
-                await invoke('player_add_to_queue', {queue: songSelection});
-                const newQ = [...oldQ, songSelection];
-                localStorage.setItem("last-played-queue", JSON.stringify(newQ) );
+            setDisplayAddToMenu(false);
+            let songList: Songs[] = [];
+            for(let i = 0; i < songSelection.length; i++) {
+                const temp: Songs = await invoke<Songs>('get_song', {song_path: songSelection[i].path});
+                songList.push(temp);
             }
-            
+            clearSelection();
+            await invoke('add_to_queue', {songs: songList});
+            await invoke('player_add_to_queue', {queue: songList});
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            const test = await invoke('player_get_queue');
-            console.log(test)
-            clearSelection();
         }
         resetContextMenu();
     }
@@ -327,11 +331,8 @@ export default function PlaylistOverviewPage() {
 
     function clearSelection() {
         setSongSelection([]);
-        let tempArr: boolean[] = [];
-        for(let i = 0; i < checkBoxNumber.length; i++) {
-            tempArr[i]= false;
-        }
-        setCheckBoxNumber(tempArr);
+        setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
+        setDisplayAddToMenu(false);
     }
 
     // ------------ End of Selection Bar Functions ------------
@@ -452,7 +453,7 @@ export default function PlaylistOverviewPage() {
                         </div>
 
                         <div className="section-4 position-relative border">
-                            <button className="d-flex align-items-center">
+                            <button className="d-flex align-items-center"  onClick={() => removeSelectedSongs()}>
                                 <img src={DeselectIcon} />
                                 &nbsp;Remove
                             </button>

@@ -569,7 +569,57 @@ pub async fn remove_song_from_playlist(state: State<AppState, '_>, playlist_id: 
         i += 1;
     }
 
+    Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn remove_multiple_songs_from_playlist(state: State<AppState, '_>, playlist_id: i64, songs: Vec<SongTable>) -> Result<(), String> {
+
+    let mut test_string: String = "DELETE FROM playlist_tracks WHERE playlist_id = ".to_string();
     
+    let mut i = 0;
+    test_string.push_str(&playlist_id.to_string().as_str());
+    test_string.push_str(" AND track_id IN (");
+    for t in &songs {
+        test_string.push_str("'");
+        test_string.push_str(t.path.as_str());
+        test_string.push_str("'");
+        
+        i += 1;
+        if i != songs.len() {
+            test_string.push_str(", ");
+        }
+    }
+    test_string.push_str(")");
+
+    // Remove the songs
+    let _ = sqlx::query(&test_string.as_str())
+        .execute(&state.pool)
+        .await;
+
+    let res: Vec<SongTable> = sqlx::query_as::<_, SongTable>("    
+            SELECT s.name, s.path, s.album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist, s.track, s.disc_number, s.song_section
+            FROM playlist_tracks p 
+            INNER JOIN songs s ON s.path = p.track_id 
+            WHERE p.playlist_id = ?1 ORDER BY p.position ASC
+        ")
+        .bind(&playlist_id)
+        .fetch_all(&state.pool)
+        .await
+        .unwrap();
+
+    let mut j: i64 = 1;
+    for item in res {
+        let _ = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
+            .bind(&j)
+            .bind(&playlist_id)
+            .bind(&item.path)
+            .execute(&state.pool)
+            .await;
+        j += 1;
+    }
+
+
     Ok(())
 }
 

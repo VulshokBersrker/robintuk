@@ -144,7 +144,7 @@ export default function RightSideBar() {
                 <span>Scanning...</span>
             </div>
 
-            <ContextMenuSideBar
+            <ContextMenu
                 isToggled={contextMenu.isToggled}
                 playlist_id={contextMenu.playlist}
                 posX={contextMenu.posX}
@@ -165,7 +165,7 @@ type Props = {
     posY: number
 }
 
-function ContextMenuSideBar({ navigateToPlaylistOverview, isToggled, playlist_id, play, posX, posY }: Props) {
+function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play, posX, posY }: Props) {
 
     if(isToggled) {
         return(

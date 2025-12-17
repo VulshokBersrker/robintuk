@@ -296,13 +296,18 @@ export default function ArtistOverviewPage() {
                     {/* Song Selection Bar */}
                     <div className={`selection-popup-container grid-20 header-font ${albumSelection.length >= 1 ? "open" : "closed"}`}>
                         <div className="section-8">{albumSelection.length} item{albumSelection.length > 1 && <>s</>} selected</div>
-                        <button className="d-flex align-items-center" onClick={playSelectedAlbums}>
-                            <img src={PlayIcon} />
-                            &nbsp;Play
-                        </button>
+                        <div className="section-4">
+                            <button className="d-flex align-items-center" onClick={playSelectedAlbums}>
+                                <img src={PlayIcon} />
+                                &nbsp;Play
+                            </button>
+                        </div>                        
                         <div className="section-6 position-relative">
-                            <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
-                            {displayAddToMenu &&
+                            <button className="d-flex align-items-center"onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
+                                <img src={AddIcon} />
+                                &nbsp;Add to
+                            </button>
+                            {displayAddToMenu && albumSelection.length >= 1 &&
                                 <div className="playlist-list-container header-font">
                                     <div className="d-flex align-items-center" onClick={addToQueue}>
                                         <img src={QueueIcon} className="icon icon-size"/>
@@ -328,7 +333,7 @@ export default function ArtistOverviewPage() {
                                 </div>
                             }
                         </div>
-                        <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
+                        <span className="vertical-centered section-2 cursor-pointer" onClick={clearSelection}> <img src={CloseIcon} /></span>
                     </div>                    
                     {/* End of Song Selection Bar */}
 
@@ -351,7 +356,7 @@ export default function ArtistOverviewPage() {
                                             <img src={AddIcon} />
                                         </button>
                                         
-                                        {displayAddToMenu &&
+                                        {displayAddToMenu && albumSelection.length === 0 &&
                                             <div className="playlist-list-container add header-font">
                                                 <hr/>
                                                 <span className="playlist-input-container d-flex justify-content-center align-items-center">
@@ -398,7 +403,7 @@ export default function ArtistOverviewPage() {
                                             <input
                                                 type="checkbox"
                                                 id={`select-${index}`} name={`select-${index}`}
-                                                // onClick={(e) => editSelection(artistDetails.albums[index].album, e.currentTarget.checked, index)}
+                                                onClick={(e) => editSelection(artistDetails.albums[index].album, e.currentTarget.checked, index)}
                                                 checked={checkBoxNumber[index]} onChange={() => {}}
                                             />
                                         </span>

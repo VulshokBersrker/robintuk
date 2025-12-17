@@ -306,6 +306,7 @@ export default function MusicControls() {
                 const index: number = shuffledQueue.map(e => e.path).indexOf(songDetails!.path);
                 await invoke("player_update_queue_and_pos", { queue: shuffledQueue, index: index } );
                 saveShuffledQueue(shuffledQueue);
+                savePosition(index);
             }
         }
         catch(e) {

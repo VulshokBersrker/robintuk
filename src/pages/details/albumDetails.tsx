@@ -131,7 +131,6 @@ export default function AlbumOverviewPage() {
             await invoke('update_current_song_played', {path: albumList[index].path});
             saveQueue(albumList);
             savePosition(index);
-            localStorage.setItem("shuffle-queue", JSON.stringify([]));
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
@@ -182,11 +181,7 @@ export default function AlbumOverviewPage() {
 
     function clearSelection() {
         setSongSelection([]);
-        let tempArr: boolean[] = [];
-        for(let i = 0; i < checkBoxNumber.length; i++) {
-            tempArr[i]= false;
-        }
-        setCheckBoxNumber(tempArr);
+        setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
         setDisplayAddToMenu(false);
     }
 
@@ -203,23 +198,20 @@ export default function AlbumOverviewPage() {
 
     async function addToQueue() {
         try {
-            const q = localStorage.getItem("last-played-queue")
-            if(q !== null) {
-                const oldQ = JSON.parse(q);
-
-                await invoke('player_add_to_queue', {queue: songSelection});
-                const newQ = [...oldQ, songSelection];
-                localStorage.setItem("last-played-queue", JSON.stringify(newQ) );
+            setDisplayAddToMenu(false);
+            let songList: Songs[] = [];
+            for(let i = 0; i < songSelection.length; i++) {
+                const temp: Songs = await invoke<Songs>('get_song', {song_path: songSelection[i].path});
+                songList.push(temp);
             }
-            
+            clearSelection();
+            await invoke('add_to_queue', {songs: songList});
+            await invoke('player_add_to_queue', {queue: songList});
         }
         catch(e) {
             console.log(e);
         }
-        finally {
-            clearSelection();
-            resetContextMenu();
-        }
+        resetContextMenu();
     }
     
     async function addToPlaylist(name: string) {
@@ -271,10 +263,20 @@ export default function AlbumOverviewPage() {
 
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
         if(e.pageX < window.innerWidth / 2) {
-            setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 180});
+            }
         }
         else {
-            setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 180});
+            }
         }
     }
 
@@ -301,7 +303,10 @@ export default function AlbumOverviewPage() {
                         <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
                         <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
                         <div className="section-6 position-relative">
-                            <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
+                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
+                                <img src={AddIcon} />
+                                &nbsp;Add to
+                            </button>
                             {displayAddToMenu &&
                                 <div className="playlist-list-container header-font">
                                     <div className="d-flex align-items-center" onClick={addToQueue}>
@@ -552,7 +557,10 @@ export default function AlbumOverviewPage() {
                         <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
                         <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
                         <div className="section-6 position-relative">
-                            <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
+                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
+                                <img src={AddIcon} />
+                                &nbsp;Add to
+                            </button>
                             {displayAddToMenu && songSelection.length >= 1 &&
                                 <div className="playlist-list-container header-font">
                                     <div className="d-flex align-items-center" onClick={addToQueue}>

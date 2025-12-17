@@ -203,20 +203,21 @@ export async function playAlbum(album_name: string) {
 export async function playPlaylist(playlist_id: number) {
     try {
         const res: PlaylistFull = await invoke("get_playlist", {id: playlist_id});
-        // Load the music to be played and saved
-        await invoke('player_load_album', {queue: res.songs, index: 0});
-        await invoke('update_current_song_played', {path: res.songs[0].path});
-        await invoke('update_current_song_played');
-        saveQueue(res.songs);
-        savePosition(0);
+        if(res.songs.length !== 0) {
+            // Load the music to be played and saved
+            await invoke('player_load_album', {queue: res.songs, index: 0});
+            await invoke('update_current_song_played', {path: res.songs[0].path});
+            await invoke('update_current_song_played');
+            saveQueue(res.songs);
+            savePosition(0);
+
+            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+            await invoke("set_shuffle_mode", { mode: false });
+        }        
     }
     catch (err) {
         alert(`Failed to play song: ${err}`);
-    }
-    finally {
-        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-        await invoke("set_shuffle_mode", { mode: false });
-    }
+    } 
 }
 
 

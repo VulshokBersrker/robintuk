@@ -119,6 +119,7 @@ pub fn run() -> Result<(), String> {
             db::create_playlist,
             db::delete_playlist,
             db::remove_song_from_playlist,
+            db::remove_multiple_songs_from_playlist,
             db::add_playlist_cover, // Custom Playlist artwork
             // History Functions
             db::add_song_to_history,

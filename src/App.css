@@ -2171,12 +2171,6 @@ img.search-icon:hover {
       height: 110px;
     }
   }
-
-
-  .nav-scrollable .section-10 {
-    /* Never collapse the sidebar for wide screens */
-    padding: 0.2rem !important;
-  }
 }
 
 [data-simplebar] {
@@ -2507,77 +2501,11 @@ img.search-icon:hover {
 @media screen and (min-width: 320px) and (max-width: 765px) {
 
 
-  .nav-item {
-    padding-top: 0.2rem;
-    padding-bottom: 0.2rem;
-    padding-right: 1rem;
-    padding-left: 1rem;
-  }
-
-  .nav-item  .nav-link {
-    height: 3.2rem;
-  }
-
-  /* --------------------------- OPEN Side Navbar Styles ---------------------------*/
-
-  .side-navbar.open {
-    width: 100vw;
-    max-width: 100vw;
-    height: 100vh;
-    max-height: 100vh;
-    overflow-y: scroll;
-  }
-
-  .side-navbar.open  .nav-font {
-    font-size: 16px;
-  }
-
-  .side-navbar.open  span.bi {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2px;
-    margin-left: 0px;
-    width: 30px;
-    height: 30px;
-    /* Stops the icons from shrinking during animations */
-    min-height: 30px;
-    min-width: 30px;
-  }
-
-  /* Search Section */
-  .side-navbar.open  .search-bar input[type=text] {
-    text-indent: 28px;
-  }
-  .side-navbar.open  .search-icon {
-    position: absolute;
-    min-width: 50px;
-    transform: scale(0.8);
-    left: 10px;
-    top: -3px;
-  }
-
-  /* --------------------------- CLOSED Side Navbar Styles --------------------------- */
-
-  .side-navbar.closed {
-    width: 100vw;
-    max-width: 100vw;
-    max-height: 50px;
-  } 
 }
 /* styles for smaller iPads/Kindle */
 @media screen and (min-width: 766px) and (max-width: 838px) { 
 
-
-  .side-navbar.open  span.bi {
-    padding: 2px;
-    margin-left: 5px;
-    width: 30px;
-    height: 30px;
-    /* Stops the icons from shrinking during animations */
-    min-height: 30px;
-    min-width: 30px;
-  }    
+  
 }
 
 @media screen and (min-width: 1000px) {
@@ -2597,107 +2525,5 @@ img.search-icon:hover {
 /* 4K Resolutions - 3840x2160 */
 @media screen and (min-width: 3840px) {
 
-  /* Advanced styling for navbar open and closed settings */
-  /* Check if there are side-navbar closed tags */
-  #root:has(.side-navbar.closed) {
-    .content {
-      padding-left: 150px;
-    }
-  }
-  /* Check if there are side-navbar open tags */
-  #root:has(.side-navbar.open) {
-    .content {
-      padding-left: 480px;
-    }
-  }
-
-  .main-calendar-wrapper-compact {
-    max-height: 890px;
-  }
-
-  /* Menu Icon */
-  .section-menu-icon {
-    padding-top: 20px;
-    width: 50%;
-    padding-left: 0.8rem;
-  }
-  .menu-icon-container {
-    cursor: pointer;
-    width: 62px;
-    height: 62px;
-  }
-  .top-row {
-    min-height: 100px;
-  }
-
-  .nav-item  .nav-link {
-    height: 4rem;
-    padding-left: 0.7rem;
-  }
-
-  .icon-size {
-    transform: scale(1.5);
-  }
-  /* --------------------------- OPEN Side Navbar Styles ---------------------------*/
-
-  .side-navbar.open {
-    width: 420px;
-  }
-
-  .side-navbar.open  .nav-font {
-    font-size: 26px;
-    padding-left: 1.5rem;
-  }
-
-  .side-navbar.open  span.bi {
-    padding: 2px;
-    margin-left: 2px;
-    width: 32px;
-    height: 32px;
-    /* Stops the icons from shrinking during animations */
-    min-height: 32px;
-    min-width: 32px;
-  }
-
-  /* Search Section */
-  .side-navbar.open  .search-bar input[type=text] {
-    max-height: 100px;
-    padding-top: 12px;
-    padding-bottom: 11px;
-    font-size: 26px;
-    text-indent: 55px;
-  }
-  .side-navbar.open  .search-icon {
-    min-width: 60px;
-    transform: scale(1);
-    left: 16px;
-    top: 7px;
-  }
-
-  /* --------------------------- CLOSED Side Navbar Styles --------------------------- */
-
-  .side-navbar.closed {
-    width: 90px;
-    transition: 0.5s ease-in-out;
-  }
-
-  .side-navbar.closed  span.bi {
-    display: flex;
-    padding: 2px;
-    margin: 2px;
-    width: 32px;
-    height: 32px;
-  }
-
-    /* Search Section */
-
-  .side-navbar.closed  .search-bar {
-    max-height: 70px;
-  }
-  .side-navbar.closed  .search-icon {
-    min-width: 60px;
-    transform: scale(1);
-    left: 16px;
-    top: 7px;
-  }
+  
 }
