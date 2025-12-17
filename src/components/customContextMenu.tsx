@@ -150,13 +150,13 @@ export default function CustomContextMenu({
                     }
                 </li>
 
-                {context_type !== "playlist" && 
+                {!context_type.includes("playlist") || !context_type.includes("album_songs") && 
                     <li  className="d-flex align-items-center" onClick={NavigateToAlbum} >
                         <img src={AlbumIcon} />
                         &nbsp; Show Album
                     </li>
                 }
-                {context_type !== "artist" && 
+                {!context_type.includes("artist") || !context_type.includes("album_songs") && 
                     <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <img src={ArtistIcon} />
                         &nbsp; Show Artist

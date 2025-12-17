@@ -42,7 +42,7 @@ export default function AlbumPage({albums}: P) {
     const virtuoso = useRef<any>(null);
 
     const [loading, setLoading] = useState(true);
-    const [albumList, setAlbumList] = useState<AlbumDetails[]>(albums);
+    const [albumList] = useState<AlbumDetails[]>(albums);
     const [searchValue, setSearchValue] = useState<string>("");
 
     const [filteredAlbums, setFilteredAlbums] = useState<AlbumDetails[]>(albums);

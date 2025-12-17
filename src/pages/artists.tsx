@@ -25,7 +25,7 @@ export default function ArtistsPage({artists}: P) {
     const virtuoso = useRef<any>(null);
 
     const [loading, setLoading] = useState(true);
-    const [artistList, setArtistList] = useState<AllArtistResults[]>(artists);
+    const [artistList] = useState<AllArtistResults[]>(artists);
 
     const [filteredArtists, setFilteredArtists] = useState<AllArtistResults[]>(artists);
     const [searchValue, setSearchValue] = useState<string>("");

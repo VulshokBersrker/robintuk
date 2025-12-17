@@ -23,7 +23,7 @@ export default function SongPage({songs}: Props) {
     const virtuoso = useRef<any>(null);
 
     // const [loading, setLoading] = useState(false);
-    const [songList, setSongList] = useState<SongsFull[]>(songs);
+    const [songList] = useState<SongsFull[]>(songs);
     const [searchValue, setSearchValue] = useState<string>("");
 
     const [filteredSongs, setFilteredSongs] = useState<SongsFull[]>(songs);
@@ -88,9 +88,8 @@ export default function SongPage({songs}: Props) {
             // Update the music controls state somehow
             await invoke('player_load_album', {queue: arr, index: 0});
             await invoke('update_current_song_played', {path: arr[0].path});
-            await invoke('get_queue', {q: arr, index: 0});
             saveQueue(arr);
-            await invoke('create_stored_queue', { songs: arr, shuffled: false });
+            await invoke('create_queue', { songs: arr, shuffled: false });
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);

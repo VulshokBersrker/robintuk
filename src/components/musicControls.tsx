@@ -101,7 +101,7 @@ export default function MusicControls() {
         if(qPosition !== null) {
             try {
                 // Get the last played song, if exists
-                const queue = await invoke<Songs[]>("get_queue", {shuffled: shuffleMode});
+                const queue: Songs[] = await invoke<Songs[]>("get_queue", {shuffled: shuffleMode !== null ? true : false});
                 console.log(queue);
 
                 if(queue.length === 0) {

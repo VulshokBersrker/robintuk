@@ -301,12 +301,7 @@ export default function Home() {
                             {playHistory.map((item, i) => {
                                 return(
                                     <div key={i} className="album-link playlist">
-                                        <div className="album-image-container ">
-                                            <div className="play-album" onClick={() => playSong(i)}>
-                                                <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
-                                                <img src={Circle} className="circle"/>
-                                            </div>
-                                            
+                                        <div className="album-image-container ">                                            
                                             <div className="container"  onClick={() => navigate('/history')}>
                                                 <ImageWithFallBack image={item.cover} alt={item.name} image_type={"album"} />
                                             </div>

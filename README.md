@@ -45,7 +45,6 @@ Made with Tauri (React and Rust).
 - [ ] Song details modal
 - [ ] Smoother music progress bar
 - [ ] New default playlist icons
-- [ ] Add support for wav
 - [x] Custom context menu when right clicking on songs/albums
 - [x] Playlist functions (create, add, delete, rename, reorder)
 - [x] Queue page functions (clear, add to)
@@ -67,6 +66,7 @@ Made with Tauri (React and Rust).
 - [x] Organize albums by track number and disc number
 
 ### Future Version Features Planned
+- [ ] Add support for wav
 - [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page
 - [ ] Mini Player?
@@ -83,6 +83,7 @@ Made with Tauri (React and Rust).
 - [ ] Playback errors
 - [ ] Better error handling
 - [ ] Blank pages on route change while it grabs the data from the backend
+- [ ] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
 - [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
 - [x] Fix songs page search results formatting
 - [x] Albums displaying Disc 0 when metadata has no disc value

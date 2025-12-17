@@ -126,6 +126,7 @@ export default function AlbumOverviewPage() {
 
     // Load the song the user clicked on but also queue the entire album
     async function playSong(index: number) {
+        resetContextMenu();
         try {
             await invoke('player_load_album', {queue: albumList, index: index});
             await invoke('update_current_song_played', {path: albumList[index].path});
@@ -159,6 +160,7 @@ export default function AlbumOverviewPage() {
 
     // Selection Function
     function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
+        resetContextMenu();
         if(songSelection.length === 0) { setDisplayAddToMenu(false); }
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
@@ -215,6 +217,8 @@ export default function AlbumOverviewPage() {
     }
     
     async function addToPlaylist(name: string) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
         try {
             await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
         }
@@ -222,13 +226,13 @@ export default function AlbumOverviewPage() {
             console.log(e);
         }
         finally {
-            setDisplayAddToMenu(false);
             clearSelection();
-            resetContextMenu();
         }
     }
 
     async function createPlaylist(name: string) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
         try {
             await invoke('create_playlist', {name: name});
             await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
@@ -238,9 +242,7 @@ export default function AlbumOverviewPage() {
             console.log(e);
         }
         finally {
-            setDisplayAddToMenu(false);
             clearSelection();
-            resetContextMenu();
         }
     }
 
@@ -267,7 +269,7 @@ export default function AlbumOverviewPage() {
                 setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 180});
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 125});
             }
         }
         else {
@@ -275,7 +277,7 @@ export default function AlbumOverviewPage() {
                 setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 180});
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 125});
             }
         }
     }

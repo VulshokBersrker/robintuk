@@ -1,4 +1,4 @@
-import { Routes, Route, BrowserRouter, ScrollRestoration } from "react-router-dom";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
 import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
 import MusicControls from "./components/musicControls";
 import RightSideBar from "./components/rightSideBar";
@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 // Custom Components
-import { AlbumDetails, AllArtistResults, clearLocalStorage, DirectoryInfo, Songs, SongsFull } from "./globalValues";
+import { AlbumDetails, AllArtistResults, clearLocalStorage, DirectoryInfo, SongsFull } from "./globalValues";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
@@ -27,15 +27,12 @@ import Home from "./pages/home";
 function App() {
 
   const [songList, setSongList] = useState<any[]>([]);
-  const [homeSongs, setHomeSongs] = useState<Songs[]>([]);
+  // const [homeSongs, setHomeSongs] = useState<Songs[]>([]);
 
   const [albumList, setAlbumList] = useState<AlbumDetails[]>([]);
-  const [homeAlbums, setHomeAlbums] = useState<AlbumDetails[]>([]);
+  // const [homeAlbums, setHomeAlbums] = useState<AlbumDetails[]>([]);
 
   const [artistList, setArtistList] = useState<AllArtistResults[]>([]);
-
-  const [loading, setLoading] = useState<boolean>(true);
-
 
   useEffect(() => {
     const selectedTheme = localStorage.getItem('theme');
@@ -72,8 +69,6 @@ function App() {
 
   async function getValues() {
     try {
-      // console.log("Loading Start");
-      setLoading(true);
       getSongs();
       getAlbums();
       getArtists();
@@ -82,20 +77,16 @@ function App() {
     catch(e) {
       alert(`Failed to scan folder: ${e}`);
     }
-    finally {
-      // console.log("Loading End");
-      setLoading(false);
-    }
   }
 
   async function getSongs() {
     try {
       const song_list: SongsFull[] = await invoke<SongsFull[]>('get_all_songs');
 
-      const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 30 } );
+      // const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 30 } );
 
       setSongList(song_list);
-      setHomeSongs(list);
+      // setHomeSongs(list);
   }
     catch (err) {
       alert(`Failed to scan folder: ${err}`);
@@ -108,8 +99,8 @@ function App() {
       const list = await invoke<AlbumDetails[]>('get_all_albums');
       setAlbumList(list);
 
-      const list_limited: AlbumDetails[] = await invoke<AlbumDetails[]>('get_albums_with_limit', { limit: 30 } );
-      setHomeAlbums(list_limited);
+      // const list_limited: AlbumDetails[] = await invoke<AlbumDetails[]>('get_albums_with_limit', { limit: 30 } );
+      // setHomeAlbums(list_limited);
         
     }
     catch (err) {
@@ -132,7 +123,7 @@ function App() {
 
   return(
     <div 
-      onContextMenu={(e) => { e.preventDefault(); }}
+      // onContextMenu={(e) => { e.preventDefault(); }}
     >
       <BrowserRouter>
         <CustomWindowsBar />
