@@ -1,6 +1,6 @@
 [package]
 name = "robintuk_player"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -33,6 +33,7 @@ uuid = { version = "1.18.1", features = ["v4"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-cache = "0.1.5"
 tauri-plugin-store = "2"
+tauri-plugin-prevent-default = "4"
 rodio = {version="0.21.1", features = [ "symphonia-all"] }
 serde_with = "3.15.1"
 

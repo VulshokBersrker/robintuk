@@ -636,10 +636,17 @@ export default function PlaylistOverviewPage() {
                                 </span>
                                 
                                 <div className="section-15 d-flex album-commmands">
-                                    <span><button className="font-1 borderless" disabled ><img src={PlayIcon} className=""    /></button></span>
-                                    <span><button className="font-1 borderless" disabled ><img src={ShuffleIcon} className="" /></button></span>
+                                    <span><button className="font-1 borderless" disabled ><img src={PlayIcon} /></button></span>
+                                    <span><button className="font-1 borderless" disabled ><img src={ShuffleIcon} /></button></span>
                                     <span><button className="font-1 borderless" onClick={() => setEditPlaylist(!editPlaylist)}><img src={EditIcon} /></button></span>
-                                    <span><button className="font-1 borderless" onClick={() => {}}><img src={DeleteIcon} /></button></span>
+                                    <span>
+                                        <button
+                                            className={`font-1 borderless red ${editPlaylist ? "" : "display-none"}`}
+                                            onClick={deletePlaylist}
+                                        >
+                                            <img src={DeleteIcon} />
+                                        </button>
+                                    </span>
                                 </div>
                             </span>
                         </div>

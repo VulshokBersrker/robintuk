@@ -406,7 +406,7 @@ pub async fn get_artist(state: State<AppState, '_>, name: String) -> Result<Song
 #[tauri::command]
 pub async fn get_all_playlists(state: State<AppState, '_>) -> Result<Vec<PlaylistTable>, String> {
 
-    let temp = sqlx::query_as::<_, PlaylistTable>("SELECT * FROM playlists;")
+    let temp = sqlx::query_as::<_, PlaylistTable>("SELECT * FROM playlists ORDER BY name")
         .fetch_all(&state.pool)
         .await
         .unwrap();
@@ -443,7 +443,7 @@ pub async fn get_playlist(state: State<AppState, '_>, id: i64) -> Result<Playlis
 pub async fn get_playlists_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<PlaylistTable>, String> {
 
     let temp: Vec<PlaylistTable> = sqlx::query_as::<_, PlaylistTable>(
-        "SELECT * FROM playlists ORDER BY name ASC LIMIT $1")
+        "SELECT * FROM playlists ORDER BY name ASC LIMIT $1 ORDER BY name")
         .bind(limit)
         .fetch_all(&state.pool)
         .await

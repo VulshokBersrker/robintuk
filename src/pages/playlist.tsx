@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 
 // Custom Components
-import { saveQueue, Songs, savePosition, Playlists } from "../globalValues.js";
+import { saveQueue, savePosition, Playlists, PlaylistFull } from "../globalValues.js";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -53,16 +53,18 @@ export default function PlaylistPage() {
         navigate("/playlists/overview", {state: {name: name}});
     }
 
-    async function playPlaylist(album_name: string) {
+    async function playPlaylist(playlist_id: number) {
         try {
-            const playlistRes: Songs[] = await invoke('get_album', { name: album_name });
-            console.log(playlistRes);
-            // Load the music to be played and saved
-            await invoke('player_load_album', {queue: playlistRes, index: 0});
-            await invoke('update_current_song_played');
-            saveQueue(playlistRes);
-            savePosition(0);
-            await invoke('create_queue', { songs: playlistRes });
+            const playlistRes: PlaylistFull = await invoke<PlaylistFull>('get_playlist', { id: playlist_id });
+            if(playlistRes.songs.length !== 0) {
+                console.log(playlistRes);
+                // Load the music to be played and saved
+                await invoke('player_load_album', {queue: playlistRes.songs, index: 0});
+                await invoke('update_current_song_played');
+                saveQueue(playlistRes.songs);
+                savePosition(0);
+                await invoke('create_queue', { songs: playlistRes.songs });
+            }            
         }
         catch(e) {
             console.log(e);
@@ -121,7 +123,7 @@ export default function PlaylistPage() {
                     return(
                         <div key={i} className="album-link playlist">
                             <div className="album-image-container playlist">
-                                <div className="play-album" onClick={() => playPlaylist(item.name)} >
+                                <div className="play-album" onClick={() => playPlaylist(item.id)} >
                                     <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                     <img src={Circle} className="circle"/>
                                 </div>

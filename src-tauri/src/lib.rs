@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
 use sqlx::{Pool, Sqlite};
+use tauri_plugin_prevent_default::Flags;
 use tokio::runtime::Runtime;
 use walkdir::WalkDir;
 use tauri::{Builder, Manager, Emitter};
@@ -58,6 +59,7 @@ pub fn run() -> Result<(), String> {
         .plugin(tauri_plugin_cache::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build())
         .setup(|app: &mut tauri::App| {
             
             app.manage(AppState { player, pool });

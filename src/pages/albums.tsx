@@ -133,10 +133,20 @@ export default function AlbumPage({albums}: P) {
 
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
         if(e.pageX < window.innerWidth / 2) {
-            setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 340});
+            }
         }
         else {
-            setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 340});
+            }
         }
     }
 
