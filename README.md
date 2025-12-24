@@ -1,11 +1,8 @@
 <div align="center">
-    <img src="./assets/logo_full.png" height="130px" alt="Robintuk Logo" title="Robintuk" />
+<img src="./assets/logo_full.png" height="130px" alt="Robintuk Logo" title="Robintuk" />
 <br>
 
-
-# Robintuk
-
-A beautiful and colorful music player for **Windows**.
+### A beautiful and colorful music player for **Windows**.
 
 </div>
 
@@ -68,6 +65,8 @@ Made with Tauri (React and Rust).
 - [x] Organize albums by track number and disc number
 
 ### Future Version Features Planned
+- [ ] Auto-Remove album/playlist artwork when respective things are removed from app
+- [ ] Gapless playback
 - [ ] Add support for wav
 - [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page

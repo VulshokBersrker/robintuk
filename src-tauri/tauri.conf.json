@@ -17,7 +17,8 @@
         "height": 950,
         "decorations": false,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "label": "main"
       }
     ],
     "security": {
@@ -41,7 +42,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis", "msi", "rpm", "appimage", "deb"],
     "category": "Music",
     "copyright": "copyright",    
     "shortDescription": "A beautiful music player made with Tauri and React",
@@ -69,14 +70,24 @@
       "signCommand": null,
       "tsp": false,
       "nsis": {
-        "installerIcon": "icons/app-icon.ico"
+        "installerIcon": "icons/app-icon.ico",
+        "headerImage": "icons/app-icon.ico",
+        "sidebarImage": "icons/app-icon.ico"
       },
       "webviewInstallMode": {
         "silent": true,
         "type": "offlineInstaller"
       },
       "wix": {
-        "language": "en-US"
+        "language": "en-US",
+        "dialogImagePath": "wix/dialogImage.jpg",
+        "bannerPath": "wix/bannerImage.jpg"
+      }
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true,
+        "files": {}
       }
     }
   },  
