@@ -40,12 +40,13 @@ Made with Tauri (React and Rust).
 
 ## Features to Be Added for V1.0
 
-- [ ] Installer Wizard
+- [ ] Custom icon for installer
 - [ ] Create a Genre section
 - [ ] Song details modal
 - [ ] Smoother music progress bar
 - [ ] New default playlist icons
-- [ ] Improve Context Menu
+- [ ] Improved Context Menu
+- [x] Installer Wizard
 - [x] Custom context menu when right clicking on songs/albums
 - [x] Playlist functions (create, add, delete, rename, reorder)
 - [x] Queue page functions (clear, add to)
@@ -87,7 +88,7 @@ Made with Tauri (React and Rust).
 - [ ] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
 - [ ] Cancelling changing playlist cover art will remove any current artwork until the page is reloaded
 - [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
-- [ ] Add music to playlist not working on home, album overview, ,songs, or artist overview pages with "Add To" or context menu
+- [x] Add music to playlist not working on home, album overview, ,songs, or artist overview pages with "Add To" or context menu
 - [x] Fix songs page search results formatting
 - [x] Albums displaying Disc 0 when metadata has no disc value
 - [x] Protections on adding child directories to scan music

@@ -66,7 +66,7 @@ type Props = {
     name: string,
     playlistList: PlaylistList[],
     createPlaylist: (name: string) => void,
-    addToPlaylist: (name: string) => void
+    addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
     ref: any
 }
@@ -136,16 +136,17 @@ export default function CustomContextMenu({
                                 />
                                 <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                             </span>
-                            
-                            {playlistList?.map((playlist) => {
-                                if(playlist.name !== name) {
-                                    return(
-                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                            {playlist.name}
-                                        </div>
-                                    );
-                                }                                            
-                            })}
+                            <div className="add-playlist-container">
+                                {playlistList?.map((playlist) => {
+                                    if(playlist.name !== name) {
+                                        return(
+                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.id, song)}>
+                                                {playlist.name}
+                                            </div>
+                                        );
+                                    }                                            
+                                })}
+                            </div>
                         </div>
                     }
                 </li>

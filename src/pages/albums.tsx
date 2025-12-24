@@ -137,7 +137,7 @@ export default function AlbumPage({albums}: P) {
                 setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 340});
+                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 215});
             }
         }
         else {
@@ -145,7 +145,7 @@ export default function AlbumPage({albums}: P) {
                 setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 340});
+                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 215});
             }
         }
     }
@@ -215,7 +215,7 @@ export default function AlbumPage({albums}: P) {
         resetContextMenu();
     }
     
-    async function addToPlaylist(name: string) {
+    async function addToPlaylist(id: number) {
         try {
             setDisplayAddToMenu(false);
             let songList: Songs[] = [];
@@ -224,7 +224,7 @@ export default function AlbumPage({albums}: P) {
                 songList.push(...temp);
             }
             clearSelection();
-            await invoke('add_to_playlist', {songs: songList, playlist_name: name});
+            await invoke('add_to_playlist', {songs: songList, playlist_id: id});
         }
         catch(e) {
             console.log(e);
@@ -361,7 +361,7 @@ export default function AlbumPage({albums}: P) {
                                 
                                 {playlistList?.map((playlist) => {
                                     return(
-                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
                                             {playlist.name}
                                         </div>
                                     );
@@ -523,10 +523,10 @@ function ContextMenu({
         }
     }
     
-    async function addToPlaylist(name: string) {
+    async function addToPlaylist(id: number) {
         try {
             const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album});
-            await invoke('add_to_playlist', {songs: album_songs, playlist_name: name});
+            await invoke('add_to_playlist', {songs: album_songs, playlist_id: id});
         }
         catch(e) {
             console.log(e);
@@ -583,7 +583,7 @@ function ContextMenu({
                     </span>
                     {displayAddMenu &&
                         <div className="playlist-list-container add-context-menu header-font">
-                            <div className="d-flex align-items-center" onClick={addToQueue}>
+                            <div className="item d-flex align-items-center" onClick={addToQueue}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
                             <hr/>
@@ -596,15 +596,17 @@ function ContextMenu({
                                 <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                             </span>
                             
-                            {playlistList?.map((playlist) => {
-                                if(playlist.name !== name) {
-                                    return(
-                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                            {playlist.name}
-                                        </div>
-                                    );
-                                }                                            
-                            })}
+                            <div className="add-playlist-container">
+                                {playlistList?.map((playlist) => {
+                                    if(playlist.name !== name) {
+                                        return(
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
+                                                {playlist.name}
+                                            </div>
+                                        );
+                                    }                                            
+                                })}
+                            </div>
                         </div>
                     }
                 </li>

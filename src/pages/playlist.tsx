@@ -1,7 +1,7 @@
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 
 // Custom Components
@@ -9,14 +9,11 @@ import { saveQueue, savePosition, Playlists, PlaylistFull } from "../globalValue
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
+import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
 import PlayIcon from '../images/play-solid-full.svg';
 import PlusIcon from '../images/plus-solid-full.svg';
 import Circle from '../images/circle.svg';
 import CloseIcon from '../images/x.svg';
-
-type NewPlaylistList = {
-    playlist: Playlists[]
-}
 
 export default function PlaylistPage() {
 
@@ -24,6 +21,9 @@ export default function PlaylistPage() {
     const [playlistList, setPlaylistList] = useState<Playlists[]>([]);
     const [displayCreate, setDisplayCreate] = useState<boolean>(false);
     const [newPlaylistName, setNewPlaylistName] = useState<string>("");
+
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, playlist: 0, posX: 0, posY: 0 });
+    const isContextMenuOpen = useRef<any>(null);
 
     async function getAlbums() {
         try {
@@ -37,12 +37,23 @@ export default function PlaylistPage() {
 
     useEffect(() => {
         getAlbums();
+
+        const handler = (e: any) => {
+            if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
+                resetContextMenu();
+            }
+        }
+        document.addEventListener('mousedown', handler);
+        
+        return () => {
+            document.removeEventListener('mousedown', handler);
+        }
     }, []);
 
     // Just for listeners
     useEffect(() => {
         // Load the new playlist from the backend
-        const unlisten_get_playlists= listen<NewPlaylistList>("new-playlist-created", (event) => { console.log(event.payload.playlist); setPlaylistList(event.payload.playlist); });
+        const unlisten_get_playlists= listen<{playlist: Playlists[]}>("new-playlist-created", (event) => { console.log(event.payload.playlist); setPlaylistList(event.payload.playlist); });
         
         return () => {
             unlisten_get_playlists.then(f => f());
@@ -54,16 +65,16 @@ export default function PlaylistPage() {
     }
 
     async function playPlaylist(playlist_id: number) {
+        resetContextMenu();
         try {
             const playlistRes: PlaylistFull = await invoke<PlaylistFull>('get_playlist', { id: playlist_id });
             if(playlistRes.songs.length !== 0) {
-                console.log(playlistRes);
                 // Load the music to be played and saved
                 await invoke('player_load_album', {queue: playlistRes.songs, index: 0});
                 await invoke('update_current_song_played');
                 saveQueue(playlistRes.songs);
                 savePosition(0);
-                await invoke('create_queue', { songs: playlistRes.songs });
+                await invoke('create_queue', { songs: playlistRes.songs, shuffled: false });
             }            
         }
         catch(e) {
@@ -72,6 +83,7 @@ export default function PlaylistPage() {
     }
 
     async function createPlaylist(name: string) {
+        resetContextMenu();
         try {
             await invoke('create_playlist', {name: name});
             await invoke('new_playlist_added');
@@ -83,6 +95,19 @@ export default function PlaylistPage() {
             setDisplayCreate(false);
             setNewPlaylistName("");
         }
+    }
+
+    function handleContextMenu(e: any, playlist: number) {
+        if(e.pageX < window.innerWidth / 2) {
+            setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY });
+        }
+        else {
+            setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX - 120, posY: e.pageY });
+        }
+    }
+
+    function resetContextMenu() {
+        setContextMenu({ isToggled: false, playlist: 0, posX: 0, posY: 0});
     }
 
     return(
@@ -121,7 +146,14 @@ export default function PlaylistPage() {
             <div className="d-flex flex-wrap" style={{marginTop: '10px'}}>
                 {playlistList.map((item, i) => {
                     return(
-                        <div key={i} className="album-link playlist">
+                        <div
+                            key={i}
+                            className="album-link playlist"
+                            onContextMenu={(e) => {
+                                e.preventDefault();
+                                handleContextMenu(e, item.id);
+                            }}
+                        >
                             <div className="album-image-container playlist">
                                 <div className="play-album" onClick={() => playPlaylist(item.id)} >
                                     <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
@@ -142,6 +174,52 @@ export default function PlaylistPage() {
                 })}
             </div>
             <div className="empty-space" />
+
+            <ContextMenu
+                isToggled={contextMenu.isToggled}
+                playlist_id={contextMenu.playlist}
+                posX={contextMenu.posX}
+                posY={contextMenu.posY}
+                play={playPlaylist}
+                navigateToPlaylistOverview={navigateToPlaylistOverview}
+                ref={isContextMenuOpen}
+            />
         </ SimpleBar>
     );
+}
+
+
+type Props = {
+    navigateToPlaylistOverview: (name: number) => void,
+    isToggled: boolean,
+    playlist_id: number,
+    play: (album_name: number) => void, // playSong / playAlbum function
+    posX: number,
+    posY: number,
+    ref: any
+}
+
+function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play, posX, posY, ref }: Props) {
+
+    if(isToggled) {
+        return(
+            <div 
+                className="context-menu-container header-font font-1"
+                style={{ position: "fixed", left: `${posX}px`, top: `${posY}px`}}
+                onContextMenu={(e) => {  e.preventDefault(); }}
+                ref={ref}
+            >
+                <li onClick={() => {play(playlist_id)}} className="d-flex align-items-center">
+                    <img src={PlayIcon} />
+                    &nbsp; Play
+                </li>
+
+                <li className="d-flex align-items-center" onClick={() => navigateToPlaylistOverview(playlist_id)} >
+                    <img src={AlbumIcon} />
+                    &nbsp; View
+                </li>                
+            </div>
+        );
+    }
+    else { return; }
 }

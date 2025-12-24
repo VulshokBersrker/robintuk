@@ -1646,14 +1646,26 @@ button img {
 }
 .playlist-list-container.add {
   top: 50%;
-  transform: translate(-43%, 15%);
+  transform: translate(-43%, 8%);
   left: 100px;
 }
 
 .playlist-list-container.add-context-menu {
   top: 50%;
-  transform: translate(-43%, -8%);
+  transform: translate(-43%, -68.4%);
   left: 270px;
+}
+
+.add-playlist-container {
+  margin-top: 8px;
+  max-height: 230px;
+  overflow-y: auto;
+  /* Scrollbar Styles */
+  overflow-y: auto;
+  scrollbar-color: var(--scrollbar-color);
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
 }
 
 .playlist-list-container hr {
@@ -1665,14 +1677,14 @@ button img {
   border: 0;
 }
 
-.playlist-list-container div {
+.playlist-list-container .item {
   margin: 0;
   margin-top: 5px;
   margin-bottom: 5px;
   padding: 8px 8px 8px 8px;
   transition: 0.1s ease-in-out;
 }
-.playlist-list-container div:hover {
+.playlist-list-container .item:hover {
   background-color: var(--gradient-one);
   border-radius: var(--border-radius);
   transition: 0.1s ease-in-out;
@@ -2058,8 +2070,6 @@ option:hover, option:active {
   padding: 0px 5px 10px 5px;
   border-radius: var(--border-radius);
 }
-
-
 .context-menu-container li {
   list-style: none;
   margin: 0;
@@ -2071,14 +2081,12 @@ option:hover, option:active {
   height: 20px;
   width: 20px;
 }
-
 .context-menu-container li:hover {
   cursor: pointer;
   background-color: var(--gradient-one);
   border-radius: var(--border-radius);
   transition: 0.1s ease-in-out;
 }
-
 .context-menu-container hr {
   background-color: var(--font-color-three);
   opacity: 1;

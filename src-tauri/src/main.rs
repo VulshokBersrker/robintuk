@@ -2,6 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() -> Result<(), String> {
-    robintuk_player_lib::run();
+    let _ = robintuk_player_lib::run();
     Ok(())
 }

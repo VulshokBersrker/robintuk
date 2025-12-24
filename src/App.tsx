@@ -120,7 +120,6 @@ function App() {
     }
   }
 
-
   return(
     <div 
       onContextMenu={(e) => { e.preventDefault(); }}
@@ -144,11 +143,9 @@ function App() {
             <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
           </Routes>
         </div>
-      </BrowserRouter>
-      
+      </BrowserRouter>      
     </div>
   );
 }
 
 export default App;
-

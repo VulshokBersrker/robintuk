@@ -466,16 +466,11 @@ pub async fn create_playlist(state: State<AppState, '_>, name: String) -> Result
 
 // Add songs to a playlist  ---------------------- NEEDS WORK
 #[tauri::command(rename_all = "snake_case")]
-pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, playlist_name: String) -> Result<(), String> {
-
-    let id: (i64,) = sqlx::query_as("SELECT id FROM playlists WHERE name=$1;")
-        .bind(&playlist_name)
-        .fetch_one(&state.pool)
-        .await.unwrap();
+pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, playlist_id: i64) -> Result<(), String> {
 
     // Get the last position of the playlist from the list
     let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM playlist_tracks WHERE playlist_id=$1;")
-        .bind(&id.0)
+        .bind(&playlist_id)
         .fetch_one(&state.pool)
         .await.unwrap();
 
@@ -485,7 +480,7 @@ pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, 
         let _ = sqlx::query("INSERT INTO playlist_tracks
             (playlist_id, track_id, position) 
             VALUES (?1, ?2, ?3)")
-            .bind(&id.0)
+            .bind(&playlist_id)
             .bind(&song.path)
             .bind(&i)
             .execute(&state.pool).await;

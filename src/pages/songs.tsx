@@ -126,10 +126,10 @@ export default function SongPage({songs}: Props) {
         resetContextMenu();
     }
     
-    async function addToPlaylist(name: string) {
+    async function addSelectedToPlaylist(id: number) {
         try {
             setDisplayAddToMenu(false);
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
         }
         catch(e) {
             console.log(e);
@@ -139,6 +139,21 @@ export default function SongPage({songs}: Props) {
             clearSelection();
         }
         resetContextMenu();
+    }
+
+    async function addToPlaylist(id: number, song: Songs) {
+        try {
+            setDisplayAddToMenu(false);
+            resetContextMenu();
+            const arr: Songs[] = [song];            
+            await invoke('add_to_playlist', {songs: arr, playlist_id: id});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {            
+            clearSelection();
+        }        
     }
 
     async function createPlaylist(name: string) {
@@ -278,7 +293,7 @@ export default function SongPage({songs}: Props) {
                                     
                                     {playlistList?.map((playlist) => {
                                         return(
-                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
                                                 {playlist.name}
                                             </div>
                                         );

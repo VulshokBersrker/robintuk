@@ -216,11 +216,40 @@ export default function AlbumOverviewPage() {
         resetContextMenu();
     }
     
-    async function addToPlaylist(name: string) {
+    async function addToPlaylistContextMenu(id: number, song: Songs) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
+        try {            
+            const arr: Songs[] = [song];            
+            await invoke('add_to_playlist', {songs: arr, playlist_id: id});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            clearSelection();
+        }        
+    }
+
+    async function addAlbumToPlaylist(id: number) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
+        try { 
+            await invoke('add_to_playlist', {songs: albumList, playlist_id: id});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            clearSelection();
+        }        
+    }
+
+    async function addSelectedToPlaylist(id: number) {
         setDisplayAddToMenu(false);
         resetContextMenu();
         try {
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
         }
         catch(e) {
             console.log(e);
@@ -327,7 +356,7 @@ export default function AlbumOverviewPage() {
                                     
                                     {playlistList?.map((playlist) => {
                                         return(
-                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
                                                 {playlist.name}
                                             </div>
                                         );
@@ -366,27 +395,29 @@ export default function AlbumOverviewPage() {
 
                                             {displayAddToMenu && songSelection.length === 0 &&
                                                 <div className="playlist-list-container add header-font">
-                                                    <div className="d-flex align-items-center" onClick={addToQueue}>
-                                                        <img src={QueueIcon} className="icon-size"/>
-                                                        <span>&nbsp;Queue</span>
+                                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
+                                                        <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                                     </div>
                                                     <hr/>
                                                     <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                                         <input
-                                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
                                                             className="new-playlist" value={newPlaylistName}
                                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                                         />
                                                         <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                                                     </span>
                                                     
-                                                    {playlistList?.map((playlist) => {
-                                                        return(
-                                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                                                {playlist.name}
-                                                            </div>
-                                                        );
-                                                    })}
+                                                    <div className="add-playlist-container">
+                                                        {playlistList?.map((playlist) => {
+                                                            return(
+                                                                <div className="item" key={playlist.name} onClick={() => addAlbumToPlaylist(playlist.id)}>
+                                                                    {playlist.name}
+                                                                </div>
+                                                            );
+                                                                                                     
+                                                        })}
+                                                    </div>
                                                 </div>
                                             }
                                         </span>
@@ -523,7 +554,6 @@ export default function AlbumOverviewPage() {
                         />
                     </div>
                     
-                    
                     <CustomContextMenu
                         isToggled={contextMenu.isToggled}
                         context_type={contextMenu.context_type}
@@ -539,7 +569,7 @@ export default function AlbumOverviewPage() {
                         playlistList={playlistList}
                         name={""}
                         createPlaylist={createPlaylist} 
-                        addToPlaylist={addToPlaylist} 
+                        addToPlaylist={addToPlaylistContextMenu} 
                         addToQueue={addToQueue}
                         ref={isContextMenuOpen}
                     />
@@ -581,7 +611,7 @@ export default function AlbumOverviewPage() {
                                     
                                     {playlistList?.map((playlist) => {
                                         return(
-                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
                                                 {playlist.name}
                                             </div>
                                         );
@@ -620,27 +650,29 @@ export default function AlbumOverviewPage() {
 
                                             {displayAddToMenu && songSelection.length === 0 &&
                                                 <div className="playlist-list-container add header-font">
-                                                    <div className="d-flex align-items-center" onClick={addToQueue}>
-                                                        <img src={QueueIcon} className="icon-size"/>
-                                                        <span>&nbsp;Queue</span>
+                                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
+                                                        <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                                     </div>
                                                     <hr/>
                                                     <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                                         <input
-                                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
                                                             className="new-playlist" value={newPlaylistName}
                                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                                         />
                                                         <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                                                     </span>
                                                     
-                                                    {playlistList?.map((playlist) => {
-                                                        return(
-                                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                                                {playlist.name}
-                                                            </div>
-                                                        );
-                                                    })}
+                                                    <div className="add-playlist-container">
+                                                        {playlistList?.map((playlist) => {
+                                                            return(
+                                                                <div className="item" key={playlist.name} onClick={() => addAlbumToPlaylist(playlist.id)}>
+                                                                    {playlist.name}
+                                                                </div>
+                                                            );
+                                                                                                     
+                                                        })}
+                                                    </div>
                                                 </div>
                                             }
                                         </span>
@@ -715,7 +747,7 @@ export default function AlbumOverviewPage() {
                         name={""} 
                         playlistList={playlistList} 
                         createPlaylist={createPlaylist}
-                        addToPlaylist={addToPlaylist}
+                        addToPlaylist={addToPlaylistContextMenu}
                         addToQueue={addToQueue}
                         ref={isContextMenuOpen}                    
                     />
