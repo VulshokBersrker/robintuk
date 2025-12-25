@@ -109,8 +109,9 @@ export default function SongPage({songs}: Props) {
     }, []);
 
     async function addToQueue() {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
         try {
-            setDisplayAddToMenu(false);
             let songList: Songs[] = [];
             for(let i = 0; i < songSelection.length; i++) {
                 const temp: Songs = await invoke<Songs>('get_song', {song_path: songSelection[i].path});
@@ -123,12 +124,12 @@ export default function SongPage({songs}: Props) {
         catch(e) {
             console.log(e);
         }
-        resetContextMenu();
     }
     
     async function addSelectedToPlaylist(id: number) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
         try {
-            setDisplayAddToMenu(false);
             await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
         }
         catch(e) {
@@ -138,13 +139,12 @@ export default function SongPage({songs}: Props) {
             
             clearSelection();
         }
-        resetContextMenu();
     }
 
     async function addToPlaylist(id: number, song: Songs) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
         try {
-            setDisplayAddToMenu(false);
-            resetContextMenu();
             const arr: Songs[] = [song];            
             await invoke('add_to_playlist', {songs: arr, playlist_id: id});
         }
@@ -157,20 +157,18 @@ export default function SongPage({songs}: Props) {
     }
 
     async function createPlaylist(name: string) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
-            setDisplayAddToMenu(false);
-            await invoke('create_playlist', {name: name});
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
             await invoke('new_playlist_added');
         }
         catch(e) {
             console.log(e);
         }
-        finally {
-            
+        finally {            
             clearSelection();
-        }
-        resetContextMenu();
+        }        
     }
 
     async function getAllPlaylists() {

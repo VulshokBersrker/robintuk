@@ -204,6 +204,7 @@ export default function PlaylistOverviewPage() {
     }
 
     async function removeSong(index: number) {
+        resetContextMenu();
         try {
             let temp: Songs[] = playlist;
             temp = playlist.filter((song) => song.path !== playlist[index].path)
@@ -212,10 +213,10 @@ export default function PlaylistOverviewPage() {
         }
         catch (err) {
             alert(`Failed remove song from playlist: ${err}`);
-        }
-        resetContextMenu();
+        }        
     }
     async function removeSelectedSongs() {
+        resetContextMenu();
         try {
             const selection = songSelection;
             clearSelection();

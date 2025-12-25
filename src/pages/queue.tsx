@@ -17,7 +17,6 @@ import ArrowBackIcon from '../images/arrow-left.svg';
 import PlusIcon from '../images/plus-solid-full.svg'
 import CloseIcon from '../images/x.svg';
 
-
 export default function QueueOverviewPage() {
 
     const navigate = useNavigate();
@@ -115,9 +114,7 @@ export default function QueueOverviewPage() {
         }
     }
 
-
     // ------------ Selection Bar Functions ------------
-    // Selection Function
     function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
@@ -126,7 +123,6 @@ export default function QueueOverviewPage() {
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = true;
             setCheckBoxNumber(tempArr);
-
         }
         // If we are removing a song from the array
         else {
@@ -140,11 +136,7 @@ export default function QueueOverviewPage() {
 
     function clearSelection() {
         setSongSelection([]);
-        let tempArr: boolean[] = [];
-        for(let i = 0; i < checkBoxNumber.length; i++) {
-            tempArr[i]= false;
-        }
-        setCheckBoxNumber(tempArr);
+        setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
     }
 
     useEffect(() => {
@@ -157,31 +149,49 @@ export default function QueueOverviewPage() {
         fetchData();        
     }, []);
     
-    async function addToPlaylist(name: string) {
+    async function addToPlaylist(id: number) {
+        setDisplayAddToMenu(false);
         try {
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('add_to_playlist', {songs: queue, playlist_id: id});
+            clearSelection();
         }
         catch(e) {
             console.log(e);
         }
-        finally {
-            setDisplayAddToMenu(false);
-            clearSelection();
-        }
     }
 
     async function createPlaylist(name: string) {
+        setDisplayAddToMenu(false);        
         try {
-            await invoke('create_playlist', {name: name});
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('create_playlist', {name: name, songs: queue, songs_to_add: true});
+            clearSelection();
             await invoke('new_playlist_added');
         }
         catch(e) {
             console.log(e);
         }
-        finally {
-            setDisplayAddToMenu(false);
+    }
+
+    async function addSelectedToPlaylist(id: number) {
+        setDisplayAddToMenu(false);
+        try {
+            await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
             clearSelection();
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
+    async function createSelectedPlaylist(name: string) {
+        setDisplayAddToMenu(false);        
+        try {
+            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
+            clearSelection();
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
         }
     }
 
@@ -224,24 +234,26 @@ export default function QueueOverviewPage() {
                         <div className="section-6 position-relative">
                             <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
                             {displayAddToMenu && songSelection.length >= 1 &&
-                                <div className="playlist-list-container header-font">
+                                <div className="playlist-list-container add-context-menu header-font">
                                     <hr/>
                                     <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                         <input
-                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
                                             className="new-playlist" value={newPlaylistName}
                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                         />
-                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                        <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
                                     </span>
                                     
-                                    {playlistList?.map((playlist) => {
-                                        return(
-                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                                {playlist.name}
-                                            </div>
-                                        );
-                                    })}
+                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
+                                        {playlistList?.map((playlist) => {
+                                            return(
+                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
+                                                    {playlist.name}
+                                                </div>
+                                            );                                                                                      
+                                        })}
+                                    </SimpleBar>
                                 </div>
                             }
                         </div>
@@ -269,20 +281,22 @@ export default function QueueOverviewPage() {
                                                 <hr/>
                                                 <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                                     <input
-                                                        id="new_playlist_input" type="text" placeholder="New Playlist"
+                                                        id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
                                                         className="new-playlist" value={newPlaylistName}
                                                         onChange={(e) => setNewPlaylistName(e.target.value)}
                                                     />
                                                     <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                                                 </span>
                                                 
-                                                {playlistList?.map((playlist) => {
-                                                    return(
-                                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                                            {playlist.name}
-                                                        </div>
-                                                    );
-                                                })}
+                                                <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
+                                                    {playlistList?.map((playlist) => {
+                                                        return(
+                                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
+                                                                {playlist.name}
+                                                            </div>
+                                                        );                                
+                                                    })}
+                                                </SimpleBar>
                                             </div>
                                         }                                    
                                     </span>

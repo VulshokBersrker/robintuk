@@ -216,8 +216,9 @@ export default function AlbumPage({albums}: P) {
     }
     
     async function addToPlaylist(id: number) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
-            setDisplayAddToMenu(false);
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
@@ -228,29 +229,25 @@ export default function AlbumPage({albums}: P) {
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            resetContextMenu();
-        }        
+        }       
     }
 
     async function createPlaylist(name: string) {
-        try {
-            setDisplayAddToMenu(false);
+        resetContextMenu();
+        setDisplayAddToMenu(false);
+        try {            
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
-            await invoke('create_playlist', {name: name });
-            await invoke('add_to_playlist', {songs: songList, playlist_name: name});
+            await invoke('create_playlist', { name: name, songs: songList, songs_to_add: true });
             await invoke('new_playlist_added');
         }
         catch(e) {
             console.log(e);
-        }
-        resetContextMenu();
+        }        
     }
 
     async function getAllPlaylists() {
@@ -596,7 +593,7 @@ function ContextMenu({
                                 <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                             </span>
                             
-                            <div className="add-playlist-container">
+                            <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
                                 {playlistList?.map((playlist) => {
                                     if(playlist.name !== name) {
                                         return(
@@ -606,7 +603,7 @@ function ContextMenu({
                                         );
                                     }                                            
                                 })}
-                            </div>
+                            </SimpleBar>
                         </div>
                     }
                 </li>

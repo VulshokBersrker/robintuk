@@ -231,18 +231,16 @@ export default function AlbumOverviewPage() {
         }        
     }
 
-    async function addAlbumToPlaylist(id: number) {
+    async function addToPlaylist(id: number) {
         setDisplayAddToMenu(false);
         resetContextMenu();
+        clearSelection();
         try { 
             await invoke('add_to_playlist', {songs: albumList, playlist_id: id});
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            clearSelection();
-        }        
+        }       
     }
 
     async function addSelectedToPlaylist(id: number) {
@@ -259,21 +257,33 @@ export default function AlbumOverviewPage() {
         }
     }
 
-    async function createPlaylist(name: string) {
+    async function createSelectedPlaylist(name: string) {
         setDisplayAddToMenu(false);
         resetContextMenu();
         try {
-            await invoke('create_playlist', {name: name});
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
+            clearSelection();
             await invoke('new_playlist_added');
         }
         catch(e) {
             console.log(e);
         }
-        finally {
-            clearSelection();
+    }
+
+    async function createPlaylist(name: string) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
+        clearSelection();
+        try {
+            await invoke('create_playlist', {name: name, songs: albumList, songs_to_add: true});
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
         }
     }
+
+
 
     async function getAllPlaylists() {
         try {
@@ -405,19 +415,18 @@ export default function AlbumOverviewPage() {
                                                             className="new-playlist" value={newPlaylistName}
                                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                                         />
-                                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                                        <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
                                                     </span>
                                                     
-                                                    <div className="add-playlist-container">
+                                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
                                                         {playlistList?.map((playlist) => {
                                                             return(
-                                                                <div className="item" key={playlist.name} onClick={() => addAlbumToPlaylist(playlist.id)}>
+                                                                <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
                                                                     {playlist.name}
                                                                 </div>
-                                                            );
-                                                                                                     
+                                                            );                                                                                      
                                                         })}
-                                                    </div>
+                                                    </SimpleBar>
                                                 </div>
                                             }
                                         </span>
@@ -660,19 +669,18 @@ export default function AlbumOverviewPage() {
                                                             className="new-playlist" value={newPlaylistName}
                                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                                         />
-                                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                                        <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
                                                     </span>
                                                     
-                                                    <div className="add-playlist-container">
+                                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
                                                         {playlistList?.map((playlist) => {
                                                             return(
-                                                                <div className="item" key={playlist.name} onClick={() => addAlbumToPlaylist(playlist.id)}>
+                                                                <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
                                                                     {playlist.name}
                                                                 </div>
-                                                            );
-                                                                                                     
+                                                            );                                                                                      
                                                         })}
-                                                    </div>
+                                                    </SimpleBar>
                                                 </div>
                                             }
                                         </span>

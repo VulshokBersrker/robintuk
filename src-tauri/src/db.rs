@@ -278,7 +278,8 @@ pub async fn remove_songs(pool: &Pool<Sqlite>) -> Result<(), String> {
 pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AllAlbumResults>, String> {
 
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT album, album_artist, cover, album_section FROM songs GROUP BY album ORDER BY album_section ASC, album ASC;",
+        "SELECT album, album_artist, cover, album_section FROM songs WHERE album IS NOT NULL 
+        GROUP BY album ORDER BY album_section ASC, album ASC;",
     )
     .fetch_all(&state.pool)
     .await
@@ -453,14 +454,42 @@ pub async fn get_playlists_with_limit(state: State<AppState, '_>, limit: i64) ->
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn create_playlist(state: State<AppState, '_>, name: String) -> Result<(), String> {
+pub async fn create_playlist(state: State<AppState, '_>, name: String, songs: Vec<SongTable>, songs_to_add: bool) -> Result<(), String> {
 
-    sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
-        .bind(&name)
-        .execute(&state.pool)
-        .await
-        .unwrap();
+    if songs_to_add == true {
+        sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
+            .bind(&name)
+            .execute(&state.pool)
+            .await
+            .unwrap();
 
+        println!("test");
+
+        let id: (i64,) = sqlx::query_as("SELECT id FROM playlists WHERE name=$1;")
+            .bind(&name)
+            .fetch_one(&state.pool)
+            .await.unwrap();
+
+        // Now add the new songs to the playlist
+        let mut i = 0;
+        for song in songs {
+            let _ = sqlx::query("INSERT INTO playlist_tracks
+                (playlist_id, track_id, position) 
+                VALUES (?1, ?2, ?3)")
+                .bind(&id.0)
+                .bind(&song.path)
+                .bind(&i)
+                .execute(&state.pool).await;
+            i = i + 1;
+        }
+    }
+    else {
+        sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
+            .bind(&name)
+            .execute(&state.pool)
+            .await
+            .unwrap();
+    } 
     Ok(())
 }
 

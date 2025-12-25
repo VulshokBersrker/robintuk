@@ -157,34 +157,44 @@ export default function Home() {
         resetContextMenu();
     }
     
-    async function addToPlaylist(name: string) {
+    async function addToPlaylist(id: number, context_type: string, song: number, album: string) {
+        resetContextMenu();
         try {
             let songList: Songs[] = [];
-            
-            
-            await invoke('add_to_playlist', {songs: songList, playlist_name: name});
+            if(context_type === "song") {
+                const res: Songs = await invoke<Songs>("get_song", { song_path: songs[song].path });
+                songList.push(res);
+            }
+            else if(context_type === "album") {
+                const res: Songs[] = await invoke<Songs[]>("get_album", { name: album });
+                songList.push(...res);
+            }
+            await invoke('add_to_playlist', {songs: songList, playlist_id: id});
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            resetContextMenu();
-        }        
+        }      
     }
 
-    async function createPlaylist(name: string) {
+    async function createPlaylist(name: string, context_type: string, song: number, album: string) {
+        resetContextMenu();
         try {
             let songList: Songs[] = [];
-            
-            
-            await invoke('create_playlist', {name: name });
-            await invoke('add_to_playlist', {songs: songList, playlist_name: name});
+            if(context_type === "song") {
+                const res: Songs = await invoke<Songs>("get_song", { song_path: songs[song].path });
+                songList.push(res);
+            }
+            else if(context_type === "album") {
+                const res: Songs[] = await invoke<Songs[]>("get_album", { name: album });
+                songList.push(...res);
+            }      
+            await invoke('create_playlist', { name: name });
+            await invoke('add_to_playlist', { songs: songList, playlist_name: name });
             await invoke('new_playlist_added');
         }
         catch(e) {
             console.log(e);
-        }
-        resetContextMenu();
+        }        
     }
 
     
@@ -235,11 +245,10 @@ export default function Home() {
                         {songs.map((song, i) => {
                             return(
                                 <div
-                                    key={`song-${i}`}
-                                    className="song grid-10"
+                                    key={`song-${i}`} className="song grid-10"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
-                                        handleContextMenu(e, albums[i].album, albums[i].album_artist, 0, i, "song");
+                                        handleContextMenu(e, songs[i].album, songs[i].album_artist, 0, i, "song");
                                     }}
                                 >
                                     <span className="section-2 d-flex position-relative" onClick={() => playSong(i)}>
@@ -271,7 +280,7 @@ export default function Home() {
                                         className="album-link playlist"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, albums[i].album, albums[i].album_artist, item.id, i, "playlist");
+                                            handleContextMenu(e, "", "", item.id, i, "playlist");
                                         }}
                                     >
                                         <div className="album-image-container ">
@@ -357,8 +366,8 @@ type Props = {
     // Playlist
     playlist: number,
     playlistList: PlaylistList[],
-    createPlaylist: (name: string) => void,
-    addToPlaylist: (name: string) => void
+    createPlaylist: (name: string, context_type: string, song: number, album: string) => void,
+    addToPlaylist: (id: number, context_type: string, song: number, album: string) => void
     addToQueue: () => void,
     ref: any,
     resetContextMenu: () => void
@@ -380,6 +389,9 @@ function CustomContextMenu({
     }
     function NavigateToArtist() {
         navigate("/artists/overview", {state: {name: artist}});
+    }
+    function NavigateToPlaylist() {
+        navigate("/playlists/overview", {state: {name: playlist}});
     }
 
     useEffect(() => {
@@ -411,7 +423,6 @@ function CustomContextMenu({
                         }
                         else if(context_type === "song") {
                             playSong(index);
-                            
                         }
                         resetContextMenu();
                     }}
@@ -420,37 +431,44 @@ function CustomContextMenu({
                     &nbsp; Play
                 </li>
 
-                <li className="position-relative">
-                    <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
-                        <img src={AddIcon} /> &nbsp; Add to
-                    </span>
-                    {displayAddMenu &&
-                        <div className="playlist-list-container add-context-menu header-font">
-                            <div className="d-flex align-items-center" onClick={addToQueue}>
-                                <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
+                {context_type !== "playlist" &&
+                    <li className="position-relative">
+                        <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                            <img src={AddIcon} /> &nbsp; Add to
+                        </span>
+                        {displayAddMenu &&
+                            <div className="playlist-list-container add-context-menu header-font">
+                                <div className="item d-flex align-items-center" onClick={addToQueue}>
+                                    <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
+                                </div>
+                                <hr/>
+                                <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                    <input
+                                        id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
+                                        className="new-playlist" value={newPlaylistName}
+                                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                                    />
+                                    <span><button onClick={() => {createPlaylist(newPlaylistName, context_type, index, album)}}>Create</button></span>
+                                </span>
+                                
+                                <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
+                                    {playlistList?.map((playlist) => {
+                                        return(
+                                            <div
+                                                className="item"
+                                                key={playlist.name}
+                                                onClick={() => addToPlaylist(playlist.id, context_type, index, album)}
+                                            >
+                                                {playlist.name}
+                                            </div>
+                                        );                                                                                  
+                                    })}
+                                </SimpleBar>
                             </div>
-                            <hr/>
-                            <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                <input
-                                    id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
-                                    className="new-playlist" value={newPlaylistName}
-                                    onChange={(e) => setNewPlaylistName(e.target.value)}
-                                />
-                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
-                            </span>
-                            
-                            {playlistList?.map((p) => {
-                                if(p.id !== playlist) {
-                                    return(
-                                        <div key={p.name} onClick={() => addToPlaylist(p.name)}>
-                                            {p.name}
-                                        </div>
-                                    );
-                                }                                            
-                            })}
-                        </div>
-                    }
-                </li>
+                        }
+                    </li>
+                }
+
                 {context_type !== "playlist" && 
                     <li  className="d-flex align-items-center" onClick={NavigateToAlbum} >
                         <img src={AlbumIcon} /> &nbsp; Show Album
@@ -459,6 +477,11 @@ function CustomContextMenu({
                 {(context_type !== "artist" && context_type !== "playlist") && 
                     <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <img src={ArtistIcon} /> &nbsp; Show Artist
+                    </li>
+                }
+                {context_type === "playlist" && 
+                    <li  className="d-flex align-items-center" onClick={NavigateToPlaylist} >
+                        <img src={AlbumIcon} /> &nbsp; Show Playlist
                     </li>
                 }
             </div>

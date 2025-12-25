@@ -476,7 +476,6 @@ export default function ArtistOverviewPage() {
                     isBeingAdded={checkBoxNumber[contextMenu.index]}
                     posX={contextMenu.posX}
                     posY={contextMenu.posY}
-                    name={""}
                     playlistList={playlistList}
                     createPlaylist={createPlaylist}
                     addToPlaylist={addToPlaylist}
@@ -500,7 +499,6 @@ type Props = {
     posX: number,
     posY: number,
     // Playlist
-    name: string,
     playlistList: PlaylistList[],
     createPlaylist: (name: string) => void,
     addToPlaylist: (id: number, album: string) => void
@@ -511,7 +509,7 @@ type Props = {
 function CustomContextMenu({ 
     isToggled, album, index, 
     play, editSelection, isBeingAdded, posX, posY,
-    name, playlistList, createPlaylist, addToPlaylist, addToQueue, ref
+    playlistList, createPlaylist, addToPlaylist, addToQueue, ref
 }: Props) {
 
     const [displayAddMenu, setDisplayAddMenu] = useState<boolean>(false);
@@ -560,7 +558,7 @@ function CustomContextMenu({
                     </span>
                     {displayAddMenu &&
                         <div className="playlist-list-container add-context-menu header-font">
-                            <div className="d-flex align-items-center" onClick={addToQueue}>
+                            <div className="item d-flex align-items-center" onClick={addToQueue}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
                             <hr/>
@@ -573,15 +571,16 @@ function CustomContextMenu({
                                 <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                             </span>
                             
-                            {playlistList?.map((playlist) => {
-                                if(playlist.name !== name) {
-                                    return(
-                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.id, album)}>
-                                            {playlist.name}
-                                        </div>
-                                    );
-                                }                                            
-                            })}
+                            <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
+                                {playlistList?.map((playlist) => {
+                                        return(
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id, album)}>
+                                                {playlist.name}
+                                            </div>
+                                        );
+                                                                                
+                                })}
+                            </SimpleBar>
                         </div>
                     }
                 </li>

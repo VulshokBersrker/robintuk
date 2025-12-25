@@ -207,7 +207,6 @@ export async function playPlaylist(playlist_id: number) {
             // Load the music to be played and saved
             await invoke('player_load_album', {queue: res.songs, index: 0});
             await invoke('update_current_song_played', {path: res.songs[0].path});
-            await invoke('update_current_song_played');
             saveQueue(res.songs);
             savePosition(0);
 

@@ -1,6 +1,7 @@
 // Core Libraries
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import SimpleBar from 'simplebar-react';
 
 // Custom Components
 import { PlaylistList, Songs } from '../globalValues';
@@ -13,42 +14,6 @@ import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
 import ArtistIcon from '../images/user-regular-full.svg';
 import PlayIcon from '../images/play-icon-outline.svg';
 import AddIcon from '../images/plus-solid-full.svg';
-
-/*
-    Song / Album Context Menu - 
-
-    Select
-    Play (Entire Song/Album)
-    Add to - Queue/Playlist
-    Show Album
-    Show Artist
-
-    Artist Context Menu - 
-    
-    Select
-    Play (Entire artist's music)
-    Add to - Queue/Playlist
-    Show Artist
-
-    Playlist Context Menu - 
-    
-    Select
-    Play (Entire playlist)
-    Add to - Queue/Playlist
-    Rename
-    Delete    
-
-    Playlist Songs Context Menu - 
-    
-    Select
-    Play (Entire playlist)
-    Add to - Queue/Playlist
-    Remove
-    Move Up/Down
-    Show Album
-    Show Artist
-
-*/
 
 type Props = {
     isToggled: boolean,
@@ -124,7 +89,7 @@ export default function CustomContextMenu({
                     </span>
                     {displayAddMenu &&
                         <div className="playlist-list-container add-context-menu header-font">
-                            <div className="d-flex align-items-center" onClick={addToQueue}>
+                            <div className="item d-flex align-items-center" onClick={addToQueue}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
                             <hr/>
@@ -136,17 +101,18 @@ export default function CustomContextMenu({
                                 />
                                 <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                             </span>
-                            <div className="add-playlist-container">
+                            
+                            <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
                                 {playlistList?.map((playlist) => {
                                     if(playlist.name !== name) {
                                         return(
-                                            <div key={playlist.name} onClick={() => addToPlaylist(playlist.id, song)}>
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id, song)}>
                                                 {playlist.name}
                                             </div>
                                         );
                                     }                                            
                                 })}
-                            </div>
+                            </SimpleBar>
                         </div>
                     }
                 </li>

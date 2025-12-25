@@ -121,7 +121,7 @@ export default function Settings() {
     useEffect(() => {
         const isScanOnging = JSON.parse(localStorage.getItem("folder-scan")!);
         if(isScanOnging === true) {
-            setLoading(true);
+            setLoading(false); // Rework this method
         }
         getDirectories();
     }, []);

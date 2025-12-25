@@ -21,9 +21,9 @@
 ## [Screenshots](./assets/screenshots/index.md)
 
 
-![](./assets/screenshots/1.png)
-![](./assets/screenshots/2.png)
-![](./assets/screenshots/6.png)
+![](./assets/screenshots/1.jpg)
+![](./assets/screenshots/3.jpg)
+![](./assets/screenshots/6.jpg)
 
 
 More: [See all screenshots](./assets/screenshots/index.md)
@@ -75,6 +75,7 @@ Made with Tauri (React and Rust).
 - [ ] Notification of version update
 - [ ] Open with (in file explorer)
 - [ ] CSS Optimization
+- [ ] Create placeholder templates while pages are loading
 
 
 ## Known Issues
@@ -87,6 +88,8 @@ Made with Tauri (React and Rust).
 - [ ] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
 - [ ] Cancelling changing playlist cover art will remove any current artwork until the page is reloaded
 - [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
+- [ ] If scan breaks or user closes app while scanning, scan buttons will be disabled because it thinks a scan is still ongoing
+- [x] Doubles on some songs in history
 - [x] Add music to playlist not working on home, album overview, ,songs, or artist overview pages with "Add To" or context menu
 - [x] Fix songs page search results formatting
 - [x] Albums displaying Disc 0 when metadata has no disc value

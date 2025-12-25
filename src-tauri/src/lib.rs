@@ -1,15 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::{Arc, Mutex};
-
 use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
-use sqlx::{Pool, Sqlite};
 use tauri_plugin_prevent_default::Flags;
-use tokio::runtime::Runtime;
-use walkdir::WalkDir;
 use tauri::{Builder, Manager, Emitter};
+use std::sync::{Arc, Mutex};
+use tokio::runtime::Runtime;
+use sqlx::{Pool, Sqlite};
+use walkdir::WalkDir;
 
 // Import files
 mod commands;
@@ -29,13 +28,6 @@ use crate::{
 fn greet() -> String {
     format!("Thank you for using my music player! =D")
 }
-
-
-// #[derive(Clone, serde::Serialize)]
-// struct Payload {
-//     args: Vec<String>,
-//     cwd: String,
-// }
 
 pub struct AppState {
     player:  Arc<Mutex<MusicPlayer>>,
@@ -64,7 +56,7 @@ pub fn run() -> Result<(), String> {
             
             app.manage(AppState { player, pool });
 
-            #[cfg(desktop)]
+            #[cfg(windows)]
             {
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new().with_shortcuts(["MediaPlayPause", "MediaTrackNext", "MediaTrackPrevious"])?
