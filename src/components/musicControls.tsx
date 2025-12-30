@@ -19,7 +19,6 @@ import PlayButton from '../images/play-solid-full.svg';
 import RepeatOneIcon from '../images/repeat-one.svg';
 import Circle from '../images/circle.svg';
 
-
 // One first install - needs to be blank - or be hidden when there is no music setup
 // On app launches - needs to find the last played queue and preload the song and where it was last at in the song
 
@@ -102,7 +101,7 @@ export default function MusicControls() {
             try {
                 // Get the last played song, if exists
                 const queue: Songs[] = await invoke<Songs[]>("get_queue", {shuffled: shuffleMode !== null ? shuffleMode : false});
-                console.log(queue);
+                // console.log(queue);
 
                 if(queue.length === 0) {
                     setIsLoaded(false);
@@ -136,6 +135,7 @@ export default function MusicControls() {
         else {
             setIsLoaded(false);
         }
+        updateVolume(volume);
         
     }
 

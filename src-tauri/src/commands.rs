@@ -1,5 +1,12 @@
 use crate::{ AppState, db, types::{GetCurrentSong, GetPlaylistList, SongTable} };
 use tauri::{Emitter, State};
+use walkdir::WalkDir;
+
+use std::{fs::File, io::Read, path::Path};
+use std::{io};
+use std::path::{PathBuf};
+use std::io::Write;
+use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 // -------------------------- Media Player Commands --------------------------
 
@@ -181,4 +188,94 @@ pub async fn new_playlist_added(state: State<AppState, '_>, app: tauri::AppHandl
 #[tauri::command]
 pub fn set_shuffle_mode(app: tauri::AppHandle, mode: bool) {
     app.emit("player-shuffle-mode", mode).unwrap();
+}
+
+
+
+// Backup, Restore, and Reset Functions for the DB and images
+#[tauri::command]
+pub async fn create_backup() -> Result<(), String> {
+    println!("Creating backup file...");
+
+    let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip"; 
+    let zip_file_path = File::create(&backup_path).unwrap();
+
+    let mut zip = ZipWriter::new(zip_file_path);
+
+    let test_string = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/";
+    let prefix = Path::new(&test_string);
+    let mut buffer = Vec::new();
+
+    for entry in WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/").into_iter().filter_map(|e| e.ok()) {
+
+        let item = entry.path().display().to_string();
+        let path = Path::new(&item);
+        let name = path.strip_prefix(prefix).unwrap();
+        let path_as_string = name.to_str().map(str::to_owned).unwrap();
+
+        if entry.metadata().unwrap().is_file() {
+            // println!("adding file {path:?} as {name:?} ...");
+            zip.start_file(path_as_string, SimpleFileOptions::default()).unwrap();
+            let mut f = File::open(path).unwrap();
+
+            f.read_to_end(&mut buffer).unwrap();
+            zip.write_all(&buffer).unwrap();
+            buffer.clear();
+        }
+        // Is a folder
+        else {
+            // println!("adding dir {path_as_string:?} as {name:?} ...");
+            zip.add_directory(path_as_string, SimpleFileOptions::default()).unwrap();
+        }        
+    }
+
+    zip.finish().unwrap();
+
+    println!("...Files successfully zipped");    
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn use_restore() -> Result<(), String> {
+    println!("Restoring from backup...");
+
+    let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip";
+
+    if PathBuf::from(&backup_path).exists() {
+        let zip_file = File::open(backup_path).unwrap();
+
+        let mut archive = ZipArchive::new(zip_file).unwrap();
+        let extraction_dir = Path::new("robintuk_player");
+
+        // Create the directory if it does not exist.
+        if !extraction_dir.exists() {
+            std::fs::create_dir(extraction_dir).unwrap();
+        }
+
+        // Iterate through the files in the ZIP archive.
+        for i in 0..archive.len() {
+            let mut file = archive.by_index(i).unwrap();
+            let file_name = file.name().to_owned();
+
+            // Create the path to the extracted file in the destination directory.
+            let target_path = extraction_dir.join(file_name);
+
+            // Create the destination directory if it does not exist.
+            if let Some(parent_dir) = target_path.parent() {
+                std::fs::create_dir_all(parent_dir).unwrap();
+            }
+
+            let mut output_file = File::create(&target_path).unwrap();
+
+            // Read the contents of the file from the ZIP archive and write them to the destination file.
+            io::copy(&mut file, &mut output_file).unwrap();
+        }
+
+        println!("Files successfully extracted to {:?}", extraction_dir);
+    }
+    else {
+        println!("There is no backup file");
+    }    
+
+    Ok(())
 }

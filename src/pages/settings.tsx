@@ -11,6 +11,8 @@ import { DirectoryInfo } from '../globalValues';
 // Images
 import CheckIcon from '../images/circle-check-regular-full.svg';
 import ErrorIcon from '../images/circle-xmark-regular-full.svg';
+import BackupIcon from '../images/shield-halved-solid-full.svg';
+import DatabaseIcon from '../images/database-solid-full.svg';
 import logo from '../images/logo.svg';
 
 interface ScanResults {
@@ -117,6 +119,25 @@ export default function Settings() {
         localStorage.setItem('theme', theme);
     }
 
+    async function backupData() {
+        try{
+            const res = await invoke("create_backup");
+            console.log(res);
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+    async function restoreData() {
+        try{
+            const res = await invoke("use_restore");
+            console.log(res);
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
     // Get the list of directories on load
     useEffect(() => {
         const isScanOnging = JSON.parse(localStorage.getItem("folder-scan")!);
@@ -207,14 +228,21 @@ export default function Settings() {
             </div>
 
             {/* Backup Restore */}
-            <div className="settings-section">
+            <div className="settings-section backup">
                 <div className="header-font font-3 sub-font" style={{marginBottom: '5px'}}>Data Backup/Restore (Not implemented yet)</div>
+                <div className="sub-font font-0" style={{marginBottom: '10px'}}>Backup and Restore all your data on Robintuk, including your playlists</div>
 
-                <div className="">
-                    <div className="sub-font font-0" style={{marginBottom: '10px'}}>Backup and Restore all your data on Robintuk, including your playlists</div>
-                    <span style={{marginRight: '10px'}}> <button className="white">Backup</button> </span>
-                    <span style={{marginRight: '10px'}}> <button className="white">Restore</button> </span>
-                    <span> <button className="white">Reset</button> </span>
+                <div className="grid-10">
+                    <span className="section-1" style={{marginRight: '20px'}}>
+                        <button className="white vertical-centered font-1 header-font" onClick={backupData}>
+                            <img src={BackupIcon} alt="icon" />&nbsp;Backup
+                        </button>
+                    </span>
+                    <span className="section-1">
+                        <button className="white vertical-centered font-1 header-font" onClick={restoreData}>
+                            <img src={DatabaseIcon} alt="icon" />&nbsp;Restore
+                        </button>
+                    </span>
                 </div>
             </div>
 
@@ -223,7 +251,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.1 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.1.3 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
@@ -249,10 +277,11 @@ type Props = {
     type: number,
 };
 
-const ErrorPopup = ({success, error, updated, type}: Props) => {
+const ErrorPopup = ({success, error, updated, type}: Props) => {    
 
     // 0 - Directory Scan
     if(type === 0) {
+        console.log("Scanned " + (error + success + updated) + " songs - " + (success) + " songs added - "+ (updated) + " songs updated - " + (error) + " songs had errors");
         if(error !== 0) {
             return(
                 <div className="status-container error d-flex vertical-centered">
@@ -274,7 +303,7 @@ const ErrorPopup = ({success, error, updated, type}: Props) => {
                     </span>
                     <span style={{paddingLeft: "10px"}}>
                         <div>Folders Scanned</div>
-                        <div>Scanned {error + success} songs - {error} songs had errors</div>                    
+                        <div>Scanned {error + success + updated} songs - {success} songs added - {updated} songs updated - {error} songs had errors</div>                    
                     </span>
                 </div>
             );

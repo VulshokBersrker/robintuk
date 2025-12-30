@@ -16,7 +16,7 @@
 
 [data-theme="red"] {
   /* Font Colors */
-  --font-color-one: #e3e2dd;
+  --font-color-one: #cdcdcd;
   --font-color-two: #877373;
   --font-color-three: #6c0e1a;
   /* Gradient Colors */
@@ -41,7 +41,7 @@
 }
 [data-theme="blue"] {
   /* Font Colors */
-  --font-color-one: #e3e2dd;
+  --font-color-one: #cdcdcd;
   --font-color-two: #76849c;
   --font-color-three: #1b3ab7;
   /* Gradient Colors */
@@ -66,7 +66,7 @@
 }
 [data-theme="purple"] {
   /* Font Colors */
-  --font-color-one: #e3e2dd;
+  --font-color-one: #cdcdcd;
   --font-color-two: #9e7fba;
   --font-color-three: #7d33ae;
   /* Gradient Colors */
@@ -92,7 +92,7 @@
 }
 [data-theme="orange"] {
   /* Font Colors */
-  --font-color-one: #e3e2dd;
+  --font-color-one: #cdcdcd;
   --font-color-two: #928475;
   --font-color-three: #b96118;
   /* Gradient Colors */
@@ -118,7 +118,7 @@
 }
 [data-theme="green"] {
   /* Font Colors */
-  --font-color-one: #e3e2dd;
+  --font-color-one: #cdcdcd;
   --font-color-two: #8baa8d;
   --font-color-three: #008b31;
   /* Gradient Colors */
@@ -144,7 +144,7 @@
 }
 [data-theme="dark-wave"] {
   /* Font Colors */
-  --font-color-one: #e3e2dd;
+  --font-color-one: #cdcdcd;
   --font-color-two: #918099;
   --font-color-three: #813db4;
   /* Gradient Colors */
@@ -310,7 +310,7 @@ button {
   padding: 8px 14px 8px 14px;
 }
 button.white {
-  border: 1px solid var(--font-color-one);
+  border: 2px solid var(--font-color-one);
   background-color: rgba(0, 0, 0, 0.0) !important;
   color: var(--font-color-one);
   border-radius: var(--border-radius);
@@ -319,7 +319,7 @@ button.white {
   transition: 0.2s ease-in-out;
 }
 button.white:hover {
-  border: 1px solid #cfcfcf;
+  border: 2px solid #cfcfcf;
   background-color: rgba(210, 210, 210, 0.221) !important;
   color: #cfcfcf;
   transition: 0.2s ease-in-out;
@@ -333,7 +333,7 @@ button.white:disabled {
   transition: 0.2s ease-in-out;
 }
 button.red {
-  border: 1px solid rgb(194, 0, 0);
+  border: 2px solid rgb(194, 0, 0);
   background-color: rgba(0, 0, 0, 0.0) !important;
   color: rgb(194, 0, 0);
   border-radius: rgb(194, 0, 0);
@@ -342,7 +342,7 @@ button.red {
   transition: 0.2s ease-in-out;
 }
 button.red:hover {
-  border: 1px solid rgb(194, 0, 0);
+  border: 2px solid rgb(194, 0, 0);
   background-color: rgba(172, 172, 172, 0.1) !important;
   color: rgb(194, 0, 0);
   border-radius: rgb(194, 0, 0);
@@ -358,7 +358,7 @@ button:hover {
   cursor: pointer;
 }
 button:disabled {
-  border: 1px solid #585858;
+  border: 2px solid #585858;
   background-color: rgba(0, 0, 0, 0.0) !important;
   color: #585858;
   pointer-events: none;
@@ -1659,11 +1659,6 @@ button img {
 .add-playlist-container {
   margin-top: 8px;
   max-height: 200px;
-  /* Scrollbar Styles */
-  /* scrollbar-color: var(--scrollbar-color) !important;
-  scrollbar-width: thin;
-  scrollbar-gutter: stable;
-  scroll-behavior: smooth; */
 }
 
 .playlist-list-container hr {
@@ -1877,6 +1872,11 @@ button.white:disabled .loader {
   filter: brightness(0) saturate(100%) invert(92%) sepia(100%) saturate(4627%) hue-rotate(290deg) brightness(88%) contrast(106%);
 }
 
+.settings-section.backup img{
+  height: 30px;
+  width: 30px;
+}
+
 /* Theme Color Picker */
 .theme-container {
   padding-top: 30px;
@@ -1890,7 +1890,7 @@ button.white:disabled .loader {
   display: inline-block;
   height: 30px;
   width: 30px;
-  border: 1px solid;
+  border: 2px solid;
   outline: 2px solid rgba(216, 216, 216, 0.354);
   outline-offset: 3px;
   border-radius: var(--border-radius);
@@ -1913,7 +1913,7 @@ button.white:disabled .loader {
 
 
 select {
-  border: 1px solid #dddddd;
+  border: 2px solid #cdcdcd;
   background: rgba(0, 0, 0, 0);
   padding: 10px;
   transition: 0.4s;

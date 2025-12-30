@@ -106,7 +106,7 @@ impl MusicPlayer {
         // Makes it a little faster if we are guessing with only mp3 files
         // Length is needed for backwards seeking
         let len = file.metadata().unwrap().len();
-        match Decoder::builder().with_data(BufReader::new(file)).with_hint("mp3").with_byte_len(len).with_seekable(true).build() {
+        match Decoder::builder().with_data(BufReader::new(file)).with_hint("mp3").with_byte_len(len).with_seekable(true).with_gapless(true).build() {
             Ok(source) => {
                 // On Success, load song into the sink
                 self.sink.append(source);

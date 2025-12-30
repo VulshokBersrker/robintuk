@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::{fs};
-use std::path::Path;
+use std::path::{Path};
 
 use chrono::Utc;
 // SQLITE Libraries
@@ -78,7 +78,7 @@ async fn apply_initial_migrations() -> Result<(), String> {
 
 // ---------------------------------------- SQLITE DATABASE FUNCTIONS ----------------------------------------
 
-pub async fn establish_connection() -> Result<Pool<sqlx::Sqlite>, std::string::String> {
+pub async fn establish_connection() -> Result<Pool<Sqlite>, std::string::String> {
     let binding = get_db_path();
     let dir_path = binding.as_str();
     // println!("Connection Established to Database File {:?}", dir_path);
@@ -261,7 +261,18 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
     Ok(res.unwrap())
 }
 
+#[derive(sqlx::FromRow, Default, serde::Serialize)]
+struct Covers {
+    cover: String
+}
+
 pub async fn remove_songs(pool: &Pool<Sqlite>) -> Result<(), String> {
+
+    let covers_to_delete: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM songs WHERE keep = false AND cover IS NOT NULL").fetch_all(pool).await.unwrap();
+
+    for covers in covers_to_delete {
+        let _ = fs::remove_file(covers.cover);
+    }
     
     let res = sqlx::query("DELETE FROM songs WHERE keep = false")
         .execute(pool)
@@ -834,3 +845,4 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
         Ok(history)        
     }    
 }
+
