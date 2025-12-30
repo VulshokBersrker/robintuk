@@ -27,7 +27,8 @@ interface ErrorInfo {
 }
 
 // Add function to remove all entries if the list is emptied
-// Add an "Are you sure" message to list the user know all the music will be gone
+// Add an "Are you sure" message to let the user know all the music will be gone
+// Get restore feature working (It can't replace files right now)
 
 export default function Settings() {
 
@@ -251,7 +252,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.1.3 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.1.4 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button

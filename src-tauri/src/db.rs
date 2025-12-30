@@ -268,10 +268,18 @@ struct Covers {
 
 pub async fn remove_songs(pool: &Pool<Sqlite>) -> Result<(), String> {
 
-    let covers_to_delete: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM songs WHERE keep = false AND cover IS NOT NULL").fetch_all(pool).await.unwrap();
+    let covers_to_delete: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT DISTINCT cover FROM songs WHERE keep = false AND cover IS NOT NULL").fetch_all(pool).await.unwrap();
 
     for covers in covers_to_delete {
-        let _ = fs::remove_file(covers.cover);
+        let res: (bool,) = sqlx::query_as("SELECT EXISTS (SELECT 1 FROM songs WHERE cover = ? AND keep = true)")
+            .bind(&covers.cover)
+            .fetch_one(pool)
+            .await.unwrap();
+
+        // There are no songs using the image
+        if res.0 == false {
+            let _ = fs::remove_file(covers.cover);
+        }      
     }
     
     let res = sqlx::query("DELETE FROM songs WHERE keep = false")
@@ -552,6 +560,9 @@ pub async fn rename_playlist(state: State<AppState, '_>, old_name: String, new_n
 // Take in the new name of the playlist and update the name value of the playlist
 #[tauri::command(rename_all = "snake_case")]
 pub async fn delete_playlist(state: State<AppState, '_>, name: String) -> Result<(), String> {
+
+    let covers_to_delete: Covers = sqlx::query_as::<_, Covers>("SELECT image AS cover FROM playlists WHERE image IS NOT NULL").fetch_one(&state.pool).await.unwrap();
+    let _ = fs::remove_file(covers_to_delete.cover);
 
     let _ = sqlx::query("DELETE FROM playlists WHERE name=$1;")
     .bind(&name)
