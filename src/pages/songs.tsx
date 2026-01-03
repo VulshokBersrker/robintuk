@@ -5,6 +5,7 @@ import SimpleBar from 'simplebar-react';
 
 import { alphabeticallyOrdered, ContextMenu, PlaylistList, saveQueue, Songs, SongsFull } from "../globalValues";
 import CustomContextMenu from "../components/customContextMenu";
+import SongDetailsModal from "../components/songDetails";
 
 // Images
 import QueueIcon from '../images/rectangle-list-regular-full.svg';
@@ -39,6 +40,8 @@ export default function SongPage({songs}: Props) {
 
     const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "song", album: "", artist: "", index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
+    const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
+    const [displaySong, setDisplaySong] = useState<string>("");
 
     
     useEffect(() => {
@@ -241,6 +244,11 @@ export default function SongPage({songs}: Props) {
         setDisplayAddToMenu(false);
     }
 
+    function updateSongDetailsDisplay(bool: boolean, path: string) {
+        setDisplaySongDetails(bool);
+        setDisplaySong(path)
+        resetContextMenu();
+    }
 
 
     return(
@@ -259,50 +267,52 @@ export default function SongPage({songs}: Props) {
                 </div>
 
                 {/* Song Selection Bar */}
-                    <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
-                        <div className="section-5 position-relative">
-                            <button className="d-flex align-items-center">
-                                <img src={PlayIcon} />
-                                &nbsp;Play
-                            </button>
-                        </div>
-                        <div className="section-6 position-relative">
-                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
-                                <img src={AddIcon} />
-                                &nbsp;Add
-                            </button>
+                <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
+                    <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                    <div className="section-5 position-relative">
+                        <button className="d-flex align-items-center">
+                            <img src={PlayIcon} />
+                            &nbsp;Play
+                        </button>
+                    </div>
+                    <div className="section-6 position-relative">
+                        <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
+                            <img src={AddIcon} />
+                            &nbsp;Add
+                        </button>
 
-                            {displayAddToMenu &&
-                                <div className="playlist-list-container header-font">
-                                    <div className="d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon-size"/>
-                                        &nbsp;Queue
-                                    </div>
-                                    <hr/>
-                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                        <input
-                                            id="new_playlist_input" type="text" placeholder="New Playlist"
-                                            className="new-playlist" value={newPlaylistName}
-                                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                                        />
-                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
-                                    </span>
-                                    
-                                    {playlistList?.map((playlist) => {
-                                        return(
-                                            <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                {playlist.name}
-                                            </div>
-                                        );
-                                    })}
+                        {displayAddToMenu &&
+                            <div className="playlist-list-container header-font">
+                                <div className="d-flex align-items-center" onClick={addToQueue}>
+                                    <img src={QueueIcon} className="icon-size"/>
+                                    &nbsp;Queue
                                 </div>
-                            }
-                        </div>
+                                <hr/>
+                                <span className="playlist-input-container d-flex justify-content-center align-items-center">
+                                    <input
+                                        id="new_playlist_input" type="text" placeholder="New Playlist"
+                                        className="new-playlist" value={newPlaylistName}
+                                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                                    />
+                                    <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                </span>
+                                
+                                {playlistList?.map((playlist) => {
+                                    return(
+                                        <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
+                                            {playlist.name}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        }
+                    </div>
 
-                        <span className="vertical-centered section-1" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                    </div>                    
-                    {/* End of Song Selection Bar */}
+                    <span className="vertical-centered section-1" onClick={clearSelection}> <img src={CloseIcon} /></span>
+                </div>                    
+                {/* End of Song Selection Bar */}
+
+                {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
                 <div className="section-list">
                     {alphabeticallyOrdered.map((section, i) => {
@@ -446,6 +456,7 @@ export default function SongPage({songs}: Props) {
                     createPlaylist={createPlaylist}
                     addToPlaylist={addToPlaylist}
                     addToQueue={addToQueue}
+                    updateSongDetailsDisplay={updateSongDetailsDisplay}
                     ref={isContextMenuOpen}                
                 />
             </div>            

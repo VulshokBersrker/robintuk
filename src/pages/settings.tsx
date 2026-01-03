@@ -129,15 +129,7 @@ export default function Settings() {
             console.log(e);
         }
     }
-    async function restoreData() {
-        try{
-            const res = await invoke("use_restore");
-            console.log(res);
-        }
-        catch(e) {
-            console.log(e);
-        }
-    }
+    
 
     // Get the list of directories on load
     useEffect(() => {
@@ -240,7 +232,7 @@ export default function Settings() {
                         </button>
                     </span>
                     <span className="section-1">
-                        <button className="white vertical-centered font-1 header-font" onClick={restoreData}>
+                        <button className="white vertical-centered font-1 header-font" >
                             <img src={DatabaseIcon} alt="icon" />&nbsp;Restore
                         </button>
                     </span>

@@ -290,7 +290,6 @@ export default function AlbumOverviewPage() {
         setDisplaySongDetails(bool);
         setDisplaySong(path)
         resetContextMenu();
-        console.log(bool);
     }
 
     async function getAllPlaylists() {
