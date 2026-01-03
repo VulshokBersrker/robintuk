@@ -15,8 +15,8 @@
 
 - Play most music formats (mp3, flac)
 - Good performance even with 11,000 songs loaded
-- Custom playlist artwork
-- Customize the look with multiple theme colors
+- Custom playlist artwork (including animated artwork)
+- Customize the look with multiple color themes
 
 ## [Screenshots](./assets/screenshots/index.md)
 
@@ -37,12 +37,14 @@ Made with Tauri (React and Rust).
 
 ## Features to Be Added for V1.0
 
-- [ ] Custom icon for installer
+- [ ] Update to color themes
 - [ ] Create a Genre section
-- [ ] Song details modal
 - [ ] Smoother music progress bar
 - [ ] New default playlist icons
-- [ ] Improved Context Menu
+- [x] Improved Context Menu
+- [x] Auto-Remove album/playlist artwork when respective songs are removed
+- [x] Display song details through context menu
+- [x] Custom icon for installer
 - [x] Installer Wizard
 - [x] Custom context menu when right clicking on songs/albums
 - [x] Playlist functions (create, add, delete, rename, reorder)
@@ -65,7 +67,7 @@ Made with Tauri (React and Rust).
 - [x] Organize albums by track number and disc number
 
 ### Future Version Features Planned
-- [ ] Auto-Remove album/playlist artwork when respective things are removed from app
+
 - [ ] Gapless playback
 - [ ] Add support for wav
 - [ ] Drag and Drop playlist order
@@ -76,19 +78,19 @@ Made with Tauri (React and Rust).
 - [ ] Open with (in file explorer)
 - [ ] CSS Optimization
 - [ ] Create placeholder templates while pages are loading
+- [ ] Linux support
 
 
 ## Known Issues
 
-- [ ] Songs have hiccups randomly (maybe due to refreshes in dev mode)
+- [ ] Songs have hiccups randomly (maybe due to heavy system load from other programs)
 - [ ] Application Optimizations (streamlining, data caching, etc.)
-- [ ] Playback errors
 - [ ] Better error handling
 - [ ] Blank pages on route change while it grabs the data from the backend
 - [ ] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
-- [ ] Cancelling changing playlist cover art will remove any current artwork until the page is reloaded
 - [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
 - [ ] If scan breaks or user closes app while scanning, scan buttons will be disabled because it thinks a scan is still ongoing
+- [x] Cancelling changing playlist cover art will remove any current artwork until the page is reloaded
 - [x] Doubles on some songs in history
 - [x] Add music to playlist not working on home, album overview, ,songs, or artist overview pages with "Add To" or context menu
 - [x] Fix songs page search results formatting

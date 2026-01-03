@@ -18,6 +18,7 @@ import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import CloseIcon from '../../images/x.svg';
 import SimpleBar from "simplebar-react";
+import SongDetailsModal from "../../components/songDetails";
 
 
 interface AlbumDetails {
@@ -59,6 +60,8 @@ export default function AlbumOverviewPage() {
 
     const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
+    const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
+    const [displaySong, setDisplaySong] = useState<string>("");
 
     // On first load get the album details
     useEffect(() => {
@@ -283,7 +286,12 @@ export default function AlbumOverviewPage() {
         }
     }
 
-
+    function updateSongDetailsDisplay(bool: boolean, path: string) {
+        setDisplaySongDetails(bool);
+        setDisplaySong(path)
+        resetContextMenu();
+        console.log(bool);
+    }
 
     async function getAllPlaylists() {
         try {
@@ -377,6 +385,8 @@ export default function AlbumOverviewPage() {
                         <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
                     </div>                    
                     {/* End of Song Selection Bar */}
+
+                    {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
                     
                     
                     <div>
@@ -580,6 +590,7 @@ export default function AlbumOverviewPage() {
                         createPlaylist={createPlaylist} 
                         addToPlaylist={addToPlaylistContextMenu} 
                         addToQueue={addToQueue}
+                        updateSongDetailsDisplay={updateSongDetailsDisplay}
                         ref={isContextMenuOpen}
                     />
                     <div className="empty-space"/>
@@ -632,6 +643,7 @@ export default function AlbumOverviewPage() {
                     </div>                    
                     {/* End of Song Selection Bar */}
                     
+                    {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
                     
                     <div>
                         <div className="d-flex top-row justify-content-between">
@@ -757,6 +769,7 @@ export default function AlbumOverviewPage() {
                         createPlaylist={createPlaylist}
                         addToPlaylist={addToPlaylistContextMenu}
                         addToQueue={addToQueue}
+                        updateSongDetailsDisplay={updateSongDetailsDisplay}
                         ref={isContextMenuOpen}                    
                     />
                     <div className="empty-space"/>

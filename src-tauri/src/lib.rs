@@ -90,7 +90,6 @@ pub fn run() -> Result<(), String> {
             // Song Functions - SQLITE
             db::get_songs_with_limit,
             db::get_all_songs,
-            db::get_song_by_path,
             db::get_song,
             // Album Functions - SQLITE
             db::get_albums_with_limit,

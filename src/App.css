@@ -293,6 +293,13 @@ a {
   line-clamp: 2; 
   -webkit-box-orient: vertical;
 }
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* number of lines to show */
+  line-clamp: 3; 
+  -webkit-box-orient: vertical;
+}
 
 /* /*-------------- Button Tags /*-------------- */
 button {
@@ -1628,6 +1635,24 @@ button img {
 .song-page-list .song-list {
   margin-left: 5px;
   margin-right: 45px;
+}
+
+.song-details-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: var(--border-radius);
+  border: 2px var(--font-color-three) solid;
+  background-color: var(--gradient-two);
+  width: 620px;
+  height: 450px;
+  z-index: 100;
+}
+
+.song-details-modal .container {
+  margin: 11px;
+  margin-left: 18px;
 }
 
 /* -------------------------- Playlist Pages Styles -------------------------- */

@@ -10,6 +10,7 @@ import SimpleBar from "simplebar-react";
 // Custom Components
 import { ContextMenu, GetCurrentSong, PlaylistFull, PlaylistList, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
+import SongDetailsModal from "../../components/songDetails";
 
 // Images
 import DeselectIcon from '../../images/circle-xmark-regular-full.svg';
@@ -61,6 +62,8 @@ export default function PlaylistOverviewPage() {
 
     const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
+    const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
+    const [displaySong, setDisplaySong] = useState<string>("");
 
     // On first load get the playlits details
     useEffect(() => {
@@ -165,7 +168,7 @@ export default function PlaylistOverviewPage() {
     }
 
     // Doesn't update image if you change the file of the old uploaded image with a new image (same name and extension but different image)
-    async function AddCustomPlaylistArtwork() {
+    async function addCustomPlaylistArtwork() {
         let cover_image: string = "";
         try {
             const file_path = await open({ multiple: false, directory: false });
@@ -175,13 +178,13 @@ export default function PlaylistOverviewPage() {
             }
         }
         catch(err) {
-            alert(`Failed to add custom artwork: ${err}`);
+            console.log(`Failed to add custom artwork: ${err}`);
         }
         finally {
-            // const res: PlaylistFull = await invoke("get_playlist", {id: location.state.name});
-            // update the image
-            setPlaylistDetails({ ...playlistDetails, image: cover_image });
-            await invoke('new_playlist_added');
+            if(cover_image !== "") {
+                setPlaylistDetails({ ...playlistDetails, image: cover_image });
+                await invoke('new_playlist_added');
+            }
         }
     }
 
@@ -398,6 +401,13 @@ export default function PlaylistOverviewPage() {
         setDisplayAddToMenu(false);
     }
 
+    function updateSongDetailsDisplay(bool: boolean, path: string) {
+        setDisplaySongDetails(bool);
+        setDisplaySong(path)
+        resetContextMenu();
+        console.log(bool);
+    }
+
 
     if(loading === true) {
         return(
@@ -410,6 +420,8 @@ export default function PlaylistOverviewPage() {
         return(
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
                 <div className="album-container">
+
+                    {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
                     
                     {/* Song Selection Bar */}
                     <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
@@ -470,7 +482,7 @@ export default function PlaylistOverviewPage() {
                     {/* Playlist Details */}
                     <div className="d-flex">
                         <div className="album-details d-flex">   
-                            <div onClick={AddCustomPlaylistArtwork} className="image-upload">
+                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
                                 <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
                             </div>
                             
@@ -590,6 +602,7 @@ export default function PlaylistOverviewPage() {
                         createPlaylist={createPlaylist} 
                         addToPlaylist={addToPlaylist} 
                         addToQueue={addToQueue}
+                        updateSongDetailsDisplay={updateSongDetailsDisplay}
                         ref={isContextMenuOpen}
                     />
                     
@@ -609,7 +622,7 @@ export default function PlaylistOverviewPage() {
                     {/* Playlist Details */}
                     <div className="d-flex">
                         <div className="album-details d-flex">   
-                            <div onClick={AddCustomPlaylistArtwork} className="image-upload">
+                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
                                 <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
                             </div>
                             
@@ -693,6 +706,7 @@ type Props = {
     createPlaylist: (name: string) => void,
     addToPlaylist: (name: string) => void
     addToQueue: () => void,
+    updateSongDetailsDisplay: (bool: boolean, path: string) => void,
     ref: any
 }
 
@@ -701,7 +715,8 @@ function CustomContextMenu({
     play, editSelection, reorder, remove, 
     isBeingAdded, posX, posY,
     playlistList, name,
-    createPlaylist, addToPlaylist, addToQueue, ref
+    createPlaylist, addToPlaylist, addToQueue, updateSongDetailsDisplay,
+    ref
 }: Props) {
 
     const [displayAddMenu, setDisplayAddMenu] = useState<boolean>(false);
@@ -752,7 +767,7 @@ function CustomContextMenu({
                     </span>
                     {displayAddMenu &&
                         <div className="playlist-list-container add-context-menu header-font">
-                            <div className="d-flex align-items-center" onClick={addToQueue}>
+                            <div className="item d-flex align-items-center" onClick={addToQueue}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
                             <hr/>
@@ -765,15 +780,17 @@ function CustomContextMenu({
                                 <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                             </span>
                             
-                            {playlistList?.map((playlist) => {
-                                if(playlist.name !== name) {
-                                    return(
-                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                            {playlist.name}
-                                        </div>
-                                    );
-                                }                                            
-                            })}
+                            <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
+                                {playlistList?.map((playlist) => {
+                                    if(playlist.name !== name) {
+                                        return(
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                                {playlist.name}
+                                            </div>
+                                        );
+                                    }                                            
+                                })}
+                            </SimpleBar>
                         </div>
                     }
                 </li>
@@ -803,6 +820,11 @@ function CustomContextMenu({
                 <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                     <img src={ArtistIcon} />
                     &nbsp; Show Artist
+                </li>
+
+                <li  className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
+                    <img src={ArtistIcon} />
+                    &nbsp; Song Details
                 </li>
             </div>
         );

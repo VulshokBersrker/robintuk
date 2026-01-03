@@ -33,13 +33,15 @@ type Props = {
     createPlaylist: (name: string) => void,
     addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
+    updateSongDetailsDisplay: (bool: boolean, path: string) => void,
     ref: any
 }
 
 export default function CustomContextMenu({ 
     isToggled, context_type, song, album, artist, index, 
     play, editSelection, isBeingAdded, posX, posY,
-    name, playlistList, createPlaylist, addToPlaylist, addToQueue, ref
+    name, playlistList, createPlaylist, addToPlaylist, addToQueue, updateSongDetailsDisplay,
+    ref
 }: Props) {
 
     const [displayAddMenu, setDisplayAddMenu] = useState<boolean>(false);
@@ -128,7 +130,11 @@ export default function CustomContextMenu({
                         <img src={ArtistIcon} />
                         &nbsp; Show Artist
                     </li>
-                }                
+                }    
+                <li  className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
+                    <img src={ArtistIcon} />
+                    &nbsp; Song Details
+                </li>            
             </div>
         );
     }

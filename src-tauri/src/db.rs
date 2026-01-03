@@ -1,7 +1,6 @@
 use std::ffi::OsStr;
 use std::{fs};
 use std::path::{Path};
-
 use chrono::Utc;
 // SQLITE Libraries
 use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite, SqlitePool};
@@ -169,18 +168,6 @@ pub async fn get_song(state: State<AppState, '_>, song_path: String) -> Result<S
 
     let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE path = ?")
         .bind(&song_path)
-        .fetch_one(&state.pool)
-        .await
-        .unwrap();
-
-    Ok(temp)
-}
-
-#[tauri::command(rename_all = "snake_case")]
-pub async fn get_song_by_path(state: State<AppState, '_>, path: String) -> Result<SongTable, String> {
-
-    let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE path = ?")
-        .bind(&path)
         .fetch_one(&state.pool)
         .await
         .unwrap();
@@ -857,3 +844,29 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
     }    
 }
 
+
+
+struct IrclibLyrics {
+    id: i64,
+    track_name: String,
+    artist_name: String,
+    album_name: String,
+    duration: i64,
+    instrumental: bool,
+    plain_lyrics: String,
+    synced_lyrics: Option<String>
+}
+
+// Use a reqwest Client since multiple requests will be made
+#[tauri::command(rename_all = "snake_case")]
+async fn get_remote_lyrics(artist: String, name: String, album: String, duration: i64) -> Result<(), String> {
+
+    // let url = format!("https://lrclib.net/api/get?artist_name={}&track_name={}&album_name={}&duration={}",
+    //     artist, name, album, duration);
+
+    // let res = reqwest::get(url).await?.text().await?;
+    // println!("{:?}", res);
+
+    Ok(())
+
+}

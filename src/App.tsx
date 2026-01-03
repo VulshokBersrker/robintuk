@@ -72,7 +72,6 @@ function App() {
       getSongs();
       getAlbums();
       getArtists();
-
     }
     catch(e) {
       alert(`Failed to scan folder: ${e}`);
@@ -122,7 +121,7 @@ function App() {
 
   return(
     <div 
-      onContextMenu={(e) => { e.preventDefault(); }}
+      // onContextMenu={(e) => { e.preventDefault(); }}
     >
       <BrowserRouter>
         <CustomWindowsBar />
