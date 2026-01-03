@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import SimpleBar from 'simplebar-react';
 
 // Custom Components
-import { AlbumDetails, playAlbum, PlayHistory, PlaylistList, Playlists, playPlaylist, saveQueue, Songs } from '../globalValues';
+import { AlbumDetails, playAlbum, PlayHistory, PlaylistList, Playlists, playPlaylist, Songs } from '../globalValues';
 import ImageWithFallBack from '../components/imageFallback';
 
 // Images
@@ -97,15 +97,12 @@ export default function Home() {
 
     async function playSong(index: number) {
         try {
-            const arr: Songs[] = [songs[index]];
             // Update the music controls state somehow
-            await invoke('player_load_album', {queue: arr, index: 0});
-            await invoke('update_current_song_played', {path: arr[0].path});
-            saveQueue(arr);
+            await invoke('play_song', {song: songs[index]});
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
-        }        
+        }
     }
 
     // ------------------- Navigation Functions -------------------
@@ -216,7 +213,7 @@ export default function Home() {
                                             handleContextMenu(e, albums[i].album, albums[i].album_artist, 0, i, "album");
                                         }}
                                     >
-                                        <div className="play-album" onClick={() => playAlbum(entry.album)}>
+                                        <div className="play-album" onClick={() => playAlbum(entry.album, false)}>
                                             <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                             <img src={Circle} className="circle"/>
                                         </div>
@@ -284,7 +281,7 @@ export default function Home() {
                                         }}
                                     >
                                         <div className="album-image-container ">
-                                            <div className="play-album" onClick={() => playPlaylist(item.id)}>
+                                            <div className="play-album" onClick={() => playPlaylist(item.id, false)}>
                                                 <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                                 <img src={Circle} className="circle"/>
                                             </div>
@@ -358,9 +355,9 @@ type Props = {
     album: string,
     artist: string,
     index: number,
-    playAlbum: (name: string) => void,
-    playSong: (index: number) => void,
-    playPlaylist: (id: number) => void,
+    playAlbum: (name: string, shuffled: boolean) => void,
+    playSong: (index: number, shuffled: boolean) => void,
+    playPlaylist: (id: number, shuffled: boolean) => void,
     posX: number,
     posY: number,
     // Playlist
@@ -416,13 +413,13 @@ function CustomContextMenu({
                 <li 
                     onClick={() => {
                         if(context_type === "album") {
-                            playAlbum(album);
+                            playAlbum(album, false);
                         }
                         else if(context_type === "playlist") {
-                            playPlaylist(playlist)
+                            playPlaylist(playlist, false)
                         }
                         else if(context_type === "song") {
-                            playSong(index);
+                            playSong(index, false);
                         }
                         resetContextMenu();
                     }}

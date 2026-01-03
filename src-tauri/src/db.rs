@@ -403,12 +403,22 @@ pub async fn get_artist(state: State<AppState, '_>, name: String) -> Result<Song
         .await
         .unwrap();
 
-    println!("id={}, album_name={}", temp.name, temp.artist);
 
     Ok(temp)
 }
 
-// ------------------------------------ Playlist Functions ------------------------------------  ---------------------- NEEDS WORK
+pub async fn get_artist_songs(state: State<'_, AppState>, album_artist: String) -> Result<Vec<SongTable>, String> {
+
+    let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album_artist = ? ORDER BY album ASC, disc_number ASC, track ASC")
+        .bind(&album_artist)
+        .fetch_all(&state.pool)
+        .await
+        .unwrap();
+
+    Ok(songs)
+}
+
+// ------------------------------------ Playlist Functions ------------------------------------
 
 #[tauri::command]
 pub async fn get_all_playlists(state: State<AppState, '_>) -> Result<Vec<PlaylistTable>, String> {
@@ -499,7 +509,7 @@ pub async fn create_playlist(state: State<AppState, '_>, name: String, songs: Ve
     Ok(())
 }
 
-// Add songs to a playlist  ---------------------- NEEDS WORK
+// Add songs to a playlist
 #[tauri::command(rename_all = "snake_case")]
 pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, playlist_id: i64) -> Result<(), String> {
 
@@ -564,7 +574,7 @@ pub async fn delete_playlist(state: State<AppState, '_>, name: String) -> Result
     Ok(())
 }
 
-// Take in an array of strings (hashes) to update the position values of the playlist  ---------------------- NEEDS WORK
+// Take in an array of strings (hashes) to update the position values of the playlist
 #[tauri::command(rename_all = "snake_case")]
 pub async fn reorder_playlist(state: State<AppState, '_>, playlist_id: i64, songs: Vec<SongTable>) -> Result<(), String> {
 
@@ -695,9 +705,7 @@ pub async fn get_queue(state: State<AppState, '_>, shuffled: bool) -> Result<Vec
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
-pub async fn create_queue(state: State<AppState, '_>, songs: Vec<SongTable>, shuffled: bool) -> Result<(), String> {
-    
+pub async fn create_queue(state: State<'_, AppState>, songs: &Vec<SongTable>) -> Result<(), String> {
     
     // Remove all entries from the table - new adding a new queue
     sqlx::query("DELETE FROM queue").execute(&state.pool).await.map_err(|e| e.to_string())?;
@@ -708,33 +716,35 @@ pub async fn create_queue(state: State<AppState, '_>, songs: Vec<SongTable>, shu
 
     // Now add the new songs to the playlist
     let mut i = length.0 + 1;
-    for song in &songs {
+    for song in songs {
         let _ = sqlx::query("INSERT INTO queue (position, song_id) VALUES (?1, ?2)")
             .bind(&i)
             .bind(&song.path)
             .execute(&state.pool).await;
         i = i + 1;
-    }
-    
-    if shuffled == true {
-        // Remove all entries from the table - new adding a new queue
-        sqlx::query("DELETE FROM queue_shuffled").execute(&state.pool).await.map_err(|e| e.to_string())?;
+    }    
 
-        // Then add the new queue
-        // Get the last position of the playlist from the list
-        let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM queue_shuffled").fetch_one(&state.pool).await.unwrap();
+    Ok(())
+}
 
-        // Now add the new songs to the playlist
-        i = length.0 + 1;
-        for song in &songs {
-            let _ = sqlx::query("INSERT INTO queue_shuffled (position, song_id) VALUES (?1, ?2)")
-                .bind(&i)
-                .bind(&song.path)
-                .execute(&state.pool).await;
-            i = i + 1;
-        }
+pub async fn create_queue_shuffled(state: State<'_, AppState>, songs: &Vec<SongTable>) -> Result<(), String> {
+
+    // Remove all entries from the table - new adding a new queue
+    sqlx::query("DELETE FROM queue_shuffled").execute(&state.pool).await.map_err(|e| e.to_string())?;
+
+    // Then add the new queue
+    // Get the last position of the playlist from the list
+    let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM queue_shuffled").fetch_one(&state.pool).await.unwrap();
+
+    // Now add the new songs to the playlist
+    let mut i = length.0 + 1;
+    for song in songs {
+        let _ = sqlx::query("INSERT INTO queue_shuffled (position, song_id) VALUES (?1, ?2)")
+            .bind(&i)
+            .bind(&song.path)
+            .execute(&state.pool).await;
+        i = i + 1;
     }
-    
 
     Ok(())
 }
@@ -844,29 +854,3 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
     }    
 }
 
-
-
-struct IrclibLyrics {
-    id: i64,
-    track_name: String,
-    artist_name: String,
-    album_name: String,
-    duration: i64,
-    instrumental: bool,
-    plain_lyrics: String,
-    synced_lyrics: Option<String>
-}
-
-// Use a reqwest Client since multiple requests will be made
-#[tauri::command(rename_all = "snake_case")]
-async fn get_remote_lyrics(artist: String, name: String, album: String, duration: i64) -> Result<(), String> {
-
-    // let url = format!("https://lrclib.net/api/get?artist_name={}&track_name={}&album_name={}&duration={}",
-    //     artist, name, album, duration);
-
-    // let res = reqwest::get(url).await?.text().await?;
-    // println!("{:?}", res);
-
-    Ok(())
-
-}

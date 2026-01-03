@@ -7,7 +7,7 @@ import SimpleBar from "simplebar-react";
 import { forwardRef } from 'react';
 
 // Custom Components
-import { ArtistDetails, ContextMenu, PlaylistList, playSelection, savePosition, saveQueue, shuffle, Songs } from "../../globalValues";
+import { ArtistDetails, ContextMenu, PlaylistList, playSelection, savePosition, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Images
@@ -43,7 +43,6 @@ export default function ArtistOverviewPage() {
     const [newPlaylistName, setNewPlaylistName] = useState<string>("");
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
-
 
     const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "artist", album: "", artist: "", index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
@@ -88,11 +87,7 @@ export default function ArtistOverviewPage() {
     // Load the song the user clicked on but also queue the entire album
     async function playAlbum(album_name: string) {
         try {
-            const albumRes: Songs[] = await invoke('get_album', { name: album_name });
-            // Load the music to be played and saved
-            await invoke('player_load_album', {queue: albumRes, index: 0});
-            await invoke('update_current_song_played');
-            saveQueue(albumRes);
+            await invoke("play_album", {album_name: album_name, index: 0, shuffled: false});
             savePosition(0);
         }
         catch(e) {
@@ -100,41 +95,16 @@ export default function ArtistOverviewPage() {
         }
     }
 
-    async function playArtist() {
+    async function playArtist(shuffled: boolean) {
+        clearSelection();
         try {
-            let albums_songs_arr: Songs[] = [];
-            for(let i = 0; i < artistDetails.albums.length; i++) {
-                const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { name: artistDetails.albums[i].album });
-                albums_songs_arr = albums_songs_arr.concat(temp_arr);
-            }
-            playSelection(albums_songs_arr);
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            clearSelection();
-        }
-    }
-
-    async function shuffleArtist() {
-        try {
-            let albums_songs_arr: Songs[] = [];
-            for(let i = 0; i < artistDetails.albums.length; i++) {
-                const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { name: artistDetails.albums[i].album });
-                albums_songs_arr = albums_songs_arr.concat(temp_arr);
-            }
-            clearSelection();
-
-            let shufflePlaylist = albums_songs_arr.slice();
-            shuffle(shufflePlaylist);
-            playSelection(shufflePlaylist);
+            await invoke("play_artist", {album_artist: artistDetails.album_artist, shuffled: shuffled});
+            savePosition(0);
         }
         catch(e) {
             console.log(e);
         }
     }
-
 
     // Selection Function
     function editSelection(album: String, isBeingAdded: boolean, index: number) {
@@ -175,8 +145,9 @@ export default function ArtistOverviewPage() {
     }, []);
 
     async function addToQueue() {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
-            setDisplayAddToMenu(false);
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
@@ -189,12 +160,12 @@ export default function ArtistOverviewPage() {
         catch(e) {
             console.log(e);
         }
-        resetContextMenu();
     }
     
     async function addSelectedToPlaylist(id: number) {
-        try {
-            setDisplayAddToMenu(false);
+        resetContextMenu();
+        setDisplayAddToMenu(false);
+        try {            
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
@@ -205,10 +176,7 @@ export default function ArtistOverviewPage() {
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            resetContextMenu();
-        }        
+        }      
     }
 
     async function addArtistToPlaylist(id: number) {
@@ -246,8 +214,9 @@ export default function ArtistOverviewPage() {
     }
 
     async function createPlaylist(name: string) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
-            setDisplayAddToMenu(false);
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
@@ -261,7 +230,6 @@ export default function ArtistOverviewPage() {
         catch(e) {
             console.log(e);
         }
-        resetContextMenu();
     }
 
     async function getAllPlaylists() {
@@ -280,6 +248,8 @@ export default function ArtistOverviewPage() {
     }
 
     async function playSelectedAlbums() {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
             let albums_songs_arr: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
@@ -307,7 +277,6 @@ export default function ArtistOverviewPage() {
     }
 
     function resetContextMenu() {
-        console.log("Resetting Context Menu");
         setContextMenu({ isToggled: false, context_type: "artist", album: "", artist: "", index: 0, posX: 0, posY: 0});
     }
 
@@ -383,8 +352,8 @@ export default function ArtistOverviewPage() {
                                 </span>
                                 
                                 <div className="section-15 d-flex album-commmands">
-                                    <span><button className="font-1 borderless" onClick={playArtist}><img src={PlayIcon} /></button></span>
-                                    <span><button className="font-1 borderless" onClick={shuffleArtist}><img src={ShuffleIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={() => playArtist(false)}><img src={PlayIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={() => playArtist(true)}><img src={ShuffleIcon} /></button></span>
                                     <span className="position-relative">
                                         <button className="font-1 borderless" disabled={artistDetails.albums.length === 0} onClick={() => setDisplayAddToMenu(!displayAddToMenu)}  >
                                             <img src={AddIcon} />

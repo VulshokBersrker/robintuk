@@ -8,7 +8,7 @@ import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 
 // Custom Components
-import { ContextMenu, GetCurrentSong, PlaylistFull, PlaylistList, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs } from "../../globalValues";
+import { ContextMenu, GetCurrentSong, PlaylistFull, PlaylistList, savePosition, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
 import SongDetailsModal from "../../components/songDetails";
 
@@ -189,20 +189,17 @@ export default function PlaylistOverviewPage() {
     }
 
     // Load the song the user clicked on but also queue the entire album
-    async function playPlaylist(index: number) {
-        try {
-            await invoke('player_load_album', {queue: playlist, index: index});
-            await invoke('update_current_song_played', {path: playlist[index].path});
-            await invoke('update_current_song_played');
-            saveQueue(playlist);
+    async function playPlaylist(index: number, shuffled: boolean) {
+        try {            
+            await invoke("play_playlist", {playlist_id: location.state.name, index: index, shuffled: shuffled})
             savePosition(index);
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
         }
         finally {
-            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-            await invoke("set_shuffle_mode", { mode: false });
+            localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+            await invoke("set_shuffle_mode", { mode: shuffled });
         }
     }
 
@@ -249,8 +246,9 @@ export default function PlaylistOverviewPage() {
     }, []);
 
     async function addToQueue() {
-        try {
-            setDisplayAddToMenu(false);
+        resetContextMenu();
+        setDisplayAddToMenu(false);
+        try {            
             let songList: Songs[] = [];
             for(let i = 0; i < songSelection.length; i++) {
                 const temp: Songs = await invoke<Songs>('get_song', {song_path: songSelection[i].path});
@@ -262,11 +260,12 @@ export default function PlaylistOverviewPage() {
         }
         catch(e) {
             console.log(e);
-        }
-        resetContextMenu();
+        }        
     }
     
     async function addToPlaylist(name: string) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
             await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
         }
@@ -274,13 +273,14 @@ export default function PlaylistOverviewPage() {
             console.log(e);
         }
         finally {
-            setDisplayAddToMenu(false);
+            
             clearSelection();
         }
-        resetContextMenu();
     }
 
     async function createPlaylist(name: string) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
             await invoke('create_playlist', {name: name});
             await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
@@ -290,10 +290,8 @@ export default function PlaylistOverviewPage() {
             console.log(e);
         }
         finally {
-            setDisplayAddToMenu(false);
             clearSelection();
         }
-        resetContextMenu();
     }
 
     async function getAllPlaylists() {
@@ -341,25 +339,6 @@ export default function PlaylistOverviewPage() {
 
     // ------------ End of Selection Bar Functions ------------
 
-    async function shufflePlaylist() {
-        try {
-            let shufflePlaylist = playlist.slice();
-            shuffle(shufflePlaylist);
-            await invoke('player_load_album', { queue: shufflePlaylist, index: 0 });
-            await invoke('update_current_song_played', { path: shufflePlaylist[0].path });
-            await invoke('update_current_song_played');
-            saveQueue(playlist);
-            saveShuffledQueue(shufflePlaylist);
-            savePosition(0);
-        }
-        catch (err) {
-            alert(`Failed to play song: ${err}`);
-        }
-        finally {
-            localStorage.setItem("shuffle-mode", JSON.stringify(true) );
-            await invoke("set_shuffle_mode", { mode: true });
-        }
-    }
 
     async function reorderPlaylist(old_index: number, new_index: number) {
         try {
@@ -396,7 +375,6 @@ export default function PlaylistOverviewPage() {
     }
 
     function resetContextMenu() {
-        console.log("Resetting Context Menu");
         setContextMenu({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0});
         setDisplayAddToMenu(false);
     }
@@ -405,7 +383,6 @@ export default function PlaylistOverviewPage() {
         setDisplaySongDetails(bool);
         setDisplaySong(path)
         resetContextMenu();
-        console.log(bool);
     }
 
 
@@ -515,12 +492,12 @@ export default function PlaylistOverviewPage() {
                                         <button
                                             className="font-1 borderless"
                                             disabled={editPlaylist}
-                                            onClick={() => playPlaylist(0)}
+                                            onClick={() => playPlaylist(0, false)}
                                         >
                                             <img src={PlayIcon} />
                                         </button>
                                     </span>
-                                    <span><button className="font-1 borderless" disabled={editPlaylist} onClick={shufflePlaylist}><img src={ShuffleIcon} /></button></span>
+                                    <span><button className="font-1 borderless" disabled={editPlaylist} onClick={() => playPlaylist(0, true)}><img src={ShuffleIcon} /></button></span>
                                     <span><button className="font-1 borderless" onClick={() => setEditPlaylist(!editPlaylist)}><img src={EditIcon} /></button></span>
                                     <span>
                                         <button
@@ -567,7 +544,7 @@ export default function PlaylistOverviewPage() {
                                                         checked={checkBoxNumber[index]}
                                                     />
                                                 </span>
-                                                <img src={PlayIcon} onClick={() => playPlaylist(index)} />
+                                                <img src={PlayIcon} onClick={() => playPlaylist(index, false)} />
                                             </span>
                                             <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={playlist[index].cover} alt="" image_type="playlist-song" /></span>
                                             <span className="section-9 font-0 name">{playlist[index].name}</span>
@@ -693,7 +670,7 @@ type Props = {
     artist: string,
     index: number,
     length: number,
-    play: (index: number) => void,
+    play: (index: number, shuffle: boolean) => void,
     editSelection: (song: Songs, isBeingAdded: boolean, index: number) => void,
     reorder: (old_index: number, new_index: number) => void,
     remove: (index: number) => void,
@@ -757,7 +734,7 @@ function CustomContextMenu({
                     {isBeingAdded === false && <><img src={SelectIcon} />&nbsp;Select</>}
                 </li>
 
-                <li onClick={() => {play(index)}} className="d-flex align-items-center">
+                <li onClick={() => {play(index, false)}} className="d-flex align-items-center">
                     <img src={PlayIcon} /> &nbsp; Play
                 </li>
 

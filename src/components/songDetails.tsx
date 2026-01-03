@@ -2,8 +2,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
-import { Songs } from '../globalValues';
 import ImageWithFallBack from './imageFallback';
+import { Songs } from '../globalValues';
 
 type Props = {
     song_path: String,
@@ -97,5 +97,5 @@ export default function SongDetailsModal({song_path, bool, updateSongDetailsDisp
                 </div>                
             </div>
         );
-    }    
+    }
 }

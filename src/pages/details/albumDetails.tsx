@@ -6,9 +6,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { Virtuoso } from "react-virtuoso";
 
 // Custom Components
-import { ContextMenu, GetCurrentSong, savePosition, saveQueue, saveShuffledQueue, shuffle, Songs, PlaylistList } from "../../globalValues";
+import { ContextMenu, GetCurrentSong, savePosition, Songs, PlaylistList } from "../../globalValues";
 import CustomContextMenu from "../../components/customContextMenu";
 import ImageWithFallBack from "../../components/imageFallback";
+import SongDetailsModal from "../../components/songDetails";
 
 // Image Components
 import QueueIcon from '../../images/rectangle-list-regular-full.svg';
@@ -18,7 +19,6 @@ import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import CloseIcon from '../../images/x.svg';
 import SimpleBar from "simplebar-react";
-import SongDetailsModal from "../../components/songDetails";
 
 
 interface AlbumDetails {
@@ -53,8 +53,7 @@ export default function AlbumOverviewPage() {
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const[isCurrent, setIsCurrent] = useState<Songs>({
-        name: "", path: "", cover: "", release: "", track: 0, album: "",
+    const[isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "",
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0
     });
 
@@ -128,36 +127,18 @@ export default function AlbumOverviewPage() {
     }
 
     // Load the song the user clicked on but also queue the entire album
-    async function playSong(index: number) {
+    async function playSong(index: number, shuffled: boolean) {
         resetContextMenu();
         try {
-            await invoke('player_load_album', {queue: albumList, index: index});
-            await invoke('update_current_song_played', {path: albumList[index].path});
-            saveQueue(albumList);
-            savePosition(index);
-        }
-        catch (err) {
-            alert(`Failed to play song: ${err}`);
-        }
-    }
-
-    async function shuffleAlbum() {
-        try {
-            let shufflePlaylist = albumList.slice();
-            shuffle(shufflePlaylist);
-            await invoke('player_load_album', { queue: shufflePlaylist, index: 0 });
-            await invoke('update_current_song_played', { path: shufflePlaylist[0].path });
-            await invoke('update_current_song_played');
-            saveQueue(albumList);
-            saveShuffledQueue(shufflePlaylist);
-            savePosition(0);
+            await invoke("play_album", {album_name: location.state.name, index: index, shuffled: shuffled});
+            savePosition(index); 
         }
         catch (err) {
             alert(`Failed to play song: ${err}`);
         }
         finally {
-            localStorage.setItem("shuffle-mode", JSON.stringify(true) );
-            await invoke("set_shuffle_mode", { mode: true });
+            localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+            await invoke("set_shuffle_mode", { mode: shuffled });
         }
     }
 
@@ -329,7 +310,6 @@ export default function AlbumOverviewPage() {
     }
 
     function resetContextMenu() {
-        console.log("Resetting Context Menu");
         setContextMenu({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0});
     }
 
@@ -407,8 +387,8 @@ export default function AlbumOverviewPage() {
                                     </span>
                                     
                                     <div className="section-15 d-flex album-commmands">
-                                        <span><button className="font-1 borderless" onClick={() => playSong(0)}><img src={PlayIcon} /></button></span>
-                                        <span><button className="font-1 borderless" onClick={shuffleAlbum} ><img src={ShuffleIcon} /></button></span>
+                                        <span><button className="font-1 borderless" onClick={() => playSong(0, false)}><img src={PlayIcon} /></button></span>
+                                        <span><button className="font-1 borderless" onClick={() => playSong(0, true)} ><img src={ShuffleIcon} /></button></span>
                                         <span className="position-relative">
                                             <button className="font-1 borderless" disabled={albumList.length === 0} onClick={() => setDisplayAddToMenu(!displayAddToMenu)}   ><img src={AddIcon} /> </button>
 
@@ -482,7 +462,7 @@ export default function AlbumOverviewPage() {
                                                                         checked={checkBoxNumber[index]}
                                                                     />
                                                                 </span>
-                                                                <img src={PlayIcon} onClick={() => playSong(index)} />
+                                                                <img src={PlayIcon} onClick={() => playSong(index, false)} />
                                                             </span>
                                                             <span className="section-1 track">{albumList[index].track}</span>
                                                             <span className="section-9 font-0 name ">{albumList[index].name}</span>
@@ -523,7 +503,7 @@ export default function AlbumOverviewPage() {
                                                                         checked={checkBoxNumber[index]}
                                                                     />
                                                                 </span>
-                                                                <img src={PlayIcon} onClick={() => playSong(index)} />
+                                                                <img src={PlayIcon} onClick={() => playSong(index, false)} />
                                                             </span>
                                                             <span className="section-1 track">{albumList[index].track}</span>
                                                             <span className="section-9 font-0 name ">{albumList[index].name}</span>
@@ -555,7 +535,7 @@ export default function AlbumOverviewPage() {
                                                             checked={checkBoxNumber[index]}
                                                         />
                                                     </span>
-                                                    <img src={PlayIcon} onClick={() => playSong(index)} />
+                                                    <img src={PlayIcon} onClick={() => playSong(index, false)} />
                                                 </span>
                                                 <span className="section-1 track">{albumList[index].track}</span>
                                                 <span className="section-9 font-0 name ">{albumList[index].name}</span>
@@ -663,8 +643,8 @@ export default function AlbumOverviewPage() {
                                     </span>
                                     
                                     <div className="section-15 d-flex album-commmands">
-                                        <span><button className="font-1 borderless" onClick={() => playSong(0)}><img src={PlayIcon} /></button></span>
-                                        <span><button className="font-1 borderless" onClick={shuffleAlbum} ><img src={ShuffleIcon} /></button></span>
+                                        <span><button className="font-1 borderless" onClick={() => playSong(0, false)}><img src={PlayIcon} /></button></span>
+                                        <span><button className="font-1 borderless" onClick={() => playSong(0, true)} ><img src={ShuffleIcon} /></button></span>
                                         <span className="position-relative">
                                             <button className="font-1 borderless" disabled={albumList.length === 0} onClick={() => setDisplayAddToMenu(!displayAddToMenu)}   ><img src={AddIcon} /> </button>
 
@@ -735,7 +715,7 @@ export default function AlbumOverviewPage() {
                                                         checked={checkBoxNumber[index]}
                                                     />
                                                 </span>
-                                                <img src={PlayIcon} onClick={() => playSong(index)} />
+                                                <img src={PlayIcon} onClick={() => playSong(index, false)} />
                                             </span>
                                             <span className="section-1 track">{albumList[index].track}</span>
                                             <span className="section-9 font-0 name ">{albumList[index].name}</span>

@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { GetCurrentSong, savePosition, saveShuffledQueue, shuffle, Songs } from "../globalValues";
+import { GetCurrentSong, savePosition, saveShuffledQueue, Songs } from "../globalValues";
 import ImageWithFallBack from "./imageFallback";
 
 // Images
@@ -301,7 +301,6 @@ export default function MusicControls() {
             else {
                 setIsShuffle(true);
                 const shuffledQueue: Songs[] = await invoke<Songs[]>("get_queue", { shuffled: isShuffle });
-                shuffle(shuffledQueue);
                 // Index of the current song
                 const index: number = shuffledQueue.map(e => e.path).indexOf(songDetails!.path);
                 await invoke("player_update_queue_and_pos", { queue: shuffledQueue, index: index } );

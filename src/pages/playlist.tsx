@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import SimpleBar from 'simplebar-react';
 
 // Custom Components
-import { saveQueue, savePosition, Playlists, PlaylistFull } from "../globalValues.js";
+import { savePosition, Playlists } from "../globalValues.js";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -66,19 +66,16 @@ export default function PlaylistPage() {
 
     async function playPlaylist(playlist_id: number) {
         resetContextMenu();
-        try {
-            const playlistRes: PlaylistFull = await invoke<PlaylistFull>('get_playlist', { id: playlist_id });
-            if(playlistRes.songs.length !== 0) {
-                // Load the music to be played and saved
-                await invoke('player_load_album', {queue: playlistRes.songs, index: 0});
-                await invoke('update_current_song_played');
-                saveQueue(playlistRes.songs);
-                savePosition(0);
-                await invoke('create_queue', { songs: playlistRes.songs, shuffled: false });
-            }            
+        try {      
+            await invoke("play_playlist", {playlist_id: playlist_id, shuffled: false});
+            savePosition(0);
         }
-        catch(e) {
-            console.log(e);
+        catch (err) {
+            alert(`Failed to play song: ${err}`);
+        } 
+        finally {
+            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+            await invoke("set_shuffle_mode", { mode: false });
         }
     }
 
@@ -193,7 +190,7 @@ type Props = {
     navigateToPlaylistOverview: (name: number) => void,
     isToggled: boolean,
     playlist_id: number,
-    play: (album_name: number) => void, // playSong / playAlbum function
+    play: (playlist_id: number, shuffled: boolean) => void, // playSong / playAlbum function
     posX: number,
     posY: number,
     ref: any
@@ -209,7 +206,7 @@ function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play,
                 onContextMenu={(e) => {  e.preventDefault(); }}
                 ref={ref}
             >
-                <li onClick={() => {play(playlist_id)}} className="d-flex align-items-center">
+                <li onClick={() => {play(playlist_id, false)}} className="d-flex align-items-center">
                     <img src={PlayIcon} />
                     &nbsp; Play
                 </li>

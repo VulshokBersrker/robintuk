@@ -5,8 +5,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 
 // Custom Components
-import ImageWithFallBack from "./imageFallback";
 import { Playlists, playPlaylist } from "../globalValues";
+import ImageWithFallBack from "./imageFallback";
 
 // Images
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
@@ -31,7 +31,6 @@ export default function RightSideBar() {
     useEffect(() => {
         // Get the list of playlists from the database
         getPlaylists();
-
 
         const handler = () => {
             if(!contextMenu.isToggled) {
@@ -160,7 +159,7 @@ type Props = {
     navigateToPlaylistOverview: (name: number) => void,
     isToggled: boolean,
     playlist_id: number,
-    play: (album_name: number) => void, // playSong / playAlbum function
+    play: (playlist_id: number, shuffled: boolean) => void, // playSong / playAlbum function
     posX: number,
     posY: number
 }
@@ -174,7 +173,7 @@ function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play,
                 style={{ position: "fixed", left: `${posX}px`, top: `${posY}px`}}
                 onContextMenu={(e) => {  e.preventDefault(); }}
             >
-                <li onClick={() => {play(playlist_id)}} className="d-flex align-items-center">
+                <li onClick={() => {play(playlist_id, false)}} className="d-flex align-items-center">
                     <img src={PlayIcon} />
                     &nbsp; Play
                 </li>

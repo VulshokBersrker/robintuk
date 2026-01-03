@@ -136,16 +136,16 @@ export const alphabeticallyOrdered = [
 
 export async function saveQueue(q: Songs[]) {
     try {
-        invoke('create_queue', {songs: q, shuffled: false});
+        await invoke('create_queue', {songs: q, shuffled: false});
     }
     catch(e) {
         console.log(e);
     }
     localStorage.setItem('last-played-queue-length', (q.length - 1).toString());
 }
-export function saveShuffledQueue(q: Songs[]) {
+export async function saveShuffledQueue(q: Songs[]) {
     try {
-        invoke('create_queue', {songs: q, shuffled: true});
+        await invoke('create_queue', {songs: q, shuffled: true});
     }
     catch(e) {
         console.log(e);
@@ -168,9 +168,7 @@ export function shuffle(array: Songs[]) {
 export async function playSelection(array: Songs[]) {
     try {
         // Load the music to be played and saved
-        await invoke('player_load_album', {queue: array, index: 0});
-        await invoke('update_current_song_played');
-        saveQueue(array);
+        await invoke('play_selection', {songs: array, shuffled: false});
         savePosition(0);
     }
     catch(e) {
@@ -182,41 +180,32 @@ export async function playSelection(array: Songs[]) {
     }
 }
 
-export async function playAlbum(album_name: string) {
+export async function playAlbum(album_name: string, shuffled: boolean) {
     try {
-        const albumRes: Songs[] = await invoke('get_album', { name: album_name });
-        // Load the music to be played and saved
-        await invoke('player_load_album', {queue: albumRes, index: 0});
-        await invoke('update_current_song_played');
-        saveQueue(albumRes);
+        await invoke("play_album", {album_name: album_name, index: 0, shuffled: shuffled});
         savePosition(0);
     }
     catch(e) {
         console.log(e);
     }
     finally {
-        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-        await invoke("set_shuffle_mode", { mode: false });
+        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+        await invoke("set_shuffle_mode", { mode: shuffled });
     }
 }
 
-export async function playPlaylist(playlist_id: number) {
+export async function playPlaylist(playlist_id: number, shuffled: boolean) {
     try {
-        const res: PlaylistFull = await invoke("get_playlist", {id: playlist_id});
-        if(res.songs.length !== 0) {
-            // Load the music to be played and saved
-            await invoke('player_load_album', {queue: res.songs, index: 0});
-            await invoke('update_current_song_played', {path: res.songs[0].path});
-            saveQueue(res.songs);
-            savePosition(0);
-
-            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-            await invoke("set_shuffle_mode", { mode: false });
-        }        
+        await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuffled});
+        savePosition(0);        
     }
     catch (err) {
         alert(`Failed to play song: ${err}`);
     } 
+    finally {
+        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+        await invoke("set_shuffle_mode", { mode: shuffled });
+    }
 }
 
 

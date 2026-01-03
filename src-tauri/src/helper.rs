@@ -1,9 +1,10 @@
 // Libraries
 use std::{
     fs,
-    hash::{DefaultHasher, Hash, Hasher},
+    hash::{DefaultHasher, Hash, BuildHasher, Hasher, RandomState},
     path::{Path, PathBuf},
 };
+
 
 // Song Metadata Libraries
 use symphonia::core::formats::FormatOptions;
@@ -14,7 +15,7 @@ use symphonia::core::probe::Hint;
 use StandardTagKey::*;
 
 // How you import in files that aren't lib or main
-use crate::{SongDataResults, types::{ SongTableUpload }};
+use crate::{SongDataResults, types::{ SongTable, SongTableUpload }};
 
 pub fn generate_cover_hash(value: u64) -> String {
     let mut s = DefaultHasher::new();
@@ -30,6 +31,21 @@ fn remove_special_characters(string: String) -> String {
         ][..],
         "",
     );
+}
+
+pub fn shuffle(vec: &mut Vec<SongTable>) {
+
+    let n: usize = vec.len();
+    for i in 0..(n - 1) {
+        // Generate random index j, such that: i <= j < n
+        // The remainder (`%`) after division is always less than the divisor.
+        let j = (rand() as usize) % (n - i) + i;
+        vec.swap(i, j);
+    }    
+}
+
+fn rand() -> u64 {
+    RandomState::new().build_hasher().finish()
 }
 
 // Get the song metadata for the database

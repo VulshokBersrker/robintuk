@@ -22,7 +22,7 @@ type Props = {
     album: string,
     artist: string,
     index: number,
-    play: (index: number) => void, // playSong / playAlbum function
+    play: (index: number, shuffled: boolean) => void, // playSong / playAlbum function
     editSelection: (song: Songs, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
@@ -80,7 +80,7 @@ export default function CustomContextMenu({
                     {!isBeingAdded === true && <><img src={SelectIcon} />&nbsp;Select</>}
                 </li>
 
-                <li onClick={() => {play(index)}} className="d-flex align-items-center">
+                <li onClick={() => {play(index, false)}} className="d-flex align-items-center">
                     <img src={PlayIcon} />
                     &nbsp; Play
                 </li>

@@ -6,7 +6,7 @@ import SimpleBar from 'simplebar-react';
 import { forwardRef } from 'react';
 
 // Custom Components
-import { saveQueue, Songs, savePosition, PlaylistList, playSelection, AlbumDetails, alphabeticallyOrdered } from "../globalValues";
+import { Songs, savePosition, PlaylistList, playSelection, AlbumDetails, alphabeticallyOrdered } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -97,20 +97,13 @@ export default function AlbumPage({albums}: P) {
     }
 
     async function playAlbum(album_name: string) {
+        resetContextMenu();
         try {
-            const albumRes: Songs[] = await invoke('get_album', { name: album_name });
-            // Load the music to be played and saved
-            await invoke('player_load_album', {queue: albumRes, index: 0});
-            await invoke('update_current_song_played');
-            saveQueue(albumRes);
+            await invoke("play_album", {album_name: album_name, index: 0, shuffled: false});
             savePosition(0);
-            await invoke('create_queue', { songs: albumRes, shuffled: false });
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            resetContextMenu();
         }
     }
 
@@ -151,7 +144,6 @@ export default function AlbumPage({albums}: P) {
     }
 
     function resetContextMenu() {
-        console.log("Resetting Context Menu");
         setContextMenu({ isToggled: false, isBeingAdded: false, album: "", artist: "", index: 0, posX: 0, posY: 0});
     }
 

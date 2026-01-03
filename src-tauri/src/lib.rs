@@ -118,6 +118,11 @@ pub fn run() -> Result<(), String> {
             db::add_song_to_history,
             db::get_play_history,
             // -- Media Player Functions
+            commands::play_song,
+            commands::play_album,
+            commands::play_playlist,
+            commands::play_artist,
+            commands::play_selection,
             // Standard Media Functions
             commands::player_play,
             commands::player_pause,
@@ -139,7 +144,7 @@ pub fn run() -> Result<(), String> {
             commands::player_update_queue_and_pos,
             commands::player_clear_queue,
             db::get_queue,
-            db::create_queue,
+            // db::create_queue,
             db::add_to_queue,
             db::clear_queue,
             // Other Media Player Functions
@@ -154,7 +159,7 @@ pub fn run() -> Result<(), String> {
             commands::set_shuffle_mode,
             // Backup and Restore Functions,
             commands::create_backup,
-            commands::use_restore
+            commands::use_restore,
         ])        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
