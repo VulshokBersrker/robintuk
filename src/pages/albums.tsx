@@ -49,7 +49,6 @@ export default function AlbumPage({albums}: P) {
     const [albumSections, setAlbumSections] = useState<number[]>([]);    
 
     const [albumSelection, setAlbumSelection] = useState<String[]>([]);
-    const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
     const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: "", artist: "", index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
@@ -62,7 +61,6 @@ export default function AlbumPage({albums}: P) {
         function setupAlbumList() {
             
             setLoading(true);
-            setCheckBoxNumber(Array(albumList.length).fill(false));
 
             let tempSectionArray: number[] = [];
             const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, albumList.map((o: AlbumDetails) => { return o.album_section})) );
@@ -124,21 +122,21 @@ export default function AlbumPage({albums}: P) {
         setAlbumSections(tempSectionArray);
     }
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+    function handleContextMenu(e: any, album: string, artist: string, index: number, isBeingAdded: boolean) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 215});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 215});
             }
         }
         else {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, isBeingAdded: checkBoxNumber[index], album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 215});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 215});
             }
         }
     }
@@ -149,31 +147,23 @@ export default function AlbumPage({albums}: P) {
 
     // ------------ Start of Selection Bar Functions ------------
     
-    function editSelection(album: String, isBeingAdded: boolean, index: number) {
+    function editSelection(album: String, isBeingAdded: boolean) {
         resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
             setAlbumSelection([...albumSelection, album]);
-            let tempArr: boolean[] = checkBoxNumber;
-            tempArr[index] = true;
-            setCheckBoxNumber(tempArr);
 
         }
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
             setAlbumSelection(albumSelection.filter(item => item !== album));
-            let tempArr: boolean[] = checkBoxNumber;
-            tempArr[index] = false;
-            setCheckBoxNumber(tempArr);;
-        }
-        
+        }        
     }
 
     function clearSelection() {
         setAlbumSelection([]);
-        setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
     }
 
     // ------------ End of Selection Bar Functions ------------
@@ -319,7 +309,7 @@ export default function AlbumPage({albums}: P) {
             <div>
                 {/* Song Selection Bar */}
                 <div className={`selection-popup-container grid-20 header-font ${albumSelection.length >= 1 ? "open" : "closed"}`}>
-                    <div className="section-8">{albumSelection.length} item{albumSelection.length > 1 && <>s</>} selected</div>
+                    <div className="section-8" style={{marginLeft: "15px"}}>{albumSelection.length} item{albumSelection.length > 1 && <>s</>} selected</div>
                     <div className="section-4 position-relative">
                         <button className="d-flex align-items-center" onClick={playSelectedAlbums}>
                             <img src={PlayIcon} />
@@ -331,30 +321,30 @@ export default function AlbumPage({albums}: P) {
                             <img src={AddIcon} />
                              &nbsp;Add to
                         </button>
-
-                        {displayAddToMenu &&
+                        {displayAddToMenu && albumSelection.length >= 1 &&
                             <div className="playlist-list-container header-font">
-                                <div className="d-flex align-items-center" onClick={addToQueue}>
-                                    <img src={QueueIcon} className="icon-size"/>
-                                    &nbsp;Queue
+                                <div className="item d-flex align-items-center" onClick={addToQueue}>
+                                    <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                 </div>
                                 <hr/>
                                 <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                     <input
-                                        id="new_playlist_input" type="text" placeholder="New Playlist"
+                                        id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
                                         className="new-playlist" value={newPlaylistName}
                                         onChange={(e) => setNewPlaylistName(e.target.value)}
                                     />
                                     <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                                 </span>
                                 
-                                {playlistList?.map((playlist) => {
-                                    return(
-                                        <div key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
-                                            {playlist.name}
-                                        </div>
-                                    );
-                                })}
+                                <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container" >
+                                    {playlistList?.map((playlist) => {
+                                        return(
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
+                                                {playlist.name}
+                                            </div>
+                                        );                                                                                      
+                                    })}
+                                </SimpleBar>
                             </div>
                         }
                     </div>
@@ -409,15 +399,20 @@ export default function AlbumPage({albums}: P) {
                                 <div className="album-image-container"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
-                                        handleContextMenu(e, filteredAlbums[index].album, filteredAlbums[index].album_artist, index);
+                                        handleContextMenu(e, filteredAlbums[index].album, filteredAlbums[index].album_artist, index, albumSelection.filter(x => {
+                                                return x === filteredAlbums[index].album
+                                            }).length > 0
+                                        );
                                     }}
                                 >
                                     <span className="checkbox-container">
                                         <input
                                             type="checkbox"
-                                            id={`select-${index}`} name={`select-${index}`}
-                                            onClick={(e) => editSelection(filteredAlbums[index].album, e.currentTarget.checked, index)}
-                                            checked={checkBoxNumber[index]} onChange={() => {}}
+                                            id={`select-${index}`} name={`select-${index}`} onChange={() => {}}
+                                            onClick={(e) => editSelection(filteredAlbums[index].album, e.currentTarget.checked)}
+                                            checked={albumSelection.filter(x => {
+                                                return x === filteredAlbums[index].album
+                                            }).length > 0} 
                                         />
                                     </span>
                                     <div className="play-album" onClick={() => playAlbum(filteredAlbums[index].album)}>

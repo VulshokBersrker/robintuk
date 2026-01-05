@@ -92,21 +92,40 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
 // ----------------- Play Commands
 
 #[tauri::command(rename_all = "snake_case")]
+pub async fn shuffle_queue(state: State<AppState, '_>, song: String, shuffled: bool) -> Result<(), String> {
+    let mut q = db::get_queue(state.clone(), false).await.unwrap();
+
+    if shuffled {
+        helper::shuffle(&mut q);
+        let index = q.iter().position(|r| r.path == song).unwrap();
+        let _ = player_update_queue_and_pos(state.clone(), q.clone(), index);
+        let _ = db::create_queue_shuffled(state.clone(), &q).await;   
+    }
+    else {
+        let index = q.iter().position(|r| r.path == song).unwrap();
+        let _ = player_update_queue_and_pos(state.clone(), q, index);
+    }
+    Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
 pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, playlist_id: i64, index: usize, shuffled: bool) -> Result<(), String> {
 
     let mut playlist = db::get_playlist(state.clone(), playlist_id).await.unwrap().songs;
+    let q = playlist.clone();
 
     if shuffled {
         helper::shuffle(&mut playlist);
         let _ = player_load_album(state.clone(), playlist.clone(), index);
         update_current_song_played(state.clone(), app);
-        let _ = db::create_queue_shuffled(state.clone(), &playlist).await;        
+        let _ = db::create_queue_shuffled(state.clone(), &playlist).await;      
+        let _ = db::create_queue(state.clone(), &q).await;
     }
     else {
-        let _ = player_load_album(state.clone(), playlist.clone(), index);
+        let _ = player_load_album(state.clone(), q.clone(), index);
         update_current_song_played(state.clone(), app);
-        let _ = db::create_queue(state.clone(), &playlist).await;
-    }
+        let _ = db::create_queue(state.clone(), &q).await;
+    }    
 
     Ok(())
 }
@@ -120,16 +139,19 @@ pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album
         .await
         .unwrap();
 
+    let q = album.clone();
+
     if shuffled {
         helper::shuffle(&mut album);
         let _ = player_load_album(state.clone(), album.clone(), index);
         update_current_song_played(state.clone(), app);
-        let _ = db::create_queue_shuffled(state.clone(), &album).await;        
+        let _ = db::create_queue_shuffled(state.clone(), &album).await;  
+        let _ = db::create_queue(state.clone(), &q).await;      
     }
     else {
-        let _ = player_load_album(state.clone(), album.clone(), index);
+        let _ = player_load_album(state.clone(), q.clone(), index);
         update_current_song_played(state.clone(), app);
-        let _ = db::create_queue(state.clone(), &album).await;
+        let _ = db::create_queue(state.clone(), &q).await;
     }    
 
     Ok(())
@@ -151,17 +173,19 @@ pub async fn play_song(state: State<AppState, '_>, app: tauri::AppHandle, song: 
 pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, album_artist: String, shuffled: bool) -> Result<(), String> {
 
     let mut songs: Vec<SongTable> = db::get_artist_songs(state.clone(), album_artist).await.unwrap();
+    let q = songs.clone();
 
     if shuffled {
         helper::shuffle(&mut songs);
         let _ = player_load_album(state.clone(), songs.clone(), 0);
         update_current_song_played(state.clone(), app);
-        let _ = db::create_queue_shuffled(state.clone(), &songs).await;        
+        let _ = db::create_queue_shuffled(state.clone(), &songs).await;    
+        let _ = db::create_queue(state.clone(), &q).await;    
     }
     else {
-        let _ = player_load_album(state.clone(), songs.clone(), 0);
+        let _ = player_load_album(state.clone(), q.clone(), 0);
         update_current_song_played(state.clone(), app);
-        let _ = db::create_queue(state.clone(), &songs).await;
+        let _ = db::create_queue(state.clone(), &q).await;
     }
     
     Ok(())
@@ -171,17 +195,19 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
 pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, songs: Vec<SongTable>, shuffled: bool) -> Result<(), String> {
 
     let mut arr = songs;
+    let q = arr.clone();    
 
     if shuffled {
         helper::shuffle(&mut arr);
         let _ = player_load_album(state.clone(), arr.clone(), 0);
         update_current_song_played(state.clone(), app);
-        let _ = db::create_queue_shuffled(state.clone(), &arr).await;        
+        let _ = db::create_queue_shuffled(state.clone(), &arr).await;   
+        let _ = db::create_queue(state.clone(), &q).await;    
     }
     else {
-        let _ = player_load_album(state.clone(), arr.clone(), 0);
+        let _ = player_load_album(state.clone(), q.clone(), 0);
         update_current_song_played(state.clone(), app);
-        let _ = db::create_queue(state.clone(), &arr).await;
+        let _ = db::create_queue(state.clone(), &q).await;
     }
     
     Ok(())

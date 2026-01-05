@@ -7,7 +7,7 @@ import SimpleBar from "simplebar-react";
 import { forwardRef } from 'react';
 
 // Custom Components
-import { ArtistDetails, ContextMenu, PlaylistList, playSelection, savePosition, Songs } from "../../globalValues";
+import { ArtistDetails, PlaylistList, playSelection, savePosition, Songs } from "../../globalValues";
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Images
@@ -44,7 +44,7 @@ export default function ArtistOverviewPage() {
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "artist", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "artist", album: "", artist: "", index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
 
@@ -116,7 +116,9 @@ export default function ArtistOverviewPage() {
             let tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = true;
             setCheckBoxNumber(tempArr);
-
+            if(albumSelection.length == 0) {
+                setDisplayAddToMenu(false);
+            }
         }
         // If we are removing a song from the array
         else {
@@ -124,12 +126,16 @@ export default function ArtistOverviewPage() {
             setAlbumSelection(albumSelection.filter(item => item !== album));
             let tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
-            setCheckBoxNumber(tempArr);;
+            setCheckBoxNumber(tempArr);
+            if(albumSelection.length <= 1) {
+                setDisplayAddToMenu(false);
+            }
         }       
     }
 
     function clearSelection() {
         setAlbumSelection([]);
+        setDisplayAddToMenu(false);
         setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
     }
 
@@ -188,14 +194,12 @@ export default function ArtistOverviewPage() {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: artistDetails.albums[i].album});
                 songList.push(...temp);
             }
+            clearSelection();
             await invoke('add_to_playlist', {songs: songList, playlist_id: id});
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            clearSelection();
-        }        
+        }      
     }
 
     async function addToPlaylist(id: number, album: string) {
@@ -256,14 +260,12 @@ export default function ArtistOverviewPage() {
                 const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { name: albumSelection[i] });
                 albums_songs_arr = albums_songs_arr.concat(temp_arr);
             }
+            clearSelection();
             playSelection(albums_songs_arr);
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            clearSelection();
-        }        
+        }      
     }
     // ------------ End of Selection Bar Functions ------------
 
@@ -298,7 +300,7 @@ export default function ArtistOverviewPage() {
 
                     {/* Song Selection Bar */}
                     <div className={`selection-popup-container grid-20 header-font ${albumSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8">{albumSelection.length} item{albumSelection.length > 1 && <>s</>} selected</div>
+                        <div className="section-8" style={{marginLeft: '10px'}}>{albumSelection.length} item{albumSelection.length > 1 && <>s</>} selected</div>
                         <div className="section-4">
                             <button className="d-flex align-items-center" onClick={playSelectedAlbums}>
                                 <img src={PlayIcon} />
@@ -312,8 +314,8 @@ export default function ArtistOverviewPage() {
                             </button>
                             {displayAddToMenu && albumSelection.length >= 1 &&
                                 <div className="playlist-list-container header-font">
-                                    <div className="d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon icon-size"/>
+                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
+                                        <img src={QueueIcon} className="icon-size"/>
                                         <span>&nbsp;Queue</span>
                                     </div>
                                     <hr/>
@@ -326,13 +328,15 @@ export default function ArtistOverviewPage() {
                                         <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                                     </span>
                                     
-                                    {playlistList?.map((playlist) => {
-                                        return(
-                                            <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                {playlist.name}
-                                            </div>
-                                        );
-                                    })}
+                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
+                                        {playlistList?.map((playlist) => {
+                                            return(
+                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
+                                                    {playlist.name}
+                                                </div>
+                                            );                                                                                      
+                                        })}
+                                    </SimpleBar>
                                 </div>
                             }
                         </div>
@@ -368,21 +372,21 @@ export default function ArtistOverviewPage() {
                                                 <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                                     <input
                                                         id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
-                                                        className="new-playlist" value={newPlaylistName}
+                                                        className="new-playlist" value={newPlaylistName} style={{marginLeft: '-10px'}} 
                                                         onChange={(e) => setNewPlaylistName(e.target.value)}
                                                     />
-                                                    <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                                    <div style={{marginLeft: '10px'}} ><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></div>
                                                 </span>
                                                 
-                                                <div className="add-playlist-container">
+                                                <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
                                                     {playlistList?.map((playlist) => {
                                                         return(
                                                             <div className="item" key={playlist.name} onClick={() => addArtistToPlaylist(playlist.id)}>
                                                                 {playlist.name}
                                                             </div>
-                                                        );                                                                                                    
+                                                        );                                                                                      
                                                     })}
-                                                </div>
+                                                </SimpleBar>
                                             </div>
                                         }                                    
                                     </span>

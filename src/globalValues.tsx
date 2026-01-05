@@ -91,6 +91,7 @@ export interface PlaylistFull {
 
 export interface ContextMenu {
     isToggled: boolean,
+    isBeingAdded: boolean,
     context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
     album: string,
     artist: string,
@@ -156,15 +157,6 @@ export function savePosition(p: number) {
     localStorage.setItem('last-played-queue-position', p.toString());
 }
 
-export function shuffle(array: Songs[]) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-}
-
 export async function playSelection(array: Songs[]) {
     try {
         // Load the music to be played and saved
@@ -195,16 +187,17 @@ export async function playAlbum(album_name: string, shuffled: boolean) {
 }
 
 export async function playPlaylist(playlist_id: number, shuffled: boolean) {
+    const shuf = JSON.parse(localStorage.getItem("shuffle-mode")!);
     try {
-        await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuffled});
-        savePosition(0);        
+        await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuf});
+        savePosition(0);
     }
     catch (err) {
         alert(`Failed to play song: ${err}`);
     } 
     finally {
-        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
-        await invoke("set_shuffle_mode", { mode: shuffled });
+        localStorage.setItem("shuffle-mode", JSON.stringify(shuf) );
+        await invoke("set_shuffle_mode", { mode: shuf });
     }
 }
 

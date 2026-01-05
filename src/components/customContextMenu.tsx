@@ -13,6 +13,7 @@ import SelectIcon from '../images/circle-check-regular-full.svg';
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
 import ArtistIcon from '../images/user-regular-full.svg';
 import PlayIcon from '../images/play-icon-outline.svg';
+import InfoIcon from '../images/info-solid-full.svg';
 import AddIcon from '../images/plus-solid-full.svg';
 
 type Props = {
@@ -132,7 +133,7 @@ export default function CustomContextMenu({
                     </li>
                 }    
                 <li  className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
-                    <img src={ArtistIcon} />
+                    <img src={InfoIcon} />
                     &nbsp; Song Details
                 </li>            
             </div>

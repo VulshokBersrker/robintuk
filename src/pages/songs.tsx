@@ -36,9 +36,8 @@ export default function SongPage({songs}: Props) {
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
-    const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
 
-    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "song", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, isBeingAdded: false, context_type: "song", album: "", artist: "", index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<string>("");
@@ -189,58 +188,49 @@ export default function SongPage({songs}: Props) {
         }
     }
     
-    function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
+    function editSelection(song: Songs, isBeingAdded: boolean) {
         resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
             setSongSelection([...songSelection, song]);
-            const tempArr: boolean[] = checkBoxNumber;
-            tempArr[index] = true;
-            setCheckBoxNumber(tempArr);
-
         }
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            setSongSelection(songSelection.filter(item => item.path !== song.path));
-            const tempArr: boolean[] = checkBoxNumber;
-            tempArr[index] = false;
-            setCheckBoxNumber(tempArr);
+            setSongSelection(songSelection.filter(item => item.path !== song.path));;
         }
     }
 
     function clearSelection() {
         setSongSelection([]);
-        setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
     }
 
     // ------------ End of Selection Bar Functions ------------
 
     // Context Menu Functions
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+    function handleContextMenu(e: any, album: string, artist: string, index: number, isBeingAdded: boolean) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 180});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 180});
             }
         }
         else {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 180});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 180});
             }
         }
     }
 
     function resetContextMenu() {
-        console.log("Resetting Context Menu");
-        setContextMenu({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0});
         setDisplayAddToMenu(false);
     }
 
@@ -370,7 +360,9 @@ export default function SongPage({songs}: Props) {
                                                 <div className="song-link"
                                                     onContextMenu={(e) => {
                                                         e.preventDefault();
-                                                        handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index);
+                                                        handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index, songSelection.filter(x => {
+                                                            return x.path === filteredSongs[index].path
+                                                        }).length > 0);
                                                     }}
                                                 >
                                                     <div className={`grid-20 song-row`}>
@@ -379,8 +371,11 @@ export default function SongPage({songs}: Props) {
                                                             <span className="form-control">
                                                                 <input
                                                                     type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                                    onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked, index)}
-                                                                    onChange={() => {}} checked={checkBoxNumber[index]}
+                                                                    onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked,)}
+                                                                    onChange={() => {}} 
+                                                                    checked={songSelection.filter(x => {
+                                                                        return x.path === filteredSongs[index].path
+                                                                    }).length > 0}
                                                                 />
                                                             </span>
                                                             <img src={PlayIcon} onClick={() => {playSong(index)}}/>
@@ -406,17 +401,21 @@ export default function SongPage({songs}: Props) {
                                     <div className="song-link"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index);
+                                            handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index, songSelection.filter(x => {
+                                                return x.path === filteredSongs[index].path
+                                            }).length > 0);
                                         }}
                                     >
-                                        <div className={`grid-20 song-row`}>
-                                            
+                                        <div className={`grid-20 song-row`}>                                            
                                             <span className="section-1 vertical-centered play ">
                                                 <span className="form-control">
                                                     <input
                                                         type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                        onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked, index)}
-                                                        onChange={() => {}} checked={checkBoxNumber[index]}
+                                                        onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked)}
+                                                        onChange={() => {}} 
+                                                        checked={songSelection.filter(x => {
+                                                            return x.path === filteredSongs[index].path
+                                                        }).length > 0}
                                                     />
                                                 </span>
                                                 <img src={PlayIcon} onClick={() => {playSong(index)}}/>
@@ -448,7 +447,7 @@ export default function SongPage({songs}: Props) {
                     index={contextMenu.index}
                     play={playSong}
                     editSelection={editSelection}
-                    isBeingAdded={checkBoxNumber[contextMenu.index]}
+                    isBeingAdded={contextMenu.isBeingAdded}
                     posX={contextMenu.posX}
                     posY={contextMenu.posY}
                     name={""}

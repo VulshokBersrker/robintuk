@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&display=swap');
 
-
 :root {
   --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --header-family: "Funnel Display", sans-serif;
@@ -21,71 +20,64 @@
   --font-color-three: #6c0e1a;
   /* Gradient Colors */
   --gradient-one: #430909;
-  --gradient-two: #250303;
+  --gradient-two: #1e0000;
   --gradient-three: rgb(0, 0, 0);
   /* Hr Colors */
-  --hr-gradient-one: #571f1f;
-  --hr-gradient-two: #511616;
-  /* Scrollbar Colors */
-  --scrollbar-color: #6c0e1a rgba(0,0,0,0);
+  --hr-gradient-one: #611e1e;
+  --hr-gradient-two: #5a0909;
   /* Music Player Colors */
   --music-player-bg: rgba(16, 1, 1, 0.55);
-  --music-player-border: linear-gradient(to right, rgb(138, 2, 2), rgb(28, 28, 28)) 1 stretch;
-  --slider-color-one: #6c0e1a;
+  --music-player-border: linear-gradient(to right, rgb(79, 1, 1), rgb(28, 28, 28)) 1 stretch;
+  --slider-color-one: #6d131f;
   /* Album Overview Colors */
-  --play-icon: brightness(0) saturate(100%) invert(7%) sepia(98%) saturate(7176%) hue-rotate(18deg) brightness(77%) contrast(111%);
-  --play-icon-hover: brightness(0) saturate(100%) invert(86%) sepia(6%) saturate(1038%) hue-rotate(314deg) brightness(99%) contrast(86%);
+  --play-icon: brightness(0) saturate(100%) invert(10%) sepia(36%) saturate(7033%) hue-rotate(340deg) brightness(91%) contrast(94%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(12%) sepia(93%) saturate(3421%) hue-rotate(342deg) brightness(83%) contrast(89%);
   --arrow-icon: brightness(0) saturate(100%) invert(15%) sepia(99%) saturate(2579%) hue-rotate(344deg) brightness(84%) contrast(86%);
   /* Checkbox Colors */
-  --checkbox-checked-color: rgb(141, 68, 68);
+  --checkbox-checked-color: rgb(146, 52, 52);
 }
 [data-theme="blue"] {
   /* Font Colors */
   --font-color-one: #cdcdcd;
   --font-color-two: #76849c;
-  --font-color-three: #1b3ab7;
+  --font-color-three: #2841a4;
   /* Gradient Colors */
-  --gradient-one: rgb(2, 18, 45);
+  --gradient-one: rgb(6, 22, 49);
   --gradient-two: rgb(0, 2, 15);
   --gradient-three: rgb(0, 0, 0);
   /* Hr Colors */
-  --hr-gradient-one: #171e36;
-  --hr-gradient-two: #17183a;
-  /* Scrollbar Colors */
-  --scrollbar-color: rgba(69, 72, 129, 0.45) rgba(0, 0, 0, 0);
+  --hr-gradient-one: #212a4a;
+  --hr-gradient-two: #1c1e55;
   /* Music Player Colors */
-  --music-player-bg: rgba(1, 4, 16, 0.429);
-  --music-player-border: linear-gradient(to right, rgb(19, 22, 126), rgb(28, 28, 28)) 1 stretch;
-  --slider-color-one: #171acb;
+  --music-player-bg: rgba(1, 4, 16, 0.55);
+  --music-player-border: linear-gradient(to right, rgb(44, 47, 151), rgb(28, 28, 28)) 1 stretch;
+  --slider-color-one: #2841a4;
   /* Album Overview Colors */
-  --play-icon: brightness(0) saturate(100%) invert(15%) sepia(93%) saturate(2862%) hue-rotate(228deg) brightness(94%) contrast(101%);;
-  --play-icon-hover: brightness(0) saturate(100%) invert(69%) sepia(11%) saturate(1645%) hue-rotate(193deg) brightness(98%) contrast(91%);
+  --play-icon: brightness(0) saturate(100%) invert(19%) sepia(97%) saturate(1994%) hue-rotate(222deg) brightness(85%) contrast(91%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(37%) sepia(26%) saturate(3653%) hue-rotate(210deg) brightness(84%) contrast(94%);
   --arrow-icon: brightness(0) saturate(100%) invert(16%) sepia(83%) saturate(3109%) hue-rotate(202deg) brightness(99%) contrast(93%);
   /* Checkbox Colors */
-  --checkbox-checked-color: rgb(68, 98, 141);
+  --checkbox-checked-color: rgb(20, 86, 178);
 }
 [data-theme="purple"] {
   /* Font Colors */
   --font-color-one: #cdcdcd;
   --font-color-two: #9e7fba;
-  --font-color-three: #7d33ae;
+  --font-color-three: #5d2881;
   /* Gradient Colors */
-  --gradient-one: #3a1b75;
-  --gradient-two: #1b093b;
-  --gradient-three: #090118;
-
+  --gradient-one: #301268;
+  --gradient-two: #170635;
+  --gradient-three: #000000;
   /* Hr Colors */
   --hr-gradient-one: #4b3957;
   --hr-gradient-two: #473551;
-  /* Scrollbar Colors */
-  --scrollbar-color: rgb(135, 93, 159);
   /* Music Player Colors */
   --music-player-bg: rgba(1, 8, 16, 0.55);
   --music-player-border: linear-gradient(to right, #5d2881, rgb(28, 28, 28)) 1 stretch;
   --slider-color-one: #5d2881;
   /* Album Overview Colors */
-  --play-icon: brightness(0) saturate(100%) invert(26%) sepia(21%) saturate(5898%) hue-rotate(258deg) brightness(90%) contrast(95%);
-  --play-icon-hover: brightness(0) saturate(100%) invert(73%) sepia(91%) saturate(404%) hue-rotate(73deg) brightness(106%) contrast(103%);
+  --play-icon: brightness(0) saturate(100%) invert(19%) sepia(32%) saturate(2987%) hue-rotate(252deg) brightness(98%) contrast(99%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(27%) sepia(94%) saturate(934%) hue-rotate(247deg) brightness(83%) contrast(102%);
   --arrow-icon: brightness(0) saturate(100%) invert(45%) sepia(5%) saturate(1523%) hue-rotate(229deg) brightness(100%) contrast(90%);
   /* Checkbox Colors */
   --checkbox-checked-color: rgb(124, 68, 141);
@@ -94,79 +86,70 @@
   /* Font Colors */
   --font-color-one: #cdcdcd;
   --font-color-two: #928475;
-  --font-color-three: #b96118;
+  --font-color-three: #974807;
   /* Gradient Colors */
-  --gradient-one: rgb(38, 20, 0);
-  --gradient-two: rgb(24, 13, 1);
+  --gradient-one: rgb(54, 30, 0);
+  --gradient-two: rgb(16, 8, 1);
   --gradient-three: rgb(0, 0, 0);
-
   /* Hr Colors */
   --hr-gradient-one: #4d3c22;
   --hr-gradient-two: #573e1e;
-  /* Scrollbar Colors */
-  --scrollbar-color: rgba(129, 102, 69, 0.45) rgba(0,0,0,0);
   /* Music Player Colors */
   --music-player-bg: rgba(16, 8, 1, 0.429);
-  --music-player-border: linear-gradient(to right, rgb(101, 49, 1), rgb(28, 28, 28)) 1 stretch;
-  --slider-color-one: #c96d12;
+  --music-player-border: linear-gradient(to right, rgb(122, 65, 11), rgb(28, 28, 28)) 1 stretch;
+  --slider-color-one: #974807;
   /* Album Overview Colors */
-  --play-icon: brightness(0) saturate(100%) invert(41%) sepia(27%) saturate(1724%) hue-rotate(349deg) brightness(96%) contrast(91%);
-  --play-icon-hover: brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(633%) hue-rotate(351deg) brightness(93%) contrast(89%);
+  --play-icon: brightness(0) saturate(100%) invert(24%) sepia(100%) saturate(1113%) hue-rotate(7deg) brightness(97%) contrast(94%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(47%) sepia(52%) saturate(6062%) hue-rotate(14deg) brightness(92%) contrast(93%);
   --arrow-icon: brightness(0) saturate(100%) invert(31%) sepia(67%) saturate(741%) hue-rotate(350deg) brightness(96%) contrast(92%);
   /* Checkbox Colors */
-  --checkbox-checked-color: rgb(155, 114, 49);
+  --checkbox-checked-color: rgb(168, 112, 15);
 }
 [data-theme="green"] {
   /* Font Colors */
   --font-color-one: #cdcdcd;
   --font-color-two: #8baa8d;
-  --font-color-three: #008b31;
+  --font-color-three: #07782e;
   /* Gradient Colors */
   --gradient-one: rgb(5, 41, 3);
   --gradient-two: rgb(5, 17, 0);
   --gradient-three: rgb(0, 0, 0);
-
   /* Hr Colors */
-  --hr-gradient-one: #174117;
-  --hr-gradient-two: #0f3a0f;
-  /* Scrollbar Colors */
-  --scrollbar-color: rgba(69, 129, 69, 0.45) rgba(0,0,0,0);
+  --hr-gradient-one: #154715;
+  --hr-gradient-two: #0e4a0e;
   /* Music Player Colors */
   --music-player-bg: rgba(3, 16, 1, 0.429);
   --music-player-border: linear-gradient(to right, rgb(1, 101, 9), rgb(28, 28, 28)) 1 stretch;
-  --slider-color-one: #1fb611;
+  --slider-color-one: #15860b;
   /* Album Overview Colors */
-  --play-icon: brightness(0) saturate(100%) invert(26%) sepia(99%) saturate(2506%) hue-rotate(135deg) brightness(89%) contrast(102%);
-  --play-icon-hover: brightness(0) saturate(100%) invert(73%) sepia(91%) saturate(404%) hue-rotate(73deg) brightness(106%) contrast(103%);
+  --play-icon: brightness(0) saturate(100%) invert(31%) sepia(100%) saturate(1230%) hue-rotate(84deg) brightness(88%) contrast(91%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(68%) sepia(82%) saturate(6003%) hue-rotate(85deg) brightness(96%) contrast(90%);
   --arrow-icon: brightness(0) saturate(100%) invert(24%) sepia(89%) saturate(2527%) hue-rotate(85deg) brightness(90%) contrast(101%);
   /* Checkbox Colors */
-  --checkbox-checked-color: rgb(74, 120, 98);
+  --checkbox-checked-color: rgb(39, 125, 44);
 }
 [data-theme="dark-wave"] {
   /* Font Colors */
   --font-color-one: #cdcdcd;
   --font-color-two: #918099;
-  --font-color-three: #813db4;
+  --font-color-three: #8e159c;
   /* Gradient Colors */
-  --gradient-one: rgb(35, 1, 53);
+  --gradient-one: rgb(45, 8, 64);
   --gradient-two: rgb(15, 1, 24);
   --gradient-three: rgb(0, 0, 0);
-
   /* Hr Colors */
   --hr-gradient-one: #281736;
   --hr-gradient-two: #33173a;
-  /* Scrollbar Colors */
-  --scrollbar-color: rgba(118, 69, 129, 0.45) rgba(0,0,0,0);
   /* Music Player Colors */
   --music-player-bg: rgba(13, 1, 16, 0.429);
   --music-player-border: linear-gradient(to right, rgb(81, 1, 101), rgb(28, 28, 28)) 1 stretch;
-  --slider-color-one: #ac13bd;
+  --slider-color-one: #8e159c;
   /* Album Overview Colors */
-  --play-icon: brightness(0) saturate(100%) invert(8%) sepia(57%) saturate(7414%) hue-rotate(274deg) brightness(95%) contrast(101%);
+  --play-icon: brightness(0) saturate(100%) invert(15%) sepia(87%) saturate(3235%) hue-rotate(284deg) brightness(90%) contrast(102%);
   --play-icon-hover: brightness(0) saturate(100%) invert(47%) sepia(96%) saturate(2625%) hue-rotate(242deg) brightness(98%) contrast(91%);
   --arrow-icon: brightness(0) saturate(100%) invert(26%) sepia(24%) saturate(4938%) hue-rotate(255deg) brightness(86%) contrast(89%);
   /* Checkbox Colors */
-  --checkbox-checked-color: rgb(120, 68, 141);
+  --checkbox-checked-color: #8e159c;
 }
 
 .border {
@@ -947,7 +930,7 @@ img.off {
   width: 100vw;
   z-index: 100;
   /* Frosted Glass Effect */
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(12px);
   /* Gradient Border */
   border-top: 1px solid #fff;
   border-left-width: 0;
@@ -1042,6 +1025,10 @@ img.off {
   width: 50px;
   transform: translate(-50%, -50%);
   filter: var(--play-icon);
+}
+.play-container:hover .circle {
+  filter: var(--play-icon-hover);
+  transition: 0.1s ease-in-out;
 }
 
 .player-buttons {
@@ -1226,7 +1213,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   height: 100%;
   background-repeat: no-repeat;
   background-size: contain;
-  filter: blur(20px) brightness(0.2);
+  filter: blur(17px) brightness(0.2);
 }
 
 #section-header {
@@ -1553,7 +1540,7 @@ input[type="checkbox"]:disabled {
 }
 
 .selection-popup-container div {
-  margin-left: 15px;
+  margin-left: 0px;
 }
 .selection-popup-container span {
   margin-right: 25px;

@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { GetCurrentSong, savePosition, saveShuffledQueue, Songs } from "../globalValues";
+import { GetCurrentSong, savePosition, Songs } from "../globalValues";
 import ImageWithFallBack from "./imageFallback";
 
 // Images
@@ -291,21 +291,15 @@ export default function MusicControls() {
     // Function to update the volume of the music player
     async function updateShuffleMode() {
         try {
-            if(isShuffle) {
+            if(isShuffle && songDetails !== undefined) {
                 setIsShuffle(false);
-                const q: Songs[] = await invoke<Songs[]>("get_queue", { shuffled: isShuffle });
                 // Index of the current song
-                const index: number = q.map(e => e.path).indexOf(songDetails!.path);
-                await invoke("player_update_queue_and_pos", { queue: q, index: index } );
+                await invoke("shuffle_queue", { song: songDetails.path, shuffled: false });
             }
-            else {
+            else if(!isShuffle && songDetails !== undefined) {
                 setIsShuffle(true);
-                const shuffledQueue: Songs[] = await invoke<Songs[]>("get_queue", { shuffled: isShuffle });
                 // Index of the current song
-                const index: number = shuffledQueue.map(e => e.path).indexOf(songDetails!.path);
-                await invoke("player_update_queue_and_pos", { queue: shuffledQueue, index: index } );
-                saveShuffledQueue(shuffledQueue);
-                savePosition(index);
+                await invoke("shuffle_queue", { song: songDetails.path, shuffled: true });
             }
         }
         catch(e) {

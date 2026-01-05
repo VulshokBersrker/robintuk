@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { Virtuoso } from "react-virtuoso";
+import SimpleBar from "simplebar-react";
 
 // Custom Components
-import { ContextMenu, GetCurrentSong, savePosition, Songs, PlaylistList } from "../../globalValues";
+import { GetCurrentSong, savePosition, Songs, PlaylistList } from "../../globalValues";
 import CustomContextMenu from "../../components/customContextMenu";
 import ImageWithFallBack from "../../components/imageFallback";
 import SongDetailsModal from "../../components/songDetails";
@@ -18,7 +19,7 @@ import PlayIcon from '../../images/play-icon-outline.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import CloseIcon from '../../images/x.svg';
-import SimpleBar from "simplebar-react";
+
 
 
 interface AlbumDetails {
@@ -57,7 +58,7 @@ export default function AlbumOverviewPage() {
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0
     });
 
-    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<string>("");
@@ -296,7 +297,7 @@ export default function AlbumOverviewPage() {
                 setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 125});
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 170});
             }
         }
         else {
@@ -304,7 +305,7 @@ export default function AlbumOverviewPage() {
                 setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 125});
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 170});
             }
         }
     }
@@ -328,7 +329,7 @@ export default function AlbumOverviewPage() {
 
                     {/* Song Selection Bar */}
                     <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                        <div className="section-8" style={{marginLeft: '10px'}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
                         <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
                         <div className="section-6 position-relative">
                             <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
@@ -337,27 +338,28 @@ export default function AlbumOverviewPage() {
                             </button>
                             {displayAddToMenu &&
                                 <div className="playlist-list-container header-font">
-                                    <div className="d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon icon-size"/>
-                                        <span>&nbsp;Queue</span>
+                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
+                                        <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                     </div>
                                     <hr/>
                                     <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                         <input
-                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
                                             className="new-playlist" value={newPlaylistName}
                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                         />
-                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                        <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
                                     </span>
                                     
-                                    {playlistList?.map((playlist) => {
-                                        return(
-                                            <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                {playlist.name}
-                                            </div>
-                                        );
-                                    })}
+                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
+                                        {playlistList?.map((playlist) => {
+                                            return(
+                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
+                                                    {playlist.name}
+                                                </div>
+                                            );                                                                                      
+                                        })}
+                                    </SimpleBar>
                                 </div>
                             }
                         </div>
@@ -585,7 +587,7 @@ export default function AlbumOverviewPage() {
 
                     {/* Song Selection Bar */}
                     <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                        <div className="section-8" style={{marginLeft: '10px'}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
                         <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
                         <div className="section-6 position-relative">
                             <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
@@ -594,27 +596,28 @@ export default function AlbumOverviewPage() {
                             </button>
                             {displayAddToMenu && songSelection.length >= 1 &&
                                 <div className="playlist-list-container header-font">
-                                    <div className="d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon-size"/>
-                                        <span>&nbsp;Queue</span>
+                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
+                                        <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                     </div>
                                     <hr/>
                                     <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                         <input
-                                            id="new_playlist_input" type="text" placeholder="New Playlist"
+                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
                                             className="new-playlist" value={newPlaylistName}
                                             onChange={(e) => setNewPlaylistName(e.target.value)}
                                         />
-                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                        <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
                                     </span>
                                     
-                                    {playlistList?.map((playlist) => {
-                                        return(
-                                            <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                {playlist.name}
-                                            </div>
-                                        );
-                                    })}
+                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
+                                        {playlistList?.map((playlist) => {
+                                            return(
+                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
+                                                    {playlist.name}
+                                                </div>
+                                            );                                                                                      
+                                        })}
+                                    </SimpleBar>
                                 </div>
                             }
                         </div>
