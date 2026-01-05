@@ -40,6 +40,7 @@ Made with Tauri (React and Rust).
 - [ ] Create a Genre section
 - [ ] Smoother music progress bar
 - [ ] New default playlist icons
+- [ ] History section should update everytime new songs are played
 - [x] Update to color themes
 - [x] Improved Context Menu
 - [x] Auto-Remove album/playlist artwork when respective songs are removed
