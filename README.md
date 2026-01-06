@@ -73,7 +73,7 @@ Made with Tauri (React and Rust).
 - [ ] Gapless playback
 - [ ] Add support for wav
 - [ ] Drag and Drop playlist order
-- [ ] Get artist data from online service for artist page
+- [ ] Get artist data from online service for artist page (Not great options once you have more than 100 songs)
 - [ ] Mini Player?
 - [ ] Playlist Import/Export as m3u file
 - [ ] Notification of version update

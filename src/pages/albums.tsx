@@ -64,7 +64,6 @@ export default function AlbumPage({albums}: P) {
 
             let tempSectionArray: number[] = [];
             const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, albumList.map((o: AlbumDetails) => { return o.album_section})) );
-            console.log(maxSection);
 
             for(let i = 0; i < maxSection; i++) {
                 const results = albumList.filter(obj => obj.album_section === alphabeticallyOrdered[i] ).length;
@@ -599,9 +598,12 @@ function ContextMenu({
                     <img src={AlbumIcon} /> &nbsp; Show Album
                 </li>
             
+            {artist !== "" &&
                 <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                     <img src={ArtistIcon} /> &nbsp; Show Artist
                 </li>
+            }
+                
             </div>
         );
     }

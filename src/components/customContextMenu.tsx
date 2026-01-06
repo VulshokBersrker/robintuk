@@ -126,7 +126,7 @@ export default function CustomContextMenu({
                         &nbsp; Show Album
                     </li>
                 }
-                {!context_type.includes("artist") || !context_type.includes("album_songs") && 
+                {(!context_type.includes("artist") || !context_type.includes("album_songs")) && artist !== "" && 
                     <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <img src={ArtistIcon} />
                         &nbsp; Show Artist

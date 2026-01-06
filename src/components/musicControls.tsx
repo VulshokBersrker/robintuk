@@ -106,6 +106,9 @@ export default function MusicControls() {
                 if(queue.length === 0) {
                     setIsLoaded(false);
                 }
+                else if(queue.length < parseInt(qPosition)) {
+                    console.log("qPosition is greater than queue length - cannot load");
+                }
                 else {
                     setSongDetails(queue[JSON.parse(qPosition!)]);
                     setSongProgress(0);
@@ -114,7 +117,7 @@ export default function MusicControls() {
 
                     if(shuffleMode !== null) {
                         if(shuffleMode) {
-                            setIsShuffle(true);                    
+                            setIsShuffle(true);
                             sendQueueToBackend(queue, JSON.parse(qPosition!));
                         }
                         else {
@@ -366,7 +369,7 @@ export default function MusicControls() {
                         <input
                             type="range"
                             min={0}
-                            step="0.01"
+                            step={0.1}
                             max={songDetails?.duration}
                             className="progress-bar"
                             value={songProgress}
