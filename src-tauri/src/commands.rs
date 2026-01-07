@@ -315,6 +315,11 @@ pub fn set_shuffle_mode(app: tauri::AppHandle, mode: bool) {
 }
 
 
+#[tauri::command]
+pub async fn check_for_ongoing_scan(state: State<AppState, '_>) -> Result<bool, String> {
+    Ok(*state.is_scan_ongoing.lock().unwrap())
+}
+
 // Backup, Restore, and Reset Functions for the DB and images
 #[tauri::command]
 pub async fn create_backup() -> Result<(), String> {

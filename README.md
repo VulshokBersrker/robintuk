@@ -88,7 +88,7 @@ Made with Tauri (React and Rust).
 - [ ] Better error handling
 - [ ] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
 - [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
-- [ ] If scan breaks or user closes app while scanning, scan buttons will be disabled because it thinks a scan is still ongoing
+- [x] If scan breaks or user closes app while scanning, scan buttons will be disabled because it thinks a scan is still ongoing
 - [x] Blank pages on route change while it grabs the data from the backend (fixed?)
 - [x] Selecting songs/albums and using the search bar will break the selection
 - [x] Cancelling changing playlist cover art will remove any current artwork until the page is reloaded

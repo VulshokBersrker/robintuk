@@ -159,7 +159,8 @@ pub fn run() -> Result<(), String> {
             commands::set_shuffle_mode,
             // Backup and Restore Functions,
             commands::create_backup,
-            commands::use_restore
+            commands::use_restore,
+            commands::check_for_ongoing_scan
         ])        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

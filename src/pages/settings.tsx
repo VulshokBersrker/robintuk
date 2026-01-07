@@ -76,6 +76,9 @@ export default function Settings() {
             if(directoryList !== null) {
                 setDirectoryList(directory_list);
             }            
+
+            const res = await invoke<boolean>('check_for_ongoing_scan');
+            setLoading(res);
         }
         catch (err) {
             alert(`Failed find any directories: ${err}`);
@@ -252,7 +255,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.1.6 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.1.7 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
