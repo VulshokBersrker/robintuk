@@ -37,10 +37,8 @@ Made with Tauri (React and Rust).
 
 ## Features for V1.0
 
-- [ ] Create a Genre section
 - [ ] Smoother music progress bar
-- [ ] New default playlist icons
-- [ ] History section should update everytime new songs are played
+- [x] History section should update everytime new songs are played
 - [x] Update to color themes
 - [x] Improved Context Menu
 - [x] Auto-Remove album/playlist artwork when respective songs are removed
@@ -82,16 +80,15 @@ Made with Tauri (React and Rust).
 - [ ] Create placeholder templates while pages are loading
 - [ ] Linux support
 
-
 ## Known Issues
 
 - [ ] Songs have hiccups randomly (maybe due to heavy system load from other programs)
 - [ ] Application Optimizations (streamlining, data caching, etc.)
 - [ ] Better error handling
-- [ ] Blank pages on route change while it grabs the data from the backend
 - [ ] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
 - [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
 - [ ] If scan breaks or user closes app while scanning, scan buttons will be disabled because it thinks a scan is still ongoing
+- [x] Blank pages on route change while it grabs the data from the backend (fixed?)
 - [x] Selecting songs/albums and using the search bar will break the selection
 - [x] Cancelling changing playlist cover art will remove any current artwork until the page is reloaded
 - [x] Doubles on some songs in history

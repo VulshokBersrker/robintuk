@@ -95,9 +95,6 @@ pub fn run() -> Result<(), String> {
             db::get_albums_with_limit,
             db::get_all_albums,
             db::get_album,
-            // Genre Functions - SQLITE
-            // db::get_all_genres,
-            // db::get_genre,
             // Artist Functions - SQLITE
             db::get_albums_by_artist,
             db::get_all_artists,

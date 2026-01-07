@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { GetCurrentSong, savePosition, Songs } from "../globalValues";
+import { GetCurrentSong, Songs } from "../globalValues";
 import ImageWithFallBack from "./imageFallback";
 
 // Images
@@ -210,14 +210,8 @@ export default function MusicControls() {
                 pauseMusic();
             }
             else {
-                const details = await invoke<Songs>('player_get_current_song');
                 await invoke("update_current_song_played");
-                setSongDetails(details);
-                saveSong(details);
-                resetSongValues(true);
-                setSongLengthFormatted(new Date(details.duration * 1000).toISOString().slice(12, 19));
             }
-            
         }
     }
     async function previousSong() {
@@ -233,47 +227,8 @@ export default function MusicControls() {
             console.log(e);
         }
         finally {
-            const details = await invoke<Songs>('player_get_current_song');
             await invoke("update_current_song_played");
-            setSongDetails(details);
-            saveSong(details);
-            resetSongValues(false);
-            setSongLengthFormatted(new Date(details.duration * 1000).toISOString().slice(12, 19));
         }
-    }
-
-    async function resetSongValues(type: boolean) {
-        try {
-            const qPosition: number = await invoke('player_get_current_position');
-            let qLength: number  = await invoke('player_get_queue_length');
-            qLength = qLength - 1;
-            // Next song
-            if(type) {            
-                let pos = qPosition;
-                if(pos > qLength) {
-                    pos = 0;
-                }
-                savePosition(pos);
-            }
-            // Previous
-            else {
-                let pos = qPosition;
-                
-                if(qPosition === 0) {
-                    pos = qLength - 1;
-                }
-                savePosition(pos);
-            }
-            setSongProgress(0);
-            setIsPlaying(true);
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-
-        }
-        
     }
 
     // Function to update the volume of the music player

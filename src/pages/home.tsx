@@ -36,7 +36,9 @@ export default function Home() {
         getAlbums();
         getSongs();
         getHistory();
+    }, []);
 
+    useEffect(() => {
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
                 resetContextMenu();
@@ -48,6 +50,11 @@ export default function Home() {
             document.removeEventListener('mousedown', handler);
         }
     }, []);
+
+    // To update the list when playHistory Changes
+    useEffect(() => {
+        getHistory();
+    }, [playHistory]);
 
     // ------------------- Fetch Data Functions -------------------
 
@@ -84,7 +91,7 @@ export default function Home() {
     }
 
     async function getHistory() {
-         try{
+        try{
             const list = await invoke<PlayHistory[]>('get_play_history', { limit: 10 } );
             setPlayHistory(list);
         }
@@ -135,7 +142,6 @@ export default function Home() {
     }
 
     function resetContextMenu() {
-        console.log("Resetting Context Menu");
         setContextMenu({ isToggled: false, context_type: "", album: "", artist: "", playlist: 0, index: 0, posX: 0, posY: 0});
     }
 

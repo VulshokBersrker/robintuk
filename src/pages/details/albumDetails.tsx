@@ -81,7 +81,6 @@ export default function AlbumOverviewPage() {
         }
         document.addEventListener('mousedown', handler);
 
-
         return () => {
             unlisten_get_current_song.then(f => f());
             document.removeEventListener('mousedown', handler);

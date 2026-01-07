@@ -142,7 +142,6 @@ export async function saveQueue(q: Songs[]) {
     catch(e) {
         console.log(e);
     }
-    localStorage.setItem('last-played-queue-length', (q.length - 1).toString());
 }
 export async function saveShuffledQueue(q: Songs[]) {
     try {
@@ -151,7 +150,6 @@ export async function saveShuffledQueue(q: Songs[]) {
     catch(e) {
         console.log(e);
     }
-    localStorage.setItem('shuffled-queue-length', (q.length - 1).toString());
 }
 export function savePosition(p: number) {
     localStorage.setItem('last-played-queue-position', p.toString());

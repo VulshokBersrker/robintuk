@@ -7,8 +7,7 @@ use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite, SqlitePool};
 use tauri::{State};
 
 use crate::types::{
-    AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, SongHistory,
-    PlaylistFull, PlaylistTable, SongTable, SongTableUpload
+    AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, PlaylistFull, PlaylistTable, SongHistory, SongTable, SongTableUpload
 };
 use crate::{AppState};
 
@@ -342,40 +341,6 @@ pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: String) ->
 
     Ok(ArtistDetailsResults{ num_tracks: temp.len(), total_duration: duration, album_artist, albums })
 }
-
-// ------------------------------------ Genre Functions ------------------------------------
-
-// #[tauri::command]
-// pub async fn get_all_genres() -> Result<Vec<SongTable>, String> {
-//     let pool = establish_connection().await?;
-
-//     let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>(
-//         "
-//         SELECT DISTINCT genre, album, artist, cover FROM songs
-//         GROUP BY genre
-//         ORDER BY genre ASC;",
-//     )
-//     .fetch_all(&pool)
-//     .await
-//     .unwrap();
-
-//     Ok(temp)
-// }
-
-// #[tauri::command(rename_all = "snake_case")]
-// pub async fn get_genre(name: String) -> Result<SongTable, String> {
-//     let pool = establish_connection().await?;
-
-//     let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre=$1 ORDER BY genre;")
-//         .bind(name)
-//         .fetch_one(&pool)
-//         .await
-//         .unwrap();
-
-//     println!("id={}, album_name={}", temp.name, temp.genre);
-
-//     Ok(temp)
-// }
 
 // ------------------------------------ Artist Functions ------------------------------------
 

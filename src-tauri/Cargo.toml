@@ -37,8 +37,6 @@ rodio = {version="0.21.1", features = [ "symphonia-all"] }
 serde_with = "3.15.1"
 tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
 zip = "7.0.0"
-reqwest = "0.13.1"
-cmake = "0.1.57"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"
