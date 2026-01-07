@@ -151,8 +151,8 @@ export default function Settings() {
     useEffect(() => {
         // Load the new playlist from the backend
 
-        const unlisten_scan_started = listen("scan-started", () => { console.log("scan started"); setLoading(true); });
-        const unlisten_scan_finished = listen("scan-finished", () => { console.log("scan ended"); setLoading(false); });
+        const unlisten_scan_started = listen("scan-started", (e) => { console.log(e); setLoading(true); });
+        const unlisten_scan_finished = listen("scan-finished", (e) => { console.log(e); setLoading(false); });
         
         return () => {
             unlisten_scan_started.then(f => f());
@@ -230,7 +230,7 @@ export default function Settings() {
 
             {/* Backup Restore */}
             <div className="settings-section backup">
-                <div className="header-font font-3 sub-font" style={{marginBottom: '5px'}}>Data Backup/Restore (Not implemented yet)</div>
+                <div className="header-font font-3 sub-font" style={{marginBottom: '5px'}}>Data Backup/Restore (Only backup working)</div>
                 <div className="sub-font font-0" style={{marginBottom: '10px'}}>Backup and Restore all your data on Robintuk, including your playlists</div>
 
                 <div className="grid-10">
@@ -252,7 +252,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.1.4 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.1.6 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
@@ -278,12 +278,24 @@ type Props = {
     type: number,
 };
 
-const ErrorPopup = ({success, error, updated, type}: Props) => {    
+const ErrorPopup = ({success, error, updated, type, error_dets}: Props) => {    
 
     // 0 - Directory Scan
     if(type === 0) {
         console.log("Scanned " + (error + success + updated) + " songs - " + (success) + " songs added - "+ (updated) + " songs updated - " + (error) + " songs had errors");
-        if(error !== 0) {
+        if(error === 1 && error_dets![0].error_type.includes("ongoing")) {
+            return(
+                <div className="status-container error d-flex vertical-centered">
+                    <span>
+                        <img src={ErrorIcon} alt={"ff"} className="scan-status-icon error"/>
+                    </span>
+                    <span style={{paddingLeft: "10px"}}>
+                        <div>A scan is already on going - please wait</div>                    
+                    </span>
+                </div>
+            );
+        }
+        else if(error !== 0) {
             return(
                 <div className="status-container error d-flex vertical-centered">
                     <span>

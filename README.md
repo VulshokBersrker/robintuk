@@ -75,6 +75,7 @@ Made with Tauri (React and Rust).
 - [ ] Mini Player?
 - [ ] Playlist Import/Export as m3u file
 - [ ] Notification of version update
+- [ ] Place sink into another thread to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] CSS Optimization
 - [ ] Create placeholder templates while pages are loading
