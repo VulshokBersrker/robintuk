@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 
 // Custom Components
-import { GetCurrentSong, Songs } from "../globalValues";
+import { GetCurrentSong, savePosition, Songs } from "../globalValues";
 import ImageWithFallBack from "./imageFallback";
 
 // Images
@@ -211,6 +211,8 @@ export default function MusicControls() {
             }
             else {
                 await invoke("update_current_song_played");
+                const res: number = await invoke("player_get_current_position");
+                savePosition(res);
             }
         }
     }
@@ -228,6 +230,8 @@ export default function MusicControls() {
         }
         finally {
             await invoke("update_current_song_played");
+            const res: number = await invoke("player_get_current_position");
+            savePosition(res);;
         }
     }
 
