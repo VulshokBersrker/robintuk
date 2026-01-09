@@ -157,7 +157,9 @@ pub fn run() -> Result<(), String> {
             commands::update_current_song_played,
             commands::new_playlist_added,
             commands::set_shuffle_mode,
-            // Backup and Restore Functions,
+            // Settings Functions,
+            db::get_settings,
+            db::set_theme,
             commands::create_backup,
             commands::use_restore,
             commands::check_for_ongoing_scan

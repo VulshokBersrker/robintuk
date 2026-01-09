@@ -117,10 +117,16 @@ export default function Settings() {
         await invoke("remove_directory", { directory_name: value })
     }
 
-    function setTheme(theme: string) {
-        setThemeColor(theme);
-        document.querySelector('body')?.setAttribute("data-theme", theme);
-        localStorage.setItem('theme', theme);
+    async function setTheme(theme: string) {
+        try {
+            setThemeColor(theme);
+            document.querySelector('body')?.setAttribute("data-theme", theme);
+            localStorage.setItem('theme', theme);
+            await invoke('set_theme', { theme_color: theme });
+        }
+        catch(e) {
+            console.log(e);
+        }
     }
 
     async function backupData() {

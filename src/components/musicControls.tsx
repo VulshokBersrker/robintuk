@@ -152,8 +152,6 @@ export default function MusicControls() {
             setSongProgress(0);
             setSongDetails(q);
             setSongLengthFormatted(new Date(q.duration * 1000).toISOString().slice(12, 19));
-            // Save the Queue in local storage
-            saveSong(q);
         }
         catch(e) {
             alert(`Failed to get song: ${e}`);
@@ -211,8 +209,10 @@ export default function MusicControls() {
             }
             else {
                 await invoke("update_current_song_played");
-                const res: number = await invoke("player_get_current_position");
-                savePosition(res);
+                const song: Songs = await invoke("player_get_current_song");
+                saveSong(song);
+                const pos: number = await invoke("player_get_current_position");
+                savePosition(pos);
             }
         }
     }
@@ -230,8 +230,10 @@ export default function MusicControls() {
         }
         finally {
             await invoke("update_current_song_played");
-            const res: number = await invoke("player_get_current_position");
-            savePosition(res);;
+            const song: Songs = await invoke("player_get_current_song");
+            saveSong(song);
+            const pos: number = await invoke("player_get_current_position");
+            savePosition(pos);
         }
     }
 
@@ -460,6 +462,3 @@ export default function MusicControls() {
     }
     else { return; }
 }
-
-
-

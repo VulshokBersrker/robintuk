@@ -21,7 +21,7 @@ import AlbumIcon from '../../images/vinyl-record-svgrepo-com.svg';
 import DeleteIcon from '../../images/trash-can-regular-full.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import ArtistIcon from '../../images/user-regular-full.svg';
-import PlayIcon from '../../images/play-icon-outline.svg';
+import PlayIcon from '../../images/play-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import InfoIcon from '../../images/info-solid-full.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
@@ -191,6 +191,8 @@ export default function PlaylistOverviewPage() {
 
     // Load the song the user clicked on but also queue the entire album
     async function playPlaylist(index: number, shuffled: boolean) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {            
             await invoke("play_playlist", {playlist_id: location.state.name, index: index, shuffled: shuffled})
             savePosition(index);
@@ -206,6 +208,7 @@ export default function PlaylistOverviewPage() {
 
     async function removeSong(index: number) {
         resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
             let temp: Songs[] = playlist;
             temp = playlist.filter((song) => song.path !== playlist[index].path)
@@ -218,6 +221,7 @@ export default function PlaylistOverviewPage() {
     }
     async function removeSelectedSongs() {
         resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
             const selection = songSelection;
             clearSelection();

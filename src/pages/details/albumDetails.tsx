@@ -15,11 +15,10 @@ import SongDetailsModal from "../../components/songDetails";
 // Image Components
 import QueueIcon from '../../images/rectangle-list-regular-full.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
-import PlayIcon from '../../images/play-icon-outline.svg';
+import PlayIcon from '../../images/play-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import CloseIcon from '../../images/x.svg';
-
 
 
 interface AlbumDetails {
@@ -71,6 +70,10 @@ export default function AlbumOverviewPage() {
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }
+    }, []);
+
+    // Listeners
+    useEffect(() => {
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
 

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 // Custom Components
-import { AlbumDetails, AllArtistResults, clearLocalStorage, DirectoryInfo, SongsFull } from "./globalValues";
+import { AlbumDetails, AllArtistResults, SongsFull } from "./globalValues";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
@@ -37,24 +37,26 @@ function App() {
   useEffect(() => {
     const selectedTheme = localStorage.getItem('theme');
 
-    if(selectedTheme) {
-      document.querySelector("body")?.setAttribute("data-theme", selectedTheme);
-    }
-    getValues();
-
-    async function checkForFiles() {
+    async function getTheme() {
       try {
-        const res = await invoke<DirectoryInfo[]>('get_directory');
-        if(res.length === 0) {
-          clearLocalStorage();
+        const res: string | null = await invoke("get_settings");
+        if(res === null) {
+          document.querySelector("body")?.setAttribute("data-theme", "red");
+        }
+        else {
+          document.querySelector("body")?.setAttribute("data-theme", res);
         }
       }
       catch(e) {
-
+        console.log(e)
       }
     }
+    getTheme();
 
-    checkForFiles();    
+    if(selectedTheme) {
+      document.querySelector("body")?.setAttribute("data-theme", selectedTheme);
+    }
+    getValues();    
   }, []);
 
   useEffect(() => {

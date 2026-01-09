@@ -146,6 +146,28 @@ pub async fn set_keep(pool: &Pool<Sqlite>) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+pub async fn get_settings(state: State<AppState, '_>) -> Result<String, String> {
+
+    let res: (String,) = sqlx::query_as("SELECT theme FROM settings LIMIT 1")
+        .fetch_one(&state.pool)
+        .await.unwrap();
+
+    Ok(res.0)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn set_theme(state: State<AppState, '_>, theme_color: String) -> Result<(), String> {
+
+    let _ = sqlx::query("INSERT OR REPLACE INTO settings (id, theme) VALUES (?1, ?2)")
+        .bind(1)
+        .bind(theme_color)
+        .execute(&state.pool)
+        .await;
+
+    Ok(())
+}
+
 // ------------------------------------ Song Functions ------------------------------------
 
 // Get all songs from the database and all of their data
