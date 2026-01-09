@@ -323,7 +323,7 @@ export default function AlbumPage({albums}: P) {
                              &nbsp;Add to
                         </button>
                         {displayAddToMenu && albumSelection.length >= 1 &&
-                            <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 20%)" : "translate(-43%, 15%)"}}>
+                            <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 20%)" : "translate(-43%, 8%)"}}>
                                 <div className="item d-flex align-items-center" onClick={addToQueue}>
                                     <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                 </div>
@@ -338,7 +338,7 @@ export default function AlbumPage({albums}: P) {
                                 </span>
                                 
                                 <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container" 
-                                    style={{height: playlistList.length === 0 ? "0px" : "inherit" }}
+                                    style={{height: playlistList.length === 0 ? "0px" : "" }}
                                 >
                                     {playlistList?.map((playlist) => {
                                         return(

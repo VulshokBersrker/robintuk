@@ -126,6 +126,7 @@ export default function SongPage({songs}: Props) {
     async function addToQueue() {
         // setDisplayAddToMenu(false);
         // resetContextMenu();
+        console.log("queue add")
         try {
             let songList: Songs[] = [];
             for(let i = 0; i < songSelection.length; i++) {
@@ -245,7 +246,6 @@ export default function SongPage({songs}: Props) {
 
     function resetContextMenu() {
         setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0});
-        setDisplayAddToMenu(false);
     }
 
     function updateSongDetailsDisplay(bool: boolean, path: string) {
@@ -286,8 +286,8 @@ export default function SongPage({songs}: Props) {
                         </button>
 
                         {displayAddToMenu && songSelection.length >= 1 &&
-                            <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 20%)" : "translate(-43%, 15%)"}}>
-                                <div className="item d-flex align-items-center" onClick={() => addToQueue()}>
+                            <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 19.5%)" : "translate(-43%, 8%)"}}>
+                                <div className="item d-flex align-items-center" onClick={addToQueue}>
                                     <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                 </div>
                                 <hr/>
@@ -301,7 +301,7 @@ export default function SongPage({songs}: Props) {
                                 </span>
                                 
                                 <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container"
-                                    style={{height: playlistList.length === 0 ? "0px" : "inherit" }}
+                                    style={{height: playlistList.length === 0 ? "0px" : "" }}
                                 >
                                     {playlistList?.map((playlist) => {
                                         return(
