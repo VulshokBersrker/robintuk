@@ -205,11 +205,11 @@ export default function MusicControls() {
                 pauseMusic();
             }
             else {
-                await invoke("update_current_song_played");
                 const song: Songs = await invoke("player_get_current_song");
                 saveSong(song);
                 const pos: number = await invoke("player_get_current_position");
                 savePosition(pos);
+                await invoke("update_current_song_played");
             }
         }
     }
@@ -226,11 +226,12 @@ export default function MusicControls() {
             console.log(e);
         }
         finally {
-            await invoke("update_current_song_played");
+            // await invoke("update_current_song_played");
             const song: Songs = await invoke("player_get_current_song");
             saveSong(song);
             const pos: number = await invoke("player_get_current_position");
             savePosition(pos);
+            await invoke("update_current_song_played");
         }
     }
 

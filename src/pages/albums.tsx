@@ -179,8 +179,10 @@ export default function AlbumPage({albums}: P) {
     }, []);
 
     async function addToQueue() {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
         try {
-            setDisplayAddToMenu(false);
+            
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
@@ -193,7 +195,7 @@ export default function AlbumPage({albums}: P) {
         catch(e) {
             console.log(e);
         }
-        resetContextMenu();
+        
     }
     
     async function addToPlaylist(id: number) {
@@ -321,7 +323,7 @@ export default function AlbumPage({albums}: P) {
                              &nbsp;Add to
                         </button>
                         {displayAddToMenu && albumSelection.length >= 1 &&
-                            <div className="playlist-list-container header-font">
+                            <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 20%)" : "translate(-43%, 15%)"}}>
                                 <div className="item d-flex align-items-center" onClick={addToQueue}>
                                     <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                 </div>
@@ -335,7 +337,9 @@ export default function AlbumPage({albums}: P) {
                                     <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                                 </span>
                                 
-                                <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container" >
+                                <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container" 
+                                    style={{height: playlistList.length === 0 ? "0px" : "inherit" }}
+                                >
                                     {playlistList?.map((playlist) => {
                                         return(
                                             <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>

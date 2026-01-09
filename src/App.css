@@ -1646,8 +1646,8 @@ button img {
 
 .playlist-list-container {
   position: absolute;
-  top: 50%;
-  transform: translate(-43%, 15%);
+  top: 20px;
+  transform: translate(-43%, 20%);
   left: 0px;
   width: 250px;
   background: var(--gradient-two);
@@ -1669,8 +1669,10 @@ button img {
 }
 
 .add-playlist-container {
+  /* transform: translate(-43%, 15%); */
   margin-top: 8px;
   max-height: 200px;
+  /* height: 0px !important; */
 }
 
 .playlist-list-container hr {

@@ -331,7 +331,7 @@ pub async fn get_album(state: State<AppState, '_>, name: String) -> Result<Vec<S
 pub async fn get_albums_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<AllAlbumResults>, String> {
 
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT album, album_artist, cover, album_section FROM songs
+        "SELECT album, album_artist, cover, album_section FROM songs WHERE album IS NOT NULL 
         GROUP BY album ORDER BY album ASC LIMIT $1")
         .bind(limit)
         .fetch_all(&state.pool)
@@ -828,7 +828,6 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
         Ok(history)
     }
     else {
-
         let history: Vec<SongHistory> = sqlx::query_as::<_, SongHistory>("
             SELECT h.id, s.name, s.path, s.album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist, s.track, s.disc_number, s.song_section
             FROM history h 

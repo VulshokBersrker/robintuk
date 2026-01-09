@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Virtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
-import { alphabeticallyOrdered, ContextMenu, PlaylistList, saveQueue, Songs, SongsFull } from "../globalValues";
+import { alphabeticallyOrdered, ContextMenu, PlaylistList, playSelection, saveQueue, Songs, SongsFull } from "../globalValues";
 import CustomContextMenu from "../components/customContextMenu";
 import SongDetailsModal from "../components/songDetails";
 
@@ -59,6 +59,19 @@ export default function SongPage({songs}: Props) {
         setupSongs();
     }, []);
 
+    useEffect(() => {
+        const handler = (e: any) => {
+            if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
+                resetContextMenu();
+            }
+        }
+        document.addEventListener('mousedown', handler);
+        
+        return () => {
+            document.removeEventListener('mousedown', handler);
+        }
+    }, []);
+
     function updateSearchResults(value: string) {
         setSearchValue(value);
 
@@ -111,8 +124,8 @@ export default function SongPage({songs}: Props) {
     }, []);
 
     async function addToQueue() {
-        setDisplayAddToMenu(false);
-        resetContextMenu();
+        // setDisplayAddToMenu(false);
+        // resetContextMenu();
         try {
             let songList: Songs[] = [];
             for(let i = 0; i < songSelection.length; i++) {
@@ -204,6 +217,7 @@ export default function SongPage({songs}: Props) {
 
     function clearSelection() {
         setSongSelection([]);
+        setDisplayAddToMenu(false);
     }
 
     // ------------ End of Selection Bar Functions ------------
@@ -258,9 +272,9 @@ export default function SongPage({songs}: Props) {
 
                 {/* Song Selection Bar */}
                 <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                    <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                    <div className="section-8" style={{marginLeft: '15px'}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
                     <div className="section-5 position-relative">
-                        <button className="d-flex align-items-center">
+                        <button className="d-flex align-items-center" onClick={() => {playSelection(songSelection); clearSelection(); }}>
                             <img src={PlayIcon} />
                             &nbsp;Play
                         </button>
@@ -271,29 +285,32 @@ export default function SongPage({songs}: Props) {
                             &nbsp;Add
                         </button>
 
-                        {displayAddToMenu &&
-                            <div className="playlist-list-container header-font">
-                                <div className="d-flex align-items-center" onClick={addToQueue}>
-                                    <img src={QueueIcon} className="icon-size"/>
-                                    &nbsp;Queue
+                        {displayAddToMenu && songSelection.length >= 1 &&
+                            <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 20%)" : "translate(-43%, 15%)"}}>
+                                <div className="item d-flex align-items-center" onClick={() => addToQueue()}>
+                                    <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                 </div>
                                 <hr/>
                                 <span className="playlist-input-container d-flex justify-content-center align-items-center">
                                     <input
-                                        id="new_playlist_input" type="text" placeholder="New Playlist"
+                                        id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
                                         className="new-playlist" value={newPlaylistName}
                                         onChange={(e) => setNewPlaylistName(e.target.value)}
                                     />
                                     <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
                                 </span>
                                 
-                                {playlistList?.map((playlist) => {
-                                    return(
-                                        <div key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                            {playlist.name}
-                                        </div>
-                                    );
-                                })}
+                                <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container"
+                                    style={{height: playlistList.length === 0 ? "0px" : "inherit" }}
+                                >
+                                    {playlistList?.map((playlist) => {
+                                        return(
+                                            <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
+                                                {playlist.name}
+                                            </div>
+                                        );                                                                                      
+                                    })}
+                                </SimpleBar>
                             </div>
                         }
                     </div>

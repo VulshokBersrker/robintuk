@@ -7,11 +7,11 @@ import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 
 // Custom Components
-import { GetCurrentSong, PlayHistory, savePosition, saveQueue, Songs } from "../globalValues";
+import { GetCurrentSong, savePosition, saveQueue, Songs } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback";
 
 // Images
-import PlayIcon from '../images/play-icon-outline.svg';
+import PlayIcon from '../images/play-solid-full.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
 
 export default function PlayHistoryPage() {
@@ -19,12 +19,12 @@ export default function PlayHistoryPage() {
     const navigate = useNavigate();
     const [scrollParent, setScrollParent] = useState<any>(null);
 
-    const [playHistory, setPlayHistory] = useState<PlayHistory[]>([]);
+    const [playHistory, setPlayHistory] = useState<Songs[]>([]);
     const [isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "", artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0 });
 
     // On first load get the album details
     useEffect(() => {
-        getHistory(); 
+        getHistory();
     }, []);
 
     // On first load get the album details
@@ -35,22 +35,22 @@ export default function PlayHistoryPage() {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }
 
-        // // Load the current song (song / album / playlist) from the backend
-        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q); getHistory(); });
+        // Load the current song (song / album / playlist) from the backend
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { 
+            setTimeout(() => {
+                setIsCurrent(event.payload.q);
+                getHistory();
+            }, 50);
+        });
         
         return () => {
             unlisten_get_current_song.then(f => f());
-        }  
+        }
     }, []);
-
-    // To update the list when playHistory Changes
-    useEffect(() => {
-        getHistory();
-    }, [playHistory]);
 
     async function getHistory() {
         try{
-            const list = await invoke<PlayHistory[]>('get_play_history', { limit: -1 } );
+            const list: Songs[] = await invoke<Songs[]>('get_play_history', { limit: -1 } );
             setPlayHistory(list);
         }
         catch(e) {
@@ -78,9 +78,6 @@ export default function PlayHistoryPage() {
             alert(`Failed to play song: ${err}`);
         }
     }
-
-
-    // ------------ End of Selection Bar Functions ------------
 
 
     return(
@@ -140,5 +137,4 @@ export default function PlayHistoryPage() {
             <div className="empty-space"/>
         </SimpleBar>
     );
-    
 }

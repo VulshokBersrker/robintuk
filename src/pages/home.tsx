@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import SimpleBar from 'simplebar-react';
 
 // Custom Components
-import { AlbumDetails, playAlbum, PlayHistory, PlaylistList, Playlists, playPlaylist, Songs } from '../globalValues';
+import { AlbumDetails, GetCurrentSong, playAlbum, PlayHistory, PlaylistList, Playlists, playPlaylist, Songs } from '../globalValues';
 import ImageWithFallBack from '../components/imageFallback';
 
 // Images
@@ -15,6 +15,7 @@ import ArtistIcon from '../images/user-regular-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
 import AddIcon from '../images/plus-solid-full.svg';
 import Circle from '../images/circle.svg';
+import { listen } from '@tauri-apps/api/event';
 
 export default function Home() {
 
@@ -39,6 +40,13 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
+
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", () => { 
+            setTimeout(() => {
+                getHistory();
+            }, 50);
+        });
+
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
                 resetContextMenu();
@@ -47,14 +55,10 @@ export default function Home() {
         document.addEventListener('mousedown', handler);
         
         return () => {
-            document.removeEventListener('mousedown', handler);
+            document.removeEventListener('mousedown', handler),
+            unlisten_get_current_song.then(f => f());
         }
     }, []);
-
-    // To update the list when playHistory Changes
-    useEffect(() => {
-        getHistory();
-    }, [playHistory]);
 
     // ------------------- Fetch Data Functions -------------------
 

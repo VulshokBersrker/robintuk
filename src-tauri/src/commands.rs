@@ -274,7 +274,6 @@ pub fn player_set_seek(state: State<AppState, '_>, pos: u64) -> Result<(), Strin
 #[tauri::command]
 pub fn player_next_song(state: State<AppState, '_>) -> Result<(), String> {
     state.player.lock().unwrap().next_song();
-
     Ok(())
 }
 
