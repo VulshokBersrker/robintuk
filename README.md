@@ -17,6 +17,8 @@
 - Good performance even with 11,000 songs loaded
 - Custom playlist artwork (including animated artwork)
 - Customize the look with multiple color themes
+- View last 100 played songs
+- Filters to find music faster
 
 ## [Screenshots](./assets/screenshots/index.md)
 
@@ -35,9 +37,21 @@ More: [See all screenshots](./assets/screenshots/index.md)
 Discovered a bug? Please open an [ISSUE](https://github.com/VulshokBersrker/robintuk_player/issues) to get it fixed.
 Made with Tauri (React and Rust).
 
-## Features for V1.0
+## To Do Features
 
 - [ ] Smoother music progress bar
+- [ ] Second Shuffle mode (Reshuffled at the end of current queue)
+- [ ] Gapless playback
+- [ ] Add support for wav
+- [ ] Drag and Drop playlist order
+- [ ] Get artist data from online service for artist page (Not great options once you have more than 100 songs)
+- [ ] Playlist Import/Export as m3u file
+- [ ] Notification of version update
+- [ ] Place sink into another thread to prevent stutters when there is heavy system load
+- [ ] Open with (in file explorer)
+- [ ] CSS Optimization
+- [ ] Create placeholder templates while pages are loading
+- [ ] Linux support
 - [x] History section should update everytime new songs are played
 - [x] Update to color themes
 - [x] Improved Context Menu
@@ -65,21 +79,6 @@ Made with Tauri (React and Rust).
 - [x] Keyboard Media Controls
 - [x] Organize albums by track number and disc number
 
-### Future Version Features Planned
-
-- [ ] Second Shuffle mode (Reshuffled at the end of current queue)
-- [ ] Gapless playback
-- [ ] Add support for wav
-- [ ] Drag and Drop playlist order
-- [ ] Get artist data from online service for artist page (Not great options once you have more than 100 songs)
-- [ ] Mini Player?
-- [ ] Playlist Import/Export as m3u file
-- [ ] Notification of version update
-- [ ] Place sink into another thread to prevent stutters when there is heavy system load
-- [ ] Open with (in file explorer)
-- [ ] CSS Optimization
-- [ ] Create placeholder templates while pages are loading
-- [ ] Linux support
 
 ## Known Issues
 

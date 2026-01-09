@@ -128,7 +128,7 @@ export default function ArtistsPage({artists}: P) {
                 </div>
 
                 <div className="section-list">
-                    {alphabeticallyOrdered.map((section, i) => {
+                    {artistList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
                         for(let j = 0; j < i; j++) { totalIndex += artistSections[j]; }
                         if(artistSections[i] !== 0) {

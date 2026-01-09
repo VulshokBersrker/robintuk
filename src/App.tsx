@@ -1,7 +1,5 @@
 import { Routes, Route, BrowserRouter } from "react-router-dom";
-import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
-import MusicControls from "./components/musicControls";
-import RightSideBar from "./components/rightSideBar";
+import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 
@@ -9,6 +7,9 @@ import "./App.css";
 
 // Custom Components
 import { AlbumDetails, AllArtistResults, SongsFull } from "./globalValues";
+import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
+import MusicControls from "./components/musicControls";
+import RightSideBar from "./components/rightSideBar";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
@@ -22,6 +23,7 @@ import Settings from "./pages/settings";
 import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
 import Home from "./pages/home";
+
 
 function App() {
 
@@ -39,6 +41,7 @@ function App() {
     async function getTheme() {
       try {
         const res: string | null = await invoke("get_settings");
+        console.log(res);
         if(res === null) {
           document.querySelector("body")?.setAttribute("data-theme", "red");
         }
@@ -47,7 +50,7 @@ function App() {
         }
       }
       catch(e) {
-        console.log(e)
+        console.error("Error getting settings", e)
       }
     }
     getTheme();
@@ -56,6 +59,16 @@ function App() {
       document.querySelector("body")?.setAttribute("data-theme", selectedTheme);
     }
     getValues();    
+  }, []);
+
+  useEffect(() => {
+    // Listen for when the current folder scan has finished
+    const unlisten_scan_finished = listen<boolean>("scan-finished", () => { getValues(); });
+    
+    return () => {
+      unlisten_scan_finished.then(f => f());
+    }
+
   }, []);
 
   async function getValues() {
@@ -72,13 +85,12 @@ function App() {
   async function getSongs() {
     try {
       const song_list: SongsFull[] = await invoke<SongsFull[]>('get_all_songs');
-
       // const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 30 } );
 
       setSongList(song_list);
       // setHomeSongs(list);
-  }
-    catch (err) {
+    }
+    catch(err) {
       alert(`Failed to scan folder: ${err}`);
     }
   }

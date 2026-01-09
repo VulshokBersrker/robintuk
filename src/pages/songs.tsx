@@ -305,7 +305,7 @@ export default function SongPage({songs}: Props) {
                 {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
                 <div className="section-list">
-                    {alphabeticallyOrdered.map((section, i) => {
+                    {songList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
                         for(let j = 0; j < i; j++) { totalIndex += songSections[j]; }
                         if(songSections[i] !== 0) {

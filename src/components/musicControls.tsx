@@ -30,7 +30,6 @@ export default function MusicControls() {
 
     // Song Info
     const [songProgress, setSongProgress] = useState<number>(0);
-    const [songLengthFormatted, setSongLengthFormatted] = useState<String>("");
 
     // Media Player States    
     const [isLoaded, setIsLoaded] = useState<boolean>(false); // Will hide music player when no music is loaded (but still while paused)
@@ -95,7 +94,7 @@ export default function MusicControls() {
     async function firstLoad() {
         const qPosition: string | null = localStorage.getItem('last-played-queue-position');
         const shuffleMode: boolean = JSON.parse(localStorage.getItem('shuffle-mode')!);
-        console.log(shuffleMode + " " + qPosition );
+
         pauseMusic();
         if(qPosition !== null) {
             try {
@@ -112,7 +111,6 @@ export default function MusicControls() {
                 else {
                     setSongDetails(queue[JSON.parse(qPosition!)]);
                     setSongProgress(0);
-                    setSongLengthFormatted(new Date(queue[JSON.parse(qPosition!)].duration * 1000).toISOString().slice(12, 19));
                     setIsLoaded(true);
 
                     if(shuffleMode !== null) {
@@ -151,7 +149,6 @@ export default function MusicControls() {
         try {
             setSongProgress(0);
             setSongDetails(q);
-            setSongLengthFormatted(new Date(q.duration * 1000).toISOString().slice(12, 19));
         }
         catch(e) {
             alert(`Failed to get song: ${e}`);
@@ -173,8 +170,7 @@ export default function MusicControls() {
         }
         catch(e) {
             console.log(e);
-        }
-        
+        }        
     }
 
     async function pauseMusic() {
@@ -203,6 +199,7 @@ export default function MusicControls() {
             console.log(e);
         }
         finally {
+            // not repeat mode
             if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
                 setSongProgress(0);
                 pauseMusic();
@@ -303,21 +300,20 @@ export default function MusicControls() {
         return () => {
             clearInterval(interval);
         };
-
-
     }, [isPlaying]);
 
 
     // Check if the song is over - play next song is able
     useEffect(() => {
-        const progress = new Date(songProgress * 1000).toISOString().slice(12, 19)
-        if(progress === songLengthFormatted) {
-            // wait 0.5s before playing next song, this is the test the song cutout issue
+        // const progress = new Date(songProgress * 1000).toISOString().slice(12, 19)
+        // console.log(progress, songProgress);
+        if(songProgress === songDetails?.duration) {
+            // wait 0.46s before playing next song, this is the test the song cutout issue
             setTimeout(function() {
                 console.log("end of song - going to next song -> ");
                 setIsPlaying(false);
                 nextSong();
-            }, 500);            
+            }, 460);
         }
     }, [songProgress]);
 
@@ -334,7 +330,7 @@ export default function MusicControls() {
                             max={songDetails?.duration}
                             className="progress-bar"
                             value={songProgress}
-                            onChange={(e) => { seekSong(parseInt(e.target.value)); }}
+                            onChange={(e) => seekSong(parseInt(e.target.value))}
                             disabled={songDetails === undefined ? true : false}
                             onDrag={(e) => seekSong(parseInt(e.currentTarget.value))}
                         />
