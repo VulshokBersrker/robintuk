@@ -26,7 +26,6 @@ export default function RightSideBar() {
 
     const [scanOnGoing, setScanOnGoing] = useState<boolean>(false);
 
-
     // Used to keep the correct link active
     useEffect(() => {
         // Get the list of playlists from the database

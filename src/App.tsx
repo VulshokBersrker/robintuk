@@ -2,7 +2,6 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
 import MusicControls from "./components/musicControls";
 import RightSideBar from "./components/rightSideBar";
-import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 
@@ -59,16 +58,6 @@ function App() {
     getValues();    
   }, []);
 
-  useEffect(() => {
-    // Listen for when the current folder scan has finished
-    const unlisten_scan_finished = listen<boolean>("scan-finished", () => { getValues(); });
-    
-    return () => {
-      unlisten_scan_finished.then(f => f());
-    }
-
-  }, []);
-
   async function getValues() {
     try {
       getSongs();
@@ -76,7 +65,7 @@ function App() {
       getArtists();
     }
     catch(e) {
-      alert(`Failed to scan folder: ${e}`);
+      console.log(`Failed to get music data: ${e}`);
     }
   }
 
