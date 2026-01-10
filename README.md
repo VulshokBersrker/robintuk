@@ -38,6 +38,8 @@ More: [See all screenshots](./assets/screenshots/index.md)
 Discovered a bug? Please open an [ISSUE](https://github.com/VulshokBersrker/robintuk_player/issues) to get it fixed.
 Made with Tauri (React and Rust).
 
+If you'd like to contribute to the project, please let me know in [DISCUSSIONS](https://github.com/VulshokBersrker/robintuk/discussions).
+
 ## To Do Features
 
 - [ ] Smoother music progress bar
