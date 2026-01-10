@@ -1,6 +1,6 @@
 use crate::{ AppState, db, helper, types::{GetCurrentSong, GetPlaylistList, SongTable} };
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
-use std::{fs::File, io::Read, path::Path};
+use std::{fs::{self, File}, io::Read, path::Path};
 use tauri::{Emitter, State};
 use std::path::{PathBuf};
 use walkdir::WalkDir;
@@ -319,90 +319,121 @@ pub async fn check_for_ongoing_scan(state: State<AppState, '_>) -> Result<bool, 
     Ok(*state.is_scan_ongoing.lock().unwrap())
 }
 
-// Backup, Restore, and Reset Functions for the DB and images
+// 0 - No Backup or Restore, 1 - Backup ongoing, 2 - Restore ongoing
 #[tauri::command]
-pub async fn create_backup() -> Result<(), String> {
-    println!("Creating backup file...");
+pub async fn check_for_backup_restore(state: State<AppState, '_>) -> Result<i64, String> {
+    Ok(*state.is_back_restore_ongoing.lock().unwrap())
+}
 
-    let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip"; 
-    let zip_file_path = File::create(&backup_path).unwrap();
+// ----------------- Backup and Restore Functions for the DB and images
+#[tauri::command]
+pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
+    let test  = state.clone();
+    // Make sure there is no scan going on, to prevent breaks in the DB
+    let scan = check_for_ongoing_scan(state).await.unwrap();
 
-    let mut zip = ZipWriter::new(zip_file_path);
+    if scan == false {
+        println!("Creating backup file...");
+        
+        *test.is_back_restore_ongoing.lock().unwrap() = 1;
 
-    let test_string = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/";
-    let prefix = Path::new(&test_string);
-    let mut buffer = Vec::new();
+        let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip"; 
+        let zip_file_path = File::create(&backup_path).unwrap();
 
-    for entry in WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/").into_iter().filter_map(|e| e.ok()) {
+        let mut zip = ZipWriter::new(zip_file_path);
 
-        let item = entry.path().display().to_string();
-        let path = Path::new(&item);
-        let name = path.strip_prefix(prefix).unwrap();
-        let path_as_string = name.to_str().map(str::to_owned).unwrap();
+        let test_string = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/";
+        let prefix = Path::new(&test_string);
+        let mut buffer = Vec::new();
 
-        if entry.metadata().unwrap().is_file() {
-            // println!("adding file {path:?} as {name:?} ...");
-            zip.start_file(path_as_string, SimpleFileOptions::default()).unwrap();
-            let mut f = File::open(path).unwrap();
+        for entry in WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/").into_iter().filter_map(|e| e.ok()) {
 
-            f.read_to_end(&mut buffer).unwrap();
-            zip.write_all(&buffer).unwrap();
-            buffer.clear();
+            let item = entry.path().display().to_string();
+            let path = Path::new(&item);
+            let name = path.strip_prefix(prefix).unwrap();
+            let path_as_string = name.to_str().map(str::to_owned).unwrap();
+
+            if entry.metadata().unwrap().is_file() {
+                // println!("adding file {path:?} as {name:?} ...");
+                zip.start_file(path_as_string, SimpleFileOptions::default()).unwrap();
+                let mut f = File::open(path).unwrap();
+
+                f.read_to_end(&mut buffer).unwrap();
+                zip.write_all(&buffer).unwrap();
+                buffer.clear();
+            }
+            // Is a folder
+            else {
+                // println!("adding dir {path_as_string:?} as {name:?} ...");
+                zip.add_directory(path_as_string, SimpleFileOptions::default()).unwrap();
+            }        
         }
-        // Is a folder
-        else {
-            // println!("adding dir {path_as_string:?} as {name:?} ...");
-            zip.add_directory(path_as_string, SimpleFileOptions::default()).unwrap();
-        }        
+        zip.finish().unwrap();
     }
-
-    zip.finish().unwrap();
-
-    println!("...Files successfully zipped");    
+    
+    println!("...Files successfully zipped");
+    *test.is_back_restore_ongoing.lock().unwrap() = 0;
+    app.emit("ending-backup", false).unwrap();
     Ok(())
 }
 
 #[tauri::command]
-pub async fn use_restore() -> Result<(), String> {
-    println!("Restoring from backup...");
-
+pub async fn check_for_backup() -> Result<bool, String> {
     let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip";
+    Ok(Path::new(&backup_path).try_exists().unwrap())
+}
 
-    if PathBuf::from(&backup_path).exists() {
-        let zip_file = File::open(backup_path).unwrap();
+#[tauri::command]
+pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
+    let test  = state.clone();
+    // Make sure there is no scan going on, to prevent breaks in the DB
+    let scan = check_for_ongoing_scan(state).await.unwrap();    
 
-        let mut archive = ZipArchive::new(zip_file).unwrap();
-        let extraction_dir = Path::new("robintuk_player");
+    if scan == false {
+        println!("Restoring from backup...");        
+        *test.is_back_restore_ongoing.lock().unwrap() = 2;
 
-        // Create the directory if it does not exist.
-        if !extraction_dir.exists() {
-            std::fs::create_dir(extraction_dir).unwrap();
-        }
+        let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip";
 
-        // Iterate through the files in the ZIP archive.
-        for i in 0..archive.len() {
-            let mut file = archive.by_index(i).unwrap();
-            let file_name = file.name().to_owned();
+        if PathBuf::from(&backup_path).exists() {
+            let fname = Path::new(&backup_path);
+            let reader: File = fs::File::open(fname).unwrap();
+            let mut archive = ZipArchive::new(reader).unwrap();
 
-            // Create the path to the extracted file in the destination directory.
-            let target_path = extraction_dir.join(file_name);
+            for i in 0..archive.len() {
+                let mut file = archive.by_index(i).unwrap();
 
-            // Create the destination directory if it does not exist.
-            if let Some(parent_dir) = target_path.parent() {
-                std::fs::create_dir_all(parent_dir).unwrap();
+                let outpath = match file.enclosed_name() {
+                    Some(path) => path,
+                    None => continue,
+                };
+
+                if file.is_dir() {
+                    let outpath_full = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/" + outpath.display().to_string().as_str();
+                    // println!("File {:?} extracted to {:?}", i, outpath_full);
+                    fs::create_dir_all(&outpath_full).unwrap();
+                }
+                else {
+                    let outpath_full = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/" + outpath.display().to_string().as_str();
+                    // println!("File {:?} extracted to {:?} - {:?} bytes", i, outpath_full, file.size());
+                    
+                    if let Some(p) = outpath.parent() {
+                        if !p.exists() {
+                            fs::create_dir_all(p).unwrap();
+                        }
+                    }
+                    let mut outfile = File::create(&outpath_full).unwrap();
+                    io::copy(&mut file, &mut outfile).unwrap();
+                }
             }
 
-            let mut output_file = File::create(&target_path).unwrap();
-
-            // Read the contents of the file from the ZIP archive and write them to the destination file.
-            io::copy(&mut file, &mut output_file).unwrap();
+            app.emit("ending-restore", false).unwrap();
         }
-
-        println!("Files successfully extracted to {:?}", extraction_dir);
+        else {
+            println!("There is no backup file");
+        }
     }
-    else {
-        println!("There is no backup file");
-    }    
+    *test.is_back_restore_ongoing.lock().unwrap() = 0;
 
     Ok(())
 }

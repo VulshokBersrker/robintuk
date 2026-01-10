@@ -39,23 +39,57 @@ export default function Settings() {
 
     const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme') !== null ? localStorage.getItem('theme')! : "red");
 
+    const [isBackup, setIsBackup] = useState<boolean>(false);
+    const [isRestore, setIsRestore] = useState<boolean>(false);
+    const [isBackupRestore, setIsBackupRestore] = useState<boolean>(false);
+
+
+    // Get the list of directories on load
+    useEffect(() => {
+        const isScanOnging = JSON.parse(localStorage.getItem("folder-scan")!);
+        if(isScanOnging === true) {
+            setLoading(false); // Rework this method
+        }
+        getDirectories();
+        getTheme();
+    }, []);
+
+    // Listeners
+    useEffect(() => {
+        const unlisten_scan_finished = listen("scan-finished", () => { setLoading(false); setIsBackupRestore(false); });
+
+        const unlisten_backup_finished = listen("ending-backup", () => { setIsBackup(false); setIsBackupRestore(false); });
+
+        const unlisten_restore_finished = listen("ending-restore", () => { setIsRestore(false); setIsBackupRestore(false); });
+        
+        return () => {
+            unlisten_scan_finished.then(f => f()),
+            unlisten_backup_finished.then(f => f()),
+            unlisten_restore_finished.then(f => f());
+        }        
+    }, []);
+
 
     async function scanMusic() {
         setLoading(true);
+        setIsBackupRestore(true);
         localStorage.setItem("folder-scan", JSON.stringify(true));
         try {
             const scannedFiles = await invoke<ScanResults>('scan_directory');
-            console.log(scannedFiles);
+            // console.log(scannedFiles);
             setScanResults(scannedFiles);
         }
-        catch (err) {
-            alert(`Failed to scan folder: ${err}`);
+        catch(err) {
+            console.log(`Failed to scan folder: ${err}`);
             localStorage.setItem("folder-scan", JSON.stringify(false));
+            setLoading(false);
+            setIsBackupRestore(false);
         }
         finally {
             setLoading(false);
             // Show the popup with the results for 3 seconds
             setShowResults(true);
+            setIsBackupRestore(false);
             setTimeout(() => {
                 setShowResults(false);
             }, 5000);
@@ -72,16 +106,33 @@ export default function Settings() {
     async function getDirectories() {
         try {
             const directory_list = await invoke<DirectoryInfo[]>('get_directory');
-            // console.log(directory_list);
             if(directoryList !== null) {
                 setDirectoryList(directory_list);
             }            
 
             const res = await invoke<boolean>('check_for_ongoing_scan');
             setLoading(res);
+            setIsBackupRestore(res);
+
+            const res2: number = await invoke<number>('check_for_backup_restore');
+            // No Backup or Restore ongoing
+            if(res2 === 0) {
+                setIsBackup(false);
+                setIsRestore(false);
+            }
+            // There is a Backup ongoing
+            else if(res2 === 1) {
+                setIsBackup(true);
+                setIsBackupRestore(true);
+            }
+            // There is a Restore ongoing
+            else {
+                setIsRestore(true);
+                setIsBackupRestore(true);
+            }
         }
-        catch (err) {
-            alert(`Failed find any directories: ${err}`);
+        catch(err) {
+            console.log(`Error in getDirectories: ${err}`);
         }
     }
     async function addDirectory() {
@@ -112,7 +163,7 @@ export default function Settings() {
             alert(`Failed to add directories: ${err}`);
         }
     }
-    async function remove_directory(value: string) {
+    async function removeDirectory(value: string) {
         setDirectoryList(directoryList.filter(item => item.dir_path !== value));
         await invoke("remove_directory", { directory_name: value })
     }
@@ -128,47 +179,50 @@ export default function Settings() {
             console.log(e);
         }
     }
-
-    async function backupData() {
-        try{
-            const res = await invoke("create_backup");
-            console.log(res);
+    async function getTheme() {
+        try {
+            const res: string = await invoke("get_settings");
+            setTheme(res);
         }
         catch(e) {
             console.log(e);
+        }
+    }
+
+    async function backupData() {
+        try{
+            setIsBackup(true);
+            setIsBackupRestore(true);
+            await invoke("create_backup");
+        }
+        catch(e) {
+            console.log("Error creating backup: ",e);
+        }
+        finally {
+            setIsBackup(false);
+            setIsBackupRestore(false);
         }
     }
     async function restoreData() {
         try{
-            const res = await invoke("use_restore");
-            console.log(res);
+            setIsRestore(true);
+            setIsBackupRestore(true);
+            const res: boolean = await invoke<boolean>("check_for_backup");
+            if(res) {
+                await invoke("use_restore");
+            }
+            else {
+                console.log("No backup exists");
+            }
         }
         catch(e) {
-            console.log(e);
+            console.log("Error restoring from backup: ", e);
+        }
+        finally {
+            setIsRestore(false);
+            setIsBackupRestore(false);
         }
     }
-
-    // Get the list of directories on load
-    useEffect(() => {
-        const isScanOnging = JSON.parse(localStorage.getItem("folder-scan")!);
-        if(isScanOnging === true) {
-            setLoading(false); // Rework this method
-        }
-        getDirectories();
-    }, []);
-
-    useEffect(() => {
-        // Load the new playlist from the backend
-
-        const unlisten_scan_started = listen("scan-started", (e) => { console.log(e); setLoading(true); });
-        const unlisten_scan_finished = listen("scan-finished", (e) => { console.log(e); setLoading(false); });
-        
-        return () => {
-            unlisten_scan_started.then(f => f());
-            unlisten_scan_finished.then(f => f());
-        }        
-    }, []);
-
 
     return(
         <SimpleBar forceVisible="y" autoHide={false} className="scrollbar-settings-content" >
@@ -179,15 +233,18 @@ export default function Settings() {
             {(showResults === true && scanResults === undefined) &&
                 <ErrorPopup success={0} updated={0} error={1} error_dets={null} type={1} />
             }
+            {(showResults === true && scanResults === undefined) &&
+                <ErrorPopup success={0} updated={0} error={1} error_dets={null} type={2} />
+            }
             <div className="settings-section">
                 <span className="header-font font-3">Folders to Scan</span>
                 <p className="sub-font font-0">Select the folders that have your music</p>
                 {directoryList.map((dir, i) => {
                     return(
                         <div className="directory-padding" key={i} >
-                            <span className={`directory-container d-flex justify-content-between header-font ${loading ? "disabled" : ""}`}>
+                            <span className={`directory-container d-flex justify-content-between header-font ${loading ? "disabled" : ""} ${isBackupRestore ? "disabled" : ""}`}>
                                 <span className="line-clamp-1">{dir.dir_path}</span>
-                                <span className="remove-directory" onClick={() => remove_directory(dir.dir_path)}>X</span>
+                                <span className="remove-directory" onClick={() => removeDirectory(dir.dir_path)}>X</span>
                             </span>
                         </div>
                     );
@@ -195,21 +252,22 @@ export default function Settings() {
 
                 {/* Buttons to add folders and scan for music */}
                 <div className="directory-padding">
-                    <button className="white header-font" onClick={addDirectory} disabled={loading}>+ Add Folder</button>
+                    <button className="white header-font" onClick={addDirectory} disabled={loading || isBackupRestore}>+ Add Folder</button>
                 </div>
 
                 <div>
-                    <button className="white header-font d-flex" onClick={scanMusic} disabled={loading || directoryList.length === 0}>
+                    <button className="white header-font d-flex" onClick={scanMusic} disabled={loading || directoryList.length === 0 || isBackupRestore}>
                         {loading === true && <span style={{paddingRight: '5px'}}><span className="loader" /> </span>}
                         <span>Scan Music</span>
                     </button>
                 </div>
             </div>
 
+            {/* Theme Picker */}
             <div className="settings-section theme-container">
                 <div className="header-font font-3" style={{marginBottom: '15px'}}>Choose Theme</div>
                 {/* Update to dropdown */}
-                <select name="themes" id={`theme-${themeColor}`} value={themeColor} onChange={(e) => setTheme(e.target.value)} >
+                <select name="themes" id={`theme-${themeColor}`} value={themeColor} onChange={(e) => setTheme(e.target.value)} disabled={loading || isBackupRestore}>
                     <option value="red" id="theme-red"> Red </option>
                     <option value="blue" id="theme-blue"> Blue </option>
                     <option value="purple" id="theme-purple"> Purple </option>
@@ -239,18 +297,22 @@ export default function Settings() {
 
             {/* Backup Restore */}
             <div className="settings-section backup">
-                <div className="header-font font-3 sub-font" style={{marginBottom: '5px'}}>Data Backup/Restore (Only backup working)</div>
+                <div className="header-font font-3" style={{marginBottom: '5px'}}>Data Backup/Restore</div>
                 <div className="sub-font font-0" style={{marginBottom: '10px'}}>Backup and Restore all your data on Robintuk, including your playlists</div>
 
                 <div className="grid-10">
                     <span className="section-1" style={{marginRight: '20px'}}>
-                        <button className="white vertical-centered font-1 header-font" onClick={backupData}>
-                            <img src={BackupIcon} alt="icon" />&nbsp;Backup
+                        <button className="white vertical-centered font-1 header-font" onClick={backupData} disabled={isBackupRestore}>
+                            {!isBackup && <img src={BackupIcon} alt="icon" />}
+                            {isBackup && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
+                            &nbsp;Backup
                         </button>
                     </span>
                     <span className="section-1">
-                        <button className="white vertical-centered font-1 header-font" onClick={restoreData}>
-                            <img src={DatabaseIcon} alt="icon" />&nbsp;Restore
+                        <button className="white vertical-centered font-1 header-font" onClick={restoreData} disabled={isBackupRestore}>
+                            {!isRestore && <img src={DatabaseIcon} alt="icon" />}
+                            {isRestore && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
+                            &nbsp;Restore
                         </button>
                     </span>
                 </div>
@@ -261,7 +323,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.1.7 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.1.8 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
@@ -345,6 +407,18 @@ const ErrorPopup = ({success, error, updated, type, error_dets}: Props) => {
             </div>
         );
     }
-        
-    
+    // Backup/Restore Errors
+    else if(type === 2) {
+        return(
+            <div className="status-container error d-flex vertical-centered">
+                <span>
+                    <img src={ErrorIcon} alt={"ff"} className="scan-status-icon error"/>
+                </span>
+                <span style={{paddingLeft: "10px"}}>
+                    <div>Cannot Restore</div>
+                    <div>No Backup File Found</div>                    
+                </span>
+            </div>
+        );
+    }
 }

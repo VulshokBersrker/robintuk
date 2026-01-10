@@ -172,10 +172,10 @@ export default function PlaylistOverviewPage() {
     async function addCustomPlaylistArtwork() {
         let cover_image: string = "";
         try {
-            const file_path = await open({ multiple: false, directory: false });
+            const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
             if(file_path !== null) {
-                await invoke("add_playlist_cover", { file_path: file_path.toString(), playlist_name: playlistDetails.name, playlist_id: location.state.name });
                 cover_image = file_path.toString();
+                await invoke("add_playlist_cover", { file_path: file_path.toString(), playlist_name: playlistDetails.name, playlist_id: location.state.name });
             }
         }
         catch(err) {

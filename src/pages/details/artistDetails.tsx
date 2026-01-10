@@ -313,7 +313,7 @@ export default function ArtistOverviewPage() {
                                 &nbsp;Add to
                             </button>
                             {displayAddToMenu && albumSelection.length >= 1 &&
-                                <div className="playlist-list-container header-font">
+                                <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 20%)" : "translate(-43%, 8%)"}}>
                                     <div className="item d-flex align-items-center" onClick={addToQueue}>
                                         <img src={QueueIcon} className="icon-size"/>
                                         <span>&nbsp;Queue</span>
@@ -359,7 +359,11 @@ export default function ArtistOverviewPage() {
                                     <span><button className="font-1 borderless" onClick={() => playArtist(false)}><img src={PlayIcon} /></button></span>
                                     <span><button className="font-1 borderless" onClick={() => playArtist(true)}><img src={ShuffleIcon} /></button></span>
                                     <span className="position-relative">
-                                        <button className="font-1 borderless" disabled={artistDetails.albums.length === 0} onClick={() => setDisplayAddToMenu(!displayAddToMenu)}  >
+                                        <button
+                                            className="font-1 borderless"
+                                            disabled={artistDetails.albums.length === 0 || albumSelection.length >= 1}
+                                            onClick={() => setDisplayAddToMenu(!displayAddToMenu)}
+                                        >
                                             <img src={AddIcon} />
                                         </button>
                                         

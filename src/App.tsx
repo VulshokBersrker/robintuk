@@ -36,40 +36,36 @@ function App() {
   const [artistList, setArtistList] = useState<AllArtistResults[]>([]);
 
   useEffect(() => {
-    const selectedTheme = localStorage.getItem('theme');
-
-    async function getTheme() {
-      try {
-        const res: string | null = await invoke("get_settings");
-        console.log(res);
-        if(res === null) {
-          document.querySelector("body")?.setAttribute("data-theme", "red");
-        }
-        else {
-          document.querySelector("body")?.setAttribute("data-theme", res);
-        }
-      }
-      catch(e) {
-        console.error("Error getting settings", e)
-      }
-    }
     getTheme();
-
-    if(selectedTheme) {
-      document.querySelector("body")?.setAttribute("data-theme", selectedTheme);
-    }
     getValues();    
   }, []);
 
+  // Listeners
   useEffect(() => {
-    // Listen for when the current folder scan has finished
     const unlisten_scan_finished = listen<boolean>("scan-finished", () => { getValues(); });
-    
-    return () => {
-      unlisten_scan_finished.then(f => f());
-    }
-
+    return () => { unlisten_scan_finished.then(f => f()); }
   }, []);
+
+  async function getTheme() {
+    try {
+      const res: string | null = await invoke("get_settings");
+      if(res === null) {
+        const selectedTheme = localStorage.getItem('theme');
+        if(selectedTheme) {
+          document.querySelector("body")?.setAttribute("data-theme", selectedTheme);
+        }
+        else {
+          document.querySelector("body")?.setAttribute("data-theme", "red");
+        }        
+      }
+      else {
+        document.querySelector("body")?.setAttribute("data-theme", res);
+      }
+    }
+    catch(e) {
+      console.error("Error getting settings", e)
+    }
+  }
 
   async function getValues() {
     try {
@@ -124,7 +120,7 @@ function App() {
 
   return(
     <div 
-      // onContextMenu={(e) => { e.preventDefault(); }}
+      onContextMenu={(e) => { e.preventDefault(); }}
     >
       <BrowserRouter>
         <CustomWindowsBar />

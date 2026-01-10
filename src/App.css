@@ -315,7 +315,7 @@ button.white:hover {
   transition: 0.2s ease-in-out;
 }
 button.white:disabled {
-  border: 1px solid #585858;
+  border: 2px solid #585858;
   background-color: rgba(0, 0, 0, 0.5) !important;
   color: #585858;
   pointer-events: none;
@@ -1843,6 +1843,17 @@ button.white:disabled .loader {
   animation: rotation 1s linear infinite;
 }
 
+.loader.large {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--font-color-one);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite
+}
+
 @keyframes rotation {
   0% {
     transform: rotate(0deg);
@@ -1935,6 +1946,12 @@ select {
   text-indent: 50px;
   display: flex;
   align-items: center;
+}
+select:disabled {
+  border: 2px solid #585858;
+}
+select:disabled:hover {
+  background: rgba(0, 0, 0, 0);
 }
 select:hover {
   background: rgba(113, 113, 113, 0.3);
@@ -2324,13 +2341,11 @@ img.search-icon:hover {
   height: calc(100vh - 35px);
 }
 
-
 .add-playlist-container.simplebar-scrollable-y {
   margin-top: 10px;
   max-height: 200px;
   overflow-y: auto;
 }
-
 
 .add-playlist-container .simplebar-track {
   z-index: 1;

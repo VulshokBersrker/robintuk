@@ -186,7 +186,7 @@ export async function playAlbum(album_name: string, shuffled: boolean) {
 
 export async function playPlaylist(playlist_id: number, shuffled: boolean) {
     const shuf = localStorage.getItem("shuffle-mode") === null ? JSON.parse(localStorage.getItem("shuffle-mode")!) : false;
-    // console.log(shuffled);
+    console.log(shuffled);
     // console.log(shuf);
     try {
         await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuf});

@@ -33,7 +33,8 @@ fn greet() -> String {
 pub struct AppState {
     player:  Arc<Mutex<MusicPlayer>>,
     pool: Pool<Sqlite>,
-    is_scan_ongoing: Mutex<bool>
+    is_scan_ongoing: Mutex<bool>,
+    is_back_restore_ongoing: Mutex<i64>
 }
 
 
@@ -56,7 +57,11 @@ pub fn run() -> Result<(), String> {
         .plugin(tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build())
         .setup(|app: &mut tauri::App| {
             
-            app.manage(AppState { player, pool, is_scan_ongoing: Mutex::new(false) });
+            app.manage(AppState { player,
+                pool,
+                is_scan_ongoing: Mutex::new(false),
+                is_back_restore_ongoing: Mutex::new(0)
+            });
 
             #[cfg(windows)]
             {
@@ -161,6 +166,8 @@ pub fn run() -> Result<(), String> {
             db::get_settings,
             db::set_theme,
             commands::create_backup,
+            commands::check_for_backup,
+            commands::check_for_backup_restore,
             commands::use_restore,
             commands::check_for_ongoing_scan
         ])        

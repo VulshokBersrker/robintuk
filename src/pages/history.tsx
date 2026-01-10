@@ -40,7 +40,7 @@ export default function PlayHistoryPage() {
             setTimeout(() => {
                 setIsCurrent(event.payload.q);
                 getHistory();
-            }, 50);
+            }, 100);
         });
         
         return () => {

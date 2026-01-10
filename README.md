@@ -19,6 +19,7 @@
 - Customize the look with multiple color themes
 - View last 100 played songs
 - Filters to find music faster
+- Fast scans to add your music quickly (~4500 per minute)
 
 ## [Screenshots](./assets/screenshots/index.md)
 

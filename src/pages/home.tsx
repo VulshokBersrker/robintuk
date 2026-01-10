@@ -44,7 +44,7 @@ export default function Home() {
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", () => { 
             setTimeout(() => {
                 getHistory();
-            }, 50);
+            }, 100);
         });
 
         const handler = (e: any) => {
