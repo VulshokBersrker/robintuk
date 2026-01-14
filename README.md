@@ -85,11 +85,13 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
+- [ ] Scan has a chances to fail with new tag system
 - [ ] Songs have hiccups randomly (maybe due to heavy system load from other programs)
 - [ ] Application Optimizations (streamlining, data caching, etc.)
 - [ ] Better error handling
-- [ ] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
+- [x] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
 - [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
+- [ ] When changing output sound device, it will continue to play sound to the old device (only fix is to reload the app)
 - [x] If scan breaks or user closes app while scanning, scan buttons will be disabled because it thinks a scan is still ongoing
 - [x] Blank pages on route change while it grabs the data from the backend (fixed?)
 - [x] Selecting songs/albums and using the search bar will break the selection

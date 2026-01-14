@@ -1,21 +1,16 @@
 // Libraries
 use std::{
-    fs,
-    hash::{DefaultHasher, Hash, BuildHasher, Hasher, RandomState},
-    path::{Path, PathBuf},
+    fs, hash::{BuildHasher, DefaultHasher, Hash, Hasher, RandomState}, path::{Path, PathBuf}
 };
 
-
 // Song Metadata Libraries
-use symphonia::core::formats::FormatOptions;
-use symphonia::core::io::MediaSourceStream;
-use symphonia::core::meta::MetadataOptions;
-use symphonia::core::meta::{StandardTagKey, StandardVisualKey};
-use symphonia::core::probe::Hint;
-use StandardTagKey::*;
+use lofty::{config::{ParseOptions, ParsingMode}, file::TaggedFileExt, tag::ItemKey};
+use lofty::prelude::*;
 
 // How you import in files that aren't lib or main
 use crate::{SongDataResults, types::{ SongTable, SongTableUpload }};
+
+// import keys from https://docs.rs/lofty/latest/lofty/tag/enum.ItemKey.html
 
 pub fn generate_cover_hash(value: u64) -> String {
     let mut s = DefaultHasher::new();
@@ -48,11 +43,31 @@ fn rand() -> u64 {
     RandomState::new().build_hasher().finish()
 }
 
+fn get_section_marker(first_char: char) -> Option<i32> {    
+    // Special Characters
+    if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
+        || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
+        || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
+    {
+        return Some(0);
+    }
+    // 0 - 9
+    else if first_char.is_ascii_digit() {
+        return Some(1);
+    }
+    //  A - Z
+    else if first_char.is_ascii_alphabetic() {
+        let section = first_char as i32;
+        return Some(section);
+    }
+    // Non-ascii values
+    else {
+        return Some(300);
+    }
+}
+
 // Get the song metadata for the database
 pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<SongDataResults> {
-    let file: fs::File = fs::File::open(&path).expect("Failed to open file");
-    // Create the media source stream.
-    let mss: MediaSourceStream = MediaSourceStream::new(Box::new(file), Default::default());
 
     let file_name: String = Path::new(&path)
         .file_name()
@@ -60,287 +75,244 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
         .map(|x| x.to_string())
         .unwrap();
 
-    // let hash: String = generate_uuid();
-
-    // Create a probe hint using the file's extension. [Optional]
-    let mut hint: Hint = Hint::new();
-    hint.with_extension("mp3").with_extension("wav").with_extension("flac");
-
-    // Use the default options for metadata and format readers.
-    let meta_opts: MetadataOptions = Default::default();
-    let fmt_opts: FormatOptions = Default::default(); // Get the instantiated format reader.
+    // println!("{:?} - {:?}", &file_name, &path);
 
     let mut song_data: SongTableUpload = SongTableUpload {
         path: path.to_string(),
         ..SongTableUpload::default()
     };
 
-    // Get the directory where all the data is stored
-    let image_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers/";
-    let mut covers_path = PathBuf::new();
+    // Prevents an error where a file might have a bad Timestamp
+    let parsing_options = ParseOptions::new().parsing_mode(ParsingMode::BestAttempt);
 
-    // Probe the media source
-    let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts);
+    let tagged_file = lofty::probe::Probe::open(&path)
+        .expect("Error: bad path")
+        .options(parsing_options)
+        .read();
 
-    if probed.is_ok() {
-        let mut probe = probed.unwrap();
+    if tagged_file.is_ok() {
+        let tagged = tagged_file.unwrap();
 
-        if let Some(song) = probe.format.default_track() {
-            if let Some((frames, sample_rate)) = song
-                .codec_params
-                .n_frames
-                .zip(song.codec_params.sample_rate)
-            {
-                song_data.duration = (frames / sample_rate as u64).to_string();
-            }
-        }
+        if tagged.contains_tag() {
 
-        // Get the song metadata
-        if let Some(mut meta) = probe
-            .metadata
-            .get()
-            .or_else(|| Some(probe.format.metadata()))
-        {
-            if let Some(rev) = meta.skip_to_latest() {
-                for tag in rev.tags() {
-                    // Get the song details
-                    if let Some(key) = tag.std_key {
+            let tag = match tagged.primary_tag() {
+                Some(primary_tag) => primary_tag,
+                None => tagged.first_tag().expect("Error no tags found")
+            };
 
-                        match key {
-                            TrackTitle => {
-                                // If there is no name to the track, give it the name of the filename
-                                if Some(tag.value.to_string()) == None {
-                                    song_data.name = Some(file_name.clone().replace(".mp3", "").replace(".flac", "").replace(".wav", ""));
-
-                                    let name: String = file_name.clone().replace(".mp3", "").replace(".flac", "").replace(".wav", "");
-                                    let char_array: Vec<char> = name.chars().collect();
-                                    let first_char: char = char_array[0].to_ascii_uppercase();
-                                    
-                                    // Special Characters
-                                    if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
-                                        || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
-                                        || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
-                                    {
-                                        song_data.song_section = Some(0);
-                                    }
-                                    // 0 - 9
-                                    else if first_char.is_ascii_digit() {
-                                        song_data.song_section = Some(1);
-                                    }
-                                    //  A - Z
-                                    else if first_char.is_ascii_alphabetic() {
-                                        let section = first_char as i32;
-                                        song_data.song_section = Some(section);
-                                    }
-                                    // Non-ascii values
-                                    else {
-                                        song_data.song_section = Some(300);
-                                    }
-                                }
-                                else {
-                                    song_data.name = Some(tag.value.to_string());
-                                    
-                                    let name: String = tag.value.to_string();
-                                    let char_array: Vec<char> = name.chars().collect();
-                                    let first_char: char = char_array[0].to_ascii_uppercase();                                    
-
-                                    // Special Characters
-                                    if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
-                                        || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
-                                        || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
-                                    {
-                                        song_data.song_section = Some(0);
-                                    }
-                                    // 0 - 9
-                                    else if first_char.is_ascii_digit() {
-                                        song_data.song_section = Some(1);
-                                    }
-                                    //  A - Z
-                                    else if first_char.is_ascii_alphabetic() {
-                                        let section = first_char as i32;
-                                        song_data.song_section = Some(section);
-                                    }
-                                    // Non-ascii values
-                                    else {
-                                        song_data.song_section = Some(300);
-                                    }
-                                    
-                                }
-                            }
-                            Artist => song_data.artist = Some(tag.value.to_string()) ,
-                            Album => {
-                                
-                                song_data.album = Some(tag.value.to_string());
-
-                                let name = tag.value.to_string();                                    
-                                let char_array: Vec<char> = name.chars().collect();
-                                let first_char = char_array[0];
-
-                                // Special Characters
-                                if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
-                                    || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
-                                    || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
-                                {
-                                    song_data.album_section = Some(0);
-                                }
-                                // 0 - 9
-                                else if first_char.is_ascii_digit() {
-                                    song_data.album_section = Some(1);
-                                }
-                                //  A - Z
-                                else if first_char.is_ascii_alphabetic() {
-                                    let section = first_char as i32;
-                                    song_data.album_section = Some(section);
-                                }
-                                // Non-ascii values
-                                else {
-                                    song_data.album_section = Some(300);
-                                }
-                            },
-                            AlbumArtist => {
-                                if Some(tag.value.to_string()) == None {
-                                    song_data.album_artist = Some(tag.value.to_string());
-                                    song_data.artist_section = None;
-                                }
-                                else {
-                                    song_data.album_artist = Some(tag.value.to_string());
-
-                                    let artist: String = tag.value.to_string();
-                                    let char_array: Vec<char> = artist.chars().collect();
-                                    let first_char: char = char_array[0].to_ascii_uppercase();
-
-                                    // Special Characters
-                                    if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
-                                        || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
-                                        || first_char == '+' || first_char == '%' || first_char == '*' || first_char == '.'
-                                    {
-                                        song_data.artist_section = Some(0);
-                                    }
-                                    // 0 - 9
-                                    else if first_char.is_ascii_digit() {
-                                        song_data.artist_section = Some(1);
-                                    }
-                                    //  A - Z
-                                    else if first_char.is_ascii_alphabetic() {
-                                        let section = first_char as i32;
-                                        song_data.artist_section = Some(section);
-                                    }
-                                    // Non-ascii values
-                                    else {
-                                        song_data.artist_section = Some(300);
-                                    }
-                                }
-                                
-                            },
-                            Date => song_data.release = Some(tag.value.to_string()),
-                            Genre => song_data.genre = Some(tag.value.to_string()),
-                            DiscNumber => {
-                                // Convert the string into an i32 number
-                                if Some(tag.value.to_string()) != None {
-                                    let value = Some(tag.value.to_string()).unwrap();
-                                    if value.find("/") != None {
-                                        let disc_num = value.split('/').next().unwrap();
-                                        song_data.disc = Some(disc_num.parse::<i32>().unwrap());
-                                    }
-                                    else if value.find("/") == None {
-                                        let disc_num = value.as_str();
-                                        song_data.disc = Some(disc_num.parse::<i32>().unwrap());
-                                    }
-                                    else {
-                                        song_data.disc = None;
-                                    }
-                                }
-                                else {
-                                    song_data.disc = None;
-                                }
-                            }
-                            TrackNumber => {
-                                // Convert the string into an i32 number
-                                if Some(tag.value.to_string()) != None {
-                                    let value = Some(tag.value.to_string()).unwrap();
-                                    if value.find("/") != None {
-                                        let track_num = value.split('/').next().unwrap();
-                                        song_data.track = Some(track_num.parse::<i32>().unwrap());
-                                    }
-                                    else if value.find("/") == None {
-                                        if value.find(".") != None {
-                                            let track_num = value.split('.').next().unwrap();
-                                            song_data.track =  Some(track_num.parse::<i32>().unwrap());
-                                        }
-                                        else {
-                                            let track_num = value.as_str();
-                                            song_data.track = Some(track_num.parse::<i32>().unwrap());
-                                        }
-                                    }
-                                    else {
-                                        song_data.track = None;
-                                    }
-                                }
-                                else {
-                                    song_data.track = None;
-                                }
-                            }
-                            _ => {}
-                        }
+            //  Get title tag
+            if let Some(value) = tag.title().as_deref() {
+                // println!("Title: {:?}", value);
+                if Some(value) == None {
+                    if Some(tag.get_string(&ItemKey::TrackTitle).unwrap().to_string()) != None {
+                        song_data.name = Some(tag.get_string(&ItemKey::TrackTitle).unwrap().to_string());
                     }
+                    else {
+                        song_data.name = None;
+                    }
+                    let name: String = file_name.clone().replace(".mp3", "").replace(".flac", "").replace(".wav", "");
+                    let char_array: Vec<char> = name.chars().collect();
+                    let first_char: char = char_array[0].to_ascii_uppercase();
+                    song_data.song_section = get_section_marker(first_char);
+                    
                 }
+                else {
+                    song_data.name = Some(value.to_string());
 
-                // Get song cover
-                let song_covers = rev.visuals();
-                let mut priority = [None, None];
-                let mut others = Vec::with_capacity(song_covers.len());
-
-                for item in song_covers {
-                    match item.usage {
-                        Some(StandardVisualKey::FrontCover) => priority[0] = Some(item),
-                        Some(StandardVisualKey::BackCover) => priority[1] = Some(item),
-                        // Some(StandardVisualKey::Media) => priority[1] = Some(item),
-                        _ => others.push(item),
-                    }
-                }
-
-                for item in priority.into_iter().flatten().chain(others) {
-                    if item.data.is_empty() {
-                        continue;
-                    }
-
-                    let (_, ext) = item.media_type.split_once("/").unwrap_or(("image", "jpg"));
-                    // Try out an if to check for the album name, to set that name as the f_name
-                    // Should lower the amount of images
-                    let f_name: String;
-                    if song_data.album == None {
-                        f_name = generate_cover_hash(file_size);
-                    } else {
-                        f_name = remove_special_characters(song_data.album.clone().unwrap());
-                    }
-
-                    let song_cover_path = format!("{image_dir}{f_name}.{ext}");
-                    covers_path.push(&song_cover_path);
-
-                    fs::write(&covers_path, &item.data)?;
-                    // Save the cover for the database
-                    song_data.cover = Some(song_cover_path);
-
-                    break;
+                    let name: String = value.to_string();
+                    let char_array: Vec<char> = name.chars().collect();
+                    let first_char: char = char_array[0].to_ascii_uppercase();
+                    song_data.song_section = get_section_marker(first_char);
                 }
             }
+
+            // Get album tag
+            if let Some(value) = tag.album().as_deref() {
+                // println!("Album: {:?}", value);
+                if Some(value) == None {
+                    if Some(tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string()) != None {
+                        song_data.album = Some(tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string());
+
+                        let name: String = tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string();
+                        let char_array: Vec<char> = name.chars().collect();
+                        let first_char: char = char_array[0].to_ascii_uppercase();
+                        song_data.album_section = get_section_marker(first_char);
+                    }
+                    else {
+                        song_data.album = None;
+                        song_data.album_section = None;
+                    }
+                }
+                else {
+                    song_data.album = Some(value.to_string());
+
+                    let name: String = value.to_string();
+                    let char_array: Vec<char> = name.chars().collect();
+                    let first_char: char = char_array[0].to_ascii_uppercase();
+                    song_data.album_section = get_section_marker(first_char);
+                }
+            }
+
+            // Get album artist tag
+            if let Some(value) = tag.get_string(&ItemKey::AlbumArtist) {
+                // println!("Album Artist: {:?}", value);
+                if Some(value) == None {
+                    if Some(tag.get_string(&ItemKey::AlbumArtist).unwrap().to_string()) != None {
+                        song_data.album_artist = Some(tag.get_string(&ItemKey::AlbumArtist).unwrap().to_string());
+
+                        let artist: String = tag.get_string(&ItemKey::TrackArtist).unwrap().to_string();
+                        let char_array: Vec<char> = artist.chars().collect();
+                        let first_char: char = char_array[0].to_ascii_uppercase();
+                        song_data.artist_section = get_section_marker(first_char);
+                    }
+                    else {
+                        song_data.album_artist = None;
+                        song_data.artist_section = None;
+                    }            
+                }
+                else {
+                    if value.to_string() == "" {
+                        song_data.album_artist = None;
+                        song_data.artist_section = None;
+                    }
+                    else {
+                        song_data.album_artist = Some(value.to_string());
+
+                        let artist: String = value.to_string();
+                        let char_array: Vec<char> = artist.chars().collect();
+                        let first_char: char = char_array[0].to_ascii_uppercase();
+                        song_data.artist_section = get_section_marker(first_char);
+                    }                
+                }
+            }
+
+            // Get artist tag
+            if let Some(value) = tag.artist().as_deref() {
+                // println!("Artist: {:?}", value);
+                if Some(value) == None {
+                    if Some(tag.get_string(&ItemKey::TrackArtist).unwrap().to_string()) != None {
+                        song_data.artist = Some(tag.get_string(&ItemKey::TrackArtist).unwrap().to_string());
+
+                    }
+                    else {
+                        song_data.artist = None;
+                        
+                    }            
+                }
+                else {
+                    song_data.artist = Some(value.to_string());
+                }
+            }
+
+            // Get genre tag
+            if let Some(value) = tag.genre().as_deref() {
+                // println!("Genre: {:?}", value);
+                if Some(value) == None {
+                    if Some(tag.get_string(&ItemKey::Genre).unwrap().to_string()) != None {
+                        song_data.genre = Some(tag.get_string(&ItemKey::Genre).unwrap().to_string());
+                    }
+                    else {
+                        song_data.genre = None;
+                    }            
+                }
+                else {
+                    song_data.genre = Some(value.to_string());
+                }
+            }
+
+            // Get year tag
+            if let Some(value) = tag.year() {
+                // println!("Year: {:?}", &value);
+                if Some(&value) == None {
+                    if tag.get_string(&ItemKey::Year) != None {
+                        song_data.release = Some(tag.get_string(&ItemKey::Year).unwrap().to_string());
+                    }
+                    else {
+                        song_data.release = None;
+                    }            
+                }
+                else {
+                    song_data.release = Some(value.to_string());
+                }
+            }
+
+            // Get track tag
+            if let Some(value) = tag.track() {
+                // println!("Track: {:?}", value);
+                if Some(value) == None {
+                    if Some(tag.get_string(&ItemKey::TrackNumber).unwrap().parse::<i32>().unwrap()) != None {
+                        song_data.track = Some(tag.get_string(&ItemKey::TrackNumber).unwrap().parse::<i32>().unwrap());
+                    }
+                    else {
+                        song_data.track = None;
+                    }            
+                }
+                else {
+                    song_data.track = Some(value as i32);
+                }
+            }
+
+            // Get disc tag
+            if let Some(value) = tag.disk() {
+                // println!("Disc: {:?}", value);
+                if Some(value) == None {
+                    println!("{:?}", tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap());
+                    if Some(tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap()) != None {
+                        song_data.disc = Some(tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap());
+                    }
+                    else {
+                        song_data.disc = None;
+                    }            
+                }
+                else {
+                    song_data.disc = Some(value as i32);
+                }
+            }
+
+            // Get duration tag
+            let properties = tagged.properties();
+            let duration = properties.duration();
+            song_data.duration = duration.as_secs().to_string();
+
+
+            // Get the directory where all the data is stored
+            let image_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers/";
+            let mut covers_path = PathBuf::new();
+
+            // Get Album artwork
+            if tag.pictures().len() != 0 {
+
+                let image_type = tag.pictures()[0].mime_type().unwrap().to_string();
+                let (_, ext) = image_type.split_once("/").unwrap_or(("image", "jpg"));
+                
+                // println!("{:?}", ext);
+
+                let f_name: String;
+                if song_data.album == None {
+                    f_name = generate_cover_hash(file_size);
+                } else {
+                    f_name = remove_special_characters(song_data.album.clone().unwrap());
+                }
+
+                let song_cover_path = format!("{image_dir}{f_name}.{ext}");
+                covers_path.push(&song_cover_path);
+
+                fs::write(&covers_path, &tag.pictures()[0].data())?;
+                // Save the cover for the database
+                song_data.cover = Some(song_cover_path);
+            }
+
         }
+
     }
     else {
-        return Ok(SongDataResults {
-            song_data,
-            error_details: "Mismatched tag types".to_string(),
-        });
+        let _ = tagged_file.inspect_err(|f| println!("{:?}", f));
     }
-
+    
     // println!("{:?}\nName: {:?}\nAlbum: {:?}\nTrack: {:?}\nArtist: {:?}\nRelease: {:?}\nDisc: {:?}\n",
-    // &song_data.path,
-    // &song_data.name,
-    // &song_data.album,
-    // &song_data.track, 
-    // &song_data.artist,
-    // &song_data.release,
-    // &song_data.disc
+    // &song_data.path, &song_data.name, &song_data.album,
+    // &song_data.track, &song_data.artist,
+    // &song_data.release, &song_data.disc
     // );
 
     return Ok(SongDataResults {
@@ -349,8 +321,25 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
     });
 }
 
-// Errors so far - Oberon
-// unsupported format: DecodeError("id3v2: unused flag bits are not cleared")
 
-//  Anicrad
-// unsupported format: IoError(Custom { kind: UnexpectedEof, error: "out of bounds" })
+// println!("--- Tag Information ---");
+// println!("Genre: {}", tag.genre().as_deref().unwrap_or("None"));
+// println!("Year: {}", tag.year().unwrap());
+// println!("-- Track: {}", tag.track().unwrap());
+
+// let test = &tag.pictures()[0];
+// println!("Image: {:?} - {:?} - {:?}", test.description(), test.pic_type(), test.mime_type());
+// println!("Title: {}", tag.get_string(&ItemKey::TrackTitle).unwrap() );
+// println!("Artist: {}", tag.get_string(&ItemKey::TrackArtist).unwrap_or("None") );
+// println!("Album Title: {}", tag.get_string(&ItemKey::AlbumTitle).unwrap_or("None") );
+// println!("Album Artist: {}", tag.get_string(&ItemKey::AlbumArtist).unwrap_or("None") );
+// println!("Genre: {}", tag.get_string(&ItemKey::Genre).unwrap_or("None") );
+// println!("Track: {}", tag.get_string(&ItemKey::TrackNumber).unwrap_or("None") );
+
+// let properties = tagged_file.properties();
+// println!("--- Audio Properties ---");
+// println!("Bitrate (Audio): {}", properties.audio_bitrate().unwrap_or(0) );
+// println!("Bitrate (Overall): {}", properties.overall_bitrate().unwrap_or(0) );
+// println!("Sample Rate: {}", properties.sample_rate().unwrap_or(0));
+// println!("Bit depth: {}", properties.bit_depth().unwrap_or(0));
+// println!("Channels: {}", properties.channels().unwrap_or(0));

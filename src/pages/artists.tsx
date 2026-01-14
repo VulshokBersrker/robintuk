@@ -39,7 +39,7 @@ export default function ArtistsPage({artists}: P) {
             const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, artistList.map((o: AllArtistResults) => { return o.artist_section})) );
             console.log(maxSection);
 
-            for(let i = 0; i < maxSection; i++) {
+            for(let i = 0; i < maxSection + 1; i++) {
                 const results = artistList.filter(obj => obj.artist_section === alphabeticallyOrdered[i] ).length;
                 tempSectionArray[i] = results;
             }
@@ -115,7 +115,7 @@ export default function ArtistsPage({artists}: P) {
     }
     else {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="artists-main">
                 <div className="search-filters d-flex justify-content-end vertical-centered"> 
                     <span className="search-bar">
                         <img src={SearchIcon} className="bi search-icon icon-size"/>
@@ -131,7 +131,7 @@ export default function ArtistsPage({artists}: P) {
                     {artistList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
                         for(let j = 0; j < i; j++) { totalIndex += artistSections[j]; }
-                        if(artistSections[i] !== 0) {
+                        if(artistSections[i] !== 0 && artistSections[i] !== undefined) {
                             return(
                                 <div
                                     id={`main-${section}`} key={`main-${section}`} className="section-key"

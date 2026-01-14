@@ -80,6 +80,21 @@ export default function MusicControls() {
         }        
     }, []);
 
+    useEffect(() => {
+        const handler = (e: any) => {
+            if(e.clientY <= 29) {
+                setTimeout(() => {
+                    setDisplayFullscreen(false);
+                }, 100);                
+            }
+        }
+        document.addEventListener('mousedown', handler);
+        
+        return () => {
+            document.removeEventListener('mousedown', handler);
+        }
+    }, []);
+
     async function sendQueueToBackend(queue: Songs[], index: number) {
         // This will reset the song's progress when a refresh happens
         try {

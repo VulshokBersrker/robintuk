@@ -26,6 +26,11 @@ interface ErrorInfo {
     error_type: string,
 }
 
+interface ScanProgress {
+    length: number,
+    current: number
+}
+
 // Add function to remove all entries if the list is emptied
 // Add an "Are you sure" message to let the user know all the music will be gone
 // Get restore feature working (It can't replace files right now)
@@ -35,7 +40,10 @@ export default function Settings() {
     const [loading, setLoading] = useState<boolean>(false);
     const [showResults, setShowResults] = useState<boolean>(false);
     const [directoryList, setDirectoryList] = useState<DirectoryInfo[]>([]);
+
     const [scanResults, setScanResults] = useState<ScanResults>();
+    const [scanLength, setScanLength] = useState<number>(0);
+    const [scanCurrent, setScanCurrent] = useState<number>(0);
 
     const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme') !== null ? localStorage.getItem('theme')! : "red");
 
@@ -46,24 +54,21 @@ export default function Settings() {
 
     // Get the list of directories on load
     useEffect(() => {
-        const isScanOnging = JSON.parse(localStorage.getItem("folder-scan")!);
-        if(isScanOnging === true) {
-            setLoading(false); // Rework this method
-        }
         getDirectories();
         getTheme();
     }, []);
 
     // Listeners
     useEffect(() => {
-        const unlisten_scan_finished = listen("scan-finished", () => { setLoading(false); setIsBackupRestore(false); });
+        const unlisten_scan_finished = listen("scan-finished", () => { setLoading(false); setIsBackupRestore(false); setScanCurrent(0); setScanLength(0); });
+        const unlisten_scan_progress = listen<ScanProgress>("scan-length", (event) => { setScanCurrent(event.payload.current); setScanLength(event.payload.length); });
 
         const unlisten_backup_finished = listen("ending-backup", () => { setIsBackup(false); setIsBackupRestore(false); });
-
         const unlisten_restore_finished = listen("ending-restore", () => { setIsRestore(false); setIsBackupRestore(false); });
         
         return () => {
             unlisten_scan_finished.then(f => f()),
+            unlisten_scan_progress.then(f => f()),
             unlisten_backup_finished.then(f => f()),
             unlisten_restore_finished.then(f => f());
         }        
@@ -73,7 +78,8 @@ export default function Settings() {
     async function scanMusic() {
         setLoading(true);
         setIsBackupRestore(true);
-        localStorage.setItem("folder-scan", JSON.stringify(true));
+        setScanCurrent(0);
+        setScanLength(0)
         try {
             const scannedFiles = await invoke<ScanResults>('scan_directory');
             // console.log(scannedFiles);
@@ -81,19 +87,19 @@ export default function Settings() {
         }
         catch(err) {
             console.log(`Failed to scan folder: ${err}`);
-            localStorage.setItem("folder-scan", JSON.stringify(false));
             setLoading(false);
             setIsBackupRestore(false);
         }
         finally {
             setLoading(false);
             // Show the popup with the results for 3 seconds
+            setScanCurrent(0);
+            setScanLength(0);
             setShowResults(true);
             setIsBackupRestore(false);
             setTimeout(() => {
                 setShowResults(false);
             }, 5000);
-            localStorage.setItem("folder-scan", JSON.stringify(false));
         }
     }
 
@@ -255,11 +261,19 @@ export default function Settings() {
                     <button className="white header-font" onClick={addDirectory} disabled={loading || isBackupRestore}>+ Add Folder</button>
                 </div>
 
-                <div>
+                <div className="d-flex vertical-centered">
                     <button className="white header-font d-flex" onClick={scanMusic} disabled={loading || directoryList.length === 0 || isBackupRestore}>
                         {loading === true && <span style={{paddingRight: '5px'}}><span className="loader" /> </span>}
                         <span>Scan Music</span>
                     </button>
+                    {loading && scanCurrent > 0 &&
+                        <div style={{marginLeft: '10px'}}>
+                            <div className="vertical-centered scan-progress">
+                                <span style={{width: `${scanCurrent / scanLength * 100}%`}} className="scan-progress-bar" />
+                            </div>
+                            <span className="font-0 sub-font vertical-centered" style={{float: 'right'}} >{scanCurrent} of {scanLength} - {(scanCurrent / scanLength * 100).toFixed(0)}% </span>
+                        </div>
+                    }                    
                 </div>
             </div>
 
@@ -323,7 +337,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.1.8 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.1.9 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
