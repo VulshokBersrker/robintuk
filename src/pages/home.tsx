@@ -481,7 +481,7 @@ function CustomContextMenu({
                         <img src={AlbumIcon} /> &nbsp; Show Album
                     </li>
                 }
-                {(context_type !== "artist" && context_type !== "playlist") && 
+                {(context_type !== "artist" && context_type !== "playlist") && artist !== "" && 
                     <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <img src={ArtistIcon} /> &nbsp; Show Artist
                     </li>

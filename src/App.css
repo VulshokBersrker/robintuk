@@ -15,7 +15,7 @@
 
 [data-theme="red"] {
   /* Font Colors */
-  --font-color-one: #cdcdcd;
+  --font-color-one: #f3f3f3;
   --font-color-two: #877373;
   --font-color-three: #6c0e1a;
   /* Gradient Colors */
@@ -38,7 +38,7 @@
 }
 [data-theme="blue"] {
   /* Font Colors */
-  --font-color-one: #cdcdcd;
+  --font-color-one: #f3f3f3;
   --font-color-two: #76849c;
   --font-color-three: #2841a4;
   /* Gradient Colors */
@@ -61,7 +61,7 @@
 }
 [data-theme="purple"] {
   /* Font Colors */
-  --font-color-one: #cdcdcd;
+  --font-color-one: #f3f3f3;
   --font-color-two: #9e7fba;
   --font-color-three: #7f3aac;
   /* Gradient Colors */
@@ -84,7 +84,7 @@
 }
 [data-theme="orange"] {
   /* Font Colors */
-  --font-color-one: #cdcdcd;
+  --font-color-one: #f3f3f3;
   --font-color-two: #928475;
   --font-color-three: #974807;
   /* Gradient Colors */
@@ -107,7 +107,7 @@
 }
 [data-theme="green"] {
   /* Font Colors */
-  --font-color-one: #cdcdcd;
+  --font-color-one: #f3f3f3;
   --font-color-two: #8baa8d;
   --font-color-three: #07782e;
   /* Gradient Colors */
@@ -130,7 +130,7 @@
 }
 [data-theme="dark-wave"] {
   /* Font Colors */
-  --font-color-one: #cdcdcd;
+  --font-color-one: #f3f3f3;
   --font-color-two: #918099;
   --font-color-three: #8e159c;
   /* Gradient Colors */
@@ -721,33 +721,24 @@ img.off {
   display: none;  /* Older Safari and Chromium */
 }
 
-#root:has(.music-control-container) {
-  .scan-status-container {
-    position: fixed;
-    bottom: 105px;
-    left: 10px;
-    border-radius: var(--border-radius);
-    background-color: rgba(0, 0, 0, 0.7);
-    padding: 10px 16px 10px 16px;
-    font-size: 12px;
-  }
-}
-
 .scan-status-container {
   position: fixed;
-  bottom: 10px;
-  left: 10px;
+  display: flex;
+  top: 4px;
+  right: 180px;
   border-radius: var(--border-radius);
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 10px 16px 10px 16px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 5px 15px 5px 15px;
   font-size: 12px;
 }
 
 .scan-status-container.loaded {
   visibility: visible;
+  transition: 0s ease;
 }
 .scan-status-container.unloaded {
   visibility: hidden;
+  transition: 0s ease;
 }
 
 /* -------------- Home Section Styles -------------- */
@@ -1900,6 +1891,29 @@ button.white:disabled .loader {
   width: 30px;
 }
 
+.scan-progress {
+  box-sizing: content-box;
+  width: 200px;
+  position: relative;
+  background: rgba(0, 0, 0, 0.443);
+  border-radius: var(--border-radius);
+}
+
+.scan-progress.mini {
+  box-sizing: content-box;
+  width: 70px;
+  position: relative;
+  background: rgba(0, 0, 0, 0.443);
+  border-radius: var(--border-radius);
+}
+
+.scan-progress-bar {
+  background-color: var(--font-color-two);
+  border-radius: var(--border-radius);
+  height: 5px;
+  transition: 0.1s ease-in-out;
+}
+
 /* Theme Color Picker */
 .theme-container {
   padding-top: 30px;
@@ -2564,6 +2578,10 @@ img.search-icon:hover {
   #root:has(.music-control-container) {
     .empty-space {
       height: 220px;
+    }
+    .albums-main .empty-space,
+    .artists-main .empty-space {
+      height: 120px;
     }
     .song-page-list .empty-space {
       height: 250px;

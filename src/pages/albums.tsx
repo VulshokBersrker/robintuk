@@ -65,7 +65,7 @@ export default function AlbumPage({albums}: P) {
             let tempSectionArray: number[] = [];
             const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, albumList.map((o: AlbumDetails) => { return o.album_section})) );
 
-            for(let i = 0; i < maxSection; i++) {
+            for(let i = 0; i < maxSection + 1; i++) {
                 const results = albumList.filter(obj => obj.album_section === alphabeticallyOrdered[i] ).length;
                 tempSectionArray[i] = results;
             }
@@ -355,7 +355,7 @@ export default function AlbumPage({albums}: P) {
                 </div>                    
                 {/* End of Song Selection Bar */}
 
-                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} clickOnTrack={false} >
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} clickOnTrack={false} className="albums-main">
                     <div className="search-filters d-flex justify-content-end vertical-centered"> 
                         <span className="search-bar">
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
@@ -371,7 +371,7 @@ export default function AlbumPage({albums}: P) {
                         {albumList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                             let totalIndex = 0;
                             for(let j = 0; j < i; j++) { totalIndex += albumSections[j]; }
-                            if(albumSections[i] !== 0) {
+                            if(albumSections[i] !== 0 && albumSections[i] !== undefined) {
                                 return(
                                     <div
                                         id={`main-${section}`} key={`main-${section}`} className="section-key"
@@ -386,7 +386,7 @@ export default function AlbumPage({albums}: P) {
                                             {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
                                             {section === 300 && "..."}
                                         </span>
-                                    </div>                                
+                                    </div>
                                 ); 
                             }                          
                         })}

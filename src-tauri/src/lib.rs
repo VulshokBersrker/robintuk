@@ -190,13 +190,19 @@ struct ScanResults {
 #[derive(serde::Serialize)]
 struct ErrorInfo {
     file_name: String,
-    error_type: String,
+    error_type: String
 }
 
 #[derive(Debug)]
 pub struct SongDataResults {
     pub song_data: SongTableUpload,
     pub error_details: String,
+}
+
+#[derive(Clone, serde::Serialize)]
+struct ScanProgress {
+    length: usize,
+    current: i32
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -214,6 +220,9 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
     let mut num_added = 0;
     let mut num_error = 0;
     let mut num_updated = 0;
+
+    let mut scan_length = 0;
+    let mut num_scanned = 0;
 
     let directories = db::get_directory().await.unwrap();
 
@@ -233,9 +242,19 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
     }
     else {
         *test.is_scan_ongoing.lock().unwrap() = true;
+        
+        for p in &directories {
+            let t = WalkDir::new(p.dir_path.clone()).into_iter().filter_map(|e| e.ok()).filter(|x|
+                x.path().display().to_string().contains(".mp3") || x.path().display().to_string().contains(".flac")
+            ).count();
+            scan_length += t;
+        }
+
+        app.emit("scan-length", ScanProgress {length: scan_length, current: 0}).unwrap();
         for path in directories {
             // walk through the entire directory, sub folders and all
             for entry in WalkDir::new(path.dir_path).into_iter().filter_map(|e| e.ok()).filter(|x| x.file_type().is_file())  {
+               
                 // Grab the metadata for each folder/file in the directory
                 let metadata: std::fs::Metadata = entry.metadata().map_err(|e| e.to_string())?;
 
@@ -243,9 +262,9 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                 let size: u64 = metadata.len();
 
                 // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
-                if entry.path().display().to_string().contains(".mp3")
-                // || entry.path().display().to_string().contains(".wav")
-                || entry.path().display().to_string().contains(".flac") {
+                if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".flac") // || entry.path().display().to_string().contains(".wav")
+                {
+                    num_scanned += 1;
 
                     let does_exist = db::does_entry_exist(&state.pool, &entry.path().display().to_string()).await.unwrap();
                     // If song already exists in the database, update its values
@@ -302,25 +321,32 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                         }
                         // If there was an error getting the song metadata
                         else {
-                            let res = song_res.unwrap();
+                            let _ = song_res.inspect_err(| e| println!("{:?}", e));
                             num_error += 1;
                             error_details.push(ErrorInfo {
                                 file_name: entry.path().display().to_string(),
-                                error_type: res.error_details,
+                                error_type: "".to_string(),
                             });
                             continue;
                         }
+                    }
+
+                    if num_scanned % 100 == 0 {
+                        app.emit("scan-length", ScanProgress {length: scan_length, current: num_scanned}).unwrap();
                     }
                 }
             }
         }
     }
 
-    // Remove all songs that are no longer in the directories
-    let _ = db::remove_songs(&state.pool).await.unwrap();
+    // Remove all songs that are no longer in the directories - When there were no errors
+    if num_error == 0 {
+        let _ = db::remove_songs(&state.pool).await.unwrap();
+    }    
 
     *test.is_scan_ongoing.lock().unwrap() = false;
-    app.emit("scan-finished", GetScanStatus { res: *test.is_scan_ongoing.lock().unwrap()}).unwrap();
+    app.emit("scan-length", ScanProgress {length: scan_length, current: num_scanned}).unwrap();
+    app.emit("scan-finished", GetScanStatus { res: *test.is_scan_ongoing.lock().unwrap()}).unwrap();    
 
 
     println!("Scan has finished = {:?} added - {:?} updated - {:?} errors", &num_added, &num_updated, &num_error);

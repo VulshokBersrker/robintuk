@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Virtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
-import { alphabeticallyOrdered, ContextMenu, PlaylistList, playSelection, saveQueue, Songs, SongsFull } from "../globalValues";
+import { alphabeticallyOrdered, ContextMenu, PlaylistList, playSelection, savePosition, Songs, SongsFull } from "../globalValues";
 import CustomContextMenu from "../components/customContextMenu";
 import SongDetailsModal from "../components/songDetails";
 
@@ -48,10 +48,9 @@ export default function SongPage({songs}: Props) {
             
             let tempSectionArray: number[] = [];
             const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, songList.map((o: SongsFull) => { return o.song_section})) );
-            console.log(maxSection)
 
-            for(let i = 0; i < maxSection; i++) {
-                const results = songList.filter(obj => obj.song_section === alphabeticallyOrdered[i] ).length;
+            for(let i = 0; i < maxSection + 1; i++) {
+                const results = songs.filter(obj => obj.song_section === alphabeticallyOrdered[i] ).length;
                 tempSectionArray[i] = results;
             }
             setSongSections(tempSectionArray); 
@@ -99,15 +98,16 @@ export default function SongPage({songs}: Props) {
 
     async function playSong(index: number) {
         try {
-            const arr: Songs[] = [filteredSongs[index]];
-            // Update the music controls state somehow
-            await invoke('player_load_album', {queue: arr, index: 0});
-            await invoke('update_current_song_played', {path: arr[0].path});
-            saveQueue(arr);
-            await invoke('create_queue', { songs: arr, shuffled: false });
+            // Load the music to be played and saved
+            await invoke('play_song', { song: filteredSongs[index] });
+            savePosition(0);
         }
-        catch (err) {
-            alert(`Failed to play song: ${err}`);
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+            await invoke("set_shuffle_mode", { mode: false });
         }
     }
 
@@ -124,8 +124,8 @@ export default function SongPage({songs}: Props) {
     }, []);
 
     async function addToQueue() {
-        // setDisplayAddToMenu(false);
-        // resetContextMenu();
+        setDisplayAddToMenu(false);
+        resetContextMenu();
         console.log("queue add")
         try {
             let songList: Songs[] = [];
@@ -325,7 +325,8 @@ export default function SongPage({songs}: Props) {
                     {songList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
                         for(let j = 0; j < i; j++) { totalIndex += songSections[j]; }
-                        if(songSections[i] !== 0) {
+                        if(songSections[i] !== 0 && songSections[i] !== undefined) {
+                            // console.log(songSections[i] + " - " + alphabeticallyOrdered[i] + "-" + section);
                             return(
                                 <div
                                     id={`main-${section}-${totalIndex}`} key={`main-${section}-${totalIndex}`} className="section-key"

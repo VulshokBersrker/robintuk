@@ -184,6 +184,21 @@ export async function playAlbum(album_name: string, shuffled: boolean) {
     }
 }
 
+export async function playSong(song: Songs) {
+    try {
+        // Load the music to be played and saved
+        await invoke('play_song', { song: song });
+        savePosition(0);
+    }
+    catch(e) {
+        console.log(e);
+    }
+    finally {
+        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+        await invoke("set_shuffle_mode", { mode: false });
+    }
+}
+
 export async function playPlaylist(playlist_id: number, shuffled: boolean) {
     const shuf = localStorage.getItem("shuffle-mode") === null ? JSON.parse(localStorage.getItem("shuffle-mode")!) : false;
     console.log(shuffled);
