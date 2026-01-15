@@ -797,14 +797,19 @@ function CustomContextMenu({
                     &nbsp; Remove
                 </li>
                 {/* Navigation Buttons */}
-                <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                    <img src={AlbumIcon} />
-                    &nbsp; Show Album
-                </li>
-                <li className="d-flex align-items-center" onClick={NavigateToArtist} >
-                    <img src={ArtistIcon} />
-                    &nbsp; Show Artist
-                </li>
+                {album !== "" &&
+                        <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
+                        <img src={AlbumIcon} />
+                        &nbsp; Show Album
+                    </li>
+                }
+                {artist !== "" &&
+                    <li className="d-flex align-items-center" onClick={NavigateToArtist} >
+                        <img src={ArtistIcon} />
+                        &nbsp; Show Artist
+                    </li>
+                }
+                
 
                 <li  className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
                     <img src={InfoIcon} />

@@ -10,6 +10,7 @@ import ImageWithFallBack from "./imageFallback";
 
 // Images
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
+import ShuffleIcon from '../images/shuffle-solid-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
 
 // Images - Filled
@@ -86,6 +87,7 @@ export default function RightSideBar() {
         }        
     }, []);
 
+
     function handleContextMenu(e: any, playlist: number) {
         if(e.pageX < window.innerWidth / 2) {
             setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY });
@@ -110,6 +112,7 @@ export default function RightSideBar() {
     }
 
     const navigateToPlaylistOverview = (name: number) => {
+        resetContextMenu();
         navigate("/playlists/overview", {state: {name: name}});
     }
 
@@ -198,6 +201,7 @@ export default function RightSideBar() {
                 posY={contextMenu.posY}
                 play={playPlaylist}
                 navigateToPlaylistOverview={navigateToPlaylistOverview}
+                resetContextMenu={resetContextMenu}
                 ref={isContextMenuOpen}
             />
         </div>
@@ -211,10 +215,11 @@ type Props = {
     play: (playlist_id: number, shuffled: boolean) => void, // playSong / playAlbum function
     posX: number,
     posY: number,
+    resetContextMenu: () => void,
     ref: any
 }
 
-function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play, posX, posY, ref }: Props) {
+function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play, posX, posY, resetContextMenu, ref }: Props) {
 
     if(isToggled) {
         return(
@@ -224,9 +229,14 @@ function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play,
                 onContextMenu={(e) => {  e.preventDefault(); }}
                 ref={ref}
             >
-                <li onClick={() => {play(playlist_id, false)}} className="d-flex align-items-center">
+                <li onClick={() => {resetContextMenu(); play(playlist_id, false); }} className="d-flex align-items-center">
                     <img src={PlayIcon} />
                     &nbsp; Play
+                </li>
+
+                <li onClick={() => {resetContextMenu(); play(playlist_id, true); }} className="d-flex align-items-center">
+                    <img src={ShuffleIcon} />
+                    &nbsp; Shuffle
                 </li>
 
                 <li className="d-flex align-items-center" onClick={() => navigateToPlaylistOverview(playlist_id)} >

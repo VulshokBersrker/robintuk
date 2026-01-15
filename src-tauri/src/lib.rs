@@ -289,12 +289,11 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                         }
                         // If there was an error getting the song metadata
                         else {
-                            let res = song_res.unwrap();
-                            println!("{:?}", &res);
+                            println!("Scan Error: {:?} - {:?}", &song_res, &entry.path().display().to_string());
                             num_error += 1;
                             error_details.push(ErrorInfo {
                                 file_name: entry.path().display().to_string(),
-                                error_type: res.error_details,
+                                error_type: "Error in song collection".to_string(),
                             });
                             continue;
                         }
@@ -312,20 +311,21 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                             }
                             // If there was an error adding the song to the db
                             else {
+                                println!("Scan Error: {:?} - {:?}", &res, &entry.path().display().to_string());
                                 num_error += 1;
                                 error_details.push(ErrorInfo {
                                     file_name: entry.path().display().to_string(),
-                                    error_type: res.unwrap().last_insert_rowid().to_string(),
+                                    error_type: "Error in song collection".to_string()
                                 });
                             }
                         }
                         // If there was an error getting the song metadata
                         else {
-                            let _ = song_res.inspect_err(| e| println!("{:?}", e));
+                            println!("Scan Error: {:?} - {:?}", &song_res, &entry.path().display().to_string());
                             num_error += 1;
                             error_details.push(ErrorInfo {
                                 file_name: entry.path().display().to_string(),
-                                error_type: "".to_string(),
+                                error_type: "Error in song collection".to_string(),
                             });
                             continue;
                         }
@@ -360,3 +360,15 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         error_dets: error_details,
     })
 }
+
+
+
+// Know errors with the scan:
+
+// Err(Os { code: 3, kind: NotFound, message: "the system cannot find the path specified." })
+// Err(Os { code: 123, kind: InvalidFilename, message: "The filename, directory name, or volume label syntax is incorrect." })
+
+// Lofty Errors: 
+// BadTimestamp("Timestamp segments contains non-digit characters")
+// FileDecoding(Mpeg: "File contains an invalid frame")
+// TextDecode("Expected a UTF-8 string")

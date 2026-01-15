@@ -120,7 +120,7 @@ function App() {
 
   return(
     <div 
-      onContextMenu={(e) => { e.preventDefault(); }}
+      // onContextMenu={(e) => { e.preventDefault(); }}
     >
       <BrowserRouter>
         <CustomWindowsBar />

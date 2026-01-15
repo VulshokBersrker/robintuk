@@ -75,8 +75,6 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
         .map(|x| x.to_string())
         .unwrap();
 
-    // println!("{:?} - {:?}", &file_name, &path);
-
     let mut song_data: SongTableUpload = SongTableUpload {
         path: path.to_string(),
         ..SongTableUpload::default()
@@ -192,11 +190,9 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                 if Some(value) == None {
                     if Some(tag.get_string(&ItemKey::TrackArtist).unwrap().to_string()) != None {
                         song_data.artist = Some(tag.get_string(&ItemKey::TrackArtist).unwrap().to_string());
-
                     }
                     else {
                         song_data.artist = None;
-                        
                     }            
                 }
                 else {
@@ -256,7 +252,6 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
             if let Some(value) = tag.disk() {
                 // println!("Disc: {:?}", value);
                 if Some(value) == None {
-                    println!("{:?}", tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap());
                     if Some(tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap()) != None {
                         song_data.disc = Some(tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap());
                     }
@@ -284,17 +279,27 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
                 let image_type = tag.pictures()[0].mime_type().unwrap().to_string();
                 let (_, ext) = image_type.split_once("/").unwrap_or(("image", "jpg"));
-                
-                // println!("{:?}", ext);
 
                 let f_name: String;
                 if song_data.album == None {
                     f_name = generate_cover_hash(file_size);
-                } else {
+                }
+                else {
                     f_name = remove_special_characters(song_data.album.clone().unwrap());
                 }
 
-                let song_cover_path = format!("{image_dir}{f_name}.{ext}");
+                let song_cover_path: String;
+                if tag.get_string(&ItemKey::AlbumArtist) != None {
+                    let tt = remove_special_characters(tag.get_string(&ItemKey::AlbumArtist).unwrap().to_string());
+                    song_cover_path = format!("{image_dir}{f_name}-{tt}.{ext}");
+                }
+                else if let Some(art) = tag.artist().as_deref()  {
+                    let new_art = remove_special_characters(art.to_string());
+                    song_cover_path = format!("{image_dir}{f_name}-{new_art}.{ext}");
+                }
+                else {
+                    song_cover_path = format!("{image_dir}{f_name}.{ext}");
+                }
                 covers_path.push(&song_cover_path);
 
                 fs::write(&covers_path, &tag.pictures()[0].data())?;
@@ -306,7 +311,7 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
     }
     else {
-        let _ = tagged_file.inspect_err(|f| println!("{:?}", f));
+        let _ = tagged_file.inspect_err(|f| println!("Lofty Error: {:?} - {:?}", f, &path));
     }
     
     // println!("{:?}\nName: {:?}\nAlbum: {:?}\nTrack: {:?}\nArtist: {:?}\nRelease: {:?}\nDisc: {:?}\n",

@@ -218,7 +218,7 @@ export default function AlbumPage({albums}: P) {
     async function createPlaylist(name: string) {
         resetContextMenu();
         setDisplayAddToMenu(false);
-        try {            
+        try {
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
                 const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
