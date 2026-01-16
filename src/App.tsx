@@ -43,7 +43,11 @@ function App() {
   // Listeners
   useEffect(() => {
     const unlisten_scan_finished = listen<boolean>("scan-finished", () => { getValues(); });
-    return () => { unlisten_scan_finished.then(f => f()); }
+    const unlisten_restore_finished = listen<boolean>("ending-restore", () => { getTheme(); getValues(); });
+    return () => {
+      unlisten_scan_finished.then(f => f()),
+      unlisten_restore_finished.then(f => f());
+    }
   }, []);
 
   async function getTheme() {

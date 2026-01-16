@@ -200,19 +200,16 @@ export async function playSong(song: Songs) {
 }
 
 export async function playPlaylist(playlist_id: number, shuffled: boolean) {
-    const shuf = localStorage.getItem("shuffle-mode") === null ? JSON.parse(localStorage.getItem("shuffle-mode")!) : false;
-    console.log(shuffled);
-    // console.log(shuf);
     try {
-        await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuf});
+        await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuffled});
         savePosition(0);
     }
     catch (err) {
         alert(`Failed to play song: ${err}`);
     } 
     finally {
-        localStorage.setItem("shuffle-mode", JSON.stringify(shuf) );
-        await invoke("set_shuffle_mode", { mode: shuf });
+        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+        await invoke("set_shuffle_mode", { mode: shuffled });
     }
 }
 

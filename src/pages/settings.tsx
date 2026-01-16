@@ -227,6 +227,9 @@ export default function Settings() {
         finally {
             setIsRestore(false);
             setIsBackupRestore(false);
+
+            await getDirectories();
+            await getTheme();
         }
     }
 
@@ -266,12 +269,17 @@ export default function Settings() {
                         {loading === true && <span style={{paddingRight: '5px'}}><span className="loader" /> </span>}
                         <span>Scan Music</span>
                     </button>
-                    {loading && scanCurrent > 0 &&
+                    {loading && scanCurrent >= 0 &&
                         <div style={{marginLeft: '10px'}}>
                             <div className="vertical-centered scan-progress">
                                 <span style={{width: `${scanCurrent / scanLength * 100}%`}} className="scan-progress-bar" />
                             </div>
-                            <span className="font-0 sub-font vertical-centered" style={{float: 'right'}} >{scanCurrent} of {scanLength} - {(scanCurrent / scanLength * 100).toFixed(0)}% </span>
+                            <span className="font-0 sub-font vertical-centered" style={{float: 'right'}} >
+                                {scanCurrent} of {scanLength} -&nbsp;
+                                
+                                {scanCurrent === 0 && <>{0}</>}
+                                {scanCurrent !== 0 && <>{(scanCurrent / scanLength * 100).toFixed(0)}</>}%
+                                </span>
                         </div>
                     }                    
                 </div>
@@ -337,7 +345,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.1.9 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.2.0 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
