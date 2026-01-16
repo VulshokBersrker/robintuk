@@ -218,7 +218,7 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
             // Get year tag
             if let Some(value) = tag.year() {
-                // println!("Year: {:?}", &value);
+                // println!("Year: {:?}", value);
                 if Some(&value) == None {
                     if tag.get_string(&ItemKey::Year) != None {
                         song_data.release = Some(tag.get_string(&ItemKey::Year).unwrap().to_string());
@@ -234,7 +234,7 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
             // Get track tag
             if let Some(value) = tag.track() {
-                // println!("Track: {:?}", value);
+                // println!("Track: {:?}", tag.track());
                 if Some(value) == None {
                     if Some(tag.get_string(&ItemKey::TrackNumber).unwrap().parse::<i32>().unwrap()) != None {
                         song_data.track = Some(tag.get_string(&ItemKey::TrackNumber).unwrap().parse::<i32>().unwrap());
@@ -308,7 +308,9 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
             }
 
         }
-
+        else {
+            println!("File contains not tags: {:?}", &path);
+        }
     }
     else {
         let _ = tagged_file.inspect_err(|f| println!("Lofty Error: {:?} - {:?}", f, &path));

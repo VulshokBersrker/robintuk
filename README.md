@@ -13,7 +13,7 @@
 
 ## Main Features
 
-- Play most music formats (mp3, flac)
+- Play most music formats (mp3, flac, ogg, aiff, m4a)
 - Good performance even with 11,000 songs loaded
 - Custom playlist artwork (including animated artwork)
 - Customize the look with multiple color themes
@@ -52,7 +52,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Notification of version update
 - [ ] Place sink into another thread to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
-- [ ] CSS Optimization
+- [ ] CSS Updates when window size changes
 - [ ] Create placeholder templates while pages are loading
 - [ ] Linux support
 - [x] History section should update everytime new songs are played

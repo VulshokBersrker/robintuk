@@ -245,7 +245,11 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         
         for p in &directories {
             let t = WalkDir::new(p.dir_path.clone()).into_iter().filter_map(|e| e.ok()).filter(|x|
-                x.path().display().to_string().contains(".mp3") || x.path().display().to_string().contains(".flac")
+                x.path().display().to_string().contains(".mp3")
+                || x.path().display().to_string().contains(".flac")
+                || x.path().display().to_string().contains(".m4a")
+                || x.path().display().to_string().contains(".aiff")
+                || x.path().display().to_string().contains(".ogg")
             ).count();
             scan_length += t;
         }
@@ -262,7 +266,11 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                 let size: u64 = metadata.len();
 
                 // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
-                if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".flac") // || entry.path().display().to_string().contains(".wav")
+                if entry.path().display().to_string().contains(".mp3")
+                    || entry.path().display().to_string().contains(".flac")
+                    || entry.path().display().to_string().contains(".m4a")
+                    || entry.path().display().to_string().contains(".aiff")
+                    || entry.path().display().to_string().contains(".ogg")
                 {
                     num_scanned += 1;
 
@@ -331,7 +339,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                         }
                     }
 
-                    if num_scanned % 100 == 0 {
+                    if num_scanned % 50 == 0 {
                         app.emit("scan-length", ScanProgress {length: scan_length, current: num_scanned}).unwrap();
                     }
                 }
