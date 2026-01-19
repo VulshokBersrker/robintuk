@@ -7,7 +7,7 @@ import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 
 // Custom Components
-import { GetCurrentSong, PlaylistList, savePosition, saveQueue, Songs } from "../globalValues";
+import { GetCurrentSong, PlaylistList, savePosition, saveQueue, saveSong, Songs } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback";
 
 // Images
@@ -45,7 +45,7 @@ export default function QueueOverviewPage() {
         }
 
         // Load the current song (song / album / playlist) from the backend
-        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q); saveSong(event.payload.q); });
         
         return () => {
             unlisten_get_current_song.then(f => f());

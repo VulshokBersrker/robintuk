@@ -7,15 +7,11 @@ use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite, SqlitePool};
 use tauri::{State};
 
 use crate::types::{
-    AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, PlaylistFull, PlaylistTable, SongHistory, SongTable, SongTableUpload
+    AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, PlaylistFull, PlaylistTable, SongHistory, SongTable, SongTableUpload,
+    DoesExist
 };
 use crate::{AppState};
 
-
-#[derive(sqlx::FromRow, Default, Debug, Clone, serde::Serialize)]
-struct DoesExist {
-    does_exist: bool
-}
 
 // ---------------------------------------- Initilize Database and Check if Database exists ----------------------------------------
 

@@ -69,6 +69,7 @@ export default function PlaylistOverviewPage() {
     // On first load get the playlits details
     useEffect(() => {
         getPlaylist();
+        getAllPlaylists();
 
         const checkCurrentSong = localStorage.getItem("last-played-song");
         if(checkCurrentSong !== null) {
@@ -240,16 +241,6 @@ export default function PlaylistOverviewPage() {
     }
 
     // ------------ Selection Bar Functions ------------
-    useEffect(() => {
-        const fetchData = async() => {
-            const list: PlaylistList[] | undefined = await getAllPlaylists();
-            if(list !== undefined) {
-                setPlaylistList(list);
-            }
-        }
-        fetchData();        
-    }, []);
-
     async function addToQueue() {
         resetContextMenu();
         setDisplayAddToMenu(false);
@@ -302,10 +293,10 @@ export default function PlaylistOverviewPage() {
         try {
             const playlists: PlaylistList[] = await invoke('get_all_playlists');
             if(playlists.length !== 0) {
-                return playlists;
+                setPlaylistList(playlists);
             }
             else {
-                return [];
+                setPlaylistList([]);
             }            
         }
         catch(e) {

@@ -10,19 +10,20 @@
 ## Download
 
 - **Recommended:** Download and install the latest installer from [Github Releases](https://github.com/VulshokBersrker/robintuk_player/releases/latest).
+- Old versions may have crashes/issues that have been fixed in the latest release.
 
 ## Main Features
 
 - Play most music formats (mp3, flac, ogg, aiff, m4a)
-- Good performance even with 11,000 songs loaded
-- Custom playlist artwork (including animated artwork)
+- Good performance even with 10,000+ songs loaded
+- Custom playlist artwork (including animated images)
 - Customize the look with multiple color themes
 - View last 100 played songs
 - Filters to find music faster
 - Fast scans to add your music quickly (~4500 per minute)
+- Export/Import m3u playlists
 
 ## [Screenshots](./assets/screenshots/index.md)
-
 
 ![](./assets/screenshots/1.jpg)
 ![](./assets/screenshots/3.jpg)
@@ -42,19 +43,20 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
+- [ ] Linux support
 - [ ] Smoother music progress bar
 - [ ] Second Shuffle mode (Reshuffled at the end of current queue)
 - [ ] Gapless playback
 - [ ] Add support for wav
+- [ ] Update queue page when playlist is changed
 - [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page (Not great options once you have more than 100 songs)
-- [ ] Playlist Import/Export as m3u file
+- [x] Playlist Import/Export as m3u file
 - [ ] Notification of version update
 - [ ] Place sink into another thread to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] CSS Updates when window size changes
 - [ ] Create placeholder templates while pages are loading
-- [ ] Linux support
 - [x] History section should update everytime new songs are played
 - [x] Update to color themes
 - [x] Improved Context Menu
@@ -85,13 +87,13 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
-- [ ] Scan has a chances to fail with new tag system
+- [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
+- [ ] When changing audio device, it will continue to play sound to the old device (only fix is to restart the app, current limitation of cpal)
+- [x] Scan has a chance to fail with new tag system
 - [ ] Songs have hiccups randomly (maybe due to heavy system load from other programs)
 - [ ] Application Optimizations (streamlining, data caching, etc.)
 - [ ] Better error handling
 - [x] Sections on songs/albums/artists pages not hiding certain parts ( Z, ... sections appear sometimes when nothing has those values)
-- [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
-- [ ] When changing output sound device, it will continue to play sound to the old device (only fix is to reload the app)
 - [x] If scan breaks or user closes app while scanning, scan buttons will be disabled because it thinks a scan is still ongoing
 - [x] Blank pages on route change while it grabs the data from the backend (fixed?)
 - [x] Selecting songs/albums and using the search bar will break the selection

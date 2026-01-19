@@ -6,13 +6,15 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 
-import { DirectoryInfo } from '../globalValues';
+import { DirectoryInfo, PlaylistList } from '../globalValues';
 
 // Images
 import CheckIcon from '../images/circle-check-regular-full.svg';
 import ErrorIcon from '../images/circle-xmark-regular-full.svg';
 import BackupIcon from '../images/shield-halved-solid-full.svg';
 import DatabaseIcon from '../images/database-solid-full.svg';
+import ImportIcon from '../images/download-solid-full.svg';
+import ExportIcon from '../images/upload-solid-full.svg';
 import logo from '../images/logo.svg';
 
 interface ScanResults {
@@ -33,7 +35,6 @@ interface ScanProgress {
 
 // Add function to remove all entries if the list is emptied
 // Add an "Are you sure" message to let the user know all the music will be gone
-// Get restore feature working (It can't replace files right now)
 
 export default function Settings() {
 
@@ -51,10 +52,14 @@ export default function Settings() {
     const [isRestore, setIsRestore] = useState<boolean>(false);
     const [isBackupRestore, setIsBackupRestore] = useState<boolean>(false);
 
+    const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
+    const [exportSelectedPlaylist, setExportSelectedPlaylist] = useState<number>(0);
+
 
     // Get the list of directories on load
     useEffect(() => {
         getDirectories();
+        getAllPlaylists();
         getTheme();
     }, []);
 
@@ -233,6 +238,50 @@ export default function Settings() {
         }
     }
 
+
+    // Playlist Functions
+
+    async function getAllPlaylists() {
+        try {
+            const playlists: PlaylistList[] = await invoke('get_all_playlists');
+            if(playlists.length !== 0) {
+                setPlaylistList(playlists);
+            }
+            else {
+                setPlaylistList([]);
+            }            
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
+    async function importPlaylist() {
+        try{
+            const file = await open({ multiple: false, directory: false, filters: [{name: "Playlist", extensions: ['m3u', 'm3u8']}] });
+            if(file !== null) {
+                const res = await invoke("import_playlist", { file_path: file });
+                console.log(res);
+            }  
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
+    async function exportPlaylist() {
+        try{
+            const folder_path = await open({ multiple: false, directory: true });
+            if(folder_path !== null && exportSelectedPlaylist !== 0) {
+                const res = await invoke("export_playlist", { save_file_location: folder_path, playlist_id: exportSelectedPlaylist });  
+                console.log(res);
+            }
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
     return(
         <SimpleBar forceVisible="y" autoHide={false} className="scrollbar-settings-content" >
 
@@ -289,7 +338,12 @@ export default function Settings() {
             <div className="settings-section theme-container">
                 <div className="header-font font-3" style={{marginBottom: '15px'}}>Choose Theme</div>
                 {/* Update to dropdown */}
-                <select name="themes" id={`theme-${themeColor}`} value={themeColor} onChange={(e) => setTheme(e.target.value)} disabled={loading || isBackupRestore}>
+                <select 
+                    name="themes" id={`theme-${themeColor}`}
+                    className="themes"
+                    value={themeColor} onChange={(e) => setTheme(e.target.value)}
+                    disabled={loading || isBackupRestore}
+                >
                     <option value="red" id="theme-red"> Red </option>
                     <option value="blue" id="theme-blue"> Blue </option>
                     <option value="purple" id="theme-purple"> Purple </option>
@@ -340,12 +394,52 @@ export default function Settings() {
                 </div>
             </div>
 
+            {/* Playlists */}
+            <div className="settings-section backup">
+                <div className="header-font font-3" style={{marginBottom: '5px'}}>Export/Import Playlists</div>
+                <div className="sub-font font-0" style={{marginBottom: '10px'}}>Bring over playlists from other apps using .m3u files or export a playlist from Robintuk</div>
+
+                <div className="d-flex">
+                    <span className="section-4 d-flex">
+                        <select
+                            name="playlists" className="playlists"
+                            value={exportSelectedPlaylist}
+                            onChange={(e) => setExportSelectedPlaylist(parseInt(e.target.value))}
+                            disabled={loading || isBackupRestore}
+                        >
+                            <option value={0} >None</option>
+                            {playlistList.map((item, i) => {
+                                return(
+                                    <option key={i} value={item.id} >{item.name}</option>
+                                );
+                            })}
+                        </select>
+
+                        <div style={{marginLeft: '10px'}}>
+                            <button className="white vertical-centered font-1 header-font" onClick={exportPlaylist} disabled={loading || isBackupRestore || exportSelectedPlaylist == 0}>
+                                {!isBackup && <img src={ExportIcon} alt="icon" />}
+                                {isBackup && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
+                                &nbsp;Export
+                            </button>
+                        </div>
+                    </span>
+
+                    <span className="section-1"  style={{marginLeft: '30px'}}>
+                        <button className="white vertical-centered font-1 header-font" onClick={importPlaylist} disabled={loading || isBackupRestore}>
+                            {!isRestore && <img src={ImportIcon} alt="icon" />}
+                            {isRestore && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
+                            &nbsp;Import
+                        </button>
+                    </span>
+                </div>
+            </div>
+
             {/* About */}
             <div className="settings-section">
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.2.0 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.2.1 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button

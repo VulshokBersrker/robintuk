@@ -109,6 +109,10 @@ pub struct SongHistory {
     pub song_section: u64
 }
 
+#[derive(sqlx::FromRow, Default, Debug, Clone, serde::Serialize)]
+pub struct DoesExist {
+    pub does_exist: bool
+}
 
 // ---------------------------------------- Event Tracker Structs ----------------------------------------
 
