@@ -485,8 +485,6 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
         .map(|x| x.to_string())
         .unwrap().replace(".m3u8", "").replace(".m3u", "");
 
-    println!("{:?}", &file_name);
-
     let mut file = File::open(&file_path).unwrap();
     let mut bytes:Vec<u8> = vec![];
     file.read_to_end(&mut bytes).unwrap();
@@ -529,8 +527,6 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
                         // Add the song to the db
                         let file_size: u64 = File::open(&entry.uri).unwrap().metadata().unwrap().file_size();
                         let res = helper::get_song_data(entry.uri, file_size).await;
-
-                        // println!("File exists: add to playlist - {:?}", playlist_id.0);
                             
                         if res.is_ok() {
                             let song = res.unwrap().song_data;
@@ -548,8 +544,7 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
                         }
                         else {
                             println!("Error reading song's info");
-                        }
-                        
+                        }                        
                     }
                     else {
                         println!("File does not exist: Not being added to playlist: {:?}", &entry.uri);
