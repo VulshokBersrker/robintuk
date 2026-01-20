@@ -90,10 +90,20 @@ export default function RightSideBar() {
 
     function handleContextMenu(e: any, playlist: number) {
         if(e.pageX < window.innerWidth / 2) {
-            setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY });
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY - 130});
+            }
         }
         else {
-            setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX - 150, posY: e.pageY });
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX - 150, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX - 150, posY: e.pageY - 130});
+            }
         }
     }
 

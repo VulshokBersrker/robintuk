@@ -1951,6 +1951,7 @@ button.white:disabled .loader {
 
 select {
   border: 2px solid #cdcdcd;
+  border-radius: var(--border-radius);
   background: rgba(0, 0, 0, 0);
   padding: 10px;
   transition: 0.4s;
@@ -1960,6 +1961,18 @@ select {
   text-indent: 50px;
   display: flex;
   align-items: center;
+}
+select.playlists {
+  border: 2px solid #cdcdcd;
+  border-radius: var(--border-radius);
+  background: rgba(0, 0, 0, 0);
+  padding: 10px;
+  transition: 0.4s;
+  width: 180px;
+  height: 54px;
+  position: relative;
+  text-indent: 5px;
+  color: var(--font-color-one);
 }
 select:disabled {
   border: 2px solid #585858;
@@ -1983,7 +1996,7 @@ select::picker-icon {
   filter: invert(100%);
 }
 
-option {
+select.themes option {
   text-indent: 0px;
   padding-top: 6px;
   padding-bottom: 6px;
@@ -1995,8 +2008,20 @@ option {
   padding-left: 15px;
   gap: 15px;
 }
+select.playlists option {
+  text-indent: 0px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: var(--gradient-two);
+  color: var(--font-color-one);
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  padding-left: 15px;
+  gap: 15px;
+}
 
-select::before {
+select.themes::before {
   content: "";
   display: inline-block;
   position: absolute;
@@ -2008,7 +2033,7 @@ select::before {
   outline-offset: 3px;
   border-radius: var(--border-radius);
 }
-option::before {
+select.themes option::before {
   content: "";
   display: inline-block;
   height: 30px;
@@ -2039,8 +2064,8 @@ option::before {
 option::checkmark {
   display: none;
 }
-option:hover, option:active {
-  background-color: var(--gradient-three);
+option:hover, option:active, option:focus {
+  background-color: var(--gradient-one) !important;
 }
 
 
@@ -2220,6 +2245,10 @@ img.search-icon:hover {
     .empty-space {
       height: 110px;
     }
+  }
+
+  .scrollbar-settings-content .empty-space {
+    height: 110px !important;
   }
 }
 

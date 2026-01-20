@@ -169,7 +169,9 @@ pub fn run() -> Result<(), String> {
             commands::check_for_backup,
             commands::check_for_backup_restore,
             commands::use_restore,
-            commands::check_for_ongoing_scan
+            commands::check_for_ongoing_scan,
+            commands::import_playlist,
+            commands::export_playlist
         ])        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

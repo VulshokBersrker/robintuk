@@ -10,6 +10,7 @@ import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
+import ShuffleIcon from '../images/shuffle-solid-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
 import PlusIcon from '../images/plus-solid-full.svg';
 import Circle from '../images/circle.svg';
@@ -96,10 +97,20 @@ export default function PlaylistPage() {
 
     function handleContextMenu(e: any, playlist: number) {
         if(e.pageX < window.innerWidth / 2) {
-            setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY });
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX, posY: e.pageY - 130});
+            }
         }
         else {
-            setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX - 120, posY: e.pageY });
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX - 150, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, playlist: playlist, posX: e.pageX - 150, posY: e.pageY - 130});
+            }
         }
     }
 
@@ -209,6 +220,11 @@ function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play,
                 <li onClick={() => {play(playlist_id, false)}} className="d-flex align-items-center">
                     <img src={PlayIcon} />
                     &nbsp; Play
+                </li>
+
+                <li onClick={() => {play(playlist_id, true)}} className="d-flex align-items-center">
+                    <img src={ShuffleIcon} />
+                    &nbsp; Shuffle
                 </li>
 
                 <li className="d-flex align-items-center" onClick={() => navigateToPlaylistOverview(playlist_id)} >

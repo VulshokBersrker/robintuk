@@ -155,11 +155,16 @@ export function savePosition(p: number) {
     localStorage.setItem('last-played-queue-position', p.toString());
 }
 
+export function saveSong(q: Songs) {
+    localStorage.setItem('last-played-song', JSON.stringify(q));
+}
+
 export async function playSelection(array: Songs[]) {
     try {
         // Load the music to be played and saved
         await invoke('play_selection', {songs: array, shuffled: false});
         savePosition(0);
+        saveSong(array[0]);
     }
     catch(e) {
         console.log(e);

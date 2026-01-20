@@ -1,9 +1,15 @@
-use crate::{ AppState, db, helper, types::{GetCurrentSong, GetPlaylistList, SongTable} };
-use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
-use std::{fs::{self, File}, io::Read, path::Path};
+use crate::{
+    AppState,
+    db::{self, create_playlist, get_playlist}, 
+    helper,
+    types::{DoesExist, GetCurrentSong, GetPlaylistList, PlaylistFull, SongTable }
+};
+use m3u8_rs::{MediaPlaylist, MediaSegment, Playlist};
+use zip::{ZipArchive, ZipWriter,  write::SimpleFileOptions};
+use std::{fs::{self, File}, io::Read, os::windows::fs::MetadataExt, path::Path};
 use tauri::{Emitter, State};
 use std::path::{PathBuf};
-use walkdir::WalkDir;
+use walkdir::{ WalkDir};
 use std::io::Write;
 use std::{io};
 
@@ -436,4 +442,122 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
     *test.is_back_restore_ongoing.lock().unwrap() = 0;
 
     Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn export_playlist(state: State<AppState, '_>, playlist_id: i64, save_file_location: String) -> Result<(), String> {
+
+    let mut playlist = MediaPlaylist {
+        playlist_type: Some(m3u8_rs::MediaPlaylistType::Vod),
+        segments: vec![],
+        end_list: true,
+        ..Default::default()
+    };
+
+    let songs: PlaylistFull = get_playlist(state, playlist_id).await.unwrap();
+    let playlist_name = &songs.name;
+
+    let path = format!("{save_file_location}/{playlist_name}.m3u");
+
+    for song in songs.songs {
+        let value: MediaSegment = MediaSegment {
+            uri: song.path,
+            duration: song.duration as f32,
+            title: Some(song.name),
+            ..Default::default()
+        };
+        playlist.segments.push(value);
+    }
+
+    let mut file = File::create(path).unwrap();
+    playlist.write_to(&mut file).unwrap();
+
+
+    Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> Result<bool, String> {  
+
+    let file_name: String = Path::new(&file_path)
+        .file_name()
+        .and_then(|x| x.to_str())
+        .map(|x| x.to_string())
+        .unwrap().replace(".m3u8", "").replace(".m3u", "");
+
+    let mut file = File::open(&file_path).unwrap();
+    let mut bytes:Vec<u8> = vec![];
+    file.read_to_end(&mut bytes).unwrap();
+
+    match m3u8_rs::parse_playlist(&bytes) {
+        Result::Ok((_, Playlist::MasterPlaylist(pl))) => println!("Master Playlist: {:?}", pl),
+        Result::Ok((_, Playlist::MediaPlaylist(pl))) => {
+
+            // Check if playlist exists
+            let does_exist: DoesExist = sqlx::query_as::<_, DoesExist>("SELECT EXISTS(SELECT 1 FROM playlists WHERE name = $1) AS does_exist")
+                .bind(&file_name)
+                .fetch_one(&state.pool)
+                .await.unwrap();
+
+            // If the playlist does not exist, create the playlist
+            if does_exist.does_exist == false {
+                let _ = create_playlist(state.clone(), file_name.clone(), vec![], false).await;
+            }
+            // If the playlist does exist, replace all the songs in playlist with the one from m3u
+            else {
+                // Drop all the songs from the playlist
+                let _ = sqlx::query("DELETE FROM playlist_tracks WHERE playlist_id = (SELECT id FROM playlists WHERE name = $1)")
+                .bind(&file_name)
+                .execute(&state.pool)
+                .await.unwrap();
+            }
+
+            let playlist_id: (i64,) = sqlx::query_as("SELECT id FROM playlists WHERE name = $1")
+                .bind(&file_name)
+                .fetch_one(&state.pool)
+                .await.unwrap();
+
+            let mut i = 0;
+
+            for entry in pl.segments {
+                if !entry.uri.contains("http") {
+                    let check = PathBuf::from(&entry.uri).exists();
+                
+                    if check {
+                        // Add the song to the db
+                        let file_size: u64 = File::open(&entry.uri).unwrap().metadata().unwrap().file_size();
+                        let res = helper::get_song_data(entry.uri, file_size).await;
+                            
+                        if res.is_ok() {
+                            let song = res.unwrap().song_data;
+                            let _ = db::add_song(song.clone(), &state.pool).await;
+                            
+                            let _ = sqlx::query("INSERT INTO playlist_tracks
+                                (playlist_id, track_id, position) 
+                                VALUES (?1, ?2, ?3)")
+                                .bind(&playlist_id.0)
+                                .bind(&song.path)
+                                .bind(&i)
+                                .execute(&state.pool).await;
+                            i = i + 1;
+                            
+                        }
+                        else {
+                            println!("Error reading song's info");
+                        }                        
+                    }
+                    else {
+                        println!("File does not exist: Not being added to playlist: {:?}", &entry.uri);
+                    }
+                }
+                else {
+                    println!("Entry is not a path: {:?}", &entry.uri);
+                }
+            }
+
+        },
+        Result::Err(e) => println!("Parsing Error: {:?}", e),
+    }
+
+    Ok(true)
 }

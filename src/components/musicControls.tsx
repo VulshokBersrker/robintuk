@@ -53,7 +53,7 @@ export default function MusicControls() {
     // Just for listeners
     useEffect(() => {
         // Load the queue (song / album / playlist) from the backend
-        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); });
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); saveSong(event.payload.q) });
         const check_for_clear = listen("queue-cleared", () => { pauseMusic(); setIsLoaded(false)});
         
         // Listen for when the MediaPlayPause shortcut is pressed
