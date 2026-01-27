@@ -86,7 +86,7 @@ export default function Settings() {
         setScanCurrent(0);
         setScanLength(0)
         try {
-            const scannedFiles = await invoke<ScanResults>('scan_directory');
+            const scannedFiles = await invoke<ScanResults>('scan_directory_threaded');
             // console.log(scannedFiles);
             setScanResults(scannedFiles);
         }

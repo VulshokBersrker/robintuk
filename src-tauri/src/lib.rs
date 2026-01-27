@@ -5,10 +5,9 @@ use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
 use tauri_plugin_prevent_default::Flags;
 use tauri::{Builder, Manager, Emitter};
-use std::sync::{Arc, Mutex};
+use std::{sync::{Arc, Mutex}};
 use tokio::runtime::Runtime;
 use sqlx::{Pool, Sqlite};
-use walkdir::WalkDir;
 use tauri::{State};
 
 // Import files
@@ -90,6 +89,7 @@ pub fn run() -> Result<(), String> {
         .invoke_handler(tauri::generate_handler![
             greet,
             scan_directory,
+            scan_directory_threaded,
             // Music Directory Functions - SQLITE
             db::get_directory,
             db::add_directory,
@@ -246,7 +246,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         *test.is_scan_ongoing.lock().unwrap() = true;
         
         for p in &directories {
-            let t = WalkDir::new(p.dir_path.clone()).into_iter().filter_map(|e| e.ok()).filter(|x|
+            let t = jwalk::WalkDir::new(p.dir_path.clone()).into_iter().filter_map(|e| e.ok()).filter(|x|
                 x.path().display().to_string().contains(".mp3")
                 || x.path().display().to_string().contains(".flac")
                 || x.path().display().to_string().contains(".m4a")
@@ -259,7 +259,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         app.emit("scan-length", ScanProgress {length: scan_length, current: 0}).unwrap();
         for path in directories {
             // walk through the entire directory, sub folders and all
-            for entry in WalkDir::new(path.dir_path).into_iter().filter_map(|e| e.ok()).filter(|x| x.file_type().is_file())  {
+            for entry in jwalk::WalkDir::new(path.dir_path).into_iter().filter_map(|e| e.ok()).filter(|x| x.file_type().is_file())  {
                
                 // Grab the metadata for each folder/file in the directory
                 let metadata: std::fs::Metadata = entry.metadata().map_err(|e| e.to_string())?;
@@ -349,10 +349,124 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         }
     }
 
+
     // Remove all songs that are no longer in the directories - When there were no errors
     if num_error == 0 {
         let _ = db::remove_songs(&state.pool).await.unwrap();
     }    
+
+    *test.is_scan_ongoing.lock().unwrap() = false;
+    app.emit("scan-length", ScanProgress {length: scan_length, current: num_scanned}).unwrap();
+    app.emit("scan-finished", GetScanStatus { res: *test.is_scan_ongoing.lock().unwrap()}).unwrap();    
+
+
+    println!("Scan has finished = {:?} added - {:?} updated - {:?} errors", &num_added, &num_updated, &num_error);
+    
+
+    // At the end, will return the number of successes and failures
+    Ok(ScanResults {
+        success: num_added,
+        updated: num_updated,
+        error: num_error,
+        error_dets: error_details,
+    })
+}
+
+
+
+// No idea how multi threading works
+#[tauri::command]
+async fn scan_directory_threaded(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<ScanResults, String> {
+    let mut error_details: Vec<ErrorInfo> = Vec::new();
+    // Keep track of how many entires pass or fail
+    let mut num_added = 0;
+    let mut num_error = 0;
+    let mut num_updated = 0;
+
+    let mut scan_length = 0;
+    let mut num_scanned = 0;
+
+    let directories = db::get_directory().await.unwrap();
+
+    let test  = state.clone();
+    
+    app.emit("scan-started", GetScanStatus { res: *test.is_scan_ongoing.lock().unwrap()}).unwrap();
+    println!("Scan has started");
+
+    let _ = db::set_keep(&state.pool).await;
+
+    if *test.is_scan_ongoing.lock().unwrap() {
+        num_error += 1;
+        error_details.push(ErrorInfo {
+            file_name: "".to_string(),
+            error_type: "Scan is ongoing".to_string(),
+        });
+    }
+    else {
+        *test.is_scan_ongoing.lock().unwrap() = true;
+        
+
+        for p in &directories {
+            let t = jwalk::WalkDir::new(p.dir_path.clone()).into_iter().filter_map(|e| e.ok()).filter(|x|
+                x.path().display().to_string().contains(".mp3")
+                || x.path().display().to_string().contains(".flac")
+                || x.path().display().to_string().contains(".m4a")
+                || x.path().display().to_string().contains(".aiff")
+                || x.path().display().to_string().contains(".ogg")
+            ).count();
+            scan_length += t;
+        }
+
+        app.emit("scan-length", ScanProgress {length: scan_length, current: 0}).unwrap();
+
+        let mut handle_arr = vec![];
+        
+        std::thread::scope(|_| {
+            for path in directories {
+                // walk through the entire directory, sub folders and all
+                for entry in jwalk::WalkDir::new(path.dir_path).into_iter().filter_map(|e| e.ok()).filter(|x| x.file_type().is_file())  {
+                    // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
+                    if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".flac")
+                        || entry.path().display().to_string().contains(".m4a") || entry.path().display().to_string().contains(".aiff") || entry.path().display().to_string().contains(".ogg")
+                    {
+                        handle_arr.push(Some(std::thread::spawn(async move|| -> Result<Result<SongDataResults, std::io::Error>, String> {
+                            // Grab the metadata for each folder/file in the directory
+                            let size: u64  = entry.metadata().map_err(|e| e.to_string()).unwrap().len();
+
+                            let song_res = get_song_data(entry.path().display().to_string(), size).await;
+                            Ok(song_res)
+                        }) ));
+                    }
+                }
+            }
+        });
+
+        for handles in handle_arr {
+            let res = handles.unwrap().join().unwrap();
+            let newe = res.await.unwrap();
+            
+            if newe.is_ok() {
+                let _ = db::add_song(newe.unwrap().song_data, &state.pool).await;
+                num_added += 1;
+            }
+            else {
+                num_error += 1;
+                let _ = newe.inspect_err(|f| println!("{f}"));
+            }
+            if num_scanned % 50 == 0 {
+                app.emit("scan-length", ScanProgress {length: scan_length, current: num_scanned}).unwrap();
+            }
+            num_scanned += 1;
+        }
+    }
+
+   
+
+
+    // Remove all songs that are no longer in the directories - When there were no errors
+    if num_error == 0 {
+        let _ = db::remove_songs(&state.pool).await.unwrap();
+    }
 
     *test.is_scan_ongoing.lock().unwrap() = false;
     app.emit("scan-length", ScanProgress {length: scan_length, current: num_scanned}).unwrap();

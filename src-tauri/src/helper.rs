@@ -317,9 +317,9 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
     }
     
     // println!("{:?}\nName: {:?}\nAlbum: {:?}\nTrack: {:?}\nArtist: {:?}\nRelease: {:?}\nDisc: {:?}\n",
-    // &song_data.path, &song_data.name, &song_data.album,
-    // &song_data.track, &song_data.artist,
-    // &song_data.release, &song_data.disc
+    //     &song_data.path, &song_data.name, &song_data.album,
+    //     &song_data.track, &song_data.artist,
+    //     &song_data.release, &song_data.disc
     // );
 
     return Ok(SongDataResults {

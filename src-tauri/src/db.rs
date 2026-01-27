@@ -2,6 +2,7 @@ use std::ffi::OsStr;
 use std::{fs};
 use std::path::{Path};
 use chrono::Utc;
+use sqlx::sqlite::SqlitePoolOptions;
 // SQLITE Libraries
 use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite, SqlitePool};
 use tauri::{State};
@@ -78,9 +79,14 @@ pub async fn establish_connection() -> Result<Pool<Sqlite>, std::string::String>
     // println!("Connection Established to Database File {:?}", dir_path);
     println!("Connection Established to Database");
 
-    return SqlitePool::connect(dir_path)
-        .await
-        .map_err(|e| format!("Failed to connect to database {}", e));
+    return SqlitePoolOptions::new().max_connections(1000)
+        .connect(dir_path)
+        .await.
+        map_err(|e| format!("Failed to connect to database {}", e));
+
+    // return SqlitePool::connect(dir_path)
+    //     .await
+    //     .map_err(|e| format!("Failed to connect to database {}", e));
 }
 
 // ----------------------------------------------------- Edit SQLITE Database -----------------------------------------------------
