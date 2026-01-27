@@ -193,10 +193,12 @@ export default function Settings() {
     async function getTheme() {
         try {
             const res: string = await invoke("get_settings");
-            setTheme(res);
+            console.log("theme " + res);
+            setTheme(res);            
         }
         catch(e) {
             console.log(e);
+            setTheme("red");
         }
     }
 

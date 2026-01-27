@@ -4,7 +4,7 @@ use std::path::{Path};
 use chrono::Utc;
 use sqlx::sqlite::SqlitePoolOptions;
 // SQLITE Libraries
-use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite, SqlitePool};
+use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite};
 use tauri::{State};
 
 use crate::types::{
@@ -151,11 +151,16 @@ pub async fn set_keep(pool: &Pool<Sqlite>) -> Result<(), String> {
 #[tauri::command]
 pub async fn get_settings(state: State<AppState, '_>) -> Result<String, String> {
 
-    let res: (String,) = sqlx::query_as("SELECT theme FROM settings LIMIT 1")
+    let res: Result<(String,), sqlx::Error> = sqlx::query_as("SELECT theme FROM settings LIMIT 1")
         .fetch_one(&state.pool)
-        .await.unwrap();
+        .await;
 
-    Ok(res.0)
+    if res.is_ok() {
+        Ok(res.unwrap().0)
+    }
+    else {
+        Ok("red".to_string())
+    }
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -236,7 +241,6 @@ pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<Sq
         .bind(true)
         .execute(pool)
         .await;
-
 
     Ok(res.unwrap())
 }

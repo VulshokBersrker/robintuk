@@ -80,6 +80,8 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
         ..SongTableUpload::default()
     };
 
+    let errors: String;
+
     // Prevents an error where a file might have a bad Timestamp
     let parsing_options = ParseOptions::new().parsing_mode(ParsingMode::BestAttempt);
 
@@ -92,7 +94,6 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
         let tagged = tagged_file.unwrap();
 
         if tagged.contains_tag() {
-
             let tag = match tagged.primary_tag() {
                 Some(primary_tag) => primary_tag,
                 None => tagged.first_tag().expect("Error no tags found")
@@ -307,13 +308,16 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
                 song_data.cover = Some(song_cover_path);
             }
 
+            errors = " ".to_string();
         }
         else {
             println!("File contains not tags: {:?}", &path);
+            errors = "No-Tags".to_string();
         }
     }
     else {
-        let _ = tagged_file.inspect_err(|f| println!("Lofty Error: {:?} - {:?}", f, &path));
+        // let _ = tagged_file.inspect_err(|f| println!("Lofty Error: {:?} - {:?}", f, &path));
+        errors = "Lofty-Error".to_string();
     }
     
     // println!("{:?}\nName: {:?}\nAlbum: {:?}\nTrack: {:?}\nArtist: {:?}\nRelease: {:?}\nDisc: {:?}\n",
@@ -324,9 +328,15 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 
     return Ok(SongDataResults {
         song_data,
-        error_details: "no error".to_string(),
+        error_details: errors,
     });
 }
+
+
+// --------- Lofty Errors: 
+// BadTimestamp("Timestamp segments contains non-digit characters")
+// FileDecoding(Mpeg: "File contains an invalid frame")
+// TextDecode("Expected a UTF-8 string")
 
 
 // println!("--- Tag Information ---");
