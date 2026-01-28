@@ -15,13 +15,14 @@
 ## Main Features
 
 - Play most music formats (mp3, flac, ogg, aiff, m4a)
-- Good performance even with 10,000+ songs loaded
+- Great performance even with 10,000+ songs loaded
 - Custom playlist artwork (including animated images)
 - Customize the look with multiple color themes
 - View last 100 played songs
-- Filters to find music faster
-- Fast scans to add your music quickly (~4500 per minute)
-- Export/Import m3u playlists
+- Search to find your music faster
+- Fast scans to add your music quickly (~5000 songs scanned per minute)
+- Backup and Restore your music database and images
+- Use mp3 files to import playlist from other apps or export your playlists for save keepings
 
 ## [Screenshots](./assets/screenshots/index.md)
 
@@ -53,7 +54,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Get artist data from online service for artist page (Not great options once you have more than 100 songs)
 - [x] Playlist Import/Export as m3u file
 - [ ] Notification of version update
-- [ ] Place sink into another thread to prevent stutters when there is heavy system load
+- [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] CSS Updates when window size changes
 - [ ] Create placeholder templates while pages are loading
