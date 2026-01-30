@@ -51,6 +51,7 @@ export default function Settings() {
     const [isBackup, setIsBackup] = useState<boolean>(false);
     const [isRestore, setIsRestore] = useState<boolean>(false);
     const [isBackupRestore, setIsBackupRestore] = useState<boolean>(false);
+    const [isReset, setIsReset] = useState<boolean>(false);
 
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     const [exportSelectedPlaylist, setExportSelectedPlaylist] = useState<number>(0);
@@ -70,11 +71,13 @@ export default function Settings() {
 
         const unlisten_backup_finished = listen("ending-backup", () => { setIsBackup(false); setIsBackupRestore(false); });
         const unlisten_restore_finished = listen("ending-restore", () => { setIsRestore(false); setIsBackupRestore(false); });
+        const unlisten_reset_finished = listen("ending-reset", () => { setIsBackupRestore(false); });
         
         return () => {
             unlisten_scan_finished.then(f => f()),
             unlisten_scan_progress.then(f => f()),
             unlisten_backup_finished.then(f => f()),
+            unlisten_reset_finished.then(f => f()),
             unlisten_restore_finished.then(f => f());
         }        
     }, []);
@@ -237,6 +240,23 @@ export default function Settings() {
 
             await getDirectories();
             await getTheme();
+        }
+    }
+
+    async function resetApp() {
+        try{
+            setIsBackupRestore(true);
+            await invoke("reset_database");
+        }
+        catch(e) {
+            console.log("Error reseting database: ", e);
+        }
+        finally {
+            // Reset Theme Color to base Red
+            setTheme("red");
+            document.querySelector('body')?.setAttribute("data-theme", "red");
+            localStorage.setItem('theme', "red");
+            setIsReset(false);
         }
     }
 
@@ -450,7 +470,32 @@ export default function Settings() {
                     >
                         View Github
                     </button>
+
+                    <button
+                        style={{marginLeft: "50px"}} className="red"
+                        disabled={isBackupRestore}
+                        onClick={() => { setIsReset(!isReset)}}
+                    >
+                        Reset
+                    </button>
+
+
+                    <div className={`selection-popup-container grid-20 header-font warning ${isReset ? "open" : "closed"}`}>
+                        <div className="section-14" style={{marginLeft: "15px", marginBottom: "0px"}}>Are you sure you want to reset Robintuk?</div>
+                        <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
+                            <button className="d-flex align-items-center red" onClick={resetApp}>
+                                Yes
+                            </button>
+                        </div>
+
+                        <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
+                            <button className="d-flex align-items-center white" onClick={() => setIsReset(false)}>
+                                No
+                            </button>
+                        </div>
+                    </div> 
                 </div>
+
             </div>
 
             <div className="empty-space"></div>

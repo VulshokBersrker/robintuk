@@ -44,8 +44,16 @@ function App() {
   useEffect(() => {
     const unlisten_scan_finished = listen<boolean>("scan-finished", () => { getValues(); });
     const unlisten_restore_finished = listen<boolean>("ending-restore", () => { getTheme(); getValues(); });
+    const unlisten_reset_finished = listen<boolean>("ending-reset", () => { getTheme(); getValues(); });
+
+
+    const unlisten_reload_albums = listen("remove-song", () => { console.log("Updating pulled data"); getValues(); });
+
+    
     return () => {
       unlisten_scan_finished.then(f => f()),
+      unlisten_reload_albums.then(f => f()),
+      unlisten_reset_finished.then(f => f()),
       unlisten_restore_finished.then(f => f());
     }
   }, []);

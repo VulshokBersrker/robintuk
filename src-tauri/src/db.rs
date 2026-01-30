@@ -2,16 +2,16 @@ use std::ffi::OsStr;
 use std::{fs};
 use std::path::{Path};
 use chrono::Utc;
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::sqlite::SqlitePool;
 // SQLITE Libraries
 use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite};
-use tauri::{State};
+use tauri::{Emitter, State};
 
 use crate::types::{
     AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, PlaylistFull, PlaylistTable, SongHistory, SongTable, SongTableUpload,
     DoesExist
 };
-use crate::{AppState};
+use crate::{AppState, commands};
 
 
 // ---------------------------------------- Initilize Database and Check if Database exists ----------------------------------------
@@ -20,11 +20,10 @@ use crate::{AppState};
 pub fn init() {
     if !db_file_exists() {
         create_db_file();
-
-        // Allows you to run async commands in sync methods
-        let tr = tokio::runtime::Runtime::new().unwrap();
-        let _ = tr.block_on(apply_initial_migrations());
     }
+    // Allows you to run async commands in sync methods
+    let tr = tokio::runtime::Runtime::new().unwrap();
+    let _ = tr.block_on(apply_initial_migrations());
 
     // Create the cover folder
     let covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers";
@@ -76,17 +75,40 @@ async fn apply_initial_migrations() -> Result<(), String> {
 pub async fn establish_connection() -> Result<Pool<Sqlite>, std::string::String> {
     let binding = get_db_path();
     let dir_path = binding.as_str();
-    // println!("Connection Established to Database File {:?}", dir_path);
-    println!("Connection Established to Database");
+    // println!("Connection Established to Database");
 
-    return SqlitePoolOptions::new().max_connections(1000)
-        .connect(dir_path)
-        .await.
-        map_err(|e| format!("Failed to connect to database {}", e));
+    return SqlitePool::connect(dir_path)
+        .await
+        .map_err(|e| format!("Failed to connect to database {}", e));
+}
 
-    // return SqlitePool::connect(dir_path)
-    //     .await
-    //     .map_err(|e| format!("Failed to connect to database {}", e));
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn reset_database(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
+    
+    // Clear the player's queue
+    let _ = app.emit("queue-cleared", false);
+    let _ = commands::player_clear_queue(app.clone(), state.clone());
+
+    // First delete all the tables from the database
+    let _ = state.pool.execute(include_str!("../migrations/9999_reset.sql")).await;
+    
+    // Then use the migration files to re-add the tables to the database
+    let _ = apply_initial_migrations().await;
+
+    // Delete all the images for playlists and albums
+    let covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers";
+    let playlist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers";
+    let _ = fs::remove_dir_all(&covers_dir);
+    let _ = fs::remove_dir_all(&playlist_cover_dir);
+    // Recreate the directories
+    let _ = fs::create_dir_all(&covers_dir);
+    let _ = fs::create_dir_all(&playlist_cover_dir);
+
+    // Trigger global refresh of all data in the app
+    let _ = app.emit("ending-reset", false);
+
+    Ok(())
 }
 
 // ----------------------------------------------------- Edit SQLITE Database -----------------------------------------------------
@@ -98,7 +120,7 @@ pub async fn add_directory(state: State<AppState, '_>, directory_name: String) -
         .bind(directory_name)
         .execute(&state.pool)
         .await
-        .map_err(|e| format!("Error saving directory path: {}", e))?;
+        .map_err(|e| format!("Error saving directory path: {}", e)).unwrap();
 
     Ok(())
 }
@@ -296,14 +318,40 @@ pub async fn remove_songs(pool: &Pool<Sqlite>) -> Result<(), String> {
         }      
     }
     
-    let res = sqlx::query("DELETE FROM songs WHERE keep = false")
+    let _ = sqlx::query("DELETE FROM songs WHERE keep = false")
         .execute(pool)
         .await;
 
-    println!("{:?}", &res);
+    Ok(())
+}
+
+pub async fn remove_song(pool: &Pool<Sqlite>, song: SongTable) -> Result<(), String> {
+
+    let covers_to_delete: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM songs WHERE path = ?1")
+        .bind(&song.path)
+        .fetch_all(pool)
+        .await.unwrap();
+
+    for covers in covers_to_delete {
+        let res: (bool,) = sqlx::query_as("SELECT EXISTS (SELECT 1 FROM songs WHERE cover = ? AND keep = true)")
+            .bind(&covers.cover)
+            .fetch_one(pool)
+            .await.unwrap();
+
+        // There are no songs using the image
+        if res.0 == false {
+            let _ = fs::remove_file(covers.cover);
+        }
+    }
+    
+    let _ = sqlx::query("DELETE FROM songs WHERE path = ?1")
+        .bind(&song.path)
+        .execute(pool)
+        .await;
 
     Ok(())
 }
+
 
 // ------------------------------------ Album Functions ------------------------------------
 

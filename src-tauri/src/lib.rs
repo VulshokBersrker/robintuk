@@ -5,7 +5,7 @@ use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
 use tauri_plugin_prevent_default::Flags;
 use tauri::{Builder, Manager, Emitter};
-use std::{fs::File, sync::{Arc, Mutex}};
+use std::{sync::{Arc, Mutex}};
 use tokio::runtime::Runtime;
 use sqlx::{Pool, Sqlite};
 use tauri::{State};
@@ -147,8 +147,7 @@ pub fn run() -> Result<(), String> {
             commands::player_update_queue_and_pos,
             commands::player_clear_queue,
             commands::shuffle_queue,
-            db::get_queue,            
-            // db::create_queue,
+            db::get_queue,
             db::add_to_queue,
             db::clear_queue,
             // Other Media Player Functions
@@ -162,6 +161,7 @@ pub fn run() -> Result<(), String> {
             commands::new_playlist_added,
             commands::set_shuffle_mode,
             // Settings Functions,
+            commands::scan_for_lyrics,
             db::get_settings,
             db::set_theme,
             commands::create_backup,
@@ -170,7 +170,8 @@ pub fn run() -> Result<(), String> {
             commands::use_restore,
             commands::check_for_ongoing_scan,
             commands::import_playlist,
-            commands::export_playlist
+            commands::export_playlist,
+            db::reset_database
         ])        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -274,8 +275,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         for received in rx.iter() {
             let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
 
-            let size = File::open(&received).unwrap().metadata().map_err(|e| e.to_string()).unwrap().len();
-            let song_res = get_song_data(received, size).await;
+            let song_res = get_song_data(received).await;
 
             if song_res.is_ok() {
                 if does_exist {

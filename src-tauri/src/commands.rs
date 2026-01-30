@@ -5,9 +5,10 @@ use crate::{
     types::{DoesExist, GetCurrentSong, GetPlaylistList, PlaylistFull, SongTable }
 };
 use m3u8_rs::{MediaPlaylist, MediaSegment, Playlist};
+use reqwest::{Client, header::{CONTENT_TYPE, USER_AGENT}};
 use zip::{ZipArchive, ZipWriter,  write::SimpleFileOptions};
-use std::{fs::{self, File}, io::Read, os::windows::fs::MetadataExt, path::Path};
-use tauri::{Emitter, State};
+use std::{fs::{self, File}, io::Read, path::Path};
+use tauri::{Emitter, State, http::HeaderMap};
 use std::path::{PathBuf};
 use walkdir::{ WalkDir};
 use std::io::Write;
@@ -21,7 +22,7 @@ use std::{io};
 #[tauri::command]
 pub fn player_set_queue(state: State<AppState, '_>, queue: Vec<SongTable>) -> Result<(), String> {
     state.player.lock().unwrap().set_queue(queue);
-    Ok(())
+    Ok(())   
 }
 
 #[tauri::command]
@@ -37,11 +38,11 @@ pub fn player_add_to_queue(state: State<AppState, '_>, queue: Vec<SongTable>) ->
 }
 
 #[tauri::command]
-pub fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
+pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
     state.player.lock().unwrap().set_queue(queue);
     let _ = state.player.lock().unwrap().load_song(index);
-
     Ok(())
+        
 }
 
 #[tauri::command]
@@ -54,8 +55,7 @@ pub fn player_get_queue_length(state: State<AppState, '_>) -> Result<usize, Stri
 pub fn player_update_queue_and_pos(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String>  {
     state.player.lock().unwrap().set_queue(queue);
     let _ = state.player.lock().unwrap().update_current_index(index);
-
-    Ok(())
+    Ok(())    
 }
 
 #[tauri::command]
@@ -68,18 +68,42 @@ pub fn player_clear_queue(app: tauri::AppHandle, state: State<AppState, '_>) -> 
 }
 
 #[tauri::command]
-pub fn player_load_album(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
+pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
+    let q = queue.clone();
+    for item in &queue {
+        println!("--- {:?}", &item.path);
+    }
     state.player.lock().unwrap().set_queue(queue);
-    let _ = state.player.lock().unwrap().load_song(index);
-    state.player.lock().unwrap().play_song();
 
-    Ok(())
+    let song_status = state.player.lock().unwrap().load_song(index);
+    if song_status.is_err() {
+        let q_length = state.player.lock().unwrap().get_queue_length();
+
+        for i in index..q_length {
+            // println!("{:?} --- {:?}", &i, &q[i].path);
+            let s_status = state.player.lock().unwrap().load_song(i);
+            if s_status.is_ok() {
+                state.player.lock().unwrap().play_song();
+                break;
+            }
+            else {
+                let _ = app.emit("remove-song", GetCurrentSong{q: q[i].clone() });
+                let _ = db::remove_song(&state.pool, q[i].clone()).await;
+            }
+        }
+    
+    }
+    else {
+        state.player.lock().unwrap().play_song();
+    }
+    
+    Ok(())    
 }
 
 #[tauri::command]
-pub fn player_load_song(state: State<AppState, '_>, index: usize) -> Result<(), String> {
-    state.player.lock().unwrap().load_song(index)?;
-    Ok(())
+pub fn player_load_song(state: State<AppState, '_>, index: usize) -> Result<Result<(), String>, String> {
+    let res = state.player.lock().unwrap().load_song(index);
+    Ok(res)
 }
 
 #[tauri::command]
@@ -122,13 +146,13 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
 
     if shuffled {
         helper::shuffle(&mut playlist);
-        let _ = player_load_album(state.clone(), playlist.clone(), index);
+        let _ = player_load_album(state.clone(), app.clone(), playlist.clone(), index).await;
         update_current_song_played(state.clone(), app);
         let _ = db::create_queue_shuffled(state.clone(), &playlist).await;      
         let _ = db::create_queue(state.clone(), &q).await;
     }
     else {
-        let _ = player_load_album(state.clone(), q.clone(), index);
+        let _ = player_load_album(state.clone(), app.clone(), q.clone(), index).await;
         update_current_song_played(state.clone(), app);
         let _ = db::create_queue(state.clone(), &q).await;
     }    
@@ -137,7 +161,7 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_name: String, index: usize, shuffled: bool) -> Result<(), String> {
+pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_name: String, index: usize, shuffled: bool) -> Result<bool, String> {
 
     let mut album: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC;")
         .bind(album_name)
@@ -146,21 +170,34 @@ pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album
         .unwrap();
 
     let q = album.clone();
+    let mut checker = true;    
 
     if shuffled {
         helper::shuffle(&mut album);
-        let _ = player_load_album(state.clone(), album.clone(), index);
-        update_current_song_played(state.clone(), app);
-        let _ = db::create_queue_shuffled(state.clone(), &album).await;  
-        let _ = db::create_queue(state.clone(), &q).await;      
+        let res = player_load_album(state.clone(), app.clone(), album.clone(), index).await;
+
+        if res.is_ok() {
+            update_current_song_played(state.clone(), app);
+            let _ = db::create_queue_shuffled(state.clone(), &album).await;  
+            let _ = db::create_queue(state.clone(), &q).await;
+        }
+        else {
+            checker = false;
+        }        
     }
     else {
-        let _ = player_load_album(state.clone(), q.clone(), index);
-        update_current_song_played(state.clone(), app);
-        let _ = db::create_queue(state.clone(), &q).await;
-    }    
+        let res = player_load_album(state.clone(), app.clone(), album.clone(), index).await;
 
-    Ok(())
+        if res.is_ok() {
+            update_current_song_played(state.clone(), app);
+            let _ = db::create_queue(state.clone(), &q).await;
+        }
+        else {
+            checker = false;
+        }
+    }
+
+    Ok(checker)
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -168,7 +205,7 @@ pub async fn play_song(state: State<AppState, '_>, app: tauri::AppHandle, song: 
 
     let arr = vec![song];
     
-    let _ = player_load_album(state.clone(), arr.clone(), 0);
+    let _ = player_load_album(state.clone(), app.clone(), arr.clone(), 0).await;
     update_current_song_played(state.clone(), app);
     let _ = db::create_queue(state.clone(), &arr).await;
     
@@ -183,13 +220,13 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
 
     if shuffled {
         helper::shuffle(&mut songs);
-        let _ = player_load_album(state.clone(), songs.clone(), 0);
+        let _ = player_load_album(state.clone(), app.clone(), songs.clone(), 0).await;
         update_current_song_played(state.clone(), app);
         let _ = db::create_queue_shuffled(state.clone(), &songs).await;    
         let _ = db::create_queue(state.clone(), &q).await;    
     }
     else {
-        let _ = player_load_album(state.clone(), q.clone(), 0);
+        let _ = player_load_album(state.clone(), app.clone(), q.clone(), 0).await;
         update_current_song_played(state.clone(), app);
         let _ = db::create_queue(state.clone(), &q).await;
     }
@@ -205,13 +242,13 @@ pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, s
 
     if shuffled {
         helper::shuffle(&mut arr);
-        let _ = player_load_album(state.clone(), arr.clone(), 0);
+        let _ = player_load_album(state.clone(), app.clone(), arr.clone(), 0).await;
         update_current_song_played(state.clone(), app);
         let _ = db::create_queue_shuffled(state.clone(), &arr).await;   
         let _ = db::create_queue(state.clone(), &q).await;    
     }
     else {
-        let _ = player_load_album(state.clone(), q.clone(), 0);
+        let _ = player_load_album(state.clone(), app.clone(), q.clone(), 0).await;
         update_current_song_played(state.clone(), app);
         let _ = db::create_queue(state.clone(), &q).await;
     }
@@ -243,7 +280,6 @@ pub fn player_stop(state: State<AppState, '_>) -> Result<(), String> {
 #[tauri::command]
 pub fn player_set_current(state: State<AppState, '_>, index: usize) -> Result<(), String> {
     state.player.lock().unwrap().update_current_index(index)?;
-
     Ok(())
 }
 
@@ -320,6 +356,109 @@ pub fn set_shuffle_mode(app: tauri::AppHandle, mode: bool) {
 }
 
 
+#[derive(sqlx::FromRow, Default, Debug, serde::Serialize, serde::Deserialize)]
+pub struct IrclibLyrics {
+    pub id: i64,
+    pub plain_lyrics: String,
+    pub synced_lyrics: Option<String>
+}
+
+#[tauri::command]
+pub async fn scan_for_lyrics(_state: State<AppState, '_>) -> Result<(), String> {
+
+    let name: String = "This Will Be the Day".to_string();
+    let artist: String = "Jeff Williams".to_string();
+    let duration: u64 = 188;
+    let album: String = "RWBY, Vol. 1".to_string();
+
+    // Setup the client
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".parse().unwrap());
+    headers.insert(USER_AGENT, "Robintuk music player".parse().unwrap());
+
+    let url_client = Client::builder().default_headers(headers).build().unwrap();
+
+    let url = format!("https://lrclib.net/api/get?artist_name={artist}&track_name={name}&album_name={album}&duration={duration}");
+
+    let res = url_client.get(&url).send().await.unwrap().text().await;
+
+    if res.is_ok() {
+        let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
+        // println!("{:?}", result);
+
+        let mut lyrics: IrclibLyrics = IrclibLyrics {
+            ..IrclibLyrics::default()
+        };
+
+        for (key, value) in result.as_object().unwrap() {
+            // println!("{:?} -> {:?}", key, value);
+            if key.contains("id") {
+                lyrics.id = value.as_i64().unwrap();
+            }
+            if key.contains("plainLyrics") {
+                lyrics.plain_lyrics = value.to_string();
+            }
+            if key.contains("syncedLyrics") {
+                lyrics.synced_lyrics = Some(value.to_string());
+            }
+        }
+
+        println!("{:?}", lyrics);
+    }
+
+
+    // // Get all songs that do not have a lyric id
+    // let list: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE lyrics_id IS NULL")
+    //     .fetch_all(&state.pool)
+    //     .await.unwrap();
+
+    // for entry in list {
+    //     // Get lyric data from remote database
+    //     let url = format!("https://lrclib.net/api/get?artist_name={artist}&track_name={name}&album_name={album}&duration={duration}");
+    //     let res = url_client.get(&url).send().await.unwrap().text().await;
+
+    //     if res.is_ok() {
+    //         let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
+    //         let mut lyrics: IrclibLyrics = IrclibLyrics {
+    //             ..IrclibLyrics::default()
+    //         };
+
+    //         for (key, value) in result.as_object().unwrap() {
+    //             println!("{:?} -> {:?}", key, value);
+    //             if key.contains("id") {
+    //                 lyrics.id = value.as_i64().unwrap();
+    //             }
+    //             if key.contains("plainLyrics") {
+    //                 lyrics.plain_lyrics = value.as_str().to_string();
+    //             }
+    //             if key.contains("syncedLyrics") {
+    //                 lyrics.synced_lyrics = value.as_str().to_string();
+    //             }
+    //         }
+
+    //         // Add data to app's db
+    //         let _ = sqlx::query("INSERT INTO lyrics (lyrics_id, plain_lyrics, synced_lyrics)
+    //             VALUES (?1, ?2, ?3)")
+    //             .bind(&lyrics.id)
+    //             .bind(&lyrics.plain_lyrics)
+    //             .bind(&lyrics.synced_lyrics)
+    //             .execute(&state.pool)
+    //             .await.unwrap();
+
+    //         let _ = sqlx::query("INSERT INTO songs (lyrics_id) VALUES (?1) WHERE path = ?2")
+    //             .bind(&lyrics.id)
+    //             .bind(&entry.path)
+    //             .execute(&state.pool)
+    //             .await.unwrap();
+    //     }
+    // }
+
+
+
+    Ok(())
+}
+
+
 #[tauri::command]
 pub async fn check_for_ongoing_scan(state: State<AppState, '_>) -> Result<bool, String> {
     Ok(*state.is_scan_ongoing.lock().unwrap())
@@ -332,6 +471,9 @@ pub async fn check_for_backup_restore(state: State<AppState, '_>) -> Result<i64,
 }
 
 // ----------------- Backup and Restore Functions for the DB and images
+// New Version Idea
+// Extract all data from the DB into a json file
+// This removes the issues of file replacement for the DB
 #[tauri::command]
 pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
     let test  = state.clone();
@@ -389,6 +531,10 @@ pub async fn check_for_backup() -> Result<bool, String> {
     Ok(Path::new(&backup_path).try_exists().unwrap())
 }
 
+
+// New Version Idea
+// Extract all the entries from a json file, from songs to playlist and playlist_tracks
+// 
 #[tauri::command]
 pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
     let test  = state.clone();
@@ -398,6 +544,8 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
     if scan == false {
         println!("Restoring from backup...");        
         *test.is_back_restore_ongoing.lock().unwrap() = 2;
+
+        // New version
 
         let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip";
 
@@ -525,8 +673,7 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
                 
                     if check {
                         // Add the song to the db
-                        let file_size: u64 = File::open(&entry.uri).unwrap().metadata().unwrap().file_size();
-                        let res = helper::get_song_data(entry.uri, file_size).await;
+                        let res = helper::get_song_data(entry.uri).await;
                             
                         if res.is_ok() {
                             let song = res.unwrap().song_data;

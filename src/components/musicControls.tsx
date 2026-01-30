@@ -53,22 +53,21 @@ export default function MusicControls() {
     // Just for listeners
     useEffect(() => {
         // Load the queue (song / album / playlist) from the backend
-        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); saveSong(event.payload.q) });
-        const check_for_clear = listen("queue-cleared", () => { pauseMusic(); setIsLoaded(false)});
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); saveSong(event.payload.q); });
+        const check_for_clear = listen("queue-cleared", () => { stopSong(); });
         
         // Listen for when the MediaPlayPause shortcut is pressed
         const unlisten_play_pause = listen("controls-play-pause", async() => { 
             const isPaused = await invoke("player_is_paused");
-            if(!isPaused) { pauseMusic(); }
-            else { playMusic(); }
+            if(!isPaused) { pauseMusic(); } else { playMusic(); }
         });
         // Listen for when the MediaTrackNext shortcut is pressed
         const unlisten_next_song = listen<GetCurrentSong>("controls-next-song", () => { nextSong(); });
         // Listen for when the MediaTrackPrevious shortcut is pressed
-        const unlisten_previous_song = listen<GetCurrentSong>("controls-prev-song", () => { previousSong() });
+        const unlisten_previous_song = listen<GetCurrentSong>("controls-prev-song", () => { previousSong(); });
 
         // Listen for when the MediaTrackPrevious shortcut is pressed
-        const unlisten_shuffle_setting = listen<boolean>("player-shuffle-mode", (event) => { setIsShuffle(event.payload) });
+        const unlisten_shuffle_setting = listen<boolean>("player-shuffle-mode", (event) => { setIsShuffle(event.payload); });
         
         return () => {
             unlisten_get_current_song.then(f => f());
@@ -101,7 +100,7 @@ export default function MusicControls() {
             await invoke('player_setup_queue_and_song', { queue: queue, index: index });
         }
         catch(e) {
-            alert(`Failed to get song: ${e}`);
+            console.log(`Failed to get song: ${e}`);
             setIsLoaded(false);
         }
     }
@@ -179,74 +178,88 @@ export default function MusicControls() {
    
     // Play the currently selected music
     async function playMusic() {
-        try {
-            await invoke("player_play");
-            setIsPlaying(true);
-        }
-        catch(e) {
-            console.log(e);
-        }        
+        if(isLoaded) {
+            try {
+                await invoke("player_play");
+                setIsPlaying(true);
+            }
+            catch(e) {
+                console.log(e);
+            } 
+        }               
     }
 
     async function pauseMusic() {
-        try {
-            await invoke("player_pause");
-            setIsPlaying(false);
-        }
-        catch(e) {
-            console.log(e);
-        }
+        if(isLoaded) {
+            try {
+                await invoke("player_pause");
+                setIsPlaying(false);
+            }
+            catch(e) {
+                console.log(e);
+            }
+        }        
+    }
+
+    function stopSong() {
+        setIsLoaded(false); 
+        setIsPlaying(false);
     }
 
     async function nextSong() {
-        const qPosition: number = await invoke('player_get_current_position');
-        const qLength: number  = await invoke('player_get_queue_length');
-        try {
-            if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
-                console.log("end of queue");
-                await invoke("player_stop");
+        if(isLoaded) {
+            const qPosition: number = await invoke('player_get_current_position');
+            const qLength: number  = await invoke('player_get_queue_length');
+            try {
+                if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
+                    console.log("end of queue");
+                    await invoke("player_stop");
+                }
+                else {
+                    await invoke("player_next_song");
+                }
             }
-            else {
-                await invoke("player_next_song");
+            catch(e) {
+                console.log(e);
+            }
+            finally {
+                // not repeat mode
+                if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
+                    setSongProgress(0);
+                    pauseMusic();
+                }
+                else {
+                    const song: Songs = await invoke("player_get_current_song");
+                    saveSong(song);
+                    const pos: number = await invoke("player_get_current_position");
+                    savePosition(pos);
+                    await invoke("update_current_song_played");
+                }
             }
         }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            // not repeat mode
-            if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
-                setSongProgress(0);
-                pauseMusic();
+        
+    }
+    async function previousSong() {
+        if(isLoaded) {
+            try {
+                if(songProgress > 3) {
+                    seekSong(0);
+                }
+                else {
+                    await invoke("player_previous_song");
+                }
             }
-            else {
+            catch(e) {
+                console.log(e);
+            }
+            finally {
+                // await invoke("update_current_song_played");
                 const song: Songs = await invoke("player_get_current_song");
                 saveSong(song);
                 const pos: number = await invoke("player_get_current_position");
                 savePosition(pos);
                 await invoke("update_current_song_played");
             }
-        }
-    }
-    async function previousSong() {
-        try {
-            if(songProgress > 3) {
-                seekSong(0);
-            }
-            else {
-                await invoke("player_previous_song");
-            }
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            // await invoke("update_current_song_played");
-            const song: Songs = await invoke("player_get_current_song");
-            saveSong(song);
-            const pos: number = await invoke("player_get_current_position");
-            savePosition(pos);
-            await invoke("update_current_song_played");
         }
     }
 

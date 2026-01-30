@@ -78,6 +78,7 @@ export default function PlaylistOverviewPage() {
 
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
+        const unlisten_remove_song = listen<GetCurrentSong>("remove-song", (event) => { setPlaylist(l => l.filter(item => item.path !== event.payload.q.path)); });
 
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
@@ -88,6 +89,7 @@ export default function PlaylistOverviewPage() {
         
         return () => {
             unlisten_get_current_song.then(f => f());
+            unlisten_remove_song.then(f => f());
             document.removeEventListener('mousedown', handler);
         }
     }, []);
