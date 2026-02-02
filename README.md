@@ -5,7 +5,9 @@
 ### A beautiful and colorful music player for **Windows**.
 
 </div>
-[![](https://img.shields.io/badge/release-v0.2.2-green)]([https://discord.gg/bGrqtHsGgs](https://github.com/VulshokBersrker/robintuk_player/releases/latest)) [![](https://img.shields.io/badge/build_in-tauri_v2-blue)](https://tauri.app/) 
+
+[![Tauri](https://img.shields.io/badge/build_in-tauri_v2-blue)](https://tauri.app/) [![Release](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FVulshokBersrker%2Frobintuk%2Frefs%2Fheads%2Fmain%2Fpackage.json&query=version&label=version&color=green)](https://github.com/VulshokBersrker/robintuk_player/releases/latest)
+
 
 ## Download
 
