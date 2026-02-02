@@ -45,8 +45,6 @@ function App() {
     const unlisten_scan_finished = listen<boolean>("scan-finished", () => { getValues(); });
     const unlisten_restore_finished = listen<boolean>("ending-restore", () => { getTheme(); getValues(); });
     const unlisten_reset_finished = listen<boolean>("ending-reset", () => { getTheme(); getValues(); });
-
-
     const unlisten_reload_albums = listen("remove-song", () => { console.log("Updating pulled data"); getValues(); });
 
     
@@ -132,7 +130,7 @@ function App() {
 
   return(
     <div 
-      // onContextMenu={(e) => { e.preventDefault(); }}
+      onContextMenu={(e) => { e.preventDefault(); }}
     >
       <BrowserRouter>
         <CustomWindowsBar />

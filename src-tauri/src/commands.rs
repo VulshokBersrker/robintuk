@@ -17,6 +17,8 @@ use std::{io};
 // -------------------------- Media Player Commands --------------------------
 
 
+
+
 // ----------------- Queue Commands
 
 #[tauri::command]
@@ -118,11 +120,7 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
     Ok(current_position)
 }
 
-#[tauri::command]
-pub fn player_check_is_paused(state: State<AppState, '_>) -> Result<bool, String> {
-    let is_paused = state.player.lock().unwrap().check_is_paused();    
-    Ok(is_paused)
-}
+
 
 
 // ----------------- Play Commands
@@ -263,6 +261,8 @@ pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, s
 }
 
 
+
+
 // ----------------- Media Control Commands
 
 #[tauri::command]
@@ -336,6 +336,8 @@ pub fn player_get_song_pos(state: State<AppState, '_>) -> Result<(), String> {
     state.player.lock().unwrap().get_song_pos();
     Ok(())
 }
+
+
 
 
 // ----------------- Event Listener Commands
@@ -475,6 +477,8 @@ pub async fn check_for_ongoing_scan(state: State<AppState, '_>) -> Result<bool, 
 pub async fn check_for_backup_restore(state: State<AppState, '_>) -> Result<i64, String> {
     Ok(*state.is_back_restore_ongoing.lock().unwrap())
 }
+
+
 
 // ----------------- Backup and Restore Functions for the DB and images
 // New Version Idea
