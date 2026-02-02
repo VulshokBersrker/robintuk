@@ -54,6 +54,7 @@ impl MusicPlayer {
     }
     // Called when a user clicks play on a song, album, or playlist
     pub fn clear_queue(&mut self) {
+        self.sink.stop();
         self.queue.clear();
         self.position = 0;
     }
@@ -127,6 +128,10 @@ impl MusicPlayer {
 
     pub fn check_is_paused(&self) -> bool {
         return self.sink.is_paused();
+    }
+
+    pub fn check_is_loaded(&self) -> bool {
+        return !self.sink.empty();
     }
     
     pub fn check_repeat_mode(&self) -> i64 {

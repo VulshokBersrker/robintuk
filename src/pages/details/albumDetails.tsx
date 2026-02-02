@@ -14,6 +14,7 @@ import SongDetailsModal from "../../components/songDetails";
 
 // Image Components
 import QueueIcon from '../../images/rectangle-list-regular-full.svg';
+import PlayOutlineIcon from '../../images/play-icon-outline.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import PlayIcon from '../../images/play-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
@@ -466,7 +467,7 @@ export default function AlbumOverviewPage() {
                                                                         checked={checkBoxNumber[index]}
                                                                     />
                                                                 </span>
-                                                                <img src={PlayIcon} onClick={() => playSong(index, false)} />
+                                                                <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />
                                                             </span>
                                                             <span className="section-1 track">{albumList[index].track}</span>
                                                             <span className="section-9 font-0 name ">{albumList[index].name}</span>
@@ -507,7 +508,7 @@ export default function AlbumOverviewPage() {
                                                                         checked={checkBoxNumber[index]}
                                                                     />
                                                                 </span>
-                                                                <img src={PlayIcon} onClick={() => playSong(index, false)} />
+                                                                <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />
                                                             </span>
                                                             <span className="section-1 track">{albumList[index].track}</span>
                                                             <span className="section-9 font-0 name ">{albumList[index].name}</span>
@@ -539,7 +540,7 @@ export default function AlbumOverviewPage() {
                                                             checked={checkBoxNumber[index]}
                                                         />
                                                     </span>
-                                                    <img src={PlayIcon} onClick={() => playSong(index, false)} />
+                                                    <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />
                                                 </span>
                                                 <span className="section-1 track">{albumList[index].track}</span>
                                                 <span className="section-9 font-0 name ">{albumList[index].name}</span>
@@ -720,7 +721,7 @@ export default function AlbumOverviewPage() {
                                                         checked={checkBoxNumber[index]}
                                                     />
                                                 </span>
-                                                <img src={PlayIcon} onClick={() => playSong(index, false)} />
+                                                <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />
                                             </span>
                                             <span className="section-1 track">{albumList[index].track}</span>
                                             <span className="section-9 font-0 name ">{albumList[index].name}</span>

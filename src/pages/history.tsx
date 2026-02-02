@@ -12,6 +12,7 @@ import ImageWithFallBack from "../components/imageFallback";
 
 // Images
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
+import PlayOutlineIcon from '../images/play-icon-outline.svg';
 import ArtistIcon from '../images/user-regular-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
@@ -144,7 +145,7 @@ export default function PlayHistoryPage() {
                                         }}
                                     >
                                         <span className="section-1 play">
-                                            <img src={PlayIcon} onClick={() => playSong(playHistory[index])} />
+                                            <img src={PlayOutlineIcon} onClick={() => playSong(playHistory[index])} />
                                         </span>
                                         <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={playHistory[index].cover} alt="" image_type="playlist-song" /></span>
                                         

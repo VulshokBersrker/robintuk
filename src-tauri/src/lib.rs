@@ -20,7 +20,7 @@ mod db;
 use crate::{
     db::establish_connection,
     helper::get_song_data, music::MusicPlayer,  
-    types::{SongTableUpload}
+    types::{SongTableUpload, GetCurrentSong}
 };
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -69,14 +69,31 @@ pub fn run() -> Result<(), String> {
                     .with_handler(move |_app, shortcut, event| {
                         // println!("{:?}", shortcut);
                         if event.state == ShortcutState::Pressed {
+                            let app_clone = _app.state::<AppState>().clone();
+                            let mut player = app_clone.player.lock().unwrap();
                             if shortcut.matches(Modifiers::FN, Code::MediaPlayPause) {
-                                let _ = _app.emit("controls-play-pause", "test");
+                                if player.check_is_paused() {
+                                    player.play_song();
+                                    let _ = _app.emit("controls-play-pause", true);
+                                }
+                                else {
+                                    player.pause_song();
+                                    let _ = _app.emit("controls-play-pause", false);
+                                }                                
                             }
                             if shortcut.matches(Modifiers::FN, Code::MediaTrackNext) {
-                                let _ = _app.emit("controls-next-song", "test");
+                                if player.check_is_loaded() {
+                                    player.next_song();
+                                    let q = player.get_current_song();
+                                    let _ = _app.emit("get-current-song", GetCurrentSong { q });
+                                }                                
                             }
                             if shortcut.matches(Modifiers::FN, Code::MediaTrackPrevious) {
-                                let _ = _app.emit("controls-prev-song", "test");
+                                if player.check_is_loaded() {
+                                    player.previous_song();
+                                    let q = player.get_current_song();
+                                    let _ = _app.emit("get-current-song", GetCurrentSong { q });
+                                }
                             }
                         }
                     })

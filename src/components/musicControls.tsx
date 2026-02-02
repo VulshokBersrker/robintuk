@@ -53,22 +53,13 @@ export default function MusicControls() {
     // Just for listeners
     useEffect(() => {
         // Load the queue (song / album / playlist) from the backend
+        // Also is run when next and previous are emitted
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); saveSong(event.payload.q); });
         const check_for_clear = listen("queue-cleared", () => { stopSong(); });
         
         // Listen for when the MediaPlayPause shortcut is pressed
-        const unlisten_play_pause = listen("controls-play-pause", async() => { 
-            const isPaused = await invoke("player_is_paused");
-            if(!isPaused) { pauseMusic(); } else { playMusic(); }
-        });
-        // Listen for when the MediaTrackNext shortcut is pressed
-        const unlisten_next_song = listen<GetCurrentSong>("controls-next-song", () => { nextSong(); });
-        // Listen for when the MediaTrackPrevious shortcut is pressed
-        const unlisten_previous_song = listen<GetCurrentSong>("controls-prev-song", () => { previousSong(); });
-
-        // Listen for when the MediaTrackPrevious shortcut is pressed
+        const unlisten_play_pause = listen("controls-play-pause", async(event) => { if(!event.payload) { setIsPlaying(false); } else { setIsPlaying(true); } });
         const unlisten_shuffle_setting = listen<boolean>("player-shuffle-mode", (event) => { setIsShuffle(event.payload); });
-
 
         const handler = (e: any) => {
             if(e.clientY <= 29) {
@@ -83,8 +74,6 @@ export default function MusicControls() {
             unlisten_get_current_song.then(f => f());
             check_for_clear.then(f => f());
             unlisten_play_pause.then(f => f());
-            unlisten_next_song.then(f => f());
-            unlisten_previous_song.then(f => f());
             unlisten_shuffle_setting.then(f => f());
             document.removeEventListener('mousedown', handler);
         }        
@@ -135,7 +124,6 @@ export default function MusicControls() {
                     else {
                         setIsShuffle(false);
                     }
-                    
                 }
             }
             catch(e) {
@@ -146,8 +134,14 @@ export default function MusicControls() {
         else {
             setIsLoaded(false);
         }
-        updateVolume(volume);
-        
+
+        const storedVolume = localStorage.getItem("volume-level");
+        if(storedVolume !== null) {
+            updateVolume(JSON.parse(storedVolume));
+        }
+        else {
+            updateVolume(volume);
+        }
     }
 
     function saveSong(q: Songs) {
@@ -174,36 +168,32 @@ export default function MusicControls() {
    
     // Play the currently selected music
     async function playMusic() {
-        if(isLoaded) {
-            try {
-                await invoke("player_play");
-                setIsPlaying(true);
-            }
-            catch(e) {
-                console.log(e);
-            } 
-        }               
+        try {
+            await invoke("player_play");
+            setIsPlaying(true);
+        }
+        catch(e) {
+            console.log(e);
+        }          
     }
 
     async function pauseMusic() {
-        if(isLoaded) {
-            try {
-                await invoke("player_pause");
-                setIsPlaying(false);
-            }
-            catch(e) {
-                console.log(e);
-            }
-        }        
+        try {
+            await invoke("player_pause");
+            setIsPlaying(false);
+        }
+        catch(e) {
+            console.log(e);
+        }   
     }
 
     function stopSong() {
-        setIsLoaded(false); 
         setIsPlaying(false);
+        setIsLoaded(false);        
     }
 
     async function nextSong() {
-        if(isLoaded) {
+        
             const qPosition: number = await invoke('player_get_current_position');
             const qLength: number  = await invoke('player_get_queue_length');
             try {
@@ -236,7 +226,7 @@ export default function MusicControls() {
                     await invoke("update_current_song_played");
                 }
             }
-        }
+        
         
     }
     async function previousSong() {

@@ -118,6 +118,12 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
     Ok(current_position)
 }
 
+#[tauri::command]
+pub fn player_check_is_paused(state: State<AppState, '_>) -> Result<bool, String> {
+    let is_paused = state.player.lock().unwrap().check_is_paused();    
+    Ok(is_paused)
+}
+
 
 // ----------------- Play Commands
 

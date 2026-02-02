@@ -87,7 +87,8 @@ pub async fn establish_connection() -> Result<Pool<Sqlite>, std::string::String>
 pub async fn reset_database(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
     
     // Clear the player's queue
-    let _ = app.emit("queue-cleared", false);
+    let _ = commands::player_stop(state.clone());
+    let _ = app.emit("queue-cleared", true);
     let _ = commands::player_clear_queue(app.clone(), state.clone());
 
     // First delete all the tables from the database
