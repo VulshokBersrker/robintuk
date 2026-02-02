@@ -68,18 +68,8 @@ export default function MusicControls() {
 
         // Listen for when the MediaTrackPrevious shortcut is pressed
         const unlisten_shuffle_setting = listen<boolean>("player-shuffle-mode", (event) => { setIsShuffle(event.payload); });
-        
-        return () => {
-            unlisten_get_current_song.then(f => f());
-            check_for_clear.then(f => f());
-            unlisten_play_pause.then(f => f());
-            unlisten_next_song.then(f => f());
-            unlisten_previous_song.then(f => f());
-            unlisten_shuffle_setting.then(f => f());
-        }        
-    }, []);
 
-    useEffect(() => {
+
         const handler = (e: any) => {
             if(e.clientY <= 29) {
                 setTimeout(() => {
@@ -90,8 +80,14 @@ export default function MusicControls() {
         document.addEventListener('mousedown', handler);
         
         return () => {
+            unlisten_get_current_song.then(f => f());
+            check_for_clear.then(f => f());
+            unlisten_play_pause.then(f => f());
+            unlisten_next_song.then(f => f());
+            unlisten_previous_song.then(f => f());
+            unlisten_shuffle_setting.then(f => f());
             document.removeEventListener('mousedown', handler);
-        }
+        }        
     }, []);
 
     async function sendQueueToBackend(queue: Songs[], index: number) {
@@ -216,6 +212,10 @@ export default function MusicControls() {
                     await invoke("player_stop");
                 }
                 else {
+                    // At the end of the queue and shuffle is on, reshuffle the queue
+                    if(isShuffle && qPosition + 1 > qLength - 1) {
+                        await invoke("shuffle_queue", {song: songDetails?.path, shuffled: isShuffle});
+                    }
                     await invoke("player_next_song");
                 }
             }

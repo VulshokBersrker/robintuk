@@ -18,6 +18,7 @@ import QueueIcon from '../../images/rectangle-list-regular-full.svg';
 import SelectIcon from '../../images/circle-check-regular-full.svg';
 import EditIcon from '../../images/pen-to-square-regular-full.svg';
 import AlbumIcon from '../../images/vinyl-record-svgrepo-com.svg';
+import PlayOutlineIcon from '../../images/play-icon-outline.svg';
 import DeleteIcon from '../../images/trash-can-regular-full.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import ArtistIcon from '../../images/user-regular-full.svg';
@@ -544,7 +545,7 @@ export default function PlaylistOverviewPage() {
                                                         checked={checkBoxNumber[index]}
                                                     />
                                                 </span>
-                                                <img src={PlayIcon} onClick={() => playPlaylist(index, false)} />
+                                                <img src={PlayOutlineIcon} onClick={() => playPlaylist(index, false)} />
                                             </span>
                                             <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={playlist[index].cover} alt="" image_type="playlist-song" /></span>
                                             <span className="section-9 font-0 name">{playlist[index].name}</span>

@@ -70,9 +70,9 @@ pub fn player_clear_queue(app: tauri::AppHandle, state: State<AppState, '_>) -> 
 #[tauri::command]
 pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
     let q = queue.clone();
-    for item in &queue {
-        println!("--- {:?}", &item.path);
-    }
+    // for item in &queue {
+    //     println!("--- {:?}", &item.path);
+    // }
     state.player.lock().unwrap().set_queue(queue);
 
     let song_status = state.player.lock().unwrap().load_song(index);
