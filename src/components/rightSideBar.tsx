@@ -79,12 +79,14 @@ export default function RightSideBar() {
         
         const unlisten_scan_progress = listen<ScanProgress>("scan-length", (event) => { setScanCurrent(event.payload.current); setScanLength(event.payload.length); });
         const unlisten_restore_finished = listen<boolean>("ending-restore", () => { getPlaylists(); });
+        const unlisten_reset_finished = listen<boolean>("ending-reset", () => { setPlaylistLists([]); });
         
         return () => {
             unlisten_get_playlists.then(f => f()),
             unlisten_scan_progress.then(f => f()),
             unlisten_scan_started.then(f => f()),
             unlisten_scan_finished.then(f => f()),
+            unlisten_reset_finished.then(f => f()),
             unlisten_restore_finished.then(f => f());
         }        
     }, []);

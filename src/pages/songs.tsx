@@ -262,7 +262,7 @@ export default function SongPage({songs}: Props) {
                     <span className="search-bar">
                         <img src={SearchIcon} className="bi search-icon icon-size"/>
                         <input
-                            type="text" placeholder="Search Albums" id="search_albums"
+                            type="text" placeholder="Search Songs" id="search_albums"
                             autoComplete="off"
                             value={searchValue}
                             onChange={(e) => updateSearchResults(e.target.value)}

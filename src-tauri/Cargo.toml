@@ -1,6 +1,6 @@
 [package]
 name = "robintuk_player"
-version = "0.2.2"
+version = "0.2.3"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -40,6 +40,7 @@ m3u8-rs = "6.0.0"
 jwalk = "0.8.1"
 flume = "0.12.0"
 threadpool = "1.8.1"
+reqwest = { version = "0.13.1", features = ["json"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"

@@ -5,7 +5,7 @@ use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
 use tauri_plugin_prevent_default::Flags;
 use tauri::{Builder, Manager, Emitter};
-use std::{fs::File, sync::{Arc, Mutex}};
+use std::{sync::{Arc, Mutex}};
 use tokio::runtime::Runtime;
 use sqlx::{Pool, Sqlite};
 use tauri::{State};
@@ -20,7 +20,7 @@ mod db;
 use crate::{
     db::establish_connection,
     helper::get_song_data, music::MusicPlayer,  
-    types::{SongTableUpload}
+    types::{SongTableUpload, GetCurrentSong}
 };
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -67,16 +67,34 @@ pub fn run() -> Result<(), String> {
                 app.handle().plugin(
                     tauri_plugin_global_shortcut::Builder::new().with_shortcuts(["MediaPlayPause", "MediaTrackNext", "MediaTrackPrevious"])?
                     .with_handler(move |_app, shortcut, event| {
-                        // println!("{:?}", shortcut);
+
                         if event.state == ShortcutState::Pressed {
+                            let app_clone = _app.state::<AppState>().clone();
+                            let mut player = app_clone.player.lock().unwrap();
+                            
                             if shortcut.matches(Modifiers::FN, Code::MediaPlayPause) {
-                                let _ = _app.emit("controls-play-pause", "test");
+                                if player.check_is_paused() {
+                                    player.play_song();
+                                    let _ = _app.emit("controls-play-pause", true);
+                                }
+                                else {
+                                    player.pause_song();
+                                    let _ = _app.emit("controls-play-pause", false);
+                                }                                
                             }
                             if shortcut.matches(Modifiers::FN, Code::MediaTrackNext) {
-                                let _ = _app.emit("controls-next-song", "test");
+                                if player.check_is_loaded() {
+                                    player.next_song();
+                                    let q = player.get_current_song();
+                                    let _ = _app.emit("get-current-song", GetCurrentSong { q });
+                                }                                
                             }
                             if shortcut.matches(Modifiers::FN, Code::MediaTrackPrevious) {
-                                let _ = _app.emit("controls-prev-song", "test");
+                                if player.check_is_loaded() {
+                                    player.previous_song();
+                                    let q = player.get_current_song();
+                                    let _ = _app.emit("get-current-song", GetCurrentSong { q });
+                                }
                             }
                         }
                     })
@@ -147,8 +165,7 @@ pub fn run() -> Result<(), String> {
             commands::player_update_queue_and_pos,
             commands::player_clear_queue,
             commands::shuffle_queue,
-            db::get_queue,            
-            // db::create_queue,
+            db::get_queue,
             db::add_to_queue,
             db::clear_queue,
             // Other Media Player Functions
@@ -162,6 +179,7 @@ pub fn run() -> Result<(), String> {
             commands::new_playlist_added,
             commands::set_shuffle_mode,
             // Settings Functions,
+            commands::scan_for_lyrics,
             db::get_settings,
             db::set_theme,
             commands::create_backup,
@@ -170,7 +188,8 @@ pub fn run() -> Result<(), String> {
             commands::use_restore,
             commands::check_for_ongoing_scan,
             commands::import_playlist,
-            commands::export_playlist
+            commands::export_playlist,
+            db::reset_database
         ])        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -274,8 +293,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         for received in rx.iter() {
             let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
 
-            let size = File::open(&received).unwrap().metadata().map_err(|e| e.to_string()).unwrap().len();
-            let song_res = get_song_data(received, size).await;
+            let song_res = get_song_data(received).await;
 
             if song_res.is_ok() {
                 if does_exist {

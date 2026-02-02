@@ -1,11 +1,11 @@
 <div align="center">
-<img src="./assets/logo_full.png" height="130px" alt="Robintuk Logo" title="Robintuk" />
-<br>
+    <img src="./assets/logo_full.png" height="130px" alt="Robintuk Logo" title="Robintuk" />
+    <br>
 
 ### A beautiful and colorful music player for **Windows**.
 
 </div>
-
+[![](https://img.shields.io/badge/release-v0.2.2-green)]([https://discord.gg/bGrqtHsGgs](https://github.com/VulshokBersrker/robintuk_player/releases/latest)) [![](https://img.shields.io/badge/build_in-tauri_v2-blue)](https://tauri.app/) 
 
 ## Download
 
@@ -15,14 +15,14 @@
 ## Main Features
 
 - Play most music formats (mp3, flac, ogg, aiff, m4a)
-- Great performance even with 10,000+ songs loaded
+- Great performance with 10,000+ songs loaded
 - Custom playlist artwork (including animated images)
 - Customize the look with multiple color themes
 - View last 100 played songs
 - Search to find your music faster
 - Fast scans to add your music quickly (~5000 songs scanned per minute)
-- Backup and Restore your music database and images
-- Use mp3 files to import playlist from other apps or export your playlists for save keepings
+- Backup, Restore, or Reset your music database and images
+- Use m3u/m3u8 files to import playlists from other apps or export your playlists for save keepings
 
 ## [Screenshots](./assets/screenshots/index.md)
 
@@ -44,9 +44,11 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
+- [ ] Equalizer?
+- [ ] Create Genre tab and features
 - [ ] Linux support
 - [ ] Smoother music progress bar
-- [ ] Second Shuffle mode (Reshuffled at the end of current queue)
+- [x] Smarter Shuffle (Reshuffled at the end of queue)
 - [ ] Gapless playback
 - [ ] Add support for wav
 - [ ] Update queue page when playlist is changed

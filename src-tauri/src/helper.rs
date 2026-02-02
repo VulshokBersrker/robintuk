@@ -1,6 +1,6 @@
 // Libraries
 use std::{
-    fs, hash::{BuildHasher, DefaultHasher, Hash, Hasher, RandomState}, path::{Path, PathBuf}
+    fs::{self}, hash::{BuildHasher, DefaultHasher, Hash, Hasher, RandomState}, os::windows::fs::MetadataExt, path::{Path, PathBuf}
 };
 
 // Song Metadata Libraries
@@ -67,13 +67,15 @@ fn get_section_marker(first_char: char) -> Option<i32> {
 }
 
 // Get the song metadata for the database
-pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<SongDataResults> {
+pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
 
     let file_name: String = Path::new(&path)
         .file_name()
         .and_then(|x| x.to_str())
         .map(|x| x.to_string())
         .unwrap();
+
+    let file_size = fs::metadata(&path).unwrap().file_size();
 
     let mut song_data: SongTableUpload = SongTableUpload {
         path: path.to_string(),
@@ -337,26 +339,3 @@ pub async fn get_song_data(path: String, file_size: u64) -> std::io::Result<Song
 // BadTimestamp("Timestamp segments contains non-digit characters")
 // FileDecoding(Mpeg: "File contains an invalid frame")
 // TextDecode("Expected a UTF-8 string")
-
-
-// println!("--- Tag Information ---");
-// println!("Genre: {}", tag.genre().as_deref().unwrap_or("None"));
-// println!("Year: {}", tag.year().unwrap());
-// println!("-- Track: {}", tag.track().unwrap());
-
-// let test = &tag.pictures()[0];
-// println!("Image: {:?} - {:?} - {:?}", test.description(), test.pic_type(), test.mime_type());
-// println!("Title: {}", tag.get_string(&ItemKey::TrackTitle).unwrap() );
-// println!("Artist: {}", tag.get_string(&ItemKey::TrackArtist).unwrap_or("None") );
-// println!("Album Title: {}", tag.get_string(&ItemKey::AlbumTitle).unwrap_or("None") );
-// println!("Album Artist: {}", tag.get_string(&ItemKey::AlbumArtist).unwrap_or("None") );
-// println!("Genre: {}", tag.get_string(&ItemKey::Genre).unwrap_or("None") );
-// println!("Track: {}", tag.get_string(&ItemKey::TrackNumber).unwrap_or("None") );
-
-// let properties = tagged_file.properties();
-// println!("--- Audio Properties ---");
-// println!("Bitrate (Audio): {}", properties.audio_bitrate().unwrap_or(0) );
-// println!("Bitrate (Overall): {}", properties.overall_bitrate().unwrap_or(0) );
-// println!("Sample Rate: {}", properties.sample_rate().unwrap_or(0));
-// println!("Bit depth: {}", properties.bit_depth().unwrap_or(0));
-// println!("Channels: {}", properties.channels().unwrap_or(0));

@@ -14,12 +14,15 @@ import DeselectIcon from '../images/circle-xmark-regular-full.svg';
 import QueueIcon from '../images/rectangle-list-regular-full.svg';
 import SelectIcon from '../images/circle-check-regular-full.svg';
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
+import ShuffleIcon from '../images/shuffle-solid-full.svg';
 import ArtistIcon from '../images/user-regular-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
 import AddIcon from '../images/plus-solid-full.svg';
 import SearchIcon from '../images/search_icon.svg';
 import Circle from '../images/circle.svg';
 import CloseIcon from '../images/x.svg';
+
+
 
 // Need to add filtering, should be easy because all the data is there
 // Begin work on caching data
@@ -93,10 +96,10 @@ export default function AlbumPage({albums}: P) {
         navigate("/albums/overview", {state: {name: name}});
     }
 
-    async function playAlbum(album_name: string) {
+    async function playAlbum(album_name: string, shuffled: boolean) {
         resetContextMenu();
         try {
-            await invoke("play_album", {album_name: album_name, index: 0, shuffled: false});
+            await invoke("play_album", {album_name: album_name, index: 0, shuffled: shuffled});
             savePosition(0);
         }
         catch(e) {
@@ -418,7 +421,7 @@ export default function AlbumPage({albums}: P) {
                                             }).length > 0} 
                                         />
                                     </span>
-                                    <div className="play-album" onClick={() => playAlbum(filteredAlbums[index].album)}>
+                                    <div className="play-album" onClick={() => playAlbum(filteredAlbums[index].album, false)}>
                                         <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                         <img src={Circle} className="circle"/>
                                     </div>
@@ -465,7 +468,7 @@ type Props = {
     album: string,
     artist: string,
     index: number,
-    play: (album_name: string) => void, // playSong / playAlbum function
+    play: (album_name: string, shuffled: boolean) => void, // playSong / playAlbum function
     editSelection: (album: string, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
@@ -560,8 +563,12 @@ function ContextMenu({
                     {isBeingAdded === false && <><img src={SelectIcon} />&nbsp;Select</>}
                 </li>
 
-                <li onClick={() => {play(album)}} className="d-flex align-items-center">
+                <li onClick={() => {play(album, false)}} className="d-flex align-items-center">
                     <img src={PlayIcon} />  &nbsp; Play
+                </li>
+
+                <li onClick={() => {play(album, true)}} className="d-flex align-items-center">
+                    <img src={ShuffleIcon} />  &nbsp; Shuffle
                 </li>
 
                 <li className="position-relative">

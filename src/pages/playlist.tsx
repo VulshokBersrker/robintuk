@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import SimpleBar from 'simplebar-react';
 
 // Custom Components
-import { savePosition, Playlists } from "../globalValues.js";
+import { Playlists, playPlaylist } from "../globalValues.js";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -65,19 +65,9 @@ export default function PlaylistPage() {
         navigate("/playlists/overview", {state: {name: name}});
     }
 
-    async function playPlaylist(playlist_id: number) {
+    async function play(playlist_id: number, shuffled: boolean) {
         resetContextMenu();
-        try {      
-            await invoke("play_playlist", {playlist_id: playlist_id, shuffled: false});
-            savePosition(0);
-        }
-        catch (err) {
-            alert(`Failed to play song: ${err}`);
-        } 
-        finally {
-            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-            await invoke("set_shuffle_mode", { mode: false });
-        }
+        playPlaylist(playlist_id, shuffled);
     }
 
     async function createPlaylist(name: string) {
@@ -163,7 +153,7 @@ export default function PlaylistPage() {
                             }}
                         >
                             <div className="album-image-container playlist">
-                                <div className="play-album" onClick={() => playPlaylist(item.id)} >
+                                <div className="play-album" onClick={() => play(item.id, false)} >
                                     <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                     <img src={Circle} className="circle"/>
                                 </div>
@@ -188,7 +178,7 @@ export default function PlaylistPage() {
                 playlist_id={contextMenu.playlist}
                 posX={contextMenu.posX}
                 posY={contextMenu.posY}
-                play={playPlaylist}
+                play={play}
                 navigateToPlaylistOverview={navigateToPlaylistOverview}
                 ref={isContextMenuOpen}
             />

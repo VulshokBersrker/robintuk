@@ -297,7 +297,7 @@ button {
   border: 2px solid var(--font-color-three);
   color: var(--font-color-one);
   background-color: rgba(0, 0, 0, 0.0);
-  padding: 8px 14px 8px 14px;
+  padding: 10px 15px 10px 15px;
 }
 button.white {
   border: 2px solid var(--font-color-one);
@@ -323,10 +323,10 @@ button.white:disabled {
   transition: 0.2s ease-in-out;
 }
 button.red {
-  border: 2px solid rgb(194, 0, 0);
+  border: 2px solid rgb(232, 70, 70);
   background-color: rgba(0, 0, 0, 0.0) !important;
-  color: rgb(194, 0, 0);
-  border-radius: rgb(194, 0, 0);
+  color: rgb(232, 70, 70);
+  border-radius: var(--border-radius);
   /* Padding */
   padding: 10px 15px 10px 15px;
   transition: 0.2s ease-in-out;
@@ -342,6 +342,10 @@ button.red:hover {
 }
 button.red img {
   filter: brightness(0) saturate(100%) invert(8%) sepia(95%) saturate(7476%) hue-rotate(4deg) brightness(86%) contrast(108%);
+}
+.warning {
+  background-color: rgba(74, 15, 15, 0.993) !important;
+  border: 2px solid rgba(169, 46, 46, 0.993) !important;
 }
 
 button:hover {
@@ -1976,6 +1980,9 @@ select.playlists {
 }
 select:disabled {
   border: 2px solid #585858;
+}
+select:disabled * {
+  color: #585858;
 }
 select:disabled:hover {
   background: rgba(0, 0, 0, 0);

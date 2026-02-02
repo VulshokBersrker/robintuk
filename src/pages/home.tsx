@@ -1,6 +1,7 @@
 // Core Libraries
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import SimpleBar from 'simplebar-react';
 
@@ -15,7 +16,6 @@ import ArtistIcon from '../images/user-regular-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
 import AddIcon from '../images/plus-solid-full.svg';
 import Circle from '../images/circle.svg';
-import { listen } from '@tauri-apps/api/event';
 
 export default function Home() {
 
