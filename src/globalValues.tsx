@@ -65,10 +65,22 @@ export interface AllArtistResults {
     artist_section: number
 }
 
+export interface AllGenreResults {
+    genre: string,
+    genre_section: number
+}
+
 export interface ArtistDetails {
     num_tracks: number,
     total_duration: number,
     album_artist: string,
+    albums: AlbumDetails[],
+}
+
+export interface GenreDetails {
+    num_tracks: number,
+    total_duration: number,
+    genre: string,
     albums: AlbumDetails[],
 }
 

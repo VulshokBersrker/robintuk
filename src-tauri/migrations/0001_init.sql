@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS songs (
     song_section INTEGER NOT NULL,
     album_section INTEGER,
     artist_section INTEGER,
+    genre_section INTEGER,
     keep BOOLEAN
 );
 

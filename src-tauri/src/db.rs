@@ -9,7 +9,7 @@ use tauri::{Emitter, State};
 
 use crate::types::{
     AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, PlaylistFull, PlaylistTable, SongHistory, SongTable, SongTableUpload,
-    DoesExist
+    DoesExist, AllGenreResults, GenreDetailsResults
 };
 use crate::{AppState, commands};
 
@@ -244,8 +244,8 @@ pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Res
 pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<SqliteQueryResult, String> {
     
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
-        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section, keep) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)")
+        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section,, genre_section keep) 
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)")
         .bind(&entry.name)
         .bind(&entry.path)
         .bind(&entry.cover)
@@ -261,6 +261,7 @@ pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<Sq
         .bind(&entry.song_section)
         .bind(&entry.album_section)
         .bind(&entry.artist_section)
+        .bind(&entry.genre_section)
         .bind(true)
         .execute(pool)
         .await;
@@ -273,22 +274,23 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
     
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("UPDATE songs
         SET name = ?1, cover = ?2, release = ?3, track = ?4, album = ?5, artist = ?6, genre = ?7,
-        album_artist = ?8, disc_number = ?9, duration = ?10, song_section = ?11, album_section = ?12, artist_section = ?13, keep = ?14
-        WHERE path = ?15
+        album_artist = ?8, disc_number = ?9, duration = ?10, song_section = ?11, album_section = ?12, artist_section = ?13, genre_section = ?14, keep = ?15
+        WHERE path = ?16
         ")
-        .bind(entry.name)
-        .bind(entry.cover)
-        .bind(entry.release)
-        .bind(entry.track)
-        .bind(entry.album)
-        .bind(entry.artist)
-        .bind(entry.genre)
-        .bind(entry.album_artist)
-        .bind(entry.disc)
-        .bind(entry.duration)
-        .bind(entry.song_section)
-        .bind(entry.album_section)
-        .bind(entry.artist_section)
+        .bind(&entry.name)
+        .bind(&entry.cover)
+        .bind(&entry.release)
+        .bind(&entry.track)
+        .bind(&entry.album)
+        .bind(&entry.artist)
+        .bind(&entry.genre)
+        .bind(&entry.album_artist)
+        .bind(&entry.disc)
+        .bind(&entry.duration)
+        .bind(&entry.song_section)
+        .bind(&entry.album_section)
+        .bind(&entry.artist_section)
+        .bind(&entry.genre_section)
         .bind(true)
 
         .bind(entry.path)
@@ -419,6 +421,28 @@ pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: String) ->
     Ok(ArtistDetailsResults{ num_tracks: temp.len(), total_duration: duration, album_artist, albums })
 }
 
+#[tauri::command(rename_all = "snake_case")]
+pub async fn get_albums_by_genre(state: State<AppState, '_>, genre: String) -> Result<GenreDetailsResults, String> {
+
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre=$1 ORDER BY album ASC;")
+        .bind(&genre)
+        .fetch_all(&state.pool)
+        .await
+        .unwrap();
+
+    let albums: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
+        "SELECT DISTINCT album, album_artist, cover, album_section FROM songs WHERE genre=$1
+        GROUP BY album ORDER BY album ASC;",
+    ).bind(&genre).fetch_all(&state.pool).await.unwrap();
+
+    let mut duration: u64 = 0;
+    for song in &temp {
+        duration += song.duration;
+    }
+
+    Ok(GenreDetailsResults{ num_tracks: temp.len(), total_duration: duration, genre, albums })
+}
+
 // ------------------------------------ Artist Functions ------------------------------------
 
 #[tauri::command]
@@ -453,6 +477,46 @@ pub async fn get_artist_songs(state: State<'_, AppState>, album_artist: String) 
 
     let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album_artist = ? ORDER BY album ASC, disc_number ASC, track ASC")
         .bind(&album_artist)
+        .fetch_all(&state.pool)
+        .await
+        .unwrap();
+
+    Ok(songs)
+}
+
+// ------------------------------------ Genre Functions ------------------------------------
+
+#[tauri::command]
+pub async fn get_all_genres(state: State<AppState, '_>) -> Result<Vec<AllGenreResults>, String> {
+
+    let temp: Vec<AllGenreResults> = sqlx::query_as::<_, AllGenreResults>(
+        "SELECT DISTINCT genre, genre_section FROM songs WHERE genre IS NOT NULL
+        GROUP BY genre
+        ORDER BY genre_section ASC, genre ASC;",
+    )
+    .fetch_all(&state.pool)
+    .await
+    .unwrap();    
+
+    Ok(temp)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn get_genre(state: State<AppState, '_>, name: String) -> Result<SongTable, String> {
+
+    let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre=$1 ORDER BY album;")
+        .bind(name)
+        .fetch_one(&state.pool)
+        .await
+        .unwrap();
+
+    Ok(temp)
+}
+
+pub async fn get_genre_songs(state: State<'_, AppState>, genre: String) -> Result<Vec<SongTable>, String> {
+
+    let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre = ? ORDER BY album ASC, disc_number ASC, track ASC")
+        .bind(&genre)
         .fetch_all(&state.pool)
         .await
         .unwrap();

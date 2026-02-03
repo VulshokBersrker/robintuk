@@ -209,13 +209,24 @@ pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
                 if Some(value) == None {
                     if Some(tag.get_string(&ItemKey::Genre).unwrap().to_string()) != None {
                         song_data.genre = Some(tag.get_string(&ItemKey::Genre).unwrap().to_string());
+
+                        let name: String = value.to_string();
+                        let char_array: Vec<char> = name.chars().collect();
+                        let first_char: char = char_array[0].to_ascii_uppercase();
+                        song_data.genre_section = get_section_marker(first_char);
                     }
                     else {
                         song_data.genre = None;
-                    }            
+                        song_data.genre_section = None;
+                    }
                 }
                 else {
                     song_data.genre = Some(value.to_string());
+
+                    let name: String = value.to_string();
+                    let char_array: Vec<char> = name.chars().collect();
+                    let first_char: char = char_array[0].to_ascii_uppercase();
+                    song_data.genre_section = get_section_marker(first_char);
                 }
             }
 
