@@ -23,12 +23,6 @@ use crate::{
     types::{SongTableUpload, GetCurrentSong}
 };
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet() -> String {
-    format!("Thank you for using my music player! =D")
-}
-
 pub struct AppState {
     player:  Arc<Mutex<MusicPlayer>>,
     pool: Pool<Sqlite>,
@@ -49,9 +43,6 @@ pub fn run() -> Result<(), String> {
 
     Builder::default()
         // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_store::Builder::new().build())
-        .plugin(tauri_plugin_cache::init())
-        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build())
         .setup(|app: &mut tauri::App| {
@@ -105,7 +96,6 @@ pub fn run() -> Result<(), String> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
             scan_directory,
             // Music Directory Functions - SQLITE
             db::get_directory,

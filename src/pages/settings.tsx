@@ -461,7 +461,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.2.1 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.2.3 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button

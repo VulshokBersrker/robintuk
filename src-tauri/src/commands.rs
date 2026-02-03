@@ -10,7 +10,6 @@ use zip::{ZipArchive, ZipWriter,  write::SimpleFileOptions};
 use std::{fs::{self, File}, io::Read, path::Path};
 use tauri::{Emitter, State, http::HeaderMap};
 use std::path::{PathBuf};
-use walkdir::{ WalkDir};
 use std::io::Write;
 use std::{io};
 
@@ -504,7 +503,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
         let prefix = Path::new(&test_string);
         let mut buffer = Vec::new();
 
-        for entry in WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/").into_iter().filter_map(|e| e.ok()) {
+        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/").into_iter().filter_map(|e| e.ok()) {
 
             let item = entry.path().display().to_string();
             let path = Path::new(&item);
