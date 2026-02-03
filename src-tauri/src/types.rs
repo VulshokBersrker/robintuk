@@ -20,7 +20,8 @@ pub struct SongTableUpload {
     pub duration: String,
     pub song_section: Option<i32>,
     pub album_section: Option<i32>,
-    pub artist_section: Option<i32>
+    pub artist_section: Option<i32>,
+    pub genre_section: Option<i32>
 }
 
 // This struct is for data retreived from the database
@@ -75,10 +76,24 @@ pub struct AllArtistResults {
 }
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
+pub struct AllGenreResults {
+    pub genre: String,
+    pub genre_section: i32
+}
+
+#[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct ArtistDetailsResults {
     pub num_tracks: usize,
     pub total_duration: u64,
     pub album_artist: String,
+    pub albums: Vec<AllAlbumResults>
+}
+
+#[derive(sqlx::FromRow, Default, Clone, Serialize)]
+pub struct GenreDetailsResults {
+    pub num_tracks: usize,
+    pub total_duration: u64,
+    pub genre: String,
     pub albums: Vec<AllAlbumResults>
 }
 

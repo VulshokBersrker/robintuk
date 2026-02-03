@@ -1,6 +1,6 @@
 [package]
 name = "robintuk_player"
-version = "0.2.3"
+version = "0.2.4"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -23,14 +23,9 @@ tauri-plugin-opener = "2.5.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = "0.4.42"
-walkdir = "2.5.0"
 sqlx = { version = "0.8.6", features = ["sqlite"] }
 dirs = "6.0.0"
 tokio = "1.48.0"
-tauri-plugin-dialog = "2"
-tauri-plugin-cache = "0.1.5"
-tauri-plugin-store = "2"
-tauri-plugin-prevent-default = "4"
 rodio = {version="0.21.1", features = [ "symphonia-all"] }
 serde_with = "3.15.1"
 tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
@@ -41,6 +36,7 @@ jwalk = "0.8.1"
 flume = "0.12.0"
 threadpool = "1.8.1"
 reqwest = { version = "0.13.1", features = ["json"] }
+tauri-plugin-prevent-default = "4.0.3"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"

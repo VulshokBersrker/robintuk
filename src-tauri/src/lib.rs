@@ -23,12 +23,6 @@ use crate::{
     types::{SongTableUpload, GetCurrentSong}
 };
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet() -> String {
-    format!("Thank you for using my music player! =D")
-}
-
 pub struct AppState {
     player:  Arc<Mutex<MusicPlayer>>,
     pool: Pool<Sqlite>,
@@ -49,9 +43,6 @@ pub fn run() -> Result<(), String> {
 
     Builder::default()
         // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_store::Builder::new().build())
-        .plugin(tauri_plugin_cache::init())
-        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build())
         .setup(|app: &mut tauri::App| {
@@ -105,25 +96,28 @@ pub fn run() -> Result<(), String> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
             scan_directory,
-            // Music Directory Functions - SQLITE
+            // Music Directory Functions - SQLite
             db::get_directory,
             db::add_directory,
             db::remove_directory,
-            // Song Functions - SQLITE
+            // Song Functions - SQLite
             db::get_songs_with_limit,
             db::get_all_songs,
             db::get_song,
-            // Album Functions - SQLITE
+            // Album Functions - SQLite
             db::get_albums_with_limit,
             db::get_all_albums,
             db::get_album,
-            // Artist Functions - SQLITE
+            // Artist Functions - SQLite
             db::get_albums_by_artist,
             db::get_all_artists,
             db::get_artist,
-            // Playlist Functions - SQLITE
+            // Genre Function - SQLite
+            db::get_albums_by_genre,
+            db::get_all_genres,
+            db::get_genre,
+            // Playlist Functions - SQLite
             db::get_playlists_with_limit,
             db::get_all_playlists,
             db::add_to_playlist,
@@ -143,6 +137,7 @@ pub fn run() -> Result<(), String> {
             commands::play_album,
             commands::play_playlist,
             commands::play_artist,
+            commands::play_genre,
             commands::play_selection,
             // Standard Media Functions
             commands::player_play,
@@ -281,8 +276,8 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                 // walk through the entire directory, sub folders and all
                 for entry in jwalk::WalkDir::new(path.dir_path).into_iter().filter_map(|e| e.ok()).filter(|x| x.file_type().is_file())  {
                     // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
-                    if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".flac")
-                        || entry.path().display().to_string().contains(".m4a") || entry.path().display().to_string().contains(".aiff") || entry.path().display().to_string().contains(".ogg")
+                    if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".flac") || entry.path().display().to_string().contains(".m4a")
+                        || entry.path().display().to_string().contains(".aiff") || entry.path().display().to_string().contains(".ogg")
                     {
                         tx1.send(entry.path().display().to_string()).unwrap();
                     }

@@ -2247,7 +2247,7 @@ img.search-icon:hover {
   }
   #root:has(.music-control-container) {
     .nav-scrollable {
-      height: calc(100vh - 23.4rem);
+      height: calc(100vh - 26.4rem);
     }
     .empty-space {
       height: 110px;

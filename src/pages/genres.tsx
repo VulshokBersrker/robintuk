@@ -5,7 +5,7 @@ import SimpleBar from 'simplebar-react';
 import { forwardRef } from 'react';
 
 // Custom Components
-import {alphabeticallyOrdered, AllArtistResults } from "../globalValues";
+import {alphabeticallyOrdered, AllGenreResults } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -13,10 +13,10 @@ import PlaceholderArtistImage from '../images/placeholder_artist.png';
 import SearchIcon from '../images/search_icon.svg';
 
 type P = {
-    artists: AllArtistResults[];
+    genres: AllGenreResults[];
 }
 
-export default function ArtistsPage({artists}: P) {
+export default function GenresPage({genres}: P) {
 
     const navigate = useNavigate();
 
@@ -25,52 +25,49 @@ export default function ArtistsPage({artists}: P) {
     const virtuoso = useRef<any>(null);
 
     const [loading, setLoading] = useState(true);
-    const [artistList] = useState<AllArtistResults[]>(artists);
+    const [artistList] = useState<AllGenreResults[]>(genres);
 
-    const [filteredArtists, setFilteredArtists] = useState<AllArtistResults[]>(artists);
+    const [filteredArtists, setFilteredArtists] = useState<AllGenreResults[]>(genres);
     const [searchValue, setSearchValue] = useState<string>("");
-    const [artistSections, setArtistSections] = useState<number[]>([]);    
+    const [genreSections, setGenreSections] = useState<number[]>([]);    
 
     useEffect(() => {
-        function setupArtists() {
+        function setupGenres() {
             setLoading(true);
 
             let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, artistList.map((o: AllArtistResults) => { return o.artist_section})) );
+            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, artistList.map((o: AllGenreResults) => { return o.genre_section})) );
             // console.log(maxSection);
 
             for(let i = 0; i < maxSection + 1; i++) {
-                const results = artistList.filter(obj => obj.artist_section === alphabeticallyOrdered[i] ).length;
+                const results = artistList.filter(obj => obj.genre_section === alphabeticallyOrdered[i] ).length;
                 tempSectionArray[i] = results;
             }
-            setArtistSections(tempSectionArray);
-            
+            setGenreSections(tempSectionArray);            
             setLoading(false);
         }
-        setupArtists();
-        // getArtists();
+        setupGenres();
     }, []);
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
         const temp_section = artistList.filter((entry): any => {
-            return entry.album_artist.toLowerCase().includes(value.toLowerCase());
+            return entry.genre.toLowerCase().includes(value.toLowerCase());
         })
         setFilteredArtists(temp_section);
 
         let tempSectionArray: number[] = [];
         const maxSection = alphabeticallyOrdered.length;
-
+        
         for(let i = 0; i < maxSection; i++) {
-            const results = temp_section.filter(obj => obj.artist_section === alphabeticallyOrdered[i] ).length;
+            const results = temp_section.filter(obj => obj.genre_section === alphabeticallyOrdered[i] ).length;
             tempSectionArray[i] = results;
         }
-        // console.log(tempSectionArray);
-        setArtistSections(tempSectionArray);
+        setGenreSections(tempSectionArray);
     }
 
-    const navigateToArtistOverview = (name: string) => {
-        navigate("/artists/overview", {state: {name: name}});
+    const navigateToGenreOverview = (name: string) => {
+        navigate("/genres/overview", {state: {name: name}});
     }
 
     if(loading) {
@@ -119,7 +116,7 @@ export default function ArtistsPage({artists}: P) {
                     <span className="search-bar">
                         <img src={SearchIcon} className="bi search-icon icon-size"/>
                         <input
-                            type="text" placeholder="Search Artists" id="search_albums"
+                            type="text" placeholder="Search Genres" id="search_genres"
                             value={searchValue}
                             onChange={(e) => updateSearchResults(e.target.value)}
                         />
@@ -129,8 +126,8 @@ export default function ArtistsPage({artists}: P) {
                 <div className="section-list">
                     {artistList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
-                        for(let j = 0; j < i; j++) { totalIndex += artistSections[j]; }
-                        if(artistSections[i] !== 0 && artistSections[i] !== undefined) {
+                        for(let j = 0; j < i; j++) { totalIndex += genreSections[j]; }
+                        if(genreSections[i] !== 0 && genreSections[i] !== undefined) {
                             return(
                                 <div
                                     id={`main-${section}`} key={`main-${section}`} className="section-key"
@@ -157,18 +154,18 @@ export default function ArtistsPage({artists}: P) {
                     ref={virtuoso}
                     increaseViewportBy={{ top: 210, bottom: 420 }}
                     itemContent={(index) =>
-                        <div className="album-link" key={index} id={`${filteredArtists[index].album_artist}-${index}`}>
+                        <div className="album-link" key={index} id={`${filteredArtists[index].genre}-${index}`}>
                             <div className="album-image-container"
                                 onContextMenu={(e) => {
                                     e.preventDefault();
                                     // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
                                 }}
                             >                                    
-                                <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist)} >
-                                    <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].album_artist} image_type={"artist"} />
+                                <div className="container" onClick={() => navigateToGenreOverview(filteredArtists[index].genre)} >
+                                    <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].genre} image_type={"artist"} />
                                 </div>
                                 <div className="album-image-name header-font">
-                                    <div className="album-name">{filteredArtists[index].album_artist}</div>
+                                    <div className="album-name">{filteredArtists[index].genre}</div>
                                 </div>
                             </div>
                         </div>

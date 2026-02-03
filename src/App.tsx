@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 // Custom Components
-import { AlbumDetails, AllArtistResults, SongsFull } from "./globalValues";
+import { AlbumDetails, AllArtistResults, AllGenreResults, SongsFull } from "./globalValues";
 import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
 import MusicControls from "./components/musicControls";
 import RightSideBar from "./components/rightSideBar";
@@ -15,10 +15,12 @@ import RightSideBar from "./components/rightSideBar";
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
 import ArtistOverviewPage from "./pages/details/artistDetails";
 import AlbumOverviewPage from "./pages/details/albumDetails";
+import GenreOverviewPage from "./pages/details/genreDetails";
 import QueueOverviewPage from "./pages/queue";
 import PlayHistoryPage from "./pages/history";
 import PlaylistPage from "./pages/playlist";
 import ArtistsPage from "./pages/artists";
+import GenresPage from "./pages/genres";
 import Settings from "./pages/settings";
 import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
@@ -28,12 +30,9 @@ import Home from "./pages/home";
 function App() {
 
   const [songList, setSongList] = useState<any[]>([]);
-  // const [homeSongs, setHomeSongs] = useState<Songs[]>([]);
-
   const [albumList, setAlbumList] = useState<AlbumDetails[]>([]);
-  // const [homeAlbums, setHomeAlbums] = useState<AlbumDetails[]>([]);
-
   const [artistList, setArtistList] = useState<AllArtistResults[]>([]);
+  const [genreList, setGenreList] = useState<AllGenreResults[]>([]);
 
   useEffect(() => {
     getTheme();
@@ -82,9 +81,10 @@ function App() {
       getSongs();
       getAlbums();
       getArtists();
+      getGenres();
     }
     catch(e) {
-      console.log(`Failed to get music data: ${e}`);
+      console.log(`Failed to get data: ${e}`);
     }
   }
 
@@ -105,14 +105,10 @@ function App() {
   async function getAlbums() {
     try {
       const list = await invoke<AlbumDetails[]>('get_all_albums');
-      setAlbumList(list);
-
-      // const list_limited: AlbumDetails[] = await invoke<AlbumDetails[]>('get_albums_with_limit', { limit: 30 } );
-      // setHomeAlbums(list_limited);
-        
+      setAlbumList(list);  
     }
     catch (err) {
-      alert(`Failed to scan folder: ${err}`);
+      console.log(`Failed to get album data: ${err}`);
     }
   }
 
@@ -120,11 +116,21 @@ function App() {
   async function getArtists() {
     try {
       const list = await invoke<AllArtistResults[]>('get_all_artists');
-      // console.log(list);
       setArtistList(list);
     }
-    catch (err) {
-      alert(`Failed to scan folder: ${err}`);
+    catch(err) {
+      console.log(`Failed to scan folder: ${err}`);
+    }
+  }
+
+  // get all data for the media player's main pages
+  async function getGenres() {
+    try {
+      const list = await invoke<AllGenreResults[]>('get_all_genres');
+      setGenreList(list);        
+    }
+    catch(err) {
+      console.log(`Failed to get genre data: ${err}`);
     }
   }
 
@@ -142,12 +148,14 @@ function App() {
             <Route path="/songs" element={ <SongPage songs={songList} /> }/>
             <Route path="/albums" element={ <AlbumPage albums={albumList} /> }/>
             <Route path="/artists" element={ <ArtistsPage artists={artistList} /> }/>
+            <Route path="/genres" element={ <GenresPage genres={genreList} /> }/>
             <Route path="/queue" element={ <QueueOverviewPage /> }/>
             <Route path="/history" element={ <PlayHistoryPage /> }/>
             <Route path="/playlists" element={ <PlaylistPage /> }/>
             <Route path="/settings" element={ <Settings /> }/>
             <Route path="/albums/overview" element={ <AlbumOverviewPage />} />
             <Route path="/artists/overview" element={ <ArtistOverviewPage />} />
+            <Route path="/genres/overview" element={ <GenreOverviewPage />} />
             <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
           </Routes>
         </div>

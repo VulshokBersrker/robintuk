@@ -15,6 +15,7 @@ import PlayIcon from '../images/play-solid-full.svg';
 
 // Images - Filled
 import PlaylistFillIcon from '../images/playlist-fill.svg';
+import GenreFullIcon from '../images/radio-solid-full.svg';
 import AlbumsFillIcon from '../images/albums-fill.svg';
 import QueueFullIcon from '../images/queue-fill.svg';
 import ArtistFullIcon from '../images/user-fill.svg';
@@ -24,6 +25,7 @@ import HomeFullIcon from '../images/home-fill.svg';
 
 // Images - Outlined
 import PlaylistOutlineIcon from '../images/playlist-outline.svg';
+import GenreOutlineIcon from '../images/radio-solid-outline.svg';
 import ArtistOutlineIcon from '../images/user-regular-full.svg';
 import AlbumsOutlineIcon from '../images/albums-outline.svg';
 import HomeOutlineIcon from '../images/home-svgrepo-com.svg';
@@ -156,6 +158,12 @@ export default function RightSideBar() {
                     {location.pathname !== "/artists" && <img src={ArtistOutlineIcon} className="bi icon-size" aria-hidden="true" />}
                     {location.pathname === "/artists" && <img src={ArtistFullIcon} className="bi icon-size" aria-hidden="true" />}
                     <span className="nav-font" > Artists </span>
+                </Link>
+
+                <Link to={"/genres"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/genres" ? "active" : ""}`} >
+                    {location.pathname !== "/genres" && <img src={GenreOutlineIcon} className="bi icon-size" aria-hidden="true" />}
+                    {location.pathname === "/genres" && <img src={GenreFullIcon} className="bi icon-size" aria-hidden="true" />}
+                    <span className="nav-font" > Genres </span>
                 </Link>
 
                 <hr />

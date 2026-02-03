@@ -10,7 +10,6 @@ use zip::{ZipArchive, ZipWriter,  write::SimpleFileOptions};
 use std::{fs::{self, File}, io::Read, path::Path};
 use tauri::{Emitter, State, http::HeaderMap};
 use std::path::{PathBuf};
-use walkdir::{ WalkDir};
 use std::io::Write;
 use std::{io};
 
@@ -237,6 +236,29 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
     
     Ok(())
 }
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre: String, shuffled: bool) -> Result<(), String> {
+
+    let mut songs: Vec<SongTable> = db::get_genre_songs(state.clone(), genre).await.unwrap();
+    let q = songs.clone();
+
+    if shuffled {
+        helper::shuffle(&mut songs);
+        let _ = player_load_album(state.clone(), app.clone(), songs.clone(), 0).await;
+        update_current_song_played(state.clone(), app);
+        let _ = db::create_queue_shuffled(state.clone(), &songs).await;    
+        let _ = db::create_queue(state.clone(), &q).await;    
+    }
+    else {
+        let _ = player_load_album(state.clone(), app.clone(), q.clone(), 0).await;
+        update_current_song_played(state.clone(), app);
+        let _ = db::create_queue(state.clone(), &q).await;
+    }
+    
+    Ok(())
+}
+
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, songs: Vec<SongTable>, shuffled: bool) -> Result<(), String> {
@@ -504,7 +526,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
         let prefix = Path::new(&test_string);
         let mut buffer = Vec::new();
 
-        for entry in WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/").into_iter().filter_map(|e| e.ok()) {
+        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/").into_iter().filter_map(|e| e.ok()) {
 
             let item = entry.path().display().to_string();
             let path = Path::new(&item);
