@@ -1,10 +1,10 @@
 // Core Libraries
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Custom Components
-import { GetCurrentSong, savePosition, Songs } from "../globalValues";
+import { GetCurrentSong, savePosition, Songs, SongLyrics, DirectoryInfo } from "../globalValues";
 import ImageWithFallBack from "./imageFallback";
 
 // Images
@@ -19,10 +19,9 @@ import PlayButton from '../images/play-solid-full.svg';
 import RepeatOneIcon from '../images/repeat-one.svg';
 import Circle from '../images/circle.svg';
 
-// One first install - needs to be blank - or be hidden when there is no music setup
-// On app launches - needs to find the last played queue and preload the song and where it was last at in the song
-
 // Update Volume Mute to return the volume to what is was before the mute
+
+interface Lyrics { plain_lyrics: string[], synced_lyrics: string[] }
 
 export default function MusicControls() {
 
@@ -40,6 +39,22 @@ export default function MusicControls() {
 
     const [songDetails, setSongDetails] = useState<Songs>();
 
+    // Song Lyric Values
+    const [hasLyrics, setHasLyrics] = useState<boolean>(false);
+    const [songLyrics, setSongLyrics] = useState<Lyrics>();
+
+    const currentLineRef = useRef<HTMLDivElement | null>(null);
+    const currentLineNumberRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if(currentLineRef.current) {
+            currentLineRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    }, [songProgress]);
+
     // Called only once on load
     useEffect(() => {
         firstLoad();
@@ -55,6 +70,7 @@ export default function MusicControls() {
         // Load the queue (song / album / playlist) from the backend
         // Also is run when next and previous are emitted
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { loadSong(event.payload.q); saveSong(event.payload.q); });
+        const unlisten_update_song = listen<DirectoryInfo>("update-song", (event) => { updateSongDetails(event.payload.dir_path); });
         const check_for_clear = listen("queue-cleared", () => { stopSong(); });
         
         // Listen for when the MediaPlayPause shortcut is pressed
@@ -71,10 +87,11 @@ export default function MusicControls() {
         document.addEventListener('mousedown', handler);
         
         return () => {
-            unlisten_get_current_song.then(f => f());
-            check_for_clear.then(f => f());
-            unlisten_play_pause.then(f => f());
-            unlisten_shuffle_setting.then(f => f());
+            unlisten_get_current_song.then(f => f()),
+            check_for_clear.then(f => f()),
+            unlisten_play_pause.then(f => f()),
+            unlisten_shuffle_setting.then(f => f()),
+            unlisten_update_song.then(f => f()),
             document.removeEventListener('mousedown', handler);
         }        
     }, []);
@@ -120,6 +137,7 @@ export default function MusicControls() {
                         else {
                             sendQueueToBackend(queue, JSON.parse(qPosition!));
                         }
+                        await checkForLyrics(queue[JSON.parse(qPosition!)].path);
                     }
                     else {
                         setIsShuffle(false);
@@ -144,8 +162,60 @@ export default function MusicControls() {
         }
     }
 
+    async function checkForLyrics(path: string) {
+        currentLineNumberRef.current = 0;
+        currentLineRef.current = null;
+        currentLineNumberRef.current = null;
+        try {
+            const res: SongLyrics = await invoke("get_lyrics", {song_id: path});
+            setHasLyrics(true);
+
+            let spilt_plain: string[] = [];
+            let split_synced: string[] = [];
+
+            if(res.plain_lyrics !== null) {
+                if(res.plain_lyrics.includes("\\n")) {
+                    split_synced = res.synced_lyrics.split("\\n");
+                    spilt_plain = res.plain_lyrics.split("\\n");
+                }
+                else if(res.plain_lyrics.includes("\r\n")) {
+                    split_synced = res.synced_lyrics.split("\r\n");
+                    spilt_plain = res.plain_lyrics.split("\r\n");
+                }
+                else if(res.plain_lyrics.includes("\n")) {
+                    split_synced = res.synced_lyrics.split("\n");
+                    spilt_plain = res.plain_lyrics.split("\n");
+                }
+
+                if(spilt_plain.length >= 0) {
+                    if(res.synced_lyrics === "null") {
+                        setSongLyrics({plain_lyrics: spilt_plain, synced_lyrics: []});
+                    }
+                    else {
+                        setSongLyrics({plain_lyrics: spilt_plain, synced_lyrics: split_synced});
+                    }
+                }
+            }
+        }
+        catch(e) {
+            setHasLyrics(false);
+            setSongLyrics(undefined);
+        }
+    }
+
     function saveSong(q: Songs) {
         localStorage.setItem('last-played-song', JSON.stringify(q));
+    }
+
+    async function updateSongDetails(song_id: string) {
+        try {
+            const song: Songs = await invoke("get_song", {song_path: song_id});
+            await checkForLyrics(song.path);
+            setSongDetails(song);
+        }
+        catch(e) {
+            console.log(e);
+        }
     }
     
     // Load the Queue and last index from the emitter event in the backend
@@ -153,6 +223,7 @@ export default function MusicControls() {
         try {
             setSongProgress(0);
             setSongDetails(q);
+            await checkForLyrics(q.path);
         }
         catch(e) {
             alert(`Failed to get song: ${e}`);
@@ -169,8 +240,8 @@ export default function MusicControls() {
     // Play the currently selected music
     async function playMusic() {
         try {
-            await invoke("player_play");
             setIsPlaying(true);
+            await invoke("player_play");            
         }
         catch(e) {
             console.log(e);
@@ -179,8 +250,8 @@ export default function MusicControls() {
 
     async function pauseMusic() {
         try {
-            await invoke("player_pause");
             setIsPlaying(false);
+            await invoke("player_pause");
         }
         catch(e) {
             console.log(e);
@@ -193,51 +264,54 @@ export default function MusicControls() {
     }
 
     async function nextSong() {
-        
-            const qPosition: number = await invoke('player_get_current_position');
-            const qLength: number  = await invoke('player_get_queue_length');
-            try {
-                if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
-                    console.log("end of queue");
-                    await invoke("player_stop");
-                }
-                else {
-                    // At the end of the queue and shuffle is on, reshuffle the queue
-                    if(isShuffle && qPosition + 1 > qLength - 1) {
-                        await invoke("shuffle_queue", {song: songDetails?.path, shuffled: isShuffle});
-                    }
-                    await invoke("player_next_song");
-                }
+        const qPosition: number = await invoke('player_get_current_position');
+        const qLength: number  = await invoke('player_get_queue_length');
+        try {
+            if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
+                console.log("end of queue");
+                await invoke("player_stop");
             }
-            catch(e) {
-                console.log(e);
-            }
-            finally {
-                // not repeat mode
-                if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
-                    setSongProgress(0);
-                    pauseMusic();
+            else {
+                // At the end of the queue and shuffle is on, reshuffle the queue
+                if(isShuffle && qPosition + 1 > qLength - 1) {
+                    await invoke("shuffle_queue", {song: songDetails?.path, shuffled: isShuffle});
                 }
-                else {
-                    const song: Songs = await invoke("player_get_current_song");
-                    saveSong(song);
-                    const pos: number = await invoke("player_get_current_position");
-                    savePosition(pos);
-                    await invoke("update_current_song_played");
-                }
+                await invoke("player_next_song");
+                currentLineNumberRef.current = 0;
             }
-        
-        
+            currentLineNumberRef.current = null;
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            // not repeat mode
+            if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
+                setSongProgress(0);
+                pauseMusic();
+            }
+            else {
+                const song: Songs = await invoke("player_get_current_song");
+                saveSong(song);
+                const pos: number = await invoke("player_get_current_position");
+                savePosition(pos);
+                await invoke("update_current_song_played");
+                await checkForLyrics(song.path);
+            }
+        }
     }
     async function previousSong() {
         if(isLoaded) {
             try {
                 if(songProgress > 3) {
                     seekSong(0);
+                    currentLineNumberRef.current = 0;
                 }
                 else {
                     await invoke("player_previous_song");
+                    currentLineNumberRef.current = 0;
                 }
+                currentLineNumberRef.current = null;
             }
             catch(e) {
                 console.log(e);
@@ -249,6 +323,7 @@ export default function MusicControls() {
                 const pos: number = await invoke("player_get_current_position");
                 savePosition(pos);
                 await invoke("update_current_song_played");
+                await checkForLyrics(song.path);
             }
         }
     }
@@ -300,7 +375,7 @@ export default function MusicControls() {
             console.log(e);
         }
         finally {
-            setIsPlaying(true);
+            playMusic();
         }
     }
 
@@ -324,8 +399,6 @@ export default function MusicControls() {
 
     // Check if the song is over - play next song is able
     useEffect(() => {
-        // const progress = new Date(songProgress * 1000).toISOString().slice(12, 19)
-        // console.log(progress, songProgress);
         if(songProgress === songDetails?.duration) {
             // wait 0.46s before playing next song, this is the test the song cutout issue
             setTimeout(function() {
@@ -335,7 +408,6 @@ export default function MusicControls() {
             }, 460);
         }
     }, [songProgress]);
-
 
     if(isLoaded) {
         return(
@@ -462,7 +534,7 @@ export default function MusicControls() {
                 
                 
                 <div className={`fullscreen-music ${displayFullscreen ? "open" : "closed"}`} >
-                    <span className="d-flex">
+                    <span className={`d-flex artwork ${hasLyrics ? "lyric" : ""}`}>
                         <ImageWithFallBack image={songDetails?.cover} alt="" image_type="album-larger" />
                         <div>
                             <p className="header-font font-4">{songDetails?.name}</p>
@@ -470,6 +542,49 @@ export default function MusicControls() {
                             <p className="font-2 song-album">{songDetails?.artist}</p>
                         </div>                        
                     </span>
+                    {hasLyrics && songLyrics !== undefined &&
+                        <span className="lyrics">
+                            <div style={{paddingTop: "40px"}} />
+                            {songLyrics.plain_lyrics.length > 0 && songLyrics.synced_lyrics.length > 0 && songLyrics.synced_lyrics.map((entry, i): any => {
+                                let timestamp: string = "";
+                                let time_in_seconds: number = 0;
+                                if(songLyrics.synced_lyrics !== null && songLyrics.synced_lyrics[i] !== undefined) {
+                                    if(songLyrics.synced_lyrics[i].includes("[")) {
+                                        timestamp = songLyrics.synced_lyrics[i].split("[")[1].substring(0, 8);
+
+                                        time_in_seconds = (parseInt(timestamp.split(":")[0]) * 60) // Minutes
+                                        + (parseInt(timestamp.split(":")[1].substring(0, 2))) // Seconds
+                                        + (parseInt(timestamp.split(".")[1]) / 100); // Milliseconds
+
+                                        // Works, but need to find a way for the highlight to stick until the next line is active
+                                        if(Math.abs(time_in_seconds - songProgress) < 1) {
+                                            currentLineNumberRef.current = i;
+                                        }
+                                    }
+                                }
+
+                                return(
+                                    <div
+                                        className={`lyric-row font-3 sub-font ${currentLineNumberRef.current === i ? "active" : ""} ${(songProgress > time_in_seconds) ? "old" : ""}`}
+                                        id={`${timestamp === "" ? `${i}` : timestamp}`}
+                                        key={`timestamp-${i}`} ref={currentLineNumberRef.current === i ? currentLineRef : null}
+                                    >
+                                        {entry.slice(11)}
+                                    </div>
+                                );
+                            })}
+
+                            {songLyrics.plain_lyrics.length > 0 && songLyrics.synced_lyrics.length === 0 && songLyrics.plain_lyrics.map((entry, i): any => {
+                                return(
+                                    <div className={`lyric-row font-3 sub-font`}  key={`timestamp-${i}`} ref={currentLineNumberRef.current === i ? currentLineRef : null} >
+                                        {entry}
+                                    </div>
+                                );
+                            })}
+                            <div style={{paddingTop: "400px"}} />
+                        </span>
+                    }
+                    
                     <div className="vertical-centered" id="fullscreen-bg"><ImageWithFallBack image={songDetails?.cover} alt="" image_type="fullscreen" /></div>
                 </div>
             </>

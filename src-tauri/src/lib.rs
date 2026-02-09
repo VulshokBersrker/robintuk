@@ -27,7 +27,8 @@ pub struct AppState {
     player:  Arc<Mutex<MusicPlayer>>,
     pool: Pool<Sqlite>,
     is_scan_ongoing: Mutex<bool>,
-    is_back_restore_ongoing: Mutex<i64>
+    is_back_restore_ongoing: Mutex<i64>,
+    is_lyric_scan_ongoing: Mutex<bool>,
 }
 
 
@@ -42,7 +43,7 @@ pub fn run() -> Result<(), String> {
     let pool: Pool<Sqlite> = Runtime::new().unwrap().block_on(establish_connection())?;
 
     Builder::default()
-        // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build())
         .setup(|app: &mut tauri::App| {
@@ -50,7 +51,8 @@ pub fn run() -> Result<(), String> {
             app.manage(AppState { player,
                 pool,
                 is_scan_ongoing: Mutex::new(false),
-                is_back_restore_ongoing: Mutex::new(0)
+                is_back_restore_ongoing: Mutex::new(0),
+                is_lyric_scan_ongoing: Mutex::new(false)
             });
 
             #[cfg(windows)]
@@ -96,11 +98,6 @@ pub fn run() -> Result<(), String> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            scan_directory,
-            // Music Directory Functions - SQLite
-            db::get_directory,
-            db::add_directory,
-            db::remove_directory,
             // Song Functions - SQLite
             db::get_songs_with_limit,
             db::get_all_songs,
@@ -173,8 +170,16 @@ pub fn run() -> Result<(), String> {
             commands::update_current_song_played,
             commands::new_playlist_added,
             commands::set_shuffle_mode,
-            // Settings Functions,
+            // Lyrics Functions
+            db::get_lyrics,
             commands::scan_for_lyrics,
+            commands::check_for_single_lyrics,
+            commands::cancel_lyrics_scan,
+            // Settings Functions
+            scan_directory,
+            db::get_directory,
+            db::add_directory,
+            db::remove_directory,   
             db::get_settings,
             db::set_theme,
             commands::create_backup,

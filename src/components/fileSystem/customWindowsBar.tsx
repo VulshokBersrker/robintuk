@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 
 //  Tray icons
 import MinimizeWindowIcon from '../../images/window-minimize-solid-full.svg';
-import SettingsIcon from '../../images/settings-svgrepo-com.svg';
+import HistoryIcon from '../../images/clock-rotate-left-solid-full.svg';
+import SettingsIcon from '../../images/gear-solid-full.svg';
 import FullscreenWindowIcon from '../../images/maximize.svg';
 import TabWindowIcon from '../../images/minimize.svg'
 import CloseWindowIcon from '../../images/x.svg';
 import AppLogo from '../../images/logo.svg';
+
 
 export default function CustomWindowsBar() {
 
@@ -48,6 +50,9 @@ export default function CustomWindowsBar() {
             <div data-tauri-drag-region></div>
             <div className="logo"><img src={AppLogo} className="window-logo"/></div>
             <div className="controls">
+                <Link to="/history" className="" id="titlebar-settings" title="history">
+                    <img src={HistoryIcon} />
+                </Link>
                 <Link to="/settings" className="" id="titlebar-settings" title="settings">
                     <img src={SettingsIcon} />
                 </Link>

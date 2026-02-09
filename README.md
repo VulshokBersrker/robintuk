@@ -47,10 +47,12 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 ## To Do Features
 
 - [ ] Equalizer?
-- [ ] Create Genre tab and features
+- [x] Create Genre tab and features
 - [ ] Linux support
 - [ ] Gapless playback
 - [ ] Add support for wav
+- [x] In addition to scanning for lyrics, find lyrics when a song without them is played
+- [x] Get and display Lyrics for songs using LRCLIB
 - [ ] Update queue page when queue is changed
 - [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page (No great options once you have more than 100 songs)
@@ -59,14 +61,14 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Open with (in file explorer)
 - [ ] CSS Updates when window size changes
 - [ ] Create placeholder templates while pages are loading
-
+- [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
 
 ## Known Issues
 
-- [ ] Remember scroll position on page change (not possible with dynamically loaded content to my knowledge)
-- [ ] When changing audio device, it will continue to play sound to the old device (only fix is to restart the app, current limitation of cpal)
+- [ ] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
 - [ ] Songs have hiccups randomly (maybe due to heavy system load from other programs)
 - [ ] Application Optimizations (streamlining, data caching, etc.)
 - [ ] Better error handling
+- [ ] Add To in Context Menu gets cut off when close to the edges of the screen
 - [ ] Some album artwork is not deleted when songs are removed
-- [ ] Some albums with multiple discs are disorganized
+- [ ] Some albums with multiple discs are disorganized on view

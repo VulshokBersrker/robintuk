@@ -56,7 +56,7 @@ pub struct PlaylistFull {
     pub songs: Vec<SongTable>
 }
 
-#[derive(sqlx::FromRow, Default, Serialize)]
+#[derive(sqlx::FromRow, Default, Serialize, Clone)]
 pub struct DirsTable {
     pub dir_path: String,
 }
@@ -141,4 +141,13 @@ pub struct GetCurrentSong {
 #[serde(rename_all = "camelCase")]
 pub struct GetPlaylistList {
   pub playlist: Vec<PlaylistTable>
+}
+
+
+
+#[derive(sqlx::FromRow, Default, Debug, serde::Serialize, serde::Deserialize)]
+pub struct LrclibLyrics {
+    pub lyrics_id: i64,
+    pub plain_lyrics: String,
+    pub synced_lyrics: Option<String>
 }

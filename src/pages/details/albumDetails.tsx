@@ -102,14 +102,14 @@ export default function AlbumOverviewPage() {
             setCheckBoxNumber(Array(res.length).fill(false));
             setAlbumDetails(
                 { 
-                    name: res[0].album, 
-                    total_duration: dur, 
+                    name: res[0].album,
+                    total_duration: dur,
                     cover: res[0].cover,
-                    artist: res[0].album_artist, 
-                    release: res[0].release, 
-                    genre: res[0].genre, 
+                    artist: res[0].album_artist,
+                    release: res[0].release,
+                    genre: res[0].genre,
                     num_songs: res.length,
-                    hasDiscValue: (res[0].disc_number === null ? false : true) 
+                    hasDiscValue: (res[0].disc_number === null ? false : true)
                 }
             );
 
@@ -439,6 +439,7 @@ export default function AlbumOverviewPage() {
                                     let totalIndex = 0;
                                     for(let j = 1; j < discGroups.length; j++) {                                        
                                         if(totalIndex === index) {
+                                            
                                             return(
                                                 <>
                                                     <div className="grid-20 position-relative" style={{marginTop: '20px'}}>

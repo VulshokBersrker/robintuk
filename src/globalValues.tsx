@@ -134,6 +134,12 @@ export interface PlayHistory {
 
 export type GetCurrentSong = { q: Songs; };
 
+export interface SongLyrics {
+    lyrics_id: number,
+    plain_lyrics: string,
+    synced_lyrics: string,
+}
+
 // &, 0-9, A-Z, ...
 export const alphabeticallyOrdered = [
     // &, #

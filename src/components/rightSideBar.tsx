@@ -205,16 +205,13 @@ export default function RightSideBar() {
             {/* Scan Status Marker */}
             {scanOnGoing && scanCurrent > 0 &&
                 <div className={`scan-status-container veritcal-centered loaded`}>
-
                     <span className="vertical-centered" style={{marginRight: '12px'}}>Scanning:</span>
                     <div className="vertical-centered scan-progress mini">
                         <span style={{width: `${scanCurrent / scanLength * 100}%`}} className="scan-progress-bar" />
                     </div>
                     <span className="sub-font vertical-centered" style={{float: 'right'}} > {(scanCurrent / scanLength * 100).toFixed(0)}% </span>
-                    
                 </div>
-            }
-            
+            }            
 
             <ContextMenu
                 isToggled={contextMenu.isToggled}

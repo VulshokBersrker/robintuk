@@ -108,11 +108,13 @@ export default function Home() {
 
     async function playSong(index: number) {
         try {
-            // Update the music controls state somehow
             await invoke('play_song', {song: songs[index]});
         }
-        catch (err) {
-            alert(`Failed to play song: ${err}`);
+        catch(err) {
+            console.log(`Failed to play song: ${err}`);
+        }
+        finally {
+            await invoke("check_for_single_lyrics", {song_id: songs[index].path});
         }
     }
 
