@@ -108,6 +108,7 @@ export default function SongPage({songs}: Props) {
         finally {
             localStorage.setItem("shuffle-mode", JSON.stringify(false) );
             await invoke("set_shuffle_mode", { mode: false });
+            await invoke("check_for_single_lyrics", {song_id: filteredSongs[index].path});
         }
     }
 

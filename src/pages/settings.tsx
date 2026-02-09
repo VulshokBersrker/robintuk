@@ -14,6 +14,7 @@ import ErrorIcon from '../images/circle-xmark-regular-full.svg';
 import BackupIcon from '../images/shield-halved-solid-full.svg';
 import DatabaseIcon from '../images/database-solid-full.svg';
 import ImportIcon from '../images/download-solid-full.svg';
+import LryicsIcon from '../images/qrcode-solid-full.svg';
 import ExportIcon from '../images/upload-solid-full.svg';
 import logo from '../images/logo.svg';
 
@@ -33,29 +34,41 @@ interface ScanProgress {
     current: number
 }
 
+interface LyricsInfo {
+    name: string,
+    album: string
+}
+
 // Add function to remove all entries if the list is emptied
 // Add an "Are you sure" message to let the user know all the music will be gone
 
 export default function Settings() {
-
-    const [loading, setLoading] = useState<boolean>(false);
+    
     const [showResults, setShowResults] = useState<boolean>(false);
+    
+    // Music Scanning Values
+    const [loading, setLoading] = useState<boolean>(false);
     const [directoryList, setDirectoryList] = useState<DirectoryInfo[]>([]);
-
     const [scanResults, setScanResults] = useState<ScanResults>();
     const [scanLength, setScanLength] = useState<number>(0);
     const [scanCurrent, setScanCurrent] = useState<number>(0);
 
+    // Theme Color Value
     const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme') !== null ? localStorage.getItem('theme')! : "red");
 
+    // Reset / Restore / Backup Values
     const [isBackup, setIsBackup] = useState<boolean>(false);
     const [isRestore, setIsRestore] = useState<boolean>(false);
     const [isBackupRestore, setIsBackupRestore] = useState<boolean>(false);
     const [isReset, setIsReset] = useState<boolean>(false);
-
+    
+    // Playlist values
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     const [exportSelectedPlaylist, setExportSelectedPlaylist] = useState<number>(0);
 
+    // Lyrics Values
+    const [isLyrics, setIsLyrics] = useState<boolean>(false);
+    const [currentLyricsInfo, setCurrentLyricsInfo] = useState<LyricsInfo>();
 
     // Get the list of directories on load
     useEffect(() => {
@@ -65,24 +78,28 @@ export default function Settings() {
     }, []);
 
     // Listeners
-    useEffect(() => {
+    useEffect(() => { 
         const unlisten_scan_finished = listen("scan-finished", () => { setLoading(false); setIsBackupRestore(false); setScanCurrent(0); setScanLength(0); });
         const unlisten_scan_progress = listen<ScanProgress>("scan-length", (event) => { setScanCurrent(event.payload.current); setScanLength(event.payload.length); });
 
         const unlisten_backup_finished = listen("ending-backup", () => { setIsBackup(false); setIsBackupRestore(false); });
         const unlisten_restore_finished = listen("ending-restore", () => { setIsRestore(false); setIsBackupRestore(false); });
         const unlisten_reset_finished = listen("ending-reset", () => { setIsBackupRestore(false); });
+
+        const unlisten_lyrics_info = listen<LyricsInfo>("lyrics-scan-info", (event) => { setIsLyrics(true); setIsBackupRestore(true); setCurrentLyricsInfo({name: event.payload.name, album: event.payload.album}) });
         
         return () => {
             unlisten_scan_finished.then(f => f()),
             unlisten_scan_progress.then(f => f()),
             unlisten_backup_finished.then(f => f()),
+            unlisten_lyrics_info.then(f => f()),
             unlisten_reset_finished.then(f => f()),
             unlisten_restore_finished.then(f => f());
         }        
     }, []);
 
 
+    // Functions for Scanning Music
     async function scanMusic() {
         setLoading(true);
         setIsBackupRestore(true);
@@ -110,13 +127,10 @@ export default function Settings() {
             }, 5000);
         }
     }
-
     function updateDirectoryList(value: string) {
         var temp_item: DirectoryInfo = { dir_path: value };
         setDirectoryList([...directoryList, temp_item ]);
     }
-
-    // Rust async commands for the dirs table
     async function getDirectories() {
         try {
             const directory_list = await invoke<DirectoryInfo[]>('get_directory');
@@ -182,29 +196,8 @@ export default function Settings() {
         await invoke("remove_directory", { directory_name: value })
     }
 
-    async function setTheme(theme: string) {
-        try {
-            setThemeColor(theme);
-            document.querySelector('body')?.setAttribute("data-theme", theme);
-            localStorage.setItem('theme', theme);
-            await invoke('set_theme', { theme_color: theme });
-        }
-        catch(e) {
-            console.log(e);
-        }
-    }
-    async function getTheme() {
-        try {
-            const res: string = await invoke("get_settings");
-            console.log("theme " + res);
-            setTheme(res);            
-        }
-        catch(e) {
-            console.log(e);
-            setTheme("red");
-        }
-    }
 
+    // Functions for Reset / Backup / Reset
     async function backupData() {
         try{
             setIsBackup(true);
@@ -259,10 +252,63 @@ export default function Settings() {
             setIsReset(false);
         }
     }
+    
+
+    // Functions for Color Theme
+    async function setTheme(theme: string) {
+        try {
+            setThemeColor(theme);
+            document.querySelector('body')?.setAttribute("data-theme", theme);
+            localStorage.setItem('theme', theme);
+            await invoke('set_theme', { theme_color: theme });
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+    async function getTheme() {
+        try {
+            const res: string = await invoke("get_settings");
+            console.log("theme " + res);
+            setTheme(res);            
+        }
+        catch(e) {
+            console.log(e);
+            setTheme("red");
+        }
+    }
+
+    
+    // Functions for Lyrics
+    async function scanForLyrics() {
+        try {
+            setIsLyrics(true);
+            await invoke("scan_for_lyrics");
+        }
+        catch(e) {
+            console.log("Error while scanning for lyrics: " + e);
+            setIsLyrics(false);
+        }
+        finally {
+            setIsLyrics(false);
+        }
+    }
+    async function cancelLyricsScan() {
+        try{
+            await invoke("cancel_lyrics_scan");
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            setIsBackupRestore(false);
+            setIsLyrics(false);
+            setCurrentLyricsInfo(undefined);
+        }
+    }
 
 
-    // Playlist Functions
-
+    // Functions for Playlist Import / Export
     async function getAllPlaylists() {
         try {
             const playlists: PlaylistList[] = await invoke('get_all_playlists');
@@ -277,26 +323,22 @@ export default function Settings() {
             console.log(e);
         }
     }
-
     async function importPlaylist() {
         try{
             const file = await open({ multiple: false, directory: false, filters: [{name: "Playlist", extensions: ['m3u', 'm3u8']}] });
             if(file !== null) {
-                const res = await invoke("import_playlist", { file_path: file });
-                console.log(res);
+                await invoke("import_playlist", { file_path: file });
             }  
         }
         catch(e) {
             console.log(e);
         }
     }
-
     async function exportPlaylist() {
         try{
             const folder_path = await open({ multiple: false, directory: true });
             if(folder_path !== null && exportSelectedPlaylist !== 0) {
-                const res = await invoke("export_playlist", { save_file_location: folder_path, playlist_id: exportSelectedPlaylist });  
-                console.log(res);
+                await invoke("export_playlist", { save_file_location: folder_path, playlist_id: exportSelectedPlaylist });  
             }
         }
         catch(e) {
@@ -456,12 +498,35 @@ export default function Settings() {
                 </div>
             </div>
 
+            {/* Lyrics */}
+            <div className="settings-section backup">
+                <div className="header-font font-3" style={{marginBottom: '5px'}}>Get Lyrics for Songs</div>
+                <div className="sub-font font-0" style={{marginBottom: '10px'}}>Get lyrics for your songs using the LRCLIB service.</div>
+
+                <div className="d-flex vertical-centered">
+                    <span>
+                        <button className="white vertical-centered font-1 header-font" onClick={scanForLyrics} disabled={loading || isBackupRestore || isLyrics}>
+                            {!isLyrics && <img src={LryicsIcon} alt="icon" />}
+                            {isLyrics && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
+                            &nbsp;Look for Lyrics
+                        </button>
+                    </span>
+
+                    {currentLyricsInfo !== undefined &&
+                        <pre className="sub-font" style={{marginLeft: "15px"}}>
+                            Asking LRCLIB for Lyrics: &#10;&#13;{currentLyricsInfo.name} - {currentLyricsInfo.album}
+                        </pre>
+                    }
+                </div>
+                {isLyrics && <div> <button className="white" onClick={cancelLyricsScan}>Cancel</button> </div> }
+            </div>
+
             {/* About */}
             <div className="settings-section">
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font">Robintuk v0.2.4 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
+                <div className="header-font">Robintuk v0.2.5 <span className="sub-font font-0">&#169; 2025 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
@@ -480,6 +545,7 @@ export default function Settings() {
                     </button>
 
 
+                    {/* Are Your Sure you want to reset App Popup */}
                     <div className={`selection-popup-container grid-20 header-font warning ${isReset ? "open" : "closed"}`}>
                         <div className="section-14" style={{marginLeft: "15px", marginBottom: "0px"}}>Are you sure you want to reset Robintuk?</div>
                         <div className="section-3 position-relative" style={{marginBottom: "0px"}}>

@@ -9,7 +9,7 @@ use tauri::{Emitter, State};
 
 use crate::types::{
     AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, PlaylistFull, PlaylistTable, SongHistory, SongTable, SongTableUpload,
-    DoesExist, AllGenreResults, GenreDetailsResults
+    DoesExist, AllGenreResults, GenreDetailsResults, LrclibLyrics
 };
 use crate::{AppState, commands};
 
@@ -244,7 +244,7 @@ pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Res
 pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<SqliteQueryResult, String> {
     
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
-        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section,, genre_section keep) 
+        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section, genre_section, keep) 
         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)")
         .bind(&entry.name)
         .bind(&entry.path)
@@ -959,3 +959,32 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
     }    
 }
 
+
+pub async fn add_lyrics(state: State<'_, AppState>, lyrics: LrclibLyrics, path: String) -> Result<(), String> {
+
+    let _ = sqlx::query("INSERT INTO lyrics (lyrics_id, plain_lyrics, synced_lyrics, song_id) VALUES (?1, ?2, ?3, ?4)")
+        .bind(lyrics.lyrics_id)
+        .bind(lyrics.plain_lyrics)
+        .bind(lyrics.synced_lyrics)
+        .bind(path)
+        .execute(&state.pool)
+        .await;
+
+    Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn get_lyrics(state: State<AppState, '_>, song_id: String) -> Result<LrclibLyrics, String> {
+
+    let res = sqlx::query_as::<_, LrclibLyrics>("SELECT lyrics_id, plain_lyrics, synced_lyrics FROM lyrics WHERE song_id = ?")
+        .bind(song_id)
+        .fetch_one(&state.pool)
+        .await;
+
+    if res.is_ok() {
+        Ok(res.unwrap())
+    }
+    else {
+        Err("No Lyrics".to_string())
+    }
+}

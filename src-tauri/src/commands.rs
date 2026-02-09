@@ -2,7 +2,7 @@ use crate::{
     AppState,
     db::{self, create_playlist, get_playlist}, 
     helper,
-    types::{DoesExist, GetCurrentSong, GetPlaylistList, PlaylistFull, SongTable }
+    types::{DirsTable, DoesExist, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable }
 };
 use m3u8_rs::{MediaPlaylist, MediaSegment, Playlist};
 use reqwest::{Client, header::{CONTENT_TYPE, USER_AGENT}};
@@ -14,9 +14,6 @@ use std::io::Write;
 use std::{io};
 
 // -------------------------- Media Player Commands --------------------------
-
-
-
 
 // ----------------- Queue Commands
 
@@ -150,15 +147,17 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
     if shuffled {
         helper::shuffle(&mut playlist);
         let _ = player_load_album(state.clone(), app.clone(), playlist.clone(), index).await;
-        update_current_song_played(state.clone(), app);
+        update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue_shuffled(state.clone(), &playlist).await;      
         let _ = db::create_queue(state.clone(), &q).await;
     }
     else {
         let _ = player_load_album(state.clone(), app.clone(), q.clone(), index).await;
-        update_current_song_played(state.clone(), app);
+        update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue(state.clone(), &q).await;
     }    
+
+    let _ = check_for_single_lyrics(state.clone(), app.clone(), playlist[index].path.clone()).await;
 
     Ok(())
 }
@@ -180,7 +179,7 @@ pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album
         let res = player_load_album(state.clone(), app.clone(), album.clone(), index).await;
 
         if res.is_ok() {
-            update_current_song_played(state.clone(), app);
+            update_current_song_played(state.clone(), app.clone());
             let _ = db::create_queue_shuffled(state.clone(), &album).await;  
             let _ = db::create_queue(state.clone(), &q).await;
         }
@@ -192,13 +191,15 @@ pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album
         let res = player_load_album(state.clone(), app.clone(), album.clone(), index).await;
 
         if res.is_ok() {
-            update_current_song_played(state.clone(), app);
+            update_current_song_played(state.clone(), app.clone());
             let _ = db::create_queue(state.clone(), &q).await;
         }
         else {
             checker = false;
         }
     }
+
+    let _ = check_for_single_lyrics(state.clone(), app.clone(), album[index].path.clone()).await;
 
     Ok(checker)
 }
@@ -209,8 +210,10 @@ pub async fn play_song(state: State<AppState, '_>, app: tauri::AppHandle, song: 
     let arr = vec![song];
     
     let _ = player_load_album(state.clone(), app.clone(), arr.clone(), 0).await;
-    update_current_song_played(state.clone(), app);
+    update_current_song_played(state.clone(), app.clone());
     let _ = db::create_queue(state.clone(), &arr).await;
+
+    let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
     
     Ok(())
 }
@@ -224,15 +227,17 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
     if shuffled {
         helper::shuffle(&mut songs);
         let _ = player_load_album(state.clone(), app.clone(), songs.clone(), 0).await;
-        update_current_song_played(state.clone(), app);
+        update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue_shuffled(state.clone(), &songs).await;    
         let _ = db::create_queue(state.clone(), &q).await;    
     }
     else {
         let _ = player_load_album(state.clone(), app.clone(), q.clone(), 0).await;
-        update_current_song_played(state.clone(), app);
+        update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue(state.clone(), &q).await;
     }
+
+    let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
     
     Ok(())
 }
@@ -246,15 +251,17 @@ pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre
     if shuffled {
         helper::shuffle(&mut songs);
         let _ = player_load_album(state.clone(), app.clone(), songs.clone(), 0).await;
-        update_current_song_played(state.clone(), app);
+        update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue_shuffled(state.clone(), &songs).await;    
         let _ = db::create_queue(state.clone(), &q).await;    
     }
     else {
         let _ = player_load_album(state.clone(), app.clone(), q.clone(), 0).await;
-        update_current_song_played(state.clone(), app);
+        update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue(state.clone(), &q).await;
     }
+
+    let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
     
     Ok(())
 }
@@ -269,15 +276,17 @@ pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, s
     if shuffled {
         helper::shuffle(&mut arr);
         let _ = player_load_album(state.clone(), app.clone(), arr.clone(), 0).await;
-        update_current_song_played(state.clone(), app);
+        update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue_shuffled(state.clone(), &arr).await;   
         let _ = db::create_queue(state.clone(), &q).await;    
     }
     else {
         let _ = player_load_album(state.clone(), app.clone(), q.clone(), 0).await;
-        update_current_song_played(state.clone(), app);
+        update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue(state.clone(), &q).await;
     }
+
+    let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
     
     Ok(())
 }
@@ -385,21 +394,36 @@ pub fn set_shuffle_mode(app: tauri::AppHandle, mode: bool) {
     app.emit("player-shuffle-mode", mode).unwrap();
 }
 
-
-#[derive(sqlx::FromRow, Default, Debug, serde::Serialize, serde::Deserialize)]
-pub struct IrclibLyrics {
-    pub id: i64,
-    pub plain_lyrics: String,
-    pub synced_lyrics: Option<String>
+#[tauri::command]
+pub fn cancel_lyrics_scan(state: State<AppState, '_>,) -> Result<(), String> {
+    *state.is_lyric_scan_ongoing.lock().unwrap() = false;
+    Ok(())
 }
 
-#[tauri::command]
-pub async fn scan_for_lyrics(_state: State<AppState, '_>) -> Result<(), String> {
+#[derive(sqlx::FromRow, Clone, serde::Serialize)]
+pub struct SongDataLyrics {
+    pub artist: String,
+    pub album: String,
+    pub name: String,
+    pub path: String,
+    pub duration: u64
+}
 
-    let name: String = "This Will Be the Day".to_string();
-    let artist: String = "Jeff Williams".to_string();
-    let duration: u64 = 188;
-    let album: String = "RWBY, Vol. 1".to_string();
+#[derive(Clone, serde::Serialize)]
+pub struct LyricsDetails {
+    name: String,
+    album: String
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn scan_for_lyrics(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
+    println!("Starting Remote Search for Lyrics");
+    *state.is_lyric_scan_ongoing.lock().unwrap() = true;
+
+    // Get all the songs that do not have lyrics
+    let songs_without_lyrics: Vec<SongDataLyrics> = sqlx::query_as::<_, SongDataLyrics>("SELECT artist, album, name, duration, path FROM songs WHERE path NOT IN 
+    (SELECT song_id from lyrics)")
+    .fetch_all(&state.pool).await.unwrap();
 
     // Setup the client
     let mut headers = HeaderMap::new();
@@ -408,90 +432,106 @@ pub async fn scan_for_lyrics(_state: State<AppState, '_>) -> Result<(), String> 
 
     let url_client = Client::builder().default_headers(headers).build().unwrap();
 
-    let url = format!("https://lrclib.net/api/get?artist_name={artist}&track_name={name}&album_name={album}&duration={duration}");
+    for entry in songs_without_lyrics {
+        // End the loop if the user wants to
+        let check = state.clone();
+        if *check.is_lyric_scan_ongoing.lock().unwrap() == false {
+            break;
+        }
+        let info = entry.clone();
+        let res = get_remote_lyrics(&url_client, entry.name, entry.artist, entry.album, entry.duration).await;
 
-    let res = url_client.get(&url).send().await.unwrap().text().await;
+        // If it is a success, add the lyrics to the database
+        if res.is_ok() {
+            let lyrics = res.unwrap();
+            let _ = app.emit("lyrics-scan-info", LyricsDetails{name: info.name, album: info.album});
 
-    if res.is_ok() {
-        let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
-        // println!("{:?}", result);
-
-        let mut lyrics: IrclibLyrics = IrclibLyrics {
-            ..IrclibLyrics::default()
-        };
-
-        for (key, value) in result.as_object().unwrap() {
-            // println!("{:?} -> {:?}", key, value);
-            if key.contains("id") {
-                lyrics.id = value.as_i64().unwrap();
-            }
-            if key.contains("plainLyrics") {
-                lyrics.plain_lyrics = value.to_string();
-            }
-            if key.contains("syncedLyrics") {
-                lyrics.synced_lyrics = Some(value.to_string());
+            if lyrics.lyrics_id != 0 {
+                let _ = db::add_lyrics(state.clone(), lyrics, entry.path).await;
             }
         }
-
-        println!("{:?}", lyrics);
+        // If an error, skip to the next
+        else {
+            continue;
+        }
     }
+    println!("Ending Remote Search for Lyrics");
+    Ok(())
+}
 
+// Check is a song has lyrics when it is played
+#[tauri::command(rename_all = "snake_case")]
+pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::AppHandle, song_id: String) -> Result<(), String> {
+    // println!("Checking if {:?} has lyrics", &song_id);
+    // Get all the songs that do not have lyrics
+    let res = sqlx::query_as::<_, SongDataLyrics>("SELECT artist, album, name, duration, path FROM songs WHERE path NOT IN 
+    (SELECT song_id from lyrics WHERE song_id = ?1) AND path = ?2")
+    .bind(&song_id)
+    .bind(&song_id)
+    .fetch_one(&state.pool).await;
 
-    // // Get all songs that do not have a lyric id
-    // let list: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE lyrics_id IS NULL")
-    //     .fetch_all(&state.pool)
-    //     .await.unwrap();
+    if res.is_ok() {
+        let song = res.unwrap();
+        // Setup the client
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".parse().unwrap());
+        headers.insert(USER_AGENT, "Robintuk music player".parse().unwrap());
 
-    // for entry in list {
-    //     // Get lyric data from remote database
-    //     let url = format!("https://lrclib.net/api/get?artist_name={artist}&track_name={name}&album_name={album}&duration={duration}");
-    //     let res = url_client.get(&url).send().await.unwrap().text().await;
+        let url_client = Client::builder().default_headers(headers).build().unwrap();
+        let res = get_remote_lyrics(&url_client, song.name, song.artist, song.album, song.duration).await;
 
-    //     if res.is_ok() {
-    //         let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
-    //         let mut lyrics: IrclibLyrics = IrclibLyrics {
-    //             ..IrclibLyrics::default()
-    //         };
-
-    //         for (key, value) in result.as_object().unwrap() {
-    //             println!("{:?} -> {:?}", key, value);
-    //             if key.contains("id") {
-    //                 lyrics.id = value.as_i64().unwrap();
-    //             }
-    //             if key.contains("plainLyrics") {
-    //                 lyrics.plain_lyrics = value.as_str().to_string();
-    //             }
-    //             if key.contains("syncedLyrics") {
-    //                 lyrics.synced_lyrics = value.as_str().to_string();
-    //             }
-    //         }
-
-    //         // Add data to app's db
-    //         let _ = sqlx::query("INSERT INTO lyrics (lyrics_id, plain_lyrics, synced_lyrics)
-    //             VALUES (?1, ?2, ?3)")
-    //             .bind(&lyrics.id)
-    //             .bind(&lyrics.plain_lyrics)
-    //             .bind(&lyrics.synced_lyrics)
-    //             .execute(&state.pool)
-    //             .await.unwrap();
-
-    //         let _ = sqlx::query("INSERT INTO songs (lyrics_id) VALUES (?1) WHERE path = ?2")
-    //             .bind(&lyrics.id)
-    //             .bind(&entry.path)
-    //             .execute(&state.pool)
-    //             .await.unwrap();
-    //     }
-    // }
-
-
-
+        // If it is a success, add the lyrics to the database
+        if res.is_ok() {
+            let lyrics = res.unwrap();
+            if lyrics.lyrics_id != 0 {
+                // println!("Adding...");
+                let _ = db::add_lyrics(state.clone(), lyrics, song.path).await;
+                let _ = app.emit("update-song", DirsTable{dir_path: song_id});
+            }
+        }
+    }
     Ok(())
 }
 
 
+pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String, album: String, duration: u64) -> Result<LrclibLyrics, String> {
+    let url = format!("https://lrclib.net/api/get?artist_name={artist}&track_name={name}&album_name={album}&duration={duration}");
+    let first_res = url_client.get(&url).send().await;
+
+    let mut lyrics: LrclibLyrics = LrclibLyrics {
+        ..LrclibLyrics::default()
+    };
+
+    if first_res.is_ok() {
+        let res = first_res.unwrap().text().await;
+        if res.is_ok() {
+            let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
+
+            for (key, value) in result.as_object().unwrap() {
+                if key.contains("id") {
+                    lyrics.lyrics_id = value.as_i64().unwrap();
+                }
+                if key.contains("plainLyrics") {
+                    lyrics.plain_lyrics = value.to_string();
+                }
+                if key.contains("syncedLyrics") {
+                    lyrics.synced_lyrics = Some(value.to_string());
+                }
+            }
+            Ok(lyrics)
+        }
+        else {
+            Err("Error Getting Remote Lyrics".to_string())
+        }
+    }
+    else {
+        Err("Error Getting Remote Lyrics".to_string())
+    }
+}
+
 #[tauri::command]
-pub async fn check_for_ongoing_scan(state: State<AppState, '_>) -> Result<bool, String> {
-    Ok(*state.is_scan_ongoing.lock().unwrap())
+pub fn check_for_ongoing_scan(state: State<AppState, '_>) -> bool {
+    return *state.is_scan_ongoing.lock().unwrap()
 }
 
 // 0 - No Backup or Restore, 1 - Backup ongoing, 2 - Restore ongoing
@@ -510,7 +550,7 @@ pub async fn check_for_backup_restore(state: State<AppState, '_>) -> Result<i64,
 pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
     let test  = state.clone();
     // Make sure there is no scan going on, to prevent breaks in the DB
-    let scan = check_for_ongoing_scan(state).await.unwrap();
+    let scan = check_for_ongoing_scan(state);
 
     if scan == false {
         println!("Creating backup file...");
@@ -571,13 +611,13 @@ pub async fn check_for_backup() -> Result<bool, String> {
 pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
     let test  = state.clone();
     // Make sure there is no scan going on, to prevent breaks in the DB
-    let scan = check_for_ongoing_scan(state).await.unwrap();    
+    let scan = check_for_ongoing_scan(state);    
 
     if scan == false {
         println!("Restoring from backup...");        
         *test.is_back_restore_ongoing.lock().unwrap() = 2;
 
-        // New version
+        // New version --- Idea
 
         let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip";
 
