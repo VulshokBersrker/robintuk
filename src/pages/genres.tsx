@@ -78,7 +78,7 @@ export default function GenresPage({genres}: P) {
                         <span className="search-bar">
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
                             <input
-                                type="text" placeholder="Search Albums" id="search_albums"
+                                type="text" placeholder="Search Genres" id="search_genres"
                                 value={searchValue}
                                 onChange={(e) => updateSearchResults(e.target.value)}
                             />
@@ -111,18 +111,7 @@ export default function GenresPage({genres}: P) {
     }
     else {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="artists-main">
-                <div className="search-filters d-flex justify-content-end vertical-centered"> 
-                    <span className="search-bar">
-                        <img src={SearchIcon} className="bi search-icon icon-size"/>
-                        <input
-                            type="text" placeholder="Search Genres" id="search_genres"
-                            value={searchValue}
-                            onChange={(e) => updateSearchResults(e.target.value)}
-                        />
-                    </span>
-                </div>
-
+            <>
                 <div className="section-list">
                     {artistList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
@@ -148,32 +137,45 @@ export default function GenresPage({genres}: P) {
                     })}
                 </div>
 
-                <VirtuosoGrid
-                    totalCount={filteredArtists.length}
-                    components={gridComponents}
-                    ref={virtuoso}
-                    increaseViewportBy={{ top: 210, bottom: 420 }}
-                    itemContent={(index) =>
-                        <div className="album-link" key={index} id={`${filteredArtists[index].genre}-${index}`}>
-                            <div className="album-image-container"
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
-                                }}
-                            >                                    
-                                <div className="container" onClick={() => navigateToGenreOverview(filteredArtists[index].genre)} >
-                                    <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].genre} image_type={"artist"} />
-                                </div>
-                                <div className="album-image-name header-font">
-                                    <div className="album-name">{filteredArtists[index].genre}</div>
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="artists-main">
+                    <div className="search-filters d-flex justify-content-end vertical-centered"> 
+                        <span className="search-bar">
+                            <img src={SearchIcon} className="bi search-icon icon-size"/>
+                            <input
+                                type="text" placeholder="Search Genres" id="search_genres"
+                                value={searchValue}
+                                onChange={(e) => updateSearchResults(e.target.value)}
+                            />
+                        </span>
+                    </div>
+
+                    <VirtuosoGrid
+                        totalCount={filteredArtists.length}
+                        components={gridComponents}
+                        ref={virtuoso}
+                        increaseViewportBy={{ top: 210, bottom: 420 }}
+                        itemContent={(index) =>
+                            <div className="album-link" key={index} id={`${filteredArtists[index].genre}-${index}`}>
+                                <div className="album-image-container"
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
+                                    }}
+                                >                                    
+                                    <div className="container" onClick={() => navigateToGenreOverview(filteredArtists[index].genre)} >
+                                        <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].genre} image_type={"artist"} />
+                                    </div>
+                                    <div className="album-image-name header-font">
+                                        <div className="album-name">{filteredArtists[index].genre}</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    }
-                    customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                />
-                <div className="empty-space"/>
-            </SimpleBar>
+                        }
+                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                    />
+                    <div className="empty-space"/>
+                </SimpleBar>
+            </>
         );
     }
 }

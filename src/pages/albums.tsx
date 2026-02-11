@@ -358,6 +358,31 @@ export default function AlbumPage({albums}: P) {
                 </div>                    
                 {/* End of Song Selection Bar */}
 
+                <div className="section-list">
+                    {albumList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
+                        let totalIndex = 0;
+                        for(let j = 0; j < i; j++) { totalIndex += albumSections[j]; }
+                        if(albumSections[i] !== 0 && albumSections[i] !== undefined) {
+                            return(
+                                <div
+                                    id={`main-${section}`} key={`main-${section}`} className="section-key"
+                                    onClick={() => {
+                                        virtuoso.current.scrollToIndex({ index: totalIndex });
+                                        return false;
+                                    }}
+                                >
+                                    <span>
+                                        {section === 0 && "&"}
+                                        {section === 1 && "#"}
+                                        {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
+                                        {section === 300 && "..."}
+                                    </span>
+                                </div>
+                            ); 
+                        }
+                    })}
+                </div>
+
                 <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} clickOnTrack={false} className="albums-main">
                     <div className="search-filters d-flex justify-content-end vertical-centered"> 
                         <span className="search-bar">
@@ -368,31 +393,6 @@ export default function AlbumPage({albums}: P) {
                                 onChange={(e) => updateSearchResults(e.target.value)}
                             />
                         </span>
-                    </div>
-
-                    <div className="section-list">
-                        {albumList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
-                            let totalIndex = 0;
-                            for(let j = 0; j < i; j++) { totalIndex += albumSections[j]; }
-                            if(albumSections[i] !== 0 && albumSections[i] !== undefined) {
-                                return(
-                                    <div
-                                        id={`main-${section}`} key={`main-${section}`} className="section-key"
-                                        onClick={() => {
-                                            virtuoso.current.scrollToIndex({ index: totalIndex });
-                                            return false;
-                                        }}
-                                    >
-                                        <span>
-                                            {section === 0 && "&"}
-                                            {section === 1 && "#"}
-                                            {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
-                                            {section === 300 && "..."}
-                                        </span>
-                                    </div>
-                                ); 
-                            }                          
-                        })}
                     </div>
 
                     <VirtuosoGrid

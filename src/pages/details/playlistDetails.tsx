@@ -400,7 +400,7 @@ export default function PlaylistOverviewPage() {
                     
                     {/* Song Selection Bar */}
                     <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-6 " style={{marginLeft: "8px"}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                        <div className="section-6 font-0" style={{marginLeft: "8px"}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
                         <div className="section-4 position-relative ">
                             <button className="d-flex align-items-center" onClick={() => { playSelection(songSelection); clearSelection(); }}>
                                 <img src={PlayIcon} />

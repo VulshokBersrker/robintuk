@@ -591,7 +591,7 @@ export default function AlbumOverviewPage() {
 
                     {/* Song Selection Bar */}
                     <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8" style={{marginLeft: '10px'}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                        <div className="section-8 font-0" style={{marginLeft: '10px'}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
                         <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
                         <div className="section-6 position-relative">
                             <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>

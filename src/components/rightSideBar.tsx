@@ -181,7 +181,7 @@ export default function RightSideBar() {
             </div>
             
             {/* Playlist Section */}
-            <div className="nav-scrollable section-10" >
+            <div className="nav-scrollable section-10">
                 <nav className="grid-10" >
                     {playlistLists.map((item, i) => {
                         return(
