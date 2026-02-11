@@ -90,7 +90,7 @@ export default function SongDetailsModal({song_path, bool, updateSongDetailsDisp
                     </div>
 
                     <div style={{position: "absolute", top: "12px", right: "20px"}}>
-                        <button className="header-font" style={{width: "100px"}} onClick={() => updateSongDetailsDisplay(false, "")}>
+                        <button className="header-font close" onClick={() => updateSongDetailsDisplay(false, "")}>
                             Close
                         </button>
                     </div>

@@ -43,6 +43,10 @@ pub fn run() -> Result<(), String> {
     let pool: Pool<Sqlite> = Runtime::new().unwrap().block_on(establish_connection())?;
 
     Builder::default()
+        // .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+        //     println!("{}, {argv:?}, {cwd}", app.package_info().name);
+        //     app.emit("single-instance", Payload { args: argv, cwd }).unwrap();
+        // }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build())

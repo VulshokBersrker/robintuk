@@ -75,7 +75,7 @@ export default function Home() {
 
     async function getAlbums() {
         try{
-            const list: AlbumDetails[] = await invoke<AlbumDetails[]>('get_albums_with_limit', { limit: 30 } );
+            const list: AlbumDetails[] = await invoke<AlbumDetails[]>('get_albums_with_limit', { limit: 35 } );
             // console.log(list);
             setAlbums(list);
         }
@@ -86,7 +86,7 @@ export default function Home() {
 
     async function getSongs() {
         try{
-            const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 30 } );
+            const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 40 } );
             setSongs(list);
         }
         catch(e) {
@@ -96,7 +96,7 @@ export default function Home() {
 
     async function getHistory() {
         try{
-            const list = await invoke<PlayHistory[]>('get_play_history', { limit: 10 } );
+            const list = await invoke<PlayHistory[]>('get_play_history', { limit: 25 } );
             setPlayHistory(list);
         }
         catch(e) {
@@ -112,9 +112,6 @@ export default function Home() {
         }
         catch(err) {
             console.log(`Failed to play song: ${err}`);
-        }
-        finally {
-            await invoke("check_for_single_lyrics", {song_id: songs[index].path});
         }
     }
 
@@ -314,19 +311,19 @@ export default function Home() {
                     <div className="section-10 history home">
                         <div className="header-font font-3 cursor-pointer" style={{width: '110px'}} onClick={() => navigate('/history')} >History</div>
                         <div className={`list ${playlists.length === 0 ? "": "d-flex flex-wrap"}`}>
-                            {playHistory.length === 0 && <div className="text-center font-secondary">No Playlists</div>}
+                            {playHistory.length === 0 && <div className="text-center font-secondary">No Play History</div>}
                             
                             {playHistory.map((item, i) => {
                                 return(
                                     <div key={i} className="album-link playlist">
-                                        <div className="album-image-container ">                                            
-                                            <div className="container"  onClick={() => navigate('/history')}>
+                                        <div className="album-image-container">
+                                            <div className="container" onClick={() => navigate('/history')}>
                                                 <ImageWithFallBack image={item.cover} alt={item.name} image_type={"album"} />
                                             </div>
                                             <div className="album-image-name header-font">
                                                 <div className="album-name">{item.name}</div>
                                             </div>
-                                        </div>                                    
+                                        </div>
                                     </div>
                                 );
                             })}

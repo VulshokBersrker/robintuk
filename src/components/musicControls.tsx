@@ -515,7 +515,7 @@ export default function MusicControls() {
                             
                         </div>
                         <div className="section-4 d-flex align-items-center justify-content-end"> 
-                            <div className="d-flex">
+                            <div className="d-flex vertical-centered">
                                 {volume === 0 && <img src={VolumeEmpty} alt="" className="volume-icon cursor-pointer"/>}
                                 {(volume > 0 ) && <img src={VolumeStandard} alt="" className="volume-icon cursor-pointer" onClick={() => updateVolume(0)}/>}
 
@@ -581,7 +581,7 @@ export default function MusicControls() {
                                     </div>
                                 );
                             })}
-                            <div style={{paddingTop: "400px"}} />
+                            <div className="lyric-buffer" />
                         </span>
                     }
                     

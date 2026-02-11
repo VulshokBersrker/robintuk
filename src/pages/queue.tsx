@@ -85,7 +85,7 @@ export default function QueueOverviewPage() {
             setDuration(0);
         }
         catch(e) {
-            alert(e)
+            console.log("Error Clearing the Queue: " + e)
         }
         finally {
             isLoading(false);
@@ -307,17 +307,15 @@ export default function QueueOverviewPage() {
 
                     {/* Song list */}
                     <div className="song-list">
-                        <div>
-                            <div className="grid-20 position-relative">
-                                <span className="section-2"></span>
-                                <span className="section-9 vertical-centered font-0 details">Track</span>
-                                <span className="section-4 vertical-centered font-0 details">Album</span>
-                                <span className="section-4 vertical-centered font-0 details">Album Artist</span>
-                                <span className="section-1 details">Length</span>
-                            </div>
-                            <hr />
+                        <div className="grid-20 position-relative">
+                            <span className="section-2"></span>
+                            <span className="section-9 vertical-centered font-0 details">Track</span>
+                            <span className="section-4 vertical-centered font-0 details">Album</span>
+                            <span className="section-4 vertical-centered font-0 details">Album Artist</span>
+                            <span className="section-1 details">Length</span>
                         </div>
-
+                        <hr />
+                        
                         <Virtuoso 
                             totalCount={queue.length}
                             itemContent={(index) => {

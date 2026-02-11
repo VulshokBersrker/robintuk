@@ -114,18 +114,7 @@ export default function ArtistsPage({artists}: P) {
     }
     else {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="artists-main">
-                <div className="search-filters d-flex justify-content-end vertical-centered"> 
-                    <span className="search-bar">
-                        <img src={SearchIcon} className="bi search-icon icon-size"/>
-                        <input
-                            type="text" placeholder="Search Artists" id="search_albums"
-                            value={searchValue}
-                            onChange={(e) => updateSearchResults(e.target.value)}
-                        />
-                    </span>
-                </div>
-
+            <>
                 <div className="section-list">
                     {artistList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
@@ -151,32 +140,45 @@ export default function ArtistsPage({artists}: P) {
                     })}
                 </div>
 
-                <VirtuosoGrid
-                    totalCount={filteredArtists.length}
-                    components={gridComponents}
-                    ref={virtuoso}
-                    increaseViewportBy={{ top: 210, bottom: 420 }}
-                    itemContent={(index) =>
-                        <div className="album-link" key={index} id={`${filteredArtists[index].album_artist}-${index}`}>
-                            <div className="album-image-container"
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
-                                }}
-                            >                                    
-                                <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist)} >
-                                    <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].album_artist} image_type={"artist"} />
-                                </div>
-                                <div className="album-image-name header-font">
-                                    <div className="album-name">{filteredArtists[index].album_artist}</div>
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="artists-main">
+                    <div className="search-filters d-flex justify-content-end vertical-centered"> 
+                        <span className="search-bar">
+                            <img src={SearchIcon} className="bi search-icon icon-size"/>
+                            <input
+                                type="text" placeholder="Search Artists" id="search_albums"
+                                value={searchValue}
+                                onChange={(e) => updateSearchResults(e.target.value)}
+                            />
+                        </span>
+                    </div>
+
+                    <VirtuosoGrid
+                        totalCount={filteredArtists.length}
+                        components={gridComponents}
+                        ref={virtuoso}
+                        increaseViewportBy={{ top: 210, bottom: 420 }}
+                        itemContent={(index) =>
+                            <div className="album-link" key={index} id={`${filteredArtists[index].album_artist}-${index}`}>
+                                <div className="album-image-container"
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
+                                    }}
+                                >                                    
+                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist)} >
+                                        <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].album_artist} image_type={"artist"} />
+                                    </div>
+                                    <div className="album-image-name header-font">
+                                        <div className="album-name">{filteredArtists[index].album_artist}</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    }
-                    customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                />
-                <div className="empty-space"/>
-            </SimpleBar>
+                        }
+                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                    />
+                    <div className="empty-space"/>
+                </SimpleBar>
+            </>
         );
     }
 }
