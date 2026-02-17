@@ -148,15 +148,16 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
         helper::shuffle(&mut playlist);
         let _ = player_load_album(state.clone(), app.clone(), playlist.clone(), index).await;
         update_current_song_played(state.clone(), app.clone());
-        let _ = db::create_queue_shuffled(state.clone(), &playlist).await;      
+        let _ = app.clone().emit("queue-changed", false);
+        let _ = db::create_queue_shuffled(state.clone(), &playlist).await;
         let _ = db::create_queue(state.clone(), &q).await;
     }
     else {
         let _ = player_load_album(state.clone(), app.clone(), q.clone(), index).await;
         update_current_song_played(state.clone(), app.clone());
+        let _ = app.clone().emit("queue-changed", false);
         let _ = db::create_queue(state.clone(), &q).await;
-    }    
-
+    }
     let _ = check_for_single_lyrics(state.clone(), app.clone(), playlist[index].path.clone()).await;
 
     Ok(())
@@ -265,7 +266,6 @@ pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre
     
     Ok(())
 }
-
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, songs: Vec<SongTable>, shuffled: bool) -> Result<(), String> {

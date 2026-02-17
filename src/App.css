@@ -1790,8 +1790,8 @@ button.white:disabled .loader {
 }
 
 .loader.large {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.2rem;
+  height: 1.2rem;
   border: 3px solid var(--font-color-one);
   border-bottom-color: transparent;
   border-radius: 50%;

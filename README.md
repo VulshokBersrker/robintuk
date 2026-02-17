@@ -24,7 +24,7 @@
 - Search to find your music faster
 - Fast scans to add your music quickly (~5000 songs scanned per minute)
 - Backup, Restore, or Reset your music database and images
-- Use m3u/m3u8 files to import playlists from other apps or export your playlists for save keepings
+- Use m3u/m3u8 files to import playlists from other apps or export your playlists for safe keepings
 
 ## [Screenshots](./assets/screenshots/index.md)
 
@@ -49,7 +49,6 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Equalizer?
 - [ ] Linux support
 - [ ] Gapless playback
-- [ ] Update queue page when queue is changed
 - [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page (No great options once you have more than 100 songs)
 - [ ] Notification of version updates
@@ -57,6 +56,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Open with (in file explorer)
 - [ ] Better DPI aware CSS styles
 - [ ] Create placeholder templates while pages are loading
+- [x] Update queue page when queue is changed
 - [x] Create Genre tab and features
 - [x] In addition to scanning for lyrics, find lyrics when a song without them is played
 - [x] Get and display Lyrics for songs using LRCLIB

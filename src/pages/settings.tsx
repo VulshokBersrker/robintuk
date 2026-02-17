@@ -65,6 +65,8 @@ export default function Settings() {
     // Playlist values
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     const [exportSelectedPlaylist, setExportSelectedPlaylist] = useState<number>(0);
+    const [isExport, setIsExport] = useState<boolean>(false);
+    const [isImport, setisImport] = useState<boolean>(false);
 
     // Lyrics Values
     const [isLyrics, setIsLyrics] = useState<boolean>(false);
@@ -325,6 +327,8 @@ export default function Settings() {
     }
     async function importPlaylist() {
         try{
+            setisImport(true);
+            setIsBackupRestore(true);
             const file = await open({ multiple: false, directory: false, filters: [{name: "Playlist", extensions: ['m3u', 'm3u8']}] });
             if(file !== null) {
                 await invoke("import_playlist", { file_path: file });
@@ -333,9 +337,13 @@ export default function Settings() {
         catch(e) {
             console.log(e);
         }
+        setisImport(false);
+        setIsBackupRestore(false);
     }
     async function exportPlaylist() {
         try{
+            setIsExport(true);
+            setIsBackupRestore(true);
             const folder_path = await open({ multiple: false, directory: true });
             if(folder_path !== null && exportSelectedPlaylist !== 0) {
                 await invoke("export_playlist", { save_file_location: folder_path, playlist_id: exportSelectedPlaylist });  
@@ -344,6 +352,8 @@ export default function Settings() {
         catch(e) {
             console.log(e);
         }
+        setIsExport(false);
+        setIsBackupRestore(false);
     }
 
     return(
@@ -480,18 +490,18 @@ export default function Settings() {
                         </select>
 
                         <div style={{marginLeft: '10px'}}>
-                            <button className="white vertical-centered font-1 header-font" onClick={exportPlaylist} disabled={loading || isBackupRestore || exportSelectedPlaylist == 0}>
-                                {!isBackup && <img src={ExportIcon} alt="icon" />}
-                                {isBackup && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
+                            <button className="white vertical-centered font-1 header-font" onClick={exportPlaylist} disabled={loading || isExport || isBackupRestore || exportSelectedPlaylist == 0}>
+                                {!isExport && <img src={ExportIcon} alt="icon" />}
+                                {isExport && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
                                 &nbsp;Export
                             </button>
                         </div>
                     </span>
 
                     <span className="section-1"  style={{marginLeft: '30px'}}>
-                        <button className="white vertical-centered font-1 header-font" onClick={importPlaylist} disabled={loading || isBackupRestore}>
-                            {!isRestore && <img src={ImportIcon} alt="icon" />}
-                            {isRestore && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
+                        <button className="white vertical-centered font-1 header-font" onClick={importPlaylist} disabled={loading || isBackupRestore || isImport}>
+                            {!isImport && <img src={ImportIcon} alt="icon" />}
+                            {isImport && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
                             &nbsp;Import
                         </button>
                     </span>

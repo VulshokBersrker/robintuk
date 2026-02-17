@@ -27,7 +27,6 @@ export default function QueueOverviewPage() {
     const [duration, setDuration] = useState<number>(0);
 
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
-    const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
     const [isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "", artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0 });
 
     // Playlist Values
@@ -46,9 +45,11 @@ export default function QueueOverviewPage() {
 
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q); saveSong(event.payload.q); });
+        const unlisten_queue_updated = listen("queue-changed", () => { getQueue(); });
         
         return () => {
-            unlisten_get_current_song.then(f => f());
+            unlisten_get_current_song.then(f => f()),
+            unlisten_queue_updated.then(f => f());
         }  
     }, []);
 
@@ -56,17 +57,13 @@ export default function QueueOverviewPage() {
         isLoading(true);
         try{
             const res: Songs[] = await invoke("player_get_queue");
-            // console.log(res);
             setQueue(res);
             let dur = 0;
-            let checkboxArr: boolean[] = [];
-            let i = 0;
-            res.forEach((x) => { dur += x.duration; checkboxArr[i] = false; i++; });
-            setCheckBoxNumber(checkboxArr);
+            res.forEach((x) => { dur += x.duration; });
             setDuration(dur);
         }
         catch(e) {
-            alert(e)
+            console.log("Error getting queue" + e);
         }
         finally {
             isLoading(false);
@@ -80,8 +77,6 @@ export default function QueueOverviewPage() {
             await invoke("player_clear_queue");
             localStorage.removeItem("last-played-queue-position");
             localStorage.removeItem("last-played-song");
-            
-            setCheckBoxNumber([]);
             setDuration(0);
         }
         catch(e) {
@@ -115,28 +110,21 @@ export default function QueueOverviewPage() {
     }
 
     // ------------ Selection Bar Functions ------------
-    function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
+    function editSelection(song: Songs, isBeingAdded: boolean) {
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
             setSongSelection([...songSelection, song]);
-            const tempArr: boolean[] = checkBoxNumber;
-            tempArr[index] = true;
-            setCheckBoxNumber(tempArr);
         }
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
             setSongSelection(songSelection.filter(item => item.path !== song.path));
-            const tempArr: boolean[] = checkBoxNumber;
-            tempArr[index] = false;
-            setCheckBoxNumber(tempArr);
         }
     }
 
     function clearSelection() {
         setSongSelection([]);
-        setCheckBoxNumber(Array(checkBoxNumber.length).fill(false));
     }
 
     useEffect(() => {
@@ -326,8 +314,10 @@ export default function QueueOverviewPage() {
                                                 <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
                                                     <input
                                                         type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                        onClick={(e) => editSelection(queue[index], e.currentTarget.checked, index)}
-                                                        checked={checkBoxNumber[index]} onChange={() => {}}
+                                                        onClick={(e) => editSelection(queue[index], e.currentTarget.checked)}
+                                                        checked={songSelection.filter(x => {
+                                                            return x.path === queue[index].path
+                                                        }).length > 0}
                                                     />
                                                 </span>
                                                 <img src={PlayIcon} onClick={() => playSong(index)} />
