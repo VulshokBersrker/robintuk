@@ -400,12 +400,12 @@ export default function MusicControls() {
     // Check if the song is over - play next song is able
     useEffect(() => {
         if(songProgress === songDetails?.duration) {
-            // wait 0.46s before playing next song, this is the test the song cutout issue
+            // wait 0.5s before playing next song, this is the test the song cutout issue
             setTimeout(function() {
                 console.log("end of song - going to next song -> ");
                 setIsPlaying(false);
                 nextSong();
-            }, 460);
+            }, 500);
         }
     }, [songProgress]);
 

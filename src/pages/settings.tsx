@@ -54,7 +54,7 @@ export default function Settings() {
     const [scanCurrent, setScanCurrent] = useState<number>(0);
 
     // Theme Color Value
-    const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme') !== null ? localStorage.getItem('theme')! : "red");
+    const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme') !== null ? localStorage.getItem('theme')! : "purple");
 
     // Reset / Restore / Backup Values
     const [isBackup, setIsBackup] = useState<boolean>(false);

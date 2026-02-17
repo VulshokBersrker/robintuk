@@ -25,6 +25,7 @@ import Settings from "./pages/settings";
 import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
 import Home from "./pages/home";
+import Popup from "./components/popups";
 
 
 function App() {
@@ -34,17 +35,21 @@ function App() {
   const [artistList, setArtistList] = useState<AllArtistResults[]>([]);
   const [genreList, setGenreList] = useState<AllGenreResults[]>([]);
 
+  const [newVersionAvailable, setNewVersionAvailable] = useState<boolean>(false);
+
   useEffect(() => {
     getTheme();
     getValues();    
+    checkForDeleted();
+    checkVersion();
   }, []);
 
   // Listeners
   useEffect(() => {
-    const unlisten_scan_finished = listen<boolean>("scan-finished", () => { getValues(); });
-    const unlisten_restore_finished = listen<boolean>("ending-restore", () => { getTheme(); getValues(); });
-    const unlisten_reset_finished = listen<boolean>("ending-reset", () => { getTheme(); getValues(); });
-    const unlisten_reload_albums = listen("remove-song", () => { console.log("Updating pulled data"); getValues(); });
+    const unlisten_scan_finished = listen("scan-finished", () => { getValues(); });
+    const unlisten_restore_finished = listen("ending-restore", () => { getTheme(); getValues(); });
+    const unlisten_reset_finished = listen("ending-reset", () => { getTheme(); getValues(); });
+    const unlisten_reload_albums = listen("remove-song", () => { getValues(); });
 
     
     return () => {
@@ -101,6 +106,30 @@ function App() {
     }
   }
 
+  async function checkForDeleted() {
+    try {
+      await invoke("scan_for_deleted");
+    }
+    catch(e) {
+      console.log(e);
+    }
+  }
+
+  async function checkVersion() {
+    try {
+      const res: boolean = await invoke("check_for_new_version");
+      if(res) {
+        setNewVersionAvailable(true);
+      }
+      else {
+        setNewVersionAvailable(false);
+      }
+    }
+    catch(e) {
+      console.log(e);
+    }
+  }
+
   // get all data for the media player's main pages
   async function getAlbums() {
     try {
@@ -136,13 +165,14 @@ function App() {
 
   return(
     <div 
-      onContextMenu={(e) => { e.preventDefault(); }}
+      // onContextMenu={(e) => { e.preventDefault(); }}
     >
       <BrowserRouter>
         <CustomWindowsBar />
         <RightSideBar />
         <MusicControls />
         <div className="content">
+          {newVersionAvailable && <Popup isToggled={newVersionAvailable} popupType={0}/>}
           <Routes>
             <Route path="/" element={ <Home /> }/>
             <Route path="/songs" element={ <SongPage songs={songList} /> }/>

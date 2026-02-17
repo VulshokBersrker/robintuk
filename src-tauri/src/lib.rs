@@ -5,9 +5,9 @@ use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
 use tauri_plugin_prevent_default::Flags;
 use tauri::{Builder, Manager, Emitter};
-use std::{sync::{Arc, Mutex}};
+use std::{path::Path, sync::{Arc, Mutex}};
 use tokio::runtime::Runtime;
-use sqlx::{Pool, Sqlite};
+use sqlx::{Pool, Sqlite, prelude::FromRow};
 use tauri::{State};
 
 // Import files
@@ -102,6 +102,7 @@ pub fn run() -> Result<(), String> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::check_for_new_version,
             // Song Functions - SQLite
             db::get_songs_with_limit,
             db::get_all_songs,
@@ -193,7 +194,8 @@ pub fn run() -> Result<(), String> {
             commands::check_for_ongoing_scan,
             commands::import_playlist,
             commands::export_playlist,
-            db::reset_database
+            db::reset_database,
+            scan_for_deleted
         ])        
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -347,4 +349,31 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         error: num_error,
         error_dets: error_details,
     })
+}
+
+
+#[derive(serde::Serialize, FromRow)]
+struct SongPath {
+    path: String
+}
+
+#[tauri::command]
+async fn scan_for_deleted(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
+
+    let songs: Vec<SongPath> = sqlx::query_as::<_, SongPath>("SELECT path FROM songs")
+        .fetch_all(&state.pool)
+        .await.unwrap();
+
+    for entry in songs {
+        // Check if path exists
+        if Path::new(&entry.path).exists() == false {
+            let _ = sqlx::query("DELETE FROM songs WHERE path = $1")
+                .bind(&entry.path)
+                .execute(&state.pool)
+                .await;
+        }
+
+    }    
+    app.emit("remove-song", false).unwrap();
+    Ok(())
 }

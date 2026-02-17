@@ -389,7 +389,7 @@ export default function AlbumPage({albums}: P) {
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
                             <input
                                 type="text" placeholder="Search Albums" id="search_albums"
-                                value={searchValue}
+                                value={searchValue} autoComplete="off"
                                 onChange={(e) => updateSearchResults(e.target.value)}
                             />
                         </span>
@@ -398,6 +398,7 @@ export default function AlbumPage({albums}: P) {
                     <VirtuosoGrid
                         totalCount={filteredAlbums.length}
                         components={gridComponents}
+                        
                         increaseViewportBy={{ top: 210, bottom: 420 }}
                         ref={virtuoso}
                         itemContent={(index) => 

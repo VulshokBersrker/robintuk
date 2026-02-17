@@ -493,7 +493,6 @@ pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::App
     Ok(())
 }
 
-
 pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String, album: String, duration: u64) -> Result<LrclibLyrics, String> {
     let url = format!("https://lrclib.net/api/get?artist_name={artist}&track_name={name}&album_name={album}&duration={duration}");
     let first_res = url_client.get(&url).send().await;
@@ -779,4 +778,44 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
     }
 
     Ok(true)
+}
+
+
+
+#[tauri::command]
+pub async fn check_for_new_version(app: tauri::AppHandle) -> Result<bool, String> {
+
+    let url_client = Client::builder().build().unwrap();
+
+    let first_res = url_client.get("https://raw.githubusercontent.com/VulshokBersrker/robintuk/refs/heads/main/package.json")
+        .send().await;
+    let version: String;
+
+    let current_version = app.package_info().version.to_string();
+
+    if first_res.is_ok() {
+        let res = first_res.unwrap().text().await;
+        if res.is_ok() {
+            let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
+
+            for (key, value) in result.as_object().unwrap() {
+                if key.contains("version") {
+                    version = value.to_string().replace("\"", "");
+                    if current_version != version {
+                        return Ok(true)
+                    }
+                    else {
+                        return Ok(false)
+                    }
+                }
+            }
+            Ok(false)
+        }
+        else {
+            Err("Error checking for new version".to_string())
+        }
+    }
+    else {
+        Err("Error checking for new version".to_string())
+    }    
 }
