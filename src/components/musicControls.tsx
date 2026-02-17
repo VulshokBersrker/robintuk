@@ -260,7 +260,8 @@ export default function MusicControls() {
 
     function stopSong() {
         setIsPlaying(false);
-        setIsLoaded(false);        
+        setIsLoaded(false);
+        setSongProgress(0);
     }
 
     async function nextSong() {

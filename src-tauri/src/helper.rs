@@ -36,7 +36,7 @@ pub fn shuffle(vec: &mut Vec<SongTable>) {
         // The remainder (`%`) after division is always less than the divisor.
         let j = (rand() as usize) % (n - i) + i;
         vec.swap(i, j);
-    }    
+    }
 }
 
 fn rand() -> u64 {

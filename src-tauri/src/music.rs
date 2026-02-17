@@ -77,8 +77,13 @@ impl MusicPlayer {
         return self.position;
     }
     
-    pub fn get_current_song(&self) -> SongTable {
-        return self.queue[self.position].clone();
+    pub fn get_current_song(&self) -> Result<SongTable, bool>  {
+        if self.queue.len() > 0 {
+            return Ok(self.queue[self.position].clone());
+        }
+        else {
+            return Err(false);
+        }
     }
     
     pub fn update_current_index(&mut self, pos: usize) -> Result<(), String> {
@@ -100,30 +105,33 @@ impl MusicPlayer {
         self.sink.stop();
 
         // Get the path of the song from the queue
-        let path = &self.queue[self.position].path;
-        let file = File::open(&path);
+        if self.queue.len() > 0 {
+            let path = &self.queue[self.position].path;
+            let file = File::open(&path);
 
-        // No error reading the file path
-        if file.is_ok() {
-            let good_file = file.unwrap();
-            // Makes it a little faster if we are guessing with only mp3 files
-            // Length is needed for backwards seeking
-            let len = good_file.metadata().unwrap().len();
-            match Decoder::builder().with_data(BufReader::new(good_file)).with_hint("mp3").with_byte_len(len).with_seekable(true).with_gapless(true).build() {
-                Ok(source) => {
-                    // On Success, load song into the sink
-                    self.sink.append(source);
-                    // println!("Song is loaded");
-                },
-                Err(e) => { eprintln!("Error decoding audio file: {}", e); }
-            };
-            Ok(())
+            // No error reading the file path
+            if file.is_ok() {
+                let good_file = file.unwrap();
+                // Makes it a little faster if we are guessing with only mp3 files
+                // Length is needed for backwards seeking
+                let len = good_file.metadata().unwrap().len();
+                match Decoder::builder().with_data(BufReader::new(good_file)).with_hint("mp3").with_byte_len(len).with_seekable(true).with_gapless(true).build() {
+                    Ok(source) => {
+                        // On Success, load song into the sink
+                        self.sink.append(source);
+                        // println!("Song is loaded");
+                    },
+                    Err(e) => { eprintln!("Error decoding audio file: {}", e); }
+                };
+                return Ok(())
+            }
+            // If there is an error reading in the file (ex. File has been moved an doesn't exist in that location)
+            else {
+                return Err("Song does not exist".to_string())
+            }
         }
-        // If there is an error reading in the file (ex. File has been moved an doesn't exist in that location)
-        else {
-            Err("Song does not exist".to_string())
-        }
-
+        
+        Ok(())
     }
 
     pub fn check_is_paused(&self) -> bool {

@@ -58,10 +58,8 @@ pub fn player_update_queue_and_pos(state: State<AppState, '_>, queue: Vec<SongTa
 
 #[tauri::command]
 pub fn player_clear_queue(app: tauri::AppHandle, state: State<AppState, '_>) -> Result<(), String>  {
-    state.player.lock().unwrap().clear_queue();
-
     let _ = app.emit("queue-cleared", true);
-
+    state.player.lock().unwrap().clear_queue();  
     Ok(())
 }
 
@@ -107,7 +105,12 @@ pub fn player_load_song(state: State<AppState, '_>, index: usize) -> Result<Resu
 #[tauri::command]
 pub fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, String> {
     let current_song = state.player.lock().unwrap().get_current_song();    
-    Ok(current_song)
+    if current_song.is_ok() {
+        Ok(current_song.unwrap())
+    }
+    else {
+        Err("Error getting current song".to_string())
+    }
 }
 
 #[tauri::command]
@@ -377,7 +380,12 @@ pub fn update_current_song_played(state: State<AppState, '_>, app: tauri::AppHan
     // Tell the music controls that there is a new song to look at
     let q =  state.player.lock().unwrap().get_current_song();
 
-    app.emit("get-current-song", GetCurrentSong { q }).unwrap();
+    if q.is_ok() {
+        let res = q.unwrap();
+        app.emit("get-current-song", GetCurrentSong { q: res }).unwrap();
+    }
+
+    
 }
 
 #[tauri::command]

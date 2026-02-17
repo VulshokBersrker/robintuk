@@ -71,4 +71,4 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] "Add To" in Context Menu gets cut off when close to the edges of the screen
 - [ ] Some album artwork is not deleted when songs are removed
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
-- [ ] App may crash when you clear the queue as the next song is being loaded
+- [ ] App has a chance to crash when you clear the queue as the next song is being loaded

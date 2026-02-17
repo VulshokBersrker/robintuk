@@ -83,14 +83,19 @@ pub fn run() -> Result<(), String> {
                                 if player.check_is_loaded() {
                                     player.next_song();
                                     let q = player.get_current_song();
-                                    let _ = _app.emit("get-current-song", GetCurrentSong { q });
+                                    if q.is_ok() {
+                                        let _ = _app.emit("get-current-song", GetCurrentSong { q: q.unwrap() });
+                                    }
+                                    
                                 }                                
                             }
                             if shortcut.matches(Modifiers::FN, Code::MediaTrackPrevious) {
                                 if player.check_is_loaded() {
                                     player.previous_song();
                                     let q = player.get_current_song();
-                                    let _ = _app.emit("get-current-song", GetCurrentSong { q });
+                                    if q.is_ok() {
+                                        let _ = _app.emit("get-current-song", GetCurrentSong { q: q.unwrap() });
+                                    }
                                 }
                             }
                         }
