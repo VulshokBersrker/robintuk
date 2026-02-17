@@ -110,7 +110,9 @@ export default function AlbumPage({albums}: P) {
     function updateSearchResults(value: string) {
         setSearchValue(value);
         const temp_section = albumList.filter((entry): any => {
-            return entry.album.toLowerCase().includes(value.toLowerCase());
+            if(entry.album !== undefined && entry.album_artist !== undefined) {
+                return (entry.album.toLowerCase().includes(value.toLowerCase()) || entry.album_artist.toLowerCase().includes(value.toLowerCase()) )
+            }
         })
         setFilteredAlbums(temp_section);
 

@@ -75,8 +75,10 @@ export default function SongPage({songs}: Props) {
         setSearchValue(value);
 
         const temp_section = songList.filter((entry) => {
-            if(entry.name !== undefined) {
-                return entry.name.toLowerCase().includes(value.toLowerCase());
+            if(entry.name !== undefined && entry.album !== undefined && entry.album_artist !== undefined) {
+                return (entry.name.toLowerCase().includes(value.toLowerCase()) || entry.album.toLowerCase().includes(value.toLowerCase())
+                || entry.album_artist.toLowerCase().includes(value.toLowerCase())
+            )
             }
             else {
                 return entry;
@@ -348,7 +350,6 @@ export default function SongPage({songs}: Props) {
 
                     {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
-                    
 
                     <div className="song-list">
                         <Virtuoso 
@@ -387,7 +388,6 @@ export default function SongPage({songs}: Props) {
                                                         }}
                                                     >
                                                         <div className={`grid-20 song-row`}>
-                                                            
                                                             <span className="section-1 vertical-centered play ">
                                                                 <span className="form-control">
                                                                     <input
@@ -404,7 +404,7 @@ export default function SongPage({songs}: Props) {
                                                             
                                                             <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
                                                             <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].artist}</span>
+                                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
                                                             <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
                                                             <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
                                                             <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
@@ -444,7 +444,7 @@ export default function SongPage({songs}: Props) {
                                                 
                                                 <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
                                                 <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                                <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].artist}</span>
+                                                <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
                                                 <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
                                                 <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
                                                 <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>

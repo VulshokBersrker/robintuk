@@ -781,9 +781,9 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
 }
 
 
-
+// Check for new version of the app based on the package.json-version value in the github repo
 #[tauri::command]
-pub async fn check_for_new_version(app: tauri::AppHandle) -> Result<bool, String> {
+pub async fn check_for_new_version(app: tauri::AppHandle) -> Result<bool, bool> {
 
     let url_client = Client::builder().build().unwrap();
 
@@ -809,13 +809,13 @@ pub async fn check_for_new_version(app: tauri::AppHandle) -> Result<bool, String
                     }
                 }
             }
-            Ok(false)
+            return Ok(false)
         }
         else {
-            Err("Error checking for new version".to_string())
+            return Err(false)
         }
     }
     else {
-        Err("Error checking for new version".to_string())
+        return Err(false)
     }    
 }
