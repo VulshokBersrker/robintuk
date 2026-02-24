@@ -38,9 +38,23 @@ pub fn player_add_to_queue(state: State<AppState, '_>, queue: Vec<SongTable>) ->
 #[tauri::command]
 pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
     state.player.lock().unwrap().set_queue(queue);
+    let _ = state.player.lock().unwrap().update_current_index(index);
+    // Setup the first two songs to ready to play
     let _ = state.player.lock().unwrap().load_song(index);
+    println!("1 - Loaded Song - pos: {:?}", &index); 
+
+    let q_length = state.player.lock().unwrap().get_queue_length();
+    if index >= q_length {
+        // Load the first song in the queue, when at the end of the queue
+        let _ = state.player.lock().unwrap().load_song(0);
+        println!("2 - Loaded Song - pos: {:?}", 0); 
+    }
+    else {
+        let _ = state.player.lock().unwrap().load_song(index + 1);
+        println!("2 - Loaded Song - pos: {:?}", index + 1);
+    }
+    println!("Current Sink Length: {:?}", state.player.lock().unwrap().get_sink_length());
     Ok(())
-        
 }
 
 #[tauri::command]
@@ -57,6 +71,12 @@ pub fn player_update_queue_and_pos(state: State<AppState, '_>, queue: Vec<SongTa
 }
 
 #[tauri::command]
+pub fn player_update_pos(state: State<AppState, '_>, index: usize) -> Result<(), String>  {
+    let _ = state.player.lock().unwrap().update_current_index(index);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn player_clear_queue(app: tauri::AppHandle, state: State<AppState, '_>) -> Result<(), String>  {
     let _ = app.emit("queue-cleared", true);
     state.player.lock().unwrap().clear_queue();  
@@ -66,9 +86,8 @@ pub fn player_clear_queue(app: tauri::AppHandle, state: State<AppState, '_>) -> 
 #[tauri::command]
 pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
     let q = queue.clone();
-    // for item in &queue {
-    //     println!("--- {:?}", &item.path);
-    // }
+    let _ = state.player.lock().unwrap().clear_queue();
+
     state.player.lock().unwrap().set_queue(queue);
 
     let song_status = state.player.lock().unwrap().load_song(index);
@@ -79,7 +98,9 @@ pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle
             // println!("{:?} --- {:?}", &i, &q[i].path);
             let s_status = state.player.lock().unwrap().load_song(i);
             if s_status.is_ok() {
+                let _ = state.player.lock().unwrap().update_current_index(i);
                 state.player.lock().unwrap().play_song();
+
                 break;
             }
             else {
@@ -87,10 +108,20 @@ pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle
                 let _ = db::remove_song(&state.pool, q[i].clone()).await;
             }
         }
-    
     }
     else {
+        let _ = state.player.lock().unwrap().update_current_index(index);
         state.player.lock().unwrap().play_song();
+
+        // Load the next song, for gapless
+        // If the next index is less than the length of the queue
+        if index + 1 < state.player.lock().unwrap().get_queue_length() {
+            let _ = state.player.lock().unwrap().load_song(index + 1);
+        }
+        // If it is larger/equal, then add the first entry of the queue
+        else {
+            let _ = state.player.lock().unwrap().load_song(0);
+        }
     }
     
     Ok(())    
@@ -99,6 +130,12 @@ pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle
 #[tauri::command]
 pub fn player_load_song(state: State<AppState, '_>, index: usize) -> Result<Result<(), String>, String> {
     let res = state.player.lock().unwrap().load_song(index);
+
+    if res.is_ok() {
+        let ex = state.player.lock().unwrap().get_sink_length();
+        println!("Sink length - {:?}", ex);
+    }
+    
     Ok(res)
 }
 
@@ -118,7 +155,6 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
     let current_position = state.player.lock().unwrap().get_current_position();    
     Ok(current_position)
 }
-
 
 
 
@@ -176,7 +212,7 @@ pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album
         .unwrap();
 
     let q = album.clone();
-    let mut checker = true;    
+    let mut checker = true;
 
     if shuffled {
         helper::shuffle(&mut album);
@@ -384,8 +420,6 @@ pub fn update_current_song_played(state: State<AppState, '_>, app: tauri::AppHan
         let res = q.unwrap();
         app.emit("get-current-song", GetCurrentSong { q: res }).unwrap();
     }
-
-    
 }
 
 #[tauri::command]

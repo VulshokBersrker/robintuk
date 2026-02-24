@@ -201,8 +201,8 @@ export default function PlaylistOverviewPage() {
             await invoke("play_playlist", {playlist_id: location.state.name, index: index, shuffled: shuffled})
             savePosition(index);
         }
-        catch (err) {
-            alert(`Failed to play song: ${err}`);
+        catch(err) {
+            console.log(`Failed to play song: ${err}`);
         }
         finally {
             localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );

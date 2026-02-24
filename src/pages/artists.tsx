@@ -145,8 +145,8 @@ export default function ArtistsPage({artists}: P) {
                         <span className="search-bar">
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
                             <input
-                                type="text" placeholder="Search Artists" id="search_albums"
-                                value={searchValue}
+                                type="text" placeholder="Search Artists" id="search_artists"
+                                value={searchValue} autoComplete="off"
                                 onChange={(e) => updateSearchResults(e.target.value)}
                             />
                         </span>

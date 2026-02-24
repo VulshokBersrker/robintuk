@@ -172,7 +172,7 @@ function App() {
         <RightSideBar />
         <MusicControls />
         <div className="content">
-          {newVersionAvailable && <Popup isToggled={newVersionAvailable} popupType={0}/>}
+          {/* {newVersionAvailable && <Popup isToggled={newVersionAvailable} popupType={0}/>} */}
           <Routes>
             <Route path="/" element={ <Home /> }/>
             <Route path="/songs" element={ <SongPage songs={songList} /> }/>

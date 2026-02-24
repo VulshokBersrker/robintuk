@@ -28,7 +28,7 @@ pub struct AppState {
     pool: Pool<Sqlite>,
     is_scan_ongoing: Mutex<bool>,
     is_back_restore_ongoing: Mutex<i64>,
-    is_lyric_scan_ongoing: Mutex<bool>,
+    is_lyric_scan_ongoing: Mutex<bool>
 }
 
 
@@ -167,6 +167,7 @@ pub fn run() -> Result<(), String> {
             commands::player_update_queue_and_pos,
             commands::player_clear_queue,
             commands::shuffle_queue,
+            commands::player_update_pos,
             db::get_queue,
             db::add_to_queue,
             db::clear_queue,
