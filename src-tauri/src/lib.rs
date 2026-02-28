@@ -177,6 +177,7 @@ pub fn run() -> Result<(), String> {
             commands::player_get_current_song,
             commands::player_set_repeat_mode,
             commands::player_stop,
+            commands::player_get_sink_length,
             // Event Caller Functions
             commands::update_current_song_played,
             commands::new_playlist_added,

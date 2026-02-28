@@ -20,8 +20,8 @@ pub struct MusicPlayer {
     4. Let there be a flag to cancel this loop if the user clicks on a new set of songs/ablum/playlist
 
     Issues:
-    Need to update current position when a song is done playing
-    How to handle end of queue, and when shuffle is on
+    When turning off shuffle while playing, it will still hold the two loaded songs. This will cause a display and play error,
+        where the displayed song will be the next one in line for the unshuffled queue, but the actual song is still from the shuffled queue
 
 */
 
@@ -95,12 +95,9 @@ impl MusicPlayer {
             if new_pos >= self.queue.len() {
                 new_pos = 0;
             }
-            println!("-------------------------------------------------------------------");
-            println!("NEXT -- old pos: {:?}       new pos: {:?} --- {:?}", self.position, &new_pos, self.queue[new_pos].name);
             // Update the current position in the player
             let _ = self.update_current_index(new_pos);
             // Load the new song
-            println!("NEXT -- Before Load - sink len: {:?} - {:?}", self.sink.len(), self.queue[new_pos].name);
             // Check if the next, unloaded song is within the bound of the queue's length
             if new_pos + 1 >= self.queue.len() {
                 // Load the next, unloaded song
@@ -110,10 +107,7 @@ impl MusicPlayer {
                 let _ = self.load_song(new_pos + 1);
             }
             
-
-            println!("NEXT -- Before Skip Length - {:?}", self.sink.len());
             let _ = self.sink.skip_one();
-            println!("NEXT -- After Skip Length - {:?}", self.sink.len());
             self.play_song();
         }
         // Repeat one song
@@ -135,28 +129,23 @@ impl MusicPlayer {
         else {
             new_pos = self.position - 1;
         }
-        println!("PREVIOUS -- Before work - {:?}", self.sink.len());
+
         let _ = self.update_current_index(new_pos);
         // Load the first song
         let _ = self.load_song(new_pos);
-        self.play_song();        
-        println!("PREVIOUS - Playing new song - {:?}", self.queue[new_pos].name);
+        self.play_song();
         
         // If the new position plus 1 is less than the queue length, load next song
         if (1 + new_pos) < self.queue.len() {
            let _ = self.load_song(new_pos + 1);
-           println!("PREVIOUS - Next song is loaded - {:?}", self.queue[new_pos + 1].name);
         }
-
-        println!("PREVIOUS - Sink Length - {:?}", self.sink.len());
-
     }
 
     // ------------------- Queue Functions -------------------
     // Called when a user clicks play on a song, album, or playlist
     pub fn set_queue(&mut self, q: Vec<SongTable>) {
         self.queue = q;
-        self.sink.stop();
+        // self.sink.stop();
         self.position = 0;
     }
     // Clear the queue and empty the sink
@@ -225,8 +214,6 @@ impl MusicPlayer {
     // ------------------- Media Loading / Setup Functions -------------------
     
     pub fn load_song(&mut self, pos: usize) -> Result<(), String> {
-        println!("--------------------------- Inside Load - pos: {:?} ==== {:?}", pos, self.queue[pos].name);
-
         // Get the path of the song from the queue
         if self.queue.len() > 0 {
             let path = &self.queue[pos].path;

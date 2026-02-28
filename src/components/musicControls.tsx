@@ -117,8 +117,6 @@ export default function MusicControls() {
     useEffect(() => {
         if(songProgress === songDetails?.duration) {
             setSongProgress(0);
-            
-            console.log("end of song - grabbing new song details -> ");
             // Append the next song to the sink
             setNextSongforLoad();
         }
@@ -155,7 +153,7 @@ export default function MusicControls() {
     async function nextSong() {
         const qPosition: number = await invoke('player_get_current_position');
         const qLength: number  = await invoke('player_get_queue_length');
-        console.log("pos: " + qPosition + " ----- " + qLength)
+        
         try {
             // No Repeat Mode and at the end of the queue
             if(repeatMode === 0 && qPosition + 1 > qLength - 1) {
@@ -174,7 +172,7 @@ export default function MusicControls() {
             currentLineNumberRef.current = null;
         }
         catch(e) {
-            console.log(e);
+            console.log("Error playing the next song: " + e);
         }
         finally {
             // not repeat mode
@@ -278,7 +276,7 @@ export default function MusicControls() {
             await invoke('player_setup_queue_and_song', { queue: queue, index: index });
         }
         catch(e) {
-            console.log(`Failed to get song: ${e}`);
+            console.log(`Failed to setup player: ${e}`);
             setIsLoaded(false);
         }
     }
@@ -306,7 +304,6 @@ export default function MusicControls() {
                     setIsLoaded(true);
 
                     if(shuffleMode !== null) {
-                        console.log("pos: " + JSON.parse(qPosition!) + " -- ");
                         if(shuffleMode) {
                             setIsShuffle(true);
                             sendQueueToBackend(queue, JSON.parse(qPosition!));
@@ -415,34 +412,48 @@ export default function MusicControls() {
     }
     
     async function setNextSongforLoad() {
-        try{
+        try {
+            
+            // Used to limit the frontend from making an extra call, which would add a dup song
+            const num_loaded_songs: number = await invoke("player_get_sink_length");
+
             const pos: number = await invoke("player_get_current_position");
             const qLength: number = await invoke("player_get_queue_length");
             if (pos + 1 >= qLength) {
-                console.log("next position is larger than length - setting to zero");
-                await invoke("player_update_pos", { index: 0 });
+                if (num_loaded_songs <= 2) {
+                    await invoke("player_update_pos", { index: 0 });
+                    savePosition(0);
+                    // Load the next song in the queue to be ready
+                    await invoke("player_load_song", { index: 0 });
+                }
                 savePosition(0);
-                // Load the next song in the queue to be ready
-                await invoke("player_load_song", { index: 0 });
             }
             else {
-                await invoke("player_update_pos", { index: pos + 1 });
-                savePosition(pos + 1);
-                // Load the next song in the queue to be ready
-                await invoke("player_load_song", { index: pos + 1 });
+                if (num_loaded_songs <= 2) {
+                    await invoke("player_update_pos", { index: pos + 1 });
+                    savePosition(pos + 1);
+                    // Load the next, unloaded song to the queue (The second song from the one that just ended)
+                    if(pos + 2 >= qLength) {
+                        await invoke("player_load_song", { index: 0 });
+                    }
+                    else {
+                        await invoke("player_load_song", { index: pos + 2 });
+                    }
+                }
             }
-            
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
             // Get the new song's details
             const newSong: Songs = await invoke("player_get_current_song");
             setSongDetails(newSong);
             saveSong(newSong);
-
+            
             // Send out update that a new song is being played
             await invoke("update_current_song_played");
             await checkForLyrics(newSong.path);
-        }
-        catch(e) {
-            console.log(e);
         }
     }
     // --------------------- End of Song Management Functions ---------------------

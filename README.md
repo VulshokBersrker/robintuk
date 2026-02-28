@@ -51,11 +51,11 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Gapless playback
 - [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page (No great options once you have more than 100 songs)
-- [ ] Notification of version updates
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] Better DPI aware CSS styles
 - [ ] Create placeholder templates while pages are loading
+- [x] Notification of version updates
 - [x] Update queue page when queue is changed
 - [x] Create Genre tab and features
 - [x] In addition to scanning for lyrics, find lyrics when a song without them is played

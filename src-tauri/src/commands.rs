@@ -1,14 +1,14 @@
 use crate::{
     AppState,
     db::{self, create_playlist, get_playlist}, 
-    helper,
+    helper::{self, re_shuffle},
     types::{DirsTable, DoesExist, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable }
 };
 use m3u8_rs::{MediaPlaylist, MediaSegment, Playlist};
 use reqwest::{Client, header::{CONTENT_TYPE, USER_AGENT}};
 use zip::{ZipArchive, ZipWriter,  write::SimpleFileOptions};
 use std::{fs::{self, File}, io::Read, path::Path};
-use tauri::{Emitter, State, http::HeaderMap};
+use tauri::{Emitter, Manager, State, http::HeaderMap};
 use std::path::{PathBuf};
 use std::io::Write;
 use std::{io};
@@ -37,23 +37,27 @@ pub fn player_add_to_queue(state: State<AppState, '_>, queue: Vec<SongTable>) ->
 
 #[tauri::command]
 pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
+    state.player.lock().unwrap().clear_queue();
+    state.player.lock().unwrap().stop_song();
+
+    let q_length = queue.len();
     state.player.lock().unwrap().set_queue(queue);
     let _ = state.player.lock().unwrap().update_current_index(index);
     // Setup the first two songs to ready to play
     let _ = state.player.lock().unwrap().load_song(index);
-    println!("1 - Loaded Song - pos: {:?}", &index); 
 
-    let q_length = state.player.lock().unwrap().get_queue_length();
-    if index >= q_length {
-        // Load the first song in the queue, when at the end of the queue
-        let _ = state.player.lock().unwrap().load_song(0);
-        println!("2 - Loaded Song - pos: {:?}", 0); 
+    // Check to limit in the event the frontend makes an extra call
+    let sink_length = state.player.lock().unwrap().get_sink_length();
+    if sink_length < 2 {
+        if index >= q_length {
+            // Load the first song in the queue, when at the end of the queue
+            let _ = state.player.lock().unwrap().load_song(0);
+        }
+        if index < q_length {
+            let _ = state.player.lock().unwrap().load_song(index + 1);
+        }
     }
-    else {
-        let _ = state.player.lock().unwrap().load_song(index + 1);
-        println!("2 - Loaded Song - pos: {:?}", index + 1);
-    }
-    println!("Current Sink Length: {:?}", state.player.lock().unwrap().get_sink_length());
+    
     Ok(())
 }
 
@@ -88,14 +92,15 @@ pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle
     let q = queue.clone();
     let _ = state.player.lock().unwrap().clear_queue();
 
+    state.player.lock().unwrap().stop_song();
     state.player.lock().unwrap().set_queue(queue);
+    
 
     let song_status = state.player.lock().unwrap().load_song(index);
     if song_status.is_err() {
         let q_length = state.player.lock().unwrap().get_queue_length();
 
         for i in index..q_length {
-            // println!("{:?} --- {:?}", &i, &q[i].path);
             let s_status = state.player.lock().unwrap().load_song(i);
             if s_status.is_ok() {
                 let _ = state.player.lock().unwrap().update_current_index(i);
@@ -129,18 +134,13 @@ pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle
 
 #[tauri::command]
 pub fn player_load_song(state: State<AppState, '_>, index: usize) -> Result<Result<(), String>, String> {
-    let res = state.player.lock().unwrap().load_song(index);
-
-    if res.is_ok() {
-        let ex = state.player.lock().unwrap().get_sink_length();
-        println!("Sink length - {:?}", ex);
-    }
-    
+    let res = state.player.lock().unwrap().load_song(index);    
     Ok(res)
 }
 
 #[tauri::command]
-pub fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, String> {
+pub fn player_get_current_song(app: tauri::AppHandle) -> Result<SongTable, String> {
+    let state = app.state::<AppState>();
     let current_song = state.player.lock().unwrap().get_current_song();    
     if current_song.is_ok() {
         Ok(current_song.unwrap())
@@ -164,15 +164,17 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
 pub async fn shuffle_queue(state: State<AppState, '_>, song: String, shuffled: bool) -> Result<(), String> {
     let mut q = db::get_queue(state.clone(), false).await.unwrap();
 
+    let current_pos = q.iter().position(|r| r.path == song).unwrap();
+
     if shuffled {
-        helper::shuffle(&mut q);
-        let index = q.iter().position(|r| r.path == song).unwrap();
-        let _ = player_update_queue_and_pos(state.clone(), q.clone(), index);
-        let _ = db::create_queue_shuffled(state.clone(), &q).await;   
+        let new_order = re_shuffle(&mut q, current_pos);
+
+        let index = new_order.iter().position(|r| r.path == song).unwrap();
+        let _ = player_update_queue_and_pos(state.clone(), new_order.clone(), index);
+        let _ = db::create_queue_shuffled(state.clone(), &new_order).await;
     }
     else {
-        let index = q.iter().position(|r| r.path == song).unwrap();
-        let _ = player_update_queue_and_pos(state.clone(), q, index);
+        let _ = player_update_queue_and_pos(state.clone(), q, current_pos);
     }
     Ok(())
 }
@@ -204,6 +206,8 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_name: String, index: usize, shuffled: bool) -> Result<bool, String> {
+
+    println!("--------------------------------------------------------------------------------------------------");
 
     let mut album: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC;")
         .bind(album_name)
@@ -407,7 +411,10 @@ pub fn player_get_song_pos(state: State<AppState, '_>) -> Result<(), String> {
     Ok(())
 }
 
-
+#[tauri::command]
+pub fn player_get_sink_length(state: State<AppState, '_>) -> Result<usize, String> {
+    Ok(state.player.lock().unwrap().get_sink_length())
+}
 
 
 // ----------------- Event Listener Commands
