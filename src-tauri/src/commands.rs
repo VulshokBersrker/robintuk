@@ -1,14 +1,14 @@
 use crate::{
     AppState,
     db::{self, create_playlist, get_playlist}, 
-    helper::{self, re_shuffle},
+    helper::{self},
     types::{DirsTable, DoesExist, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable }
 };
 use m3u8_rs::{MediaPlaylist, MediaSegment, Playlist};
 use reqwest::{Client, header::{CONTENT_TYPE, USER_AGENT}};
 use zip::{ZipArchive, ZipWriter,  write::SimpleFileOptions};
 use std::{fs::{self, File}, io::Read, path::Path};
-use tauri::{Emitter, Manager, State, http::HeaderMap};
+use tauri::{Emitter, State, http::HeaderMap};
 use std::path::{PathBuf};
 use std::io::Write;
 use std::{io};
@@ -40,23 +40,11 @@ pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<
     state.player.lock().unwrap().clear_queue();
     state.player.lock().unwrap().stop_song();
 
-    let q_length = queue.len();
+    // let q_length = queue.len();
     state.player.lock().unwrap().set_queue(queue);
     let _ = state.player.lock().unwrap().update_current_index(index);
     // Setup the first two songs to ready to play
     let _ = state.player.lock().unwrap().load_song(index);
-
-    // Check to limit in the event the frontend makes an extra call
-    let sink_length = state.player.lock().unwrap().get_sink_length();
-    if sink_length < 2 {
-        if index >= q_length {
-            // Load the first song in the queue, when at the end of the queue
-            let _ = state.player.lock().unwrap().load_song(0);
-        }
-        if index < q_length {
-            let _ = state.player.lock().unwrap().load_song(index + 1);
-        }
-    }
     
     Ok(())
 }
@@ -117,16 +105,6 @@ pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle
     else {
         let _ = state.player.lock().unwrap().update_current_index(index);
         state.player.lock().unwrap().play_song();
-
-        // Load the next song, for gapless
-        // If the next index is less than the length of the queue
-        if index + 1 < state.player.lock().unwrap().get_queue_length() {
-            let _ = state.player.lock().unwrap().load_song(index + 1);
-        }
-        // If it is larger/equal, then add the first entry of the queue
-        else {
-            let _ = state.player.lock().unwrap().load_song(0);
-        }
     }
     
     Ok(())    
@@ -139,8 +117,7 @@ pub fn player_load_song(state: State<AppState, '_>, index: usize) -> Result<Resu
 }
 
 #[tauri::command]
-pub fn player_get_current_song(app: tauri::AppHandle) -> Result<SongTable, String> {
-    let state = app.state::<AppState>();
+pub fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, String> {
     let current_song = state.player.lock().unwrap().get_current_song();    
     if current_song.is_ok() {
         Ok(current_song.unwrap())
@@ -164,17 +141,17 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
 pub async fn shuffle_queue(state: State<AppState, '_>, song: String, shuffled: bool) -> Result<(), String> {
     let mut q = db::get_queue(state.clone(), false).await.unwrap();
 
-    let current_pos = q.iter().position(|r| r.path == song).unwrap();
+    // let current_pos = q.iter().position(|r| r.path == song).unwrap();
 
     if shuffled {
-        let new_order = re_shuffle(&mut q, current_pos);
-
-        let index = new_order.iter().position(|r| r.path == song).unwrap();
-        let _ = player_update_queue_and_pos(state.clone(), new_order.clone(), index);
-        let _ = db::create_queue_shuffled(state.clone(), &new_order).await;
+        helper::shuffle(&mut q);
+        let index = q.iter().position(|r| r.path == song).unwrap();
+        let _ = player_update_queue_and_pos(state.clone(), q.clone(), index);
+        let _ = db::create_queue_shuffled(state.clone(), &q).await;   
     }
     else {
-        let _ = player_update_queue_and_pos(state.clone(), q, current_pos);
+        let index = q.iter().position(|r| r.path == song).unwrap();
+        let _ = player_update_queue_and_pos(state.clone(), q, index);
     }
     Ok(())
 }

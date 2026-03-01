@@ -39,33 +39,6 @@ pub fn shuffle(vec: &mut Vec<SongTable>) {
     }
 }
 
-pub fn re_shuffle(vec: &mut Vec<SongTable>, index: usize) -> Vec<SongTable> {
-
-    // Save the songs that are loaded to the sink, so they are not shuffled
-    let mut loaded_songs: Vec<SongTable> = vec![];
-    if (index + 1) >= vec.len() {
-        loaded_songs.push(vec[index].clone());
-        loaded_songs.push(vec[0].clone());
-        vec.remove(index);
-        vec.remove(0);
-    }
-    else {
-        let mut test = vec.drain(index..(index + 2)).collect::<Vec<SongTable>>();
-        loaded_songs.append(&mut test);
-    }
-
-    let n = vec.len();
-    // Then shuffle the remaining songs
-    for i in 0..(vec.len() - 1) {
-        let j = (rand() as usize) % (n - i) + i;
-        vec.swap(i, j);
-    }
-
-    loaded_songs.append(vec);
-
-    return loaded_songs;
-}
-
 fn rand() -> u64 {
     RandomState::new().build_hasher().finish()
 }

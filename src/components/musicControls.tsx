@@ -46,14 +46,7 @@ export default function MusicControls() {
     const currentLineRef = useRef<HTMLDivElement | null>(null);
     const currentLineNumberRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        if(currentLineRef.current) {
-            currentLineRef.current.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-        }
-    }, [songProgress]);
+    const [lockShuffle, setLockShuffle] = useState<boolean>(false);
 
     // Called only once on load
     useEffect(() => {
@@ -115,10 +108,26 @@ export default function MusicControls() {
 
     // Check if the song is over - play next song is able
     useEffect(() => {
+        // Lyrics Line Mover
+        if(currentLineRef.current) {
+            currentLineRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+
+        // Get the next song's details when the current song ends
         if(songProgress === songDetails?.duration) {
-            setSongProgress(0);
-            // Append the next song to the sink
-            setNextSongforLoad();
+            getNewSongDetails();
+        }
+
+        // Pre-load the next song when there is one second left
+        // Then lock the shuffle function to stop and song mismatch, unlock when new song starts
+        if(songDetails?.duration !== undefined) {
+            if(Math.abs(songProgress - songDetails?.duration) <= 1 && Math.abs(songProgress - songDetails?.duration) !== 0) {
+                // Append the next song to the sink
+                setNextSongforLoad();
+            }
         }
     }, [songProgress]);
 
@@ -233,22 +242,22 @@ export default function MusicControls() {
     // Function to update the volume of the music player
     async function updateShuffleMode() {
         try {
-            if(isShuffle && songDetails !== undefined) {
-                setIsShuffle(false);
-                // Index of the current song
-                await invoke("shuffle_queue", { song: songDetails.path, shuffled: false });
-            }
-            else if(!isShuffle && songDetails !== undefined) {
-                setIsShuffle(true);
-                // Index of the current song
-                await invoke("shuffle_queue", { song: songDetails.path, shuffled: true });
+            if(lockShuffle === false) {
+                if(isShuffle && songDetails !== undefined) {
+                    setIsShuffle(false);
+                    // Index of the current song
+                    await invoke("shuffle_queue", { song: songDetails.path, shuffled: false });
+                }
+                else if(!isShuffle && songDetails !== undefined) {
+                    setIsShuffle(true);
+                    // Index of the current song
+                    await invoke("shuffle_queue", { song: songDetails.path, shuffled: true });
+                }
+                localStorage.setItem("shuffle-mode", JSON.stringify(!isShuffle));
             }
         }
         catch(e) {
-            console.log(e);
-        }
-        finally {
-            localStorage.setItem("shuffle-mode", JSON.stringify(!isShuffle));
+            console.log("Error Updating the Shuffle: " + e);
         }
     }
     // Set where in the song it plays
@@ -411,39 +420,54 @@ export default function MusicControls() {
         }
     }
     
+    // Pre-load the next song, used for gapless playback
     async function setNextSongforLoad() {
         try {
-            
+            setLockShuffle(true);
             // Used to limit the frontend from making an extra call, which would add a dup song
             const num_loaded_songs: number = await invoke("player_get_sink_length");
 
             const pos: number = await invoke("player_get_current_position");
             const qLength: number = await invoke("player_get_queue_length");
+
+            console.log("Current Position: " + pos);
+
             if (pos + 1 >= qLength) {
-                if (num_loaded_songs <= 2) {
-                    await invoke("player_update_pos", { index: 0 });
-                    savePosition(0);
+                if(num_loaded_songs == 1) {
                     // Load the next song in the queue to be ready
                     await invoke("player_load_song", { index: 0 });
                 }
-                savePosition(0);
             }
             else {
-                if (num_loaded_songs <= 2) {
-                    await invoke("player_update_pos", { index: pos + 1 });
-                    savePosition(pos + 1);
+                if(num_loaded_songs == 1) {
                     // Load the next, unloaded song to the queue (The second song from the one that just ended)
-                    if(pos + 2 >= qLength) {
-                        await invoke("player_load_song", { index: 0 });
-                    }
-                    else {
-                        await invoke("player_load_song", { index: pos + 2 });
-                    }
+                    await invoke("player_load_song", { index: pos + 1 });
                 }
             }
         }
         catch(e) {
-            console.log(e);
+            console.log("Error loading the next song: " + e);
+        }
+    }
+
+    // Get the next song details, when a song ends
+    async function getNewSongDetails() {
+        try {
+            setSongProgress(0);
+            const pos: number = await invoke("player_get_current_position");
+            const qLength: number = await invoke("player_get_queue_length");
+            if (pos + 1 >= qLength) {
+                await invoke("player_update_pos", { index: 0 });
+                savePosition(0);
+            }
+            else {
+                await invoke("player_update_pos", { index: pos + 1 });
+                savePosition(pos + 1);
+            }
+        }
+        catch(e) {
+            console.log("Error getting the new song details: " + e);
+            setLockShuffle(false);
         }
         finally {
             // Get the new song's details
@@ -454,6 +478,7 @@ export default function MusicControls() {
             // Send out update that a new song is being played
             await invoke("update_current_song_played");
             await checkForLyrics(newSong.path);
+            setLockShuffle(false);
         }
     }
     // --------------------- End of Song Management Functions ---------------------

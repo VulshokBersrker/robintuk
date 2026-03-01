@@ -90,6 +90,7 @@ impl MusicPlayer {
         }
         // repeat the queue
         else if self.repeat_mode == 1 {
+            self.sink.clear();
             let mut new_pos = self.position + 1;
             // If the new position will be larger than the length of the queue, reset to 0
             if new_pos >= self.queue.len() {
@@ -98,16 +99,7 @@ impl MusicPlayer {
             // Update the current position in the player
             let _ = self.update_current_index(new_pos);
             // Load the new song
-            // Check if the next, unloaded song is within the bound of the queue's length
-            if new_pos + 1 >= self.queue.len() {
-                // Load the next, unloaded song
-                let _ = self.load_song(0);
-            }
-            else {
-                let _ = self.load_song(new_pos + 1);
-            }
-            
-            let _ = self.sink.skip_one();
+            let _ = self.load_song(new_pos);
             self.play_song();
         }
         // Repeat one song
