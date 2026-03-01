@@ -76,7 +76,7 @@ export default function AlbumOverviewPage() {
     // Listeners
     useEffect(() => {
         // Load the current song (song / album / playlist) from the backend
-        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q)});
+        const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q); });
 
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
@@ -135,10 +135,10 @@ export default function AlbumOverviewPage() {
         resetContextMenu();
         try {
             await invoke("play_album", {album_name: location.state.name, index: index, shuffled: shuffled});
-            savePosition(index); 
+            savePosition(index);
         }
-        catch (err) {
-            alert(`Failed to play song: ${err}`);
+        catch(err) {
+            console.log(`Failed to play song: ${err}`);
         }
         finally {
             localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );

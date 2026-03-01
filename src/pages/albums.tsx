@@ -110,7 +110,9 @@ export default function AlbumPage({albums}: P) {
     function updateSearchResults(value: string) {
         setSearchValue(value);
         const temp_section = albumList.filter((entry): any => {
-            return entry.album.toLowerCase().includes(value.toLowerCase());
+            if(entry.album !== undefined && entry.album_artist !== undefined) {
+                return (entry.album.toLowerCase().includes(value.toLowerCase()) || entry.album_artist.toLowerCase().includes(value.toLowerCase()) )
+            }
         })
         setFilteredAlbums(temp_section);
 
@@ -389,7 +391,7 @@ export default function AlbumPage({albums}: P) {
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
                             <input
                                 type="text" placeholder="Search Albums" id="search_albums"
-                                value={searchValue}
+                                value={searchValue} autoComplete="off"
                                 onChange={(e) => updateSearchResults(e.target.value)}
                             />
                         </span>
@@ -398,6 +400,7 @@ export default function AlbumPage({albums}: P) {
                     <VirtuosoGrid
                         totalCount={filteredAlbums.length}
                         components={gridComponents}
+                        
                         increaseViewportBy={{ top: 210, bottom: 420 }}
                         ref={virtuoso}
                         itemContent={(index) => 
