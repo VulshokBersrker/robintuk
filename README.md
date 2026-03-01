@@ -48,13 +48,13 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 - [ ] Equalizer?
 - [ ] Linux support
-- [ ] Gapless playback
 - [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page (No great options once you have more than 100 songs)
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] Better DPI aware CSS styles
 - [ ] Create placeholder templates while pages are loading
+- [x] Gapless playback
 - [x] Notification of version updates
 - [x] Update queue page when queue is changed
 - [x] Create Genre tab and features
@@ -65,10 +65,10 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 ## Known Issues
 
 - [ ] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
-- [ ] Songs have hiccups randomly (maybe due to heavy system load from other programs)
+- [ ] Songs have hiccups randomly (due to heavy system load from other programs)
 - [ ] Application Optimizations (streamlining, data caching, etc.)
 - [ ] Better error handling
 - [ ] "Add To" in Context Menu gets cut off when close to the edges of the screen
 - [ ] Some album artwork is not deleted when songs are removed
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
-- [ ] App has a chance to crash when you clear the queue as the next song is being loaded
+- [x] App has a chance to crash when you clear the queue as the next song is being loaded

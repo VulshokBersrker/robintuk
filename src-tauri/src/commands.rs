@@ -93,7 +93,6 @@ pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle
             if s_status.is_ok() {
                 let _ = state.player.lock().unwrap().update_current_index(i);
                 state.player.lock().unwrap().play_song();
-
                 break;
             }
             else {
@@ -141,8 +140,6 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
 pub async fn shuffle_queue(state: State<AppState, '_>, song: String, shuffled: bool) -> Result<(), String> {
     let mut q = db::get_queue(state.clone(), false).await.unwrap();
 
-    // let current_pos = q.iter().position(|r| r.path == song).unwrap();
-
     if shuffled {
         helper::shuffle(&mut q);
         let index = q.iter().position(|r| r.path == song).unwrap();
@@ -183,8 +180,6 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_name: String, index: usize, shuffled: bool) -> Result<bool, String> {
-
-    println!("--------------------------------------------------------------------------------------------------");
 
     let mut album: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC;")
         .bind(album_name)

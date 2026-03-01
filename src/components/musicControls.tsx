@@ -426,11 +426,8 @@ export default function MusicControls() {
             setLockShuffle(true);
             // Used to limit the frontend from making an extra call, which would add a dup song
             const num_loaded_songs: number = await invoke("player_get_sink_length");
-
             const pos: number = await invoke("player_get_current_position");
             const qLength: number = await invoke("player_get_queue_length");
-
-            console.log("Current Position: " + pos);
 
             if (pos + 1 >= qLength) {
                 if(num_loaded_songs == 1) {
