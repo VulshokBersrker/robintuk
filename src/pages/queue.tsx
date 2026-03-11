@@ -1,8 +1,8 @@
 // Core Libraries
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 
@@ -11,10 +11,13 @@ import { GetCurrentSong, PlaylistList, savePosition, saveQueue, saveSong, Songs 
 import ImageWithFallBack from "../components/imageFallback";
 
 // Images
+import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
+import PlayIconOutline from '../images/play-icon-outline.svg';
 import ClearIcon from '../images/trash-can-regular-full.svg';
-import PlayIcon from '../images/play-icon-outline.svg';
+import ArtistIcon from '../images/user-regular-full.svg';
+import PlayIcon from '../images/play-solid-full.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
-import PlusIcon from '../images/plus-solid-full.svg'
+import PlusIcon from '../images/plus-solid-full.svg';
 import CloseIcon from '../images/x.svg';
 
 export default function QueueOverviewPage() {
@@ -33,6 +36,9 @@ export default function QueueOverviewPage() {
     const [newPlaylistName, setNewPlaylistName] = useState<string>("");
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
+
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const isContextMenuOpen = useRef<any>(null);
 
     // On first load get the album details
     useEffect(() => {
@@ -98,14 +104,13 @@ export default function QueueOverviewPage() {
     async function playSong(index: number) {
         try {
             await invoke('player_load_album', {queue: queue, index: index});
-            await invoke('update_current_song_played', {path: queue[index].path});
             await invoke('update_current_song_played');
             saveQueue(queue);
             savePosition(index);
             // Update the music controls state somehow
         }
         catch (err) {
-            alert(`Failed to play song: ${err}`);
+            console.log(`Failed to play song: ${err}`);
         }
     }
 
@@ -199,6 +204,30 @@ export default function QueueOverviewPage() {
     }
 
     // ------------ End of Selection Bar Functions ------------
+
+    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+        if(e.pageX < window.innerWidth / 2) {
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 20});
+            }
+        }
+        else {
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+            }
+            else {
+                setContextMenu({ isToggled: true, album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 20});
+            }
+        }
+    }
+
+    function resetContextMenu() {
+        setContextMenu({ isToggled: false, album: "", artist: "", index: 0, posX: 0, posY: 0});
+    }
+
 
     if(loading) {
         return(
@@ -309,7 +338,13 @@ export default function QueueOverviewPage() {
                             itemContent={(index) => {
                                 return(
                                     <div key={index}>
-                                        <div className={`grid-20 song-row playlist align-items-center ${queue[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}>
+                                        <div
+                                            className={`grid-20 song-row playlist align-items-center ${queue[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
+                                            onContextMenu={(e) => {
+                                                e.preventDefault();
+                                                handleContextMenu(e, queue[index].album, queue[index].album_artist, index);
+                                            }}
+                                        >
                                             <span className="section-1 play">
                                                 <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
                                                     <input
@@ -320,7 +355,7 @@ export default function QueueOverviewPage() {
                                                         }).length > 0}
                                                     />
                                                 </span>
-                                                <img src={PlayIcon} onClick={() => playSong(index)} />
+                                                <img src={PlayIconOutline} onClick={() => playSong(index)} />
                                             </span>
                                             <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={queue[index].cover} alt="" image_type="playlist-song" /></span>
                                             <span className="section-9 font-0 name">{queue[index].name}</span>
@@ -336,8 +371,86 @@ export default function QueueOverviewPage() {
                         />
                     </div>
                 </div>
-                <div className="empty-space"/>                
+                <div className="empty-space"/>
+
+                <CustomContextMenu 
+                    isToggled={contextMenu.isToggled}
+                    index={contextMenu.index}
+                    album={contextMenu.album}
+                    artist={contextMenu.artist}
+                    playSong={playSong}
+                    posX={contextMenu.posX}
+                    posY={contextMenu.posY}
+                    ref={isContextMenuOpen}
+                    resetContextMenu={resetContextMenu}
+                />                
             </SimpleBar>
         );
     }
+}
+
+
+
+type Props = {
+    isToggled: boolean,
+    album: string,
+    index: number,
+    artist: string,
+    playSong: (index: number) => void,
+    posX: number,
+    posY: number,
+    ref: any,
+    resetContextMenu: () => void
+}
+
+function CustomContextMenu({ 
+    isToggled, index, album, artist, playSong, posX, posY, ref, resetContextMenu
+}: Props) {
+
+    const navigate = useNavigate();
+
+    function NavigateToAlbum() {
+        navigate("/albums/overview", {state: {name: album}});
+    }
+    function NavigateToArtist() {
+        navigate("/artists/overview", {state: {name: artist}});
+    }
+
+    useEffect(() => {
+        const element = document.getElementsByClassName("simplebar-content-wrapper");
+        if(isToggled) {
+            element[0].classList.add("overflow-y-hidden");
+        }
+        else {
+            element[0].classList.remove("overflow-y-hidden");
+        }
+    }, [isToggled]);
+
+    if(isToggled) {
+        return(
+            <div 
+                className="context-menu-container header-font font-1"
+                style={{ position: "fixed", left: `${posX}px`, top: `${posY}px`}}
+                onContextMenu={(e) => {  e.preventDefault(); }}
+                ref={ref}
+            >
+                <li onClick={() => { playSong(index); resetContextMenu(); }} className="d-flex align-items-center" >
+                    <img src={PlayIcon} />
+                    &nbsp; Play
+                </li>
+
+                {album !== "" && 
+                    <li  className="d-flex align-items-center" onClick={NavigateToAlbum} >
+                        <img src={AlbumIcon} /> &nbsp; Show Album
+                    </li>
+                }
+                {artist !== "" && 
+                    <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
+                        <img src={ArtistIcon} /> &nbsp; Show Artist
+                    </li>
+                }
+            </div>
+        );
+    }
+    else { return; }    
 }

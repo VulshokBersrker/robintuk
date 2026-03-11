@@ -197,16 +197,15 @@ export default function PlaylistOverviewPage() {
     async function playPlaylist(index: number, shuffled: boolean) {
         resetContextMenu();
         setDisplayAddToMenu(false);
-        try {            
+        try {        
+            localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+            await invoke("set_shuffle_mode", { mode: shuffled });
+            
             await invoke("play_playlist", {playlist_id: location.state.name, index: index, shuffled: shuffled})
             savePosition(index);
         }
         catch(err) {
             console.log(`Failed to play song: ${err}`);
-        }
-        finally {
-            localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
-            await invoke("set_shuffle_mode", { mode: shuffled });
         }
     }
 
