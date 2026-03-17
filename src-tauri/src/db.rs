@@ -3,6 +3,7 @@ use std::{fs};
 use std::path::{Path};
 use chrono::Utc;
 use sqlx::sqlite::SqlitePool;
+use tauri_plugin_log::log;
 // SQLITE Libraries
 use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite};
 use tauri::{Emitter, State};
@@ -646,16 +647,16 @@ pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, 
 pub async fn rename_playlist(state: State<AppState, '_>, old_name: String, new_name: String) -> Result<(), String> {
 
     let _ = sqlx::query("UPDATE playlists SET name = $1 WHERE name = $2;")
-    .bind(&new_name)
-    .bind(&old_name)
-    .execute(&state.pool)
-    .await;
+        .bind(&new_name)
+        .bind(&old_name)
+        .execute(&state.pool)
+        .await;
 
     let _ = sqlx::query("UPDATE playlist_tracks SET playlist_name = $1 WHERE playlist_name = $2;")
-    .bind(&new_name)
-    .bind(&old_name)
-    .execute(&state.pool)
-    .await;
+        .bind(&new_name)
+        .bind(&old_name)
+        .execute(&state.pool)
+        .await;
 
     Ok(())
 }
@@ -668,14 +669,14 @@ pub async fn delete_playlist(state: State<AppState, '_>, name: String) -> Result
     let _ = fs::remove_file(covers_to_delete.cover);
 
     let _ = sqlx::query("DELETE FROM playlists WHERE name=$1;")
-    .bind(&name)
-    .execute(&state.pool)
-    .await;
+        .bind(&name)
+        .execute(&state.pool)
+        .await;
 
     let _ = sqlx::query("DELETE FROM playlist_tracks WHERE playlist_name=$1;")
-    .bind(&name)
-    .execute(&state.pool)
-    .await;
+        .bind(&name)
+        .execute(&state.pool)
+        .await;
 
     Ok(())
 }
@@ -916,9 +917,9 @@ pub async fn add_song_to_history(state: State<AppState, '_>, path: String) -> Re
 
     // Remove the song from the history if it is in the history, no repeats
     let _ = sqlx::query("DELETE FROM history WHERE song_id = ?")
-    .bind(&history.song_id)
-    .execute(&state.pool)
-    .await;
+        .bind(&history.song_id)
+        .execute(&state.pool)
+        .await;
     
     let _ = sqlx::query("INSERT INTO history (id, created_at, song_id) VALUES (?1, ?2, ?3)")
         .bind(history.id)
@@ -985,6 +986,7 @@ pub async fn get_lyrics(state: State<AppState, '_>, song_id: String) -> Result<L
         Ok(res.unwrap())
     }
     else {
+        log::info!("Song does not have lyrics in the database");
         Err("No Lyrics".to_string())
     }
 }

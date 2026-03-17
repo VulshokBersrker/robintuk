@@ -1,14 +1,20 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+// Tauri Plugins
 use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
-use rodio::{OutputStream, Sink, OutputStreamBuilder};
+use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_prevent_default::Flags;
 use tauri::{Builder, Manager, Emitter};
-use std::{path::Path, sync::{Arc, Mutex}};
-use tokio::runtime::Runtime;
-use sqlx::{Pool, Sqlite, prelude::FromRow};
+use tauri_plugin_log::log;
+use tauri_plugin_log::{fern};
 use tauri::{State};
+
+// Rust Libraries
+use rodio::{OutputStream, Sink, OutputStreamBuilder};
+use std::{path::Path, sync::{Arc, Mutex}};
+use sqlx::{Pool, Sqlite, prelude::FromRow};
+use tokio::runtime::Runtime;
 
 // Import files
 mod commands;
@@ -47,6 +53,17 @@ pub fn run() -> Result<(), String> {
         //     println!("{}, {argv:?}, {cwd}", app.package_info().name);
         //     app.emit("single-instance", Payload { args: argv, cwd }).unwrap();
         // }))
+        .plugin(tauri_plugin_log::Builder::new() // -> C:\Users\"Alice"\AppData\Local\com.tauri.dev\logs
+            .clear_targets()
+            .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+            .level(log::LevelFilter::Info)
+            .level(log::LevelFilter::Error)
+            .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+            .targets([Target::new(TargetKind::Dispatch(
+                fern::Dispatch::new().chain(fern::DateBased::new("logs/", "%Y-%m-%d-my-program.log")),
+            ))])
+            .build()
+        )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build())
@@ -86,7 +103,6 @@ pub fn run() -> Result<(), String> {
                                     if q.is_ok() {
                                         let _ = _app.emit("get-current-song", GetCurrentSong { q: q.unwrap() });
                                     }
-                                    
                                 }                                
                             }
                             if shortcut.matches(Modifiers::FN, Code::MediaTrackPrevious) {
@@ -262,6 +278,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
     println!("Scan has started");
 
     if *second_state.is_scan_ongoing.lock().unwrap() {
+        log::info!("There is a Music Scan already active");
         num_error += 1;
         error_details.push(ErrorInfo {
             file_name: "".to_string(),
@@ -322,6 +339,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                 }
             }
             else {
+                log::error!("Scan Music - Error reading Metadata");
                 let _ = song_res.inspect_err(|e| println!("Error reading metadata: {:?}", e));
                 num_error += 1;
             }
@@ -348,6 +366,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
     app.emit("scan-finished", GetScanStatus { res: false}).unwrap(); 
 
     println!("Scan has finished = {:?} added - {:?} updated - {:?} errors", &num_added, &num_updated, &num_error);
+    log::info!("Scan Music - Results ---> Total Scanned: {:?} --  Number Added: {:?}, Number Updated: {:?}, Number Errors: {:?}", &num_scanned, &num_added, &num_updated, &num_error);
     
     // At the end, will return the number of successes and failures
     Ok(ScanResults {

@@ -1,17 +1,25 @@
+// Imports
 use crate::{
-    AppState,
+    types::{DirsTable, DoesExist, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable },
     db::{self, create_playlist, get_playlist}, 
     helper::{self},
-    types::{DirsTable, DoesExist, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable }
+    AppState
 };
-use m3u8_rs::{MediaPlaylist, MediaSegment, Playlist};
-use reqwest::{Client, header::{CONTENT_TYPE, USER_AGENT}};
-use zip::{ZipArchive, ZipWriter,  write::SimpleFileOptions};
+
+// Core Libraries
 use std::{fs::{self, File}, io::Read, path::Path};
-use tauri::{Emitter, State, http::HeaderMap};
 use std::path::{PathBuf};
 use std::io::Write;
 use std::{io};
+
+// Tauri Libraries
+use tauri::{Emitter, State, http::HeaderMap};
+use tauri_plugin_log::log;
+
+// Misc Libraries
+use zip::{ZipArchive, ZipWriter,  write::SimpleFileOptions};
+use reqwest::{Client, header::{CONTENT_TYPE, USER_AGENT}};
+use m3u8_rs::{MediaPlaylist, MediaSegment, Playlist};
 
 // -------------------------- Media Player Commands --------------------------
 
@@ -122,6 +130,7 @@ pub fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, 
         Ok(current_song.unwrap())
     }
     else {
+        log::error!("Player Get Current Song - Error getting current song");
         Err("Error getting current song".to_string())
     }
 }
@@ -399,6 +408,9 @@ pub fn update_current_song_played(state: State<AppState, '_>, app: tauri::AppHan
         let res = q.unwrap();
         app.emit("get-current-song", GetCurrentSong { q: res }).unwrap();
     }
+    else {
+        log::error!("Update Current Song Played - Error updating current song played emit");
+    }
 }
 
 #[tauri::command]
@@ -473,6 +485,7 @@ pub async fn scan_for_lyrics(state: State<AppState, '_>, app: tauri::AppHandle) 
         }
         // If an error, skip to the next
         else {
+            log::error!("Lyrics Scan - Error getting remote lyric data");
             continue;
         }
     }
@@ -510,6 +523,9 @@ pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::App
                 let _ = app.emit("update-song", DirsTable{dir_path: song_id});
             }
         }
+        else {
+            log::error!("Check for Lyric - Error on fetch response");
+        }
     }
     Ok(())
 }
@@ -541,10 +557,12 @@ pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String
             Ok(lyrics)
         }
         else {
+            log::error!("Get Remote Lyrics - Error getting remote lyrics - res");
             Err("Error Getting Remote Lyrics".to_string())
         }
     }
     else {
+        log::error!("Get Remote Lyrics - Error getting remote lyrics - first res");
         Err("Error Getting Remote Lyrics".to_string())
     }
 }
@@ -606,7 +624,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
             else {
                 // println!("adding dir {path_as_string:?} as {name:?} ...");
                 zip.add_directory(path_as_string, SimpleFileOptions::default()).unwrap();
-            }        
+            }
         }
         zip.finish().unwrap();
     }
@@ -833,10 +851,12 @@ pub async fn check_for_new_version(app: tauri::AppHandle) -> Result<bool, bool> 
             return Ok(false)
         }
         else {
+            log::error!("Check New For Version - Error getting version data");
             return Err(false)
         }
     }
     else {
+        log::error!("Check New For Version - Error on remote fetch of package.json");
         return Err(false)
     }    
 }
