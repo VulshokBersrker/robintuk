@@ -46,7 +46,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
-- [ ] Error Event log file for debugging (with timestamps) https://v2.tauri.app/plugin/logging/
+- [ ] Error Event log file for debugging (with timestamps)
 - [ ] Equalizer?
 - [ ] Linux support
 - [ ] Drag and Drop playlist order
