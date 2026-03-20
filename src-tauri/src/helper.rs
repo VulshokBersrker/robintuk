@@ -2,6 +2,7 @@
 use std::{
     fs::{self}, hash::{BuildHasher, DefaultHasher, Hash, Hasher, RandomState}, os::windows::fs::MetadataExt, path::{Path, PathBuf}
 };
+use tauri_plugin_log::log;
 
 // Song Metadata Libraries
 use lofty::{config::{ParseOptions, ParsingMode}, file::TaggedFileExt, tag::ItemKey};
@@ -326,11 +327,13 @@ pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
         else {
             println!("File contains not tags: {:?}", &path);
             errors = "No-Tags".to_string();
+            log::error!("Get Song Data - file does not contain tags");
         }
     }
     else {
         // let _ = tagged_file.inspect_err(|f| println!("Lofty Error: {:?} - {:?}", f, &path));
         errors = "Lofty-Error".to_string();
+        log::error!("Get Song Data - Lofty Metadata Error");
     }
     
     // println!("{:?}\nName: {:?}\nAlbum: {:?}\nTrack: {:?}\nArtist: {:?}\nRelease: {:?}\nDisc: {:?}\n",

@@ -1,5 +1,6 @@
 use std::{ fs::File, io::BufReader, time };
 use rodio::{ Decoder, Sink };
+use tauri_plugin_log::log;
 
 use crate::{ types::SongTable };
 
@@ -9,21 +10,6 @@ pub struct MusicPlayer {
     pub repeat_mode: i64,
     pub queue: Vec<SongTable>
 }
-
-/*
-    Gapless Rework
-
-    When a song/album/playlist is set to play, it needs to:
-    1. Setup the first song, by appending it to the Sink
-    2. Let the frontend know the song is ready
-    3. Add one more song to the Sink for gapless to work
-    4. Let there be a flag to cancel this loop if the user clicks on a new set of songs/ablum/playlist
-
-    Issues:
-    When turning off shuffle while playing, it will still hold the two loaded songs. This will cause a display and play error,
-        where the displayed song will be the next one in line for the unshuffled queue, but the actual song is still from the shuffled queue
-
-*/
 
 // Rework Parts
 impl MusicPlayer {
@@ -169,6 +155,7 @@ impl MusicPlayer {
         if pos > self.queue.len() {
             println!("position is larger than queue length - setting to zero");
             self.position = 0;
+            log::error!("Update Current Index MusicPlayer - Position is larger than Queue length");
             Err("position is larger than queue length".to_string())
         }
         else if pos == self.position {
@@ -186,6 +173,7 @@ impl MusicPlayer {
             return Ok(self.queue[self.position].clone());
         }
         else {
+            log::error!("Get Current Song MusicPlayer - Error decoding Audio File");
             return Err(false);
         }
     }
@@ -221,14 +209,16 @@ impl MusicPlayer {
                     Ok(source) => {
                         // On Success, load song into the sink
                         self.sink.append(source);
+                        log::info!("Load Song - Song Successfully loaded - {:?} -- {:?}", &self.queue[pos].name, &self.queue[pos].album);
                         // println!("Song is loaded");
                     },
-                    Err(e) => { eprintln!("Error decoding audio file: {}", e); }
+                    Err(e) => { log::error!("Load Song - Error decoding Audio File"); eprintln!("Error decoding audio file: {}", e); }
                 };
                 return Ok(())
             }
             // If there is an error reading in the file (ex. File has been moved an doesn't exist in that location)
             else {
+                log::error!("Load Song - Song file does not exist");
                 return Err("Song does not exist".to_string())
             }
         }

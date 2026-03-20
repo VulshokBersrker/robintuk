@@ -1,6 +1,6 @@
 [package]
 name = "robintuk_player"
-version = "0.2.7"
+version = "0.2.8"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -38,6 +38,8 @@ threadpool = "1.8.1"
 reqwest = { version = "0.13.1", features = ["json"] }
 tauri-plugin-prevent-default = "4.0.3"
 tauri-plugin-dialog = "2"
+tauri-plugin-log = "2"
+fern = { version = "0.7.1", features = ["colored", "date-based"] } 
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"

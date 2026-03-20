@@ -158,7 +158,7 @@ export default function ArtistsPage({artists}: P) {
                         ref={virtuoso}
                         increaseViewportBy={{ top: 210, bottom: 420 }}
                         itemContent={(index) =>
-                            <div className="album-link" key={index} id={`${filteredArtists[index].album_artist}-${index}`}>
+                            <div className="album-link artist" key={index} id={`${filteredArtists[index].album_artist}-${index}`}>
                                 <div className="album-image-container"
                                     onContextMenu={(e) => {
                                         e.preventDefault();

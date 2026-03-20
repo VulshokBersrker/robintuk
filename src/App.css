@@ -22,6 +22,11 @@
   --gradient-one: #430909;
   --gradient-two: #1e0000;
   --gradient-three: rgb(0, 0, 0);
+  /* Hover / Highlight Colors */
+  --current-song-one: #460202;
+  --current-song-two: #1301040d;
+  --highlight-color: #000000b5;
+  --highlight-hover: #4b0404e2;
   /* Hr Colors */
   --hr-gradient-one: #611e1e;
   --hr-gradient-two: #5a0909;
@@ -45,15 +50,20 @@
   --gradient-one: rgb(6, 22, 49);
   --gradient-two: rgb(0, 2, 15);
   --gradient-three: rgb(0, 0, 0);
+  /* Hover / Highlight Colors */
+  --current-song-one: #04134f;
+  --current-song-two: #2841a400;
+  --highlight-color: #f4f4f421;
+  --highlight-hover: #140e6d;
   /* Hr Colors */
   --hr-gradient-one: #212a4a;
   --hr-gradient-two: #1c1e55;
   /* Music Player Colors */
   --music-player-bg: rgba(1, 4, 16, 0.55);
-  --music-player-border: linear-gradient(to right, rgb(44, 47, 151), rgb(28, 28, 28)) 1 stretch;
-  --slider-color-one: #2841a4;
+  --music-player-border: linear-gradient(to right, #0e2fb1, rgb(28, 28, 28)) 1 stretch;
+  --slider-color-one: #0e2fb1;
   /* Album Overview Colors */
-  --play-icon: brightness(0) saturate(100%) invert(19%) sepia(97%) saturate(1994%) hue-rotate(222deg) brightness(85%) contrast(91%);
+  --play-icon: brightness(0) saturate(100%) invert(19%) sepia(97%) saturate(1994%) hue-rotate(222deg) brightness(85%) contrast(101%);
   --play-icon-hover: brightness(0) saturate(100%) invert(37%) sepia(26%) saturate(3653%) hue-rotate(210deg) brightness(84%) contrast(94%);
   --arrow-icon: brightness(0) saturate(100%) invert(16%) sepia(83%) saturate(3109%) hue-rotate(202deg) brightness(99%) contrast(93%);
   /* Checkbox Colors */
@@ -68,6 +78,11 @@
   --gradient-one: #301268;
   --gradient-two: #170635;
   --gradient-three: #000000;
+  /* Hover / Highlight Colors */
+  --current-song-one: #44066e;
+  --current-song-two: #ffffff00;
+  --highlight-color: #000000ba;
+  --highlight-hover: #4b1171;
   /* Hr Colors */
   --hr-gradient-one: #4b3957;
   --hr-gradient-two: #473551;
@@ -91,6 +106,11 @@
   --gradient-one: rgb(54, 30, 0);
   --gradient-two: rgb(16, 8, 1);
   --gradient-three: rgb(0, 0, 0);
+  /* Hover / Highlight Colors */
+  --current-song-one: #7a4010;
+  --current-song-two: #ffffff00;
+  --highlight-color: rgba(0, 0, 0, 0.733);
+  --highlight-hover: #925607;
   /* Hr Colors */
   --hr-gradient-one: #4d3c22;
   --hr-gradient-two: #573e1e;
@@ -114,6 +134,11 @@
   --gradient-one: rgb(5, 41, 3);
   --gradient-two: rgb(5, 17, 0);
   --gradient-three: rgb(0, 0, 0);
+  /* Hover / Highlight Colors */
+  --current-song-one: #013906;
+  --current-song-two: #000000;
+  --highlight-color: rgba(0, 0, 0, 0.788);
+  --highlight-hover: #004e1c;
   /* Hr Colors */
   --hr-gradient-one: #154715;
   --hr-gradient-two: #0e4a0e;
@@ -137,6 +162,11 @@
   --gradient-one: rgb(45, 8, 64);
   --gradient-two: rgb(15, 1, 24);
   --gradient-three: rgb(0, 0, 0);
+  /* Hover / Highlight Colors */
+  --current-song-one: #410748;
+  --current-song-two: #ffffff00;
+  --highlight-color: #000000ce;
+  --highlight-hover: #700d7a;
   /* Hr Colors */
   --hr-gradient-one: #281736;
   --hr-gradient-two: #33173a;
@@ -151,6 +181,145 @@
   /* Checkbox Colors */
   --checkbox-checked-color: #8e159c;
 }
+[data-theme="tau-ceti"] {
+  /* Font Colors */
+  --font-color-one: #f3f3f3;
+  --font-color-two: #84986b;
+  --font-color-three: #8cac0f;
+  --font-color-hover: #010101;
+  /* Gradient Colors */
+  --gradient-one: #010101;
+  --gradient-two: #010101;
+  --gradient-three: #010101;
+  /* Hover / Highlight Colors */
+  --current-song-one: #232d05;
+  --current-song-two: #010101;
+  --highlight-color: #28292589;
+  --highlight-hover: #9ed042;
+  /* Hr Colors */
+  --hr-gradient-one: #212b04;
+  --hr-gradient-two: #2a3507;
+  /* Music Player Colors */
+  --music-player-bg: rgba(16, 22, 1, 0.573);
+  --music-player-border: linear-gradient(to right, #c0fe04, rgb(28, 28, 28)) 1 stretch;
+  --slider-color-one: #c0fe04;
+  /* Album Overview Colors */
+  --play-icon: brightness(0) saturate(100%) invert(70%) sepia(49%) saturate(4308%) hue-rotate(36deg) brightness(104%) contrast(99%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(71%) sepia(64%) saturate(6700%) hue-rotate(48deg) brightness(160%) contrast(99%);
+  --arrow-icon: brightness(0) saturate(100%) invert(70%) sepia(49%) saturate(4308%) hue-rotate(36deg) brightness(104%) contrast(99%);
+  /* Checkbox Colors */
+  --checkbox-checked-color: #c0fe04;
+}
+
+/* Custom Styles for Tau Ceti */
+body[data-theme="tau-ceti"] {
+  input[type="range"]::-webkit-slider-thumb {
+    --thumb-radius: calc((var(--thumb-height) * 0.5) - 1px);
+    --clip-top: calc((var(--thumb-height) - var(--track-height)) * 0.5 - 0.5px);
+    --clip-bottom: calc(var(--thumb-height) - var(--clip-top));
+    --clip-further: calc(100% + 1px);
+    --box-fill: calc(-100vmax - var(--thumb-width, var(--thumb-height))) 0 0 100vmax currentColor;
+
+    width: var(--thumb-width, var(--thumb-height));
+    background: transparent;
+    box-shadow: var(--box-fill);
+    border-radius: 0px;
+
+    clip-path: polygon(
+      100% -1px,
+      var(--clip-edges) -1px,
+      0 var(--clip-top),
+      -100vmax var(--clip-top),
+      -100vmax var(--clip-bottom),
+      0 var(--clip-bottom),
+      var(--clip-edges) 100%,
+      var(--clip-further) var(--clip-further)
+    );
+    filter: var(--play-icon);
+    background-image: url("./images/node.svg");
+  }
+  input[type="range"]:hover::-webkit-slider-thumb {
+    filter: var(--play-icon-hover);
+    cursor: grab;
+  }
+  .nav-item.active {
+    background-color: var(--highlight-hover);
+  }
+  .nav-item:hover .nav-font,
+  .nav-item.active .nav-font {
+    color: var(--font-color-hover) !important;
+  }
+  .nav-item.nav-link:hover img.bi,
+  .nav-item.nav-link.active img.bi {
+    filter: brightness(0%);
+  }
+  .search-bar:after {
+    content: "";
+    position: absolute;
+    height: 22px;
+    width: 22px;
+    filter: var(--play-icon);
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    /* border: 1px solid #fff; */
+    background-image: url("./images/search-icon.svg");
+  }
+  .search-bar input {
+    position: relative;
+  }
+  .search-bar img {
+    display: none;
+  }
+  .section-list div:hover {
+    cursor: pointer;
+    color: var(--gradient-one) !important;
+    background-color: var(--highlight-hover);
+    border-radius: 0%;
+  }
+
+  .album-link:hover {
+    cursor: pointer;
+    z-index: 10;
+    color: var(--gradient-one);
+    border-radius: 4px;
+    background-color: var(--highlight-hover);
+  }
+  .album-link:hover .header-font .artist-name {
+    color: var(--gradient-one);
+  }
+  .album-link.artist:hover img,
+  .album-link.genre:hover img {
+    filter: brightness(0%);
+  }
+  
+  .songs.home .song:hover {
+    background-color: var(--highlight-hover);
+  }
+  .songs.home .song:hover .song-name,
+  .songs.home .song:hover .album  {
+    color: var(--font-color-hover);
+  }
+
+  .directory-container:hover {
+    color: var(--font-color-hover)
+  }
+
+  button, input, select {
+    border-radius: 0px;
+  }
+
+  .play-container:hover .play-pause-icon { 
+    filter: brightness(0%);
+  }
+  .play-button:hover img {
+    filter: brightness(60%);
+  }
+  .play-button:hover img.off {
+    filter: brightness(30%);
+  }
+
+} 
 
 .border {
   border: 1px solid #fff;
@@ -632,7 +801,7 @@ img.off {
 }
 .nav-link:hover {
   cursor: pointer;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--highlight-hover);
   backdrop-filter: blur(10px);
   border-radius: var(--border-radius);
 }
@@ -787,7 +956,7 @@ img.off {
 }
 
 .songs.home .song:hover {
-  background: linear-gradient(90deg, var(--gradient-one) 0%, rgba(0, 0, 0, 0.0) 100%);
+  background: linear-gradient(90deg, var(--highlight-hover) 0%, rgba(0, 0, 0, 0.0) 100%);
 }
 
 .songs.home .song:hover img.play {
@@ -882,9 +1051,9 @@ img.off {
 }
 
 .music-progress-bar {
-  width: 100%;
+  width: 100.5%;
   top: -0.75rem;
-  left: 0px;
+  left: -2px;
   display: flex;
   position: absolute;
 }
@@ -1220,7 +1389,8 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 }
 .section-list div:hover {
   cursor: pointer;
-  background-color: var(--gradient-one);
+  color: var(--gradient-one) !important;
+  background-color: var(--highlight-hover);
   border-radius: 50%;
 }
 
@@ -1240,7 +1410,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   cursor: pointer;
   z-index: 10;
   border-radius: var(--border-radius);
-  background-color: var(--gradient-one);
+  background-color: var(--highlight-hover);
 }
 
 .album-image-container .container {
@@ -1422,12 +1592,12 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   position: relative;
 }
 .song-row.current-song {
-  color: var(--font-color-two) !important;
-  background: linear-gradient(90deg, var(--gradient-one) 0%, var(--gradient-two) 100%);
+  color: var(--font-color-one) !important;
+  background: linear-gradient(90deg, var(--current-song-one) 0%, var(--current-song-two) 100%);
   border-radius: var(--border-radius);
 }
 .song-row:hover {
-  background: linear-gradient(90deg, var(--gradient-one) 0%, rgba(0, 0, 0, 0.0) 100%);
+  background: linear-gradient(90deg, var(--current-song-one) 0%, rgba(0, 0, 0, 0.0) 100%);
   border-radius: var(--border-radius);
   transition: 0.2s ease-in-out;
 }
@@ -1745,14 +1915,14 @@ input.new-playlist {
   padding-bottom: 0.9rem;
 }
 .directory-container {
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--highlight-color);
   border-radius: var(--border-radius);
   padding: 1rem;
   width: 15rem;
   transition: 0.1s ease-in-out;
 }
 .directory-container:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--highlight-hover);
   transition: 0.1s ease-in-out;
   color: var(--font-color-one);
 }
@@ -1977,6 +2147,9 @@ select.themes option::before {
 #theme-dark-wave::before {
   background-image: url("./images/dark-wave.svg"); 
 }
+#theme-tau-ceti::before {
+  background-image: url("./images/tau-ceti.svg"); 
+}
 
 option::checkmark {
   display: none;
@@ -1992,7 +2165,7 @@ option:hover, option:active, option:focus {
   padding: 0.55rem;
   width: 8rem;
   border-radius: var(--border-radius);
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--highlight-color);
 }
 
 
@@ -2467,6 +2640,7 @@ img.search-icon:hover {
   
 }
 
+/* Scrollbar itself */
 .simplebar-scrollbar:before {
   position: absolute;
   content: '';
@@ -2474,8 +2648,7 @@ img.search-icon:hover {
   left: 2px;
   right: 2px;
   opacity: 0;
-  transition: opacity 0.2s 0.5s linear;
-  
+  transition: opacity 0.2s 0.5s linear;  
 }
 
 .simplebar-track.simplebar-vertical .simplebar-scrollbar:before {

@@ -351,19 +351,28 @@ export default function MusicControls() {
         currentLineNumberRef.current = null;
         try {
             const res: SongLyrics = await invoke("get_lyrics", {song_id: path});
-            setHasLyrics(true);
+            if(res !== undefined) {
+                setHasLyrics(true);
+            }
+            else {
+                setHasLyrics(false);
+            }            
 
             let spilt_plain: string[] = [];
             let split_synced: string[] = [];
 
             if(res.plain_lyrics !== null) {
-                if(res.plain_lyrics.includes("\\n")) {
-                    split_synced = res.synced_lyrics.split("\\n");
-                    spilt_plain = res.plain_lyrics.split("\\n");
+                if(res.plain_lyrics.includes("\\r\\n")) {
+                    split_synced = res.synced_lyrics.split("\\r\\n");
+                    spilt_plain = res.plain_lyrics.split("\\r\\n");
                 }
                 else if(res.plain_lyrics.includes("\r\n")) {
                     split_synced = res.synced_lyrics.split("\r\n");
                     spilt_plain = res.plain_lyrics.split("\r\n");
+                }
+                else if(res.plain_lyrics.includes("\\n")) {
+                    split_synced = res.synced_lyrics.split("\\n");
+                    spilt_plain = res.plain_lyrics.split("\\n");
                 }
                 else if(res.plain_lyrics.includes("\n")) {
                     split_synced = res.synced_lyrics.split("\n");
@@ -625,26 +634,35 @@ export default function MusicControls() {
                                     if(songLyrics.synced_lyrics[i].includes("[")) {
                                         timestamp = songLyrics.synced_lyrics[i].split("[")[1].substring(0, 8);
 
-                                        time_in_seconds = (parseInt(timestamp.split(":")[0]) * 60) // Minutes
-                                        + (parseInt(timestamp.split(":")[1].substring(0, 2))) // Seconds
-                                        + (parseInt(timestamp.split(".")[1]) / 100); // Milliseconds
+                                        // console.log(timestamp.split(":")[0][0]);
+                                        if(parseInt(timestamp.split(":")[0][0]) !== 0 && parseInt(timestamp.split(":")[0][0]) !== 1) { }
+                                        else {
+                                            time_in_seconds = (parseInt(timestamp.split(":")[0]) * 60) // Minutes
+                                            + (parseInt(timestamp.split(":")[1].substring(0, 2))) // Seconds
+                                            + (parseInt(timestamp.split(".")[1]) / 100); // Milliseconds
 
-                                        // Works, but need to find a way for the highlight to stick until the next line is active
-                                        if(Math.abs(time_in_seconds - songProgress) < 1) {
-                                            currentLineNumberRef.current = i;
+                                            // Works, but need to find a way for the highlight to stick until the next line is active
+                                            if(Math.abs(time_in_seconds - songProgress) < 1) {
+                                                currentLineNumberRef.current = i;
+                                            }
                                         }
+                                        
                                     }
                                 }
 
-                                return(
-                                    <div
-                                        className={`lyric-row font-3 sub-font ${currentLineNumberRef.current === i ? "active" : ""} ${(songProgress > time_in_seconds) ? "old" : ""}`}
-                                        id={`${timestamp === "" ? `${i}` : timestamp}`}
-                                        key={`timestamp-${i}`} ref={currentLineNumberRef.current === i ? currentLineRef : null}
-                                    >
-                                        {entry.slice(11)}
-                                    </div>
-                                );
+                                // Only show the lyrics with the proper timestamps
+                                if(parseInt(timestamp.split(":")[0][0]) === 0 || parseInt(timestamp.split(":")[0][0]) === 1) { 
+                                    return(
+                                        <div
+                                            className={`lyric-row font-3 sub-font ${currentLineNumberRef.current === i ? "active" : ""} ${(songProgress > time_in_seconds) ? "old" : ""}`}
+                                            id={`${timestamp === "" ? `${i}` : timestamp}`}
+                                            key={`timestamp-${i}`} ref={currentLineNumberRef.current === i ? currentLineRef : null}
+                                        >
+                                            {entry.slice(11)}
+                                        </div>
+                                    );
+                                }
+                                                 
                             })}
 
                             {songLyrics.plain_lyrics.length > 0 && songLyrics.synced_lyrics.length === 0 && songLyrics.plain_lyrics.map((entry, i): any => {

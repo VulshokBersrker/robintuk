@@ -93,6 +93,10 @@ export default function ArtistOverviewPage() {
         catch(e) {
             console.log(e);
         }
+        finally{
+            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+            await invoke("set_shuffle_mode", { mode: false });
+        }
     }
 
     async function playArtist(shuffled: boolean) {
@@ -103,6 +107,10 @@ export default function ArtistOverviewPage() {
         }
         catch(e) {
             console.log(e);
+        }
+        finally {
+            localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+            await invoke("set_shuffle_mode", { mode: shuffled });
         }
     }
 

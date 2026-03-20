@@ -46,6 +46,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
+- [ ] Error Event log file for debugging (with timestamps)
 - [ ] Equalizer?
 - [ ] Linux support
 - [ ] Drag and Drop playlist order
@@ -64,6 +65,8 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
+- [ ] Small chance of crash on song change (Unknown reason why)
+- [ ] Error on load sometimes where the wrong queue is saved or removed
 - [ ] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)
 - [ ] Application Optimizations (streamlining, data caching, etc.)

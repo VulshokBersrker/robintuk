@@ -424,6 +424,7 @@ export default function Settings() {
                     <option value="orange" id="theme-orange"> Orange </option>
                     <option value="green" id="theme-green"> Green </option>
                     <option value="dark-wave" id="theme-dark-wave"> Dark Wave </option>
+                    <option value="tau-ceti" id="theme-tau-ceti"> Tau Ceti </option>
                 </select>
             </div>
 

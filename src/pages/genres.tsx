@@ -155,7 +155,7 @@ export default function GenresPage({genres}: P) {
                         ref={virtuoso}
                         increaseViewportBy={{ top: 210, bottom: 420 }}
                         itemContent={(index) =>
-                            <div className="album-link" key={index} id={`${filteredArtists[index].genre}-${index}`}>
+                            <div className="album-link genre" key={index} id={`${filteredArtists[index].genre}-${index}`}>
                                 <div className="album-image-container"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
