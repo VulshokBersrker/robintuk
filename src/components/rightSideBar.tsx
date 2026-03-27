@@ -249,18 +249,21 @@ function ContextMenu({ navigateToPlaylistOverview, isToggled, playlist_id, play,
                 ref={ref}
             >
                 <li onClick={() => {resetContextMenu(); play(playlist_id, false); }} className="d-flex align-items-center">
-                    <img src={PlayIcon} />
-                    &nbsp; Play
+                    <span className="context-row">
+                        <img src={PlayIcon} /> &nbsp; Play
+                    </span> 
                 </li>
 
                 <li onClick={() => {resetContextMenu(); play(playlist_id, true); }} className="d-flex align-items-center">
-                    <img src={ShuffleIcon} />
-                    &nbsp; Shuffle
+                    <span className="context-row">
+                        <img src={ShuffleIcon} /> &nbsp; Shuffle
+                    </span>                    
                 </li>
 
                 <li className="d-flex align-items-center" onClick={() => navigateToPlaylistOverview(playlist_id)} >
-                    <img src={AlbumIcon} />
-                    &nbsp; View
+                    <span className="context-row">
+                        <img src={AlbumIcon} /> &nbsp; View
+                    </span>  
                 </li>                
             </div>
         );

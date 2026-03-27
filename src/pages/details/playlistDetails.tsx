@@ -62,7 +62,7 @@ export default function PlaylistOverviewPage() {
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0
     });
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<string>("");
@@ -355,24 +355,24 @@ export default function PlaylistOverviewPage() {
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 380});
+                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 380, side: 0});
             }
         }
         else {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY, side: 1});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 380});
+                setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 380, side: 1});
             }
         }
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
         setDisplayAddToMenu(false);
     }
 
@@ -569,6 +569,7 @@ export default function PlaylistOverviewPage() {
                         length={playlist.length}
                         posX={contextMenu.posX}
                         posY={contextMenu.posY}
+                        side={contextMenu.side}
                         play={playPlaylist}
                         editSelection={editSelection}
                         reorder={reorderPlaylist}
@@ -677,6 +678,7 @@ type Props = {
     isBeingAdded: boolean,
     posX: number,
     posY: number,
+    side: number,
     // Playlist
     name: string,
     playlistList: PlaylistList[],
@@ -690,7 +692,7 @@ type Props = {
 function CustomContextMenu({ 
     isToggled, song, album, artist, index, length, 
     play, editSelection, reorder, remove, 
-    isBeingAdded, posX, posY,
+    isBeingAdded, posX, posY, side,
     playlistList, name,
     createPlaylist, addToPlaylist, addToQueue, updateSongDetailsDisplay,
     ref
@@ -730,20 +732,22 @@ function CustomContextMenu({
                 <li className="d-flex align-items-center"
                     onClick={() => editSelection(song, !isBeingAdded, index) }
                 >
-                    {isBeingAdded === true && <><img src={DeselectIcon} />&nbsp;Deselect</>}
-                    {isBeingAdded === false && <><img src={SelectIcon} />&nbsp;Select</>}
+                    {isBeingAdded === true && <span className="d-flex context-row"> <img src={DeselectIcon} />&nbsp;Deselect </span>}
+                    {isBeingAdded === false && <span className="d-flex context-row"> <img src={SelectIcon} />&nbsp;Select </span>}
                 </li>
 
                 <li onClick={() => {play(index, false)}} className="d-flex align-items-center">
-                    <img src={PlayIcon} /> &nbsp; Play
+                    <span className="d-flex context-row">
+                        <img src={PlayIcon} /> &nbsp; Play
+                    </span>
                 </li>
 
                 <li className="position-relative">
-                    <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                    <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
                         <img src={AddIcon} /> &nbsp; Add to
                     </span>
                     {displayAddMenu &&
-                        <div className="playlist-list-container add-context-menu header-font">
+                        <div className={`playlist-list-container add-context-menu header-font ${side === 0 ? "" : "left" }`}>
                             <div className="item d-flex align-items-center" onClick={addToQueue}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
@@ -775,38 +779,44 @@ function CustomContextMenu({
                {/* Playlist Buttons */}
                 {index > 0 &&
                     <li className="d-flex align-items-center" onClick={() => reorder(index, index - 1)} >
-                        <img src={ArrowBackIcon} className="rotate-up icon"/>
-                        &nbsp; Move Up
+                        <span className="d-flex context-row">
+                            <img src={ArrowBackIcon} className="rotate-up icon"/> &nbsp; Move Up
+                        </span>
                     </li>
                 }
                 {index !== length - 1 &&
                     <li className="d-flex align-items-center" onClick={() => reorder(index, index + 1)} >
-                        <img src={ArrowBackIcon} className="rotate-down icon" />
-                        &nbsp; Move Down
+                        <span className="d-flex context-row">
+                            <img src={ArrowBackIcon} className="rotate-down icon" /> &nbsp; Move Down
+                        </span>
                     </li>
                 }
                 <li className="d-flex align-items-center" onClick={() => remove(index)} >
-                    <img src={CloseIcon} />
-                    &nbsp; Remove
+                    <span className="d-flex context-row">
+                        <img src={CloseIcon} />  &nbsp; Remove
+                    </span>
                 </li>
                 {/* Navigation Buttons */}
                 {album !== "" &&
-                        <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                        <img src={AlbumIcon} />
-                        &nbsp; Show Album
+                    <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
+                        <span className="d-flex context-row">
+                            <img src={AlbumIcon} />  &nbsp; Show Album
+                        </span>
                     </li>
                 }
                 {artist !== "" &&
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
-                        <img src={ArtistIcon} />
-                        &nbsp; Show Artist
+                        <span className="d-flex context-row">
+                            <img src={ArtistIcon} /> &nbsp; Show Artist
+                        </span>
                     </li>
                 }
                 
 
-                <li  className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
-                    <img src={InfoIcon} />
-                    &nbsp; Song Details
+                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
+                    <span className="d-flex context-row">
+                        <img src={InfoIcon} />  &nbsp; Song Details
+                    </span>
                 </li>
             </div>
         );

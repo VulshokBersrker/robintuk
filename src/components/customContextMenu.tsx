@@ -28,6 +28,7 @@ type Props = {
     isBeingAdded: boolean,
     posX: number,
     posY: number,
+    side: number // What side to render the add playlist
     // Playlist
     name: string,
     playlistList: PlaylistList[],
@@ -40,7 +41,7 @@ type Props = {
 
 export default function CustomContextMenu({ 
     isToggled, context_type, song, album, artist, index, 
-    play, editSelection, isBeingAdded, posX, posY,
+    play, editSelection, isBeingAdded, posX, posY, side,
     name, playlistList, createPlaylist, addToPlaylist, addToQueue, updateSongDetailsDisplay,
     ref
 }: Props) {
@@ -77,21 +78,22 @@ export default function CustomContextMenu({
                 ref={ref}
             >
                 <li className="d-flex align-items-center" onClick={() => editSelection(song, !isBeingAdded, index) } >
-                    {!isBeingAdded === false && <><img src={DeselectIcon} />&nbsp;Deselect</>}
-                    {!isBeingAdded === true && <><img src={SelectIcon} />&nbsp;Select</>}
+                    {!isBeingAdded === false && <span className="context-row"> <img src={DeselectIcon} />&nbsp;Deselect </span>}
+                    {!isBeingAdded === true && <span className="context-row"> <img src={SelectIcon} />&nbsp;Select </span>}
                 </li>
 
                 <li onClick={() => {play(index, false)}} className="d-flex align-items-center">
-                    <img src={PlayIcon} />
-                    &nbsp; Play
+                    <span className="context-row">
+                        <img src={PlayIcon} />&nbsp; Play
+                    </span>
                 </li>
 
                 <li className="position-relative">
-                    <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                    <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
                         <img src={AddIcon} /> &nbsp; Add to
                     </span>
                     {displayAddMenu &&
-                        <div className="playlist-list-container add-context-menu header-font">
+                        <div className={`playlist-list-container add-context-menu header-font ${side === 0 ? "" : "left" }`}>
                             <div className="item d-flex align-items-center" onClick={addToQueue}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
@@ -121,20 +123,23 @@ export default function CustomContextMenu({
                 </li>
 
                 {!context_type.includes("playlist") || !context_type.includes("album_songs") && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                        <img src={AlbumIcon} />
-                        &nbsp; Show Album
+                    <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
+                        <span className="context-row">
+                            <img src={AlbumIcon} /> &nbsp; Show Album
+                        </span>
                     </li>
                 }
                 {(!context_type.includes("artist") || !context_type.includes("album_songs")) && artist !== "" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
-                        <img src={ArtistIcon} />
-                        &nbsp; Show Artist
+                    <li className="d-flex align-items-center" onClick={NavigateToArtist} >
+                        <span className="context-row">
+                            <img src={ArtistIcon} /> &nbsp; Show Artist
+                        </span>
                     </li>
                 }    
-                <li  className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
-                    <img src={InfoIcon} />
-                    &nbsp; Song Details
+                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
+                    <span className="context-row">
+                        <img src={InfoIcon} />&nbsp; Song Details
+                    </span>
                 </li>            
             </div>
         );

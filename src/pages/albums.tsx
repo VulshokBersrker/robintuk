@@ -52,7 +52,7 @@ export default function AlbumPage({albums}: P) {
     const [albumSections, setAlbumSections] = useState<number[]>([]);    
 
     const [albumSelection, setAlbumSelection] = useState<String[]>([]);
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
     // Playlist Values
@@ -128,25 +128,30 @@ export default function AlbumPage({albums}: P) {
 
     function handleContextMenu(e: any, album: string, artist: string, index: number, isBeingAdded: boolean) {
         if(e.pageX < window.innerWidth / 2) {
+            // Top Left
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
             }
+            // Bottom Left
             else {
-                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 215});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 215, side: 0});
             }
         }
+        // 
         else {
+            // Top Right
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY, side: 1});
             }
+            // Bottom Right
             else {
-                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 215});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 215, side: 1});
             }
         }
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, isBeingAdded: false, album: "", artist: "", index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, isBeingAdded: false, album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
     }
 
     // ------------ Start of Selection Bar Functions ------------
@@ -451,6 +456,7 @@ export default function AlbumPage({albums}: P) {
                     index={contextMenu.index}
                     posX={contextMenu.posX}
                     posY={contextMenu.posY}
+                    side={contextMenu.side}
                     play={playAlbum}
                     editSelection={editSelection}
                     isBeingAdded={contextMenu.isBeingAdded}
@@ -476,6 +482,7 @@ type Props = {
     isBeingAdded: boolean,
     posX: number,
     posY: number,
+    side: number // What side the add playlist will appear
     // Playlist
     name: string,
     playlistList: PlaylistList[],
@@ -485,7 +492,7 @@ type Props = {
 
 function ContextMenu({
     isToggled, album, artist, index,
-    play, editSelection, isBeingAdded, posX, posY,
+    play, editSelection, isBeingAdded, posX, posY, side,
     name, playlistList, resetContextMenu, ref
 }: Props) {
 
@@ -562,24 +569,28 @@ function ContextMenu({
                 <li className="d-flex align-items-center"
                     onClick={() => editSelection(album, !isBeingAdded, index) }
                 >
-                    {isBeingAdded === true && <><img src={DeselectIcon} />&nbsp;Deselect</>}
-                    {isBeingAdded === false && <><img src={SelectIcon} />&nbsp;Select</>}
+                    {isBeingAdded === true && <span className="context-row"> <img src={DeselectIcon} />&nbsp;Deselect </span> }
+                    {isBeingAdded === false && <span className="context-row"> <img src={SelectIcon} />&nbsp;Select </span> }
                 </li>
 
                 <li onClick={() => {play(album, false)}} className="d-flex align-items-center">
-                    <img src={PlayIcon} />  &nbsp; Play
+                    <span className="context-row">
+                        <img src={PlayIcon} />  &nbsp; Play
+                    </span>
                 </li>
 
                 <li onClick={() => {play(album, true)}} className="d-flex align-items-center">
-                    <img src={ShuffleIcon} />  &nbsp; Shuffle
+                    <span className="context-row">
+                        <img src={ShuffleIcon} />  &nbsp; Shuffle
+                    </span>                    
                 </li>
 
                 <li className="position-relative">
-                    <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                    <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
                         <img src={AddIcon} /> &nbsp; Add to
                     </span>
                     {displayAddMenu &&
-                        <div className="playlist-list-container add-context-menu header-font">
+                        <div className={`playlist-list-container add-context-menu header-font ${side === 0 ? "" : "left" }`}>
                             <div className="item d-flex align-items-center" onClick={addToQueue}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
@@ -609,12 +620,16 @@ function ContextMenu({
                 </li>
 
                 <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                    <img src={AlbumIcon} /> &nbsp; Show Album
+                    <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                        <img src={AlbumIcon} /> &nbsp; Show Album
+                    </span>                    
                 </li>
             
             {artist !== "" &&
                 <li className="d-flex align-items-center" onClick={NavigateToArtist} >
-                    <img src={ArtistIcon} /> &nbsp; Show Artist
+                    <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                        <img src={ArtistIcon} /> &nbsp; Show Artist
+                    </span>
                 </li>
             }
                 

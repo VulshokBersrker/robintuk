@@ -14,7 +14,7 @@
 - **Recommended:** Download and install the latest installer from [Github Releases](https://github.com/VulshokBersrker/robintuk_player/releases/latest).
 - Old versions may have crashes/issues that have been fixed in the latest release.
 
-## Main Features
+## Features
 
 - Play most music formats (mp3, flac, ogg, aiff, m4a)
 - Great performance with 10,000+ songs loaded
@@ -22,9 +22,10 @@
 - Customize the look with multiple color themes
 - View last 100 played songs
 - Search to find your music faster
-- Fast scans to add your music quickly (~5000 songs scanned per minute)
+- Fast scans to add your music quickly (~5000 songs per minute)
 - Backup, Restore, or Reset your music database and images
 - Use m3u/m3u8 files to import playlists from other apps or export your playlists for safe keepings
+- Download song lyrics using LRCLIB
 
 ## [Screenshots](./assets/screenshots/index.md)
 
@@ -46,32 +47,29 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
-- [ ] Error Event log file for debugging (with timestamps)
+- [ ] Improve Error Event log file for debugging
 - [ ] Equalizer?
 - [ ] Linux support
 - [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page (No great options once you have more than 100 songs)
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
-- [ ] Better DPI aware CSS styles
-- [ ] Create placeholder templates while pages are loading
+- [ ] Better DPI aware CSS
 - [x] Gapless playback
 - [x] Notification of version updates
 - [x] Update queue page when queue is changed
 - [x] Create Genre tab and features
 - [x] In addition to scanning for lyrics, find lyrics when a song without them is played
 - [x] Get and display Lyrics for songs using LRCLIB
-- [x] CSS Updates when window size changes
 
 ## Known Issues
 
+- [ ] Wrong song is loaded when app is opened with a shuffled queue
 - [ ] Small chance of crash on song change (Unknown reason why)
 - [ ] Error on load sometimes where the wrong queue is saved or removed
-- [ ] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
-- [ ] Songs have hiccups randomly (due to heavy system load from other programs)
-- [ ] Application Optimizations (streamlining, data caching, etc.)
-- [ ] Better error handling
-- [ ] "Add To" in Context Menu gets cut off when close to the edges of the screen
 - [ ] Some album artwork is not deleted when songs are removed
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
-- [x] App has a chance to crash when you clear the queue as the next song is being loaded
+- [ ] Songs have hiccups randomly (due to heavy system load from other programs)
+- [ ] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
+- [x] Some songs in fullscreen are not centered correctly (instrumental songs)
+- [x] "Add To" in Context Menu gets cut off when close to the edges of the screen

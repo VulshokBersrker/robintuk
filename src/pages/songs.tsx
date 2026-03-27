@@ -37,7 +37,7 @@ export default function SongPage({songs}: Props) {
     
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
 
-    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, isBeingAdded: false, context_type: "song", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, isBeingAdded: false, context_type: "song", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<string>("");
@@ -230,24 +230,24 @@ export default function SongPage({songs}: Props) {
     function handleContextMenu(e: any, album: string, artist: string, index: number, isBeingAdded: boolean) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
             }
             else {
-                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 180});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 180, side: 0});
             }
         }
         else {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY, side: 1});
             }
             else {
-                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 180});
+                setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 180, side: 1});
             }
         }
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
     }
 
     function updateSongDetailsDisplay(bool: boolean, path: string) {
@@ -471,6 +471,7 @@ export default function SongPage({songs}: Props) {
                         isBeingAdded={contextMenu.isBeingAdded}
                         posX={contextMenu.posX}
                         posY={contextMenu.posY}
+                        side={contextMenu.side}
                         name={""}
                         playlistList={playlistList}
                         createPlaylist={createPlaylist}
