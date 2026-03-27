@@ -351,42 +351,47 @@ export default function MusicControls() {
         currentLineNumberRef.current = null;
         try {
             const res: SongLyrics = await invoke("get_lyrics", {song_id: path});
+            
             if(res !== undefined) {
-                setHasLyrics(true);
+                if(res.plain_lyrics !== 'null') {
+                    setHasLyrics(true);
+                    let spilt_plain: string[] = [];
+                    let split_synced: string[] = [];
+
+                    if(res.plain_lyrics !== null) {
+                        if(res.plain_lyrics.includes("\\r\\n")) {
+                            split_synced = res.synced_lyrics.split("\\r\\n");
+                            spilt_plain = res.plain_lyrics.split("\\r\\n");
+                        }
+                        else if(res.plain_lyrics.includes("\r\n")) {
+                            split_synced = res.synced_lyrics.split("\r\n");
+                            spilt_plain = res.plain_lyrics.split("\r\n");
+                        }
+                        else if(res.plain_lyrics.includes("\\n")) {
+                            split_synced = res.synced_lyrics.split("\\n");
+                            spilt_plain = res.plain_lyrics.split("\\n");
+                        }
+                        else if(res.plain_lyrics.includes("\n")) {
+                            split_synced = res.synced_lyrics.split("\n");
+                            spilt_plain = res.plain_lyrics.split("\n");
+                        }
+
+                        if(spilt_plain.length >= 0) {
+                            if(res.synced_lyrics === "null") {
+                                setSongLyrics({plain_lyrics: spilt_plain, synced_lyrics: []});
+                            }
+                            else {
+                                setSongLyrics({plain_lyrics: spilt_plain, synced_lyrics: split_synced});
+                            }
+                        }
+                    }
+                }    
+                else {
+                    setHasLyrics(false);
+                }            
             }
             else {
                 setHasLyrics(false);
-            }            
-
-            let spilt_plain: string[] = [];
-            let split_synced: string[] = [];
-
-            if(res.plain_lyrics !== null) {
-                if(res.plain_lyrics.includes("\\r\\n")) {
-                    split_synced = res.synced_lyrics.split("\\r\\n");
-                    spilt_plain = res.plain_lyrics.split("\\r\\n");
-                }
-                else if(res.plain_lyrics.includes("\r\n")) {
-                    split_synced = res.synced_lyrics.split("\r\n");
-                    spilt_plain = res.plain_lyrics.split("\r\n");
-                }
-                else if(res.plain_lyrics.includes("\\n")) {
-                    split_synced = res.synced_lyrics.split("\\n");
-                    spilt_plain = res.plain_lyrics.split("\\n");
-                }
-                else if(res.plain_lyrics.includes("\n")) {
-                    split_synced = res.synced_lyrics.split("\n");
-                    spilt_plain = res.plain_lyrics.split("\n");
-                }
-
-                if(spilt_plain.length >= 0) {
-                    if(res.synced_lyrics === "null") {
-                        setSongLyrics({plain_lyrics: spilt_plain, synced_lyrics: []});
-                    }
-                    else {
-                        setSongLyrics({plain_lyrics: spilt_plain, synced_lyrics: split_synced});
-                    }
-                }
             }
         }
         catch(e) {

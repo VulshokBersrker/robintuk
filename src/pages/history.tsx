@@ -225,18 +225,23 @@ function CustomContextMenu({
                 ref={ref}
             >
                 <li onClick={() => { playSong(song); resetContextMenu(); }} className="d-flex align-items-center" >
-                    <img src={PlayIcon} />
-                    &nbsp; Play
+                    <span className="context-row">
+                        <img src={PlayIcon} /> &nbsp; Play
+                    </span>
                 </li>
 
                 {album !== "" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                        <img src={AlbumIcon} /> &nbsp; Show Album
+                    <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
+                        <span className="context-row">
+                            <img src={AlbumIcon} /> &nbsp; Show Album
+                        </span>
                     </li>
                 }
                 {artist !== "" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
-                        <img src={ArtistIcon} /> &nbsp; Show Artist
+                    <li className="d-flex align-items-center" onClick={NavigateToArtist} >
+                        <span className="context-row">
+                            <img src={ArtistIcon} /> &nbsp; Show Artist
+                        </span>
                     </li>
                 }
             </div>

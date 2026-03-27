@@ -109,7 +109,8 @@ export interface ContextMenu {
     artist: string,
     index: number,
     posX: number,
-    posY: number
+    posY: number,
+    side: number
 }
 
 export interface DirectoryInfo {

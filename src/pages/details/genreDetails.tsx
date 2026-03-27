@@ -44,7 +44,7 @@ export default function GenreOverviewPage() {
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "genre", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "genre", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
 
@@ -272,15 +272,25 @@ export default function GenreOverviewPage() {
 
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
         if(e.pageX < window.innerWidth / 2) {
-            setContextMenu({ isToggled: true, context_type: "genre", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, context_type: "genre", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
+            }
+            else {
+                setContextMenu({ isToggled: true, context_type: "genre", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
+            }
         }
         else {
-            setContextMenu({ isToggled: true, context_type: "genre", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+            if(e.pageY < window.innerHeight / 2) {
+                setContextMenu({ isToggled: true, context_type: "genre", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY, side: 1});
+            }
+            else {
+                setContextMenu({ isToggled: true, context_type: "genre", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY, side: 1});
+            }
         }
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "genre", album: "", artist: "", index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, context_type: "genre", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
@@ -454,6 +464,7 @@ export default function GenreOverviewPage() {
                     isBeingAdded={checkBoxNumber[contextMenu.index]}
                     posX={contextMenu.posX}
                     posY={contextMenu.posY}
+                    side={contextMenu.side}
                     playlistList={playlistList}
                     createPlaylist={createPlaylist}
                     addToPlaylist={addToPlaylist}
@@ -476,6 +487,7 @@ type Props = {
     isBeingAdded: boolean,
     posX: number,
     posY: number,
+    side: number,
     // Playlist
     playlistList: PlaylistList[],
     createPlaylist: (name: string) => void,
@@ -486,7 +498,7 @@ type Props = {
 
 function CustomContextMenu({ 
     isToggled, album, index, 
-    play, editSelection, isBeingAdded, posX, posY,
+    play, editSelection, isBeingAdded, posX, posY, side,
     playlistList, createPlaylist, addToPlaylist, addToQueue, ref
 }: Props) {
 
@@ -521,21 +533,22 @@ function CustomContextMenu({
                 <li className="d-flex align-items-center"
                     onClick={() => editSelection(album, !isBeingAdded, index) }
                 >
-                    {isBeingAdded === true && <><img src={DeselectIcon} />&nbsp;Deselect</>}
-                    {isBeingAdded === false && <><img src={SelectIcon} />&nbsp;Select</>}
+                    {isBeingAdded === true && <span className="context-row"> <img src={DeselectIcon} />&nbsp;Deselect </span>}
+                    {isBeingAdded === false && <span className="context-row"> <img src={SelectIcon} />&nbsp;Select </span>}
                 </li>
 
                 <li onClick={() => {play(album)}} className="d-flex align-items-center">
-                    <img src={PlayIcon} />
-                    &nbsp; Play
+                    <span className="context-row">
+                        <img src={PlayIcon} /> &nbsp; Play
+                    </span> 
                 </li>
 
                 <li className="position-relative">
-                    <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                    <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
                         <img src={AddIcon} /> &nbsp; Add to
                     </span>
                     {displayAddMenu &&
-                        <div className="playlist-list-container add-context-menu header-font">
+                        <div className={`playlist-list-container add-context-menu header-font ${side === 0 ? "" : "left" }`}>
                             <div className="item d-flex align-items-center" onClick={addToQueue}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
@@ -551,12 +564,11 @@ function CustomContextMenu({
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
                                 {playlistList?.map((playlist) => {
-                                        return(
-                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id, album)}>
-                                                {playlist.name}
-                                            </div>
-                                        );
-                                                                                
+                                    return(
+                                        <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id, album)}>
+                                            {playlist.name}
+                                        </div>
+                                    );                                     
                                 })}
                             </SimpleBar>
                         </div>
@@ -564,10 +576,10 @@ function CustomContextMenu({
                 </li>
 
                 <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                    <img src={AlbumIcon} />
-                    &nbsp; Show Album
+                    <span className="context-row">
+                        <img src={AlbumIcon} /> &nbsp; Show Album
+                    </span>                    
                 </li>
-                               
             </div>
         );
     }

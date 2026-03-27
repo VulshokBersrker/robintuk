@@ -12,6 +12,7 @@ import ImageWithFallBack from '../components/imageFallback';
 // Images
 import QueueIcon from '../images/rectangle-list-regular-full.svg';
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
+import ShuffleIcon from '../images/shuffle-solid-full.svg';
 import ArtistIcon from '../images/user-regular-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
 import AddIcon from '../images/plus-solid-full.svg';
@@ -26,7 +27,7 @@ export default function Home() {
     const [songs, setSongs] = useState<Songs[]>([]);
     const [playHistory, setPlayHistory] = useState<PlayHistory[]>([]);
 
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "", album: "", artist: "", playlist: 0, index: 0, posX: 0, posY: 0 });
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "", album: "", artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
     // Playlist Values
@@ -128,24 +129,24 @@ export default function Home() {
     function handleContextMenu(e: any, album: string, artist: string, playlist: number, index: number, type: string) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX, posY: e.pageY});
+                setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX, posY: e.pageY - 20});
+                setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX, posY: e.pageY - 20, side: 0});
             }
         }
         else {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX - 150, posY: e.pageY});
+                setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX - 150, posY: e.pageY, side: 1});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX - 150, posY: e.pageY - 20});
+                setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX - 150, posY: e.pageY - 20, side: 1});
             }
         }
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "", album: "", artist: "", playlist: 0, index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, context_type: "", album: "", artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
@@ -344,6 +345,7 @@ export default function Home() {
                 playPlaylist={playPlaylist}
                 posX={contextMenu.posX}
                 posY={contextMenu.posY}
+                side={contextMenu.side}
                 playlist={contextMenu.playlist}
                 playlistList={playlistList}
                 createPlaylist={createPlaylist}
@@ -369,6 +371,7 @@ type Props = {
     playPlaylist: (id: number, shuffled: boolean) => void,
     posX: number,
     posY: number,
+    side: number,
     // Playlist
     playlist: number,
     playlistList: PlaylistList[],
@@ -381,7 +384,7 @@ type Props = {
 
 function CustomContextMenu({ 
     isToggled, context_type, album, artist, index, 
-    playAlbum, playSong, playPlaylist, posX, posY,
+    playAlbum, playSong, playPlaylist, posX, posY, side,
     playlist, playlistList, createPlaylist, addToPlaylist, addToQueue, ref, resetContextMenu
 }: Props) {
 
@@ -433,17 +436,34 @@ function CustomContextMenu({
                         resetContextMenu();
                     }}
                 className="d-flex align-items-center">
-                    <img src={PlayIcon} />
-                    &nbsp; Play
+                    <span className="context-row">
+                       <img src={PlayIcon} />&nbsp; Play
+                    </span>
                 </li>
+
+                {context_type !== "song" && <li 
+                    onClick={() => {
+                        if(context_type === "album") {
+                            playAlbum(album, true);
+                        }
+                        else if(context_type === "playlist") {
+                            playPlaylist(playlist, true)
+                        }
+                        resetContextMenu();
+                    }}
+                className="d-flex align-items-center">
+                    <span className="context-row">
+                       <img src={ShuffleIcon} />&nbsp; Shuffle
+                    </span>
+                </li>}
 
                 {context_type !== "playlist" &&
                     <li className="position-relative">
-                        <span className="d-flex" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                        <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
                             <img src={AddIcon} /> &nbsp; Add to
                         </span>
                         {displayAddMenu &&
-                            <div className="playlist-list-container add-context-menu header-font">
+                            <div className={`playlist-list-container add-context-menu header-font ${side === 0 ? "" : "left" }`}>
                                 <div className="item d-flex align-items-center" onClick={addToQueue}>
                                     <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                                 </div>
@@ -477,17 +497,23 @@ function CustomContextMenu({
 
                 {context_type !== "playlist" && 
                     <li  className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                        <img src={AlbumIcon} /> &nbsp; Show Album
+                        <span className="context-row">
+                            <img src={AlbumIcon} /> &nbsp; Show Album
+                        </span>
                     </li>
                 }
                 {(context_type !== "artist" && context_type !== "playlist") && artist !== "" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
-                        <img src={ArtistIcon} /> &nbsp; Show Artist
+                    <li className="d-flex align-items-center" onClick={NavigateToArtist} >
+                        <span className="context-row">
+                            <img src={ArtistIcon} /> &nbsp; Show Artist
+                        </span>
                     </li>
                 }
                 {context_type === "playlist" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToPlaylist} >
-                        <img src={AlbumIcon} /> &nbsp; Show Playlist
+                    <li className="d-flex align-items-center" onClick={NavigateToPlaylist} >
+                        <span className="context-row">
+                            <img src={AlbumIcon} /> &nbsp; Show Playlist
+                        </span>
                     </li>
                 }
             </div>

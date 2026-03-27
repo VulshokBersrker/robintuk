@@ -58,7 +58,7 @@ export default function AlbumOverviewPage() {
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0
     });
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<string>("");
@@ -297,24 +297,24 @@ export default function AlbumOverviewPage() {
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 170});
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY - 170, side: 0});
             }
         }
         else {
             if(e.pageY < window.innerHeight / 2) {
-                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY});
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY, side: 1});
             }
             else {
-                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 170});
+                setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX - 150, posY: e.pageY - 170, side: 1});
             }
         }
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, context_type: "album_songs", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
@@ -567,6 +567,7 @@ export default function AlbumOverviewPage() {
                         index={contextMenu.index}
                         posX={contextMenu.posX}
                         posY={contextMenu.posY}
+                        side={contextMenu.side}
                         play={playSong}
                         editSelection={editSelection}
                         isBeingAdded={checkBoxNumber[contextMenu.index]}
@@ -747,6 +748,7 @@ export default function AlbumOverviewPage() {
                         index={contextMenu.index}
                         posX={contextMenu.posX}
                         posY={contextMenu.posY}
+                        side={contextMenu.side}
                         play={playSong}
                         editSelection={editSelection}
                         isBeingAdded={checkBoxNumber[contextMenu.index]} 

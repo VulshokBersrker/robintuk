@@ -52,11 +52,19 @@ export default function QueueOverviewPage() {
         // Load the current song (song / album / playlist) from the backend
         const unlisten_get_current_song = listen<GetCurrentSong>("get-current-song", (event) => { setIsCurrent(event.payload.q); saveSong(event.payload.q); });
         const unlisten_queue_updated = listen("queue-changed", () => { getQueue(); });
+
+        const handler = (e: any) => {
+            if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
+                resetContextMenu();
+            }
+        }
+        document.addEventListener('mousedown', handler);
         
         return () => {
+            document.removeEventListener('mousedown', handler);
             unlisten_get_current_song.then(f => f()),
             unlisten_queue_updated.then(f => f());
-        }  
+        }
     }, []);
 
     async function getQueue() {
@@ -435,18 +443,23 @@ function CustomContextMenu({
                 ref={ref}
             >
                 <li onClick={() => { playSong(index); resetContextMenu(); }} className="d-flex align-items-center" >
-                    <img src={PlayIcon} />
-                    &nbsp; Play
+                    <span className="d-flex context-row">
+                        <img src={PlayIcon} />  &nbsp; Play
+                    </span>
                 </li>
 
                 {album !== "" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToAlbum} >
-                        <img src={AlbumIcon} /> &nbsp; Show Album
+                    <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
+                        <span className="d-flex context-row">
+                            <img src={AlbumIcon} /> &nbsp; Show Album
+                        </span>
                     </li>
                 }
                 {artist !== "" && 
-                    <li  className="d-flex align-items-center" onClick={NavigateToArtist} >
-                        <img src={ArtistIcon} /> &nbsp; Show Artist
+                    <li className="d-flex align-items-center" onClick={NavigateToArtist} >
+                        <span className="d-flex context-row">
+                            <img src={ArtistIcon} /> &nbsp; Show Artist
+                        </span>                        
                     </li>
                 }
             </div>
