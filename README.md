@@ -29,9 +29,9 @@
 
 ## [Screenshots](./assets/screenshots/index.md)
 
-![](./assets/screenshots/1.jpg)
-![](./assets/screenshots/3.jpg)
-![](./assets/screenshots/6.jpg)
+![](./assets/screenshots/1.png)
+![](./assets/screenshots/3.png)
+![](./assets/screenshots/5.png)
 
 
 More: [See all screenshots](./assets/screenshots/index.md)
@@ -47,6 +47,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
+- [ ] Add Search for Lyrics in Song Details (can be used to replace lyrics)
 - [ ] Improve Error Event log file for debugging
 - [ ] Equalizer?
 - [ ] Linux support
