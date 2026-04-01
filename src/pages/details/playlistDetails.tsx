@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from "@tauri-apps/api/event";
+import { error } from '@tauri-apps/plugin-log';
 import { invoke } from "@tauri-apps/api/core";
 import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
@@ -134,7 +135,8 @@ export default function PlaylistOverviewPage() {
             setCurrentPlaylistName(res.name);
         }
         catch(e) {
-            alert("Error getting playlist: " + e)
+            error("Playlist Overview (Error) - Error Getting Playlist Details");
+            console.log("Error getting playlist: " + e)
         }
         finally {
             isLoading(false);
@@ -149,6 +151,7 @@ export default function PlaylistOverviewPage() {
             await invoke('new_playlist_added');
         }
         catch(e) {
+            error("Playlist Overview (Error) - Error Deleting Playlist");
             console.log(e);
         }
         finally {
@@ -162,6 +165,7 @@ export default function PlaylistOverviewPage() {
             invoke("rename_playlist", { old_name: playlistDetails.name, new_name: currentPlaylistName });
         }
         catch(e) {
+            error("Playlist Overview (Error) - Error Renaming Playlist");
             console.log(e)
         }
         finally {
@@ -183,6 +187,7 @@ export default function PlaylistOverviewPage() {
             }
         }
         catch(err) {
+            error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
             console.log(`Failed to add custom artwork: ${err}`);
         }
         finally {
@@ -205,6 +210,7 @@ export default function PlaylistOverviewPage() {
             savePosition(index);
         }
         catch(err) {
+            error("Playlist Overview (Error) - Error Playing Playlist");
             console.log(`Failed to play song: ${err}`);
         }
     }
@@ -257,6 +263,7 @@ export default function PlaylistOverviewPage() {
             await invoke('player_add_to_queue', {queue: songList});
         }
         catch(e) {
+            error("Playlist Overview (Error) - Error Adding to Queue");
             console.log(e);
         }        
     }
@@ -268,6 +275,7 @@ export default function PlaylistOverviewPage() {
             await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
         }
         catch(e) {
+            error("Playlist Overview (Error) - Error Adding to Playlist");
             console.log(e);
         }
         finally {
@@ -284,6 +292,7 @@ export default function PlaylistOverviewPage() {
             await invoke('new_playlist_added');
         }
         catch(e) {
+            error("Playlist Overview (Error) - Error Creating Playlist");
             console.log(e);
         }
         finally {
@@ -302,6 +311,7 @@ export default function PlaylistOverviewPage() {
             }            
         }
         catch(e) {
+            error("Playlist Overview (Error) - Error Getting All Playlist Names");
             console.log(e);
         }
     }
@@ -345,6 +355,7 @@ export default function PlaylistOverviewPage() {
             invoke("reorder_playlist", { playlist_id: location.state.name, songs: temp });
         }
         catch(e) {
+            error("Playlist Overview (Error) - Error Reordering Playlist");
             console.log("Error reordering playlist" + e);
         }
         resetContextMenu();

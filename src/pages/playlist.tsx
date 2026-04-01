@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { error } from '@tauri-apps/plugin-log';
 import { useNavigate } from 'react-router-dom';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
@@ -26,18 +27,19 @@ export default function PlaylistPage() {
     const [contextMenu, setContextMenu] = useState({ isToggled: false, playlist: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
-    async function getAlbums() {
+    async function getPlaylists() {
         try {
             const list = await invoke<Playlists[]>('get_all_playlists');
             setPlaylistList(list);
         }
-        catch (err) {
-            alert(`Failed to scan folder: ${err}`);
+        catch(err) {
+            error("Playlist Main Page (Error) - Error fetching Playlists: " + err);
+            console.log(`Playlist Main Page (Error) - Error fetching Playlists: ${err}`);
         }
     }
 
     useEffect(() => {
-        getAlbums();
+        getPlaylists();
 
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
@@ -77,6 +79,7 @@ export default function PlaylistPage() {
             await invoke('new_playlist_added');
         }
         catch(e) {
+            error("Playlist Main Page (Error) - Error Creating a Playlist: " + e);
             console.log(e);
         }
         finally {

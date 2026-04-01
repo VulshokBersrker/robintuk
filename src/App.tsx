@@ -1,4 +1,5 @@
 import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { error } from '@tauri-apps/plugin-log';
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
@@ -77,6 +78,7 @@ function App() {
       }
     }
     catch(e) {
+      error("Main (Error) - Error Getting Settings");
       console.error("Error getting settings", e)
     }
   }
@@ -89,6 +91,7 @@ function App() {
       getGenres();
     }
     catch(e) {
+      error("Main (Error) - Failed to get Data");
       console.log(`Failed to get data: ${e}`);
     }
   }
@@ -96,13 +99,11 @@ function App() {
   async function getSongs() {
     try {
       const song_list: SongsFull[] = await invoke<SongsFull[]>('get_all_songs');
-      // const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 30 } );
-
       setSongList(song_list);
-      // setHomeSongs(list);
     }
     catch(err) {
-      alert(`Failed to scan folder: ${err}`);
+      error("Main (Error) - Failed to get Songs");
+      console.log(`Failed to scan folder: ${err}`);
     }
   }
 
@@ -111,6 +112,7 @@ function App() {
       await invoke("scan_for_deleted");
     }
     catch(e) {
+      error("Main (Error) - Error while Checking for Deleted Songs");
       console.log(e);
     }
   }
@@ -126,6 +128,7 @@ function App() {
       }
     }
     catch(e) {
+      error("Main (Error) - Error Checking for new Version");
       console.log(e);
     }
   }
@@ -136,7 +139,8 @@ function App() {
       const list = await invoke<AlbumDetails[]>('get_all_albums');
       setAlbumList(list);  
     }
-    catch (err) {
+    catch(err) {
+      error("Main (Error) - Error Getting Albums");
       console.log(`Failed to get album data: ${err}`);
     }
   }
@@ -148,6 +152,7 @@ function App() {
       setArtistList(list);
     }
     catch(err) {
+      error("Main (Error) - Error Getting Artists");
       console.log(`Failed to scan folder: ${err}`);
     }
   }
@@ -159,13 +164,14 @@ function App() {
       setGenreList(list);        
     }
     catch(err) {
+      error("Main (Error) - Error Getting Genres");
       console.log(`Failed to get genre data: ${err}`);
     }
   }
 
   return(
     <div 
-      onContextMenu={(e) => { e.preventDefault(); }}
+      onContextMenu={(e) =>  e.preventDefault() }
     >
       <BrowserRouter>
         <CustomWindowsBar />

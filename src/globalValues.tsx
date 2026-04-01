@@ -1,3 +1,4 @@
+import { error, info } from '@tauri-apps/plugin-log';
 import { invoke } from "@tauri-apps/api/core";
 
 
@@ -159,6 +160,7 @@ export async function saveQueue(q: Songs[]) {
         await invoke('create_queue', {songs: q, shuffled: false});
     }
     catch(e) {
+        error("Save Queue Global (Error) - Error Saving Queue: " + e);
         console.log(e);
     }
 }
@@ -167,6 +169,7 @@ export async function saveShuffledQueue(q: Songs[]) {
         await invoke('create_queue', {songs: q, shuffled: true});
     }
     catch(e) {
+        error("Save Shuffled Queue Global (Error) - Error Saving Shuffled Queue: " + e);
         console.log(e);
     }
 }
@@ -189,6 +192,7 @@ export async function playSelection(array: Songs[]) {
         saveSong(array[0]);
     }
     catch(e) {
+        error("Play Selection Global (Error) - Error Playing Selection: " + e);
         console.log(e);
     }
 }
@@ -202,6 +206,7 @@ export async function playAlbum(album_name: string, shuffled: boolean) {
         savePosition(0);
     }
     catch(e) {
+        error("Play Album Global (Error) - Error Playing Album: " + e);
         console.log(e);
     }
 }
@@ -213,6 +218,7 @@ export async function playSong(song: Songs) {
         savePosition(0);
     }
     catch(e) {
+        error("Play Song Global (Error) - Error Playing Song: " + e);
         console.log(e);
     }
     finally {
@@ -229,12 +235,14 @@ export async function playPlaylist(playlist_id: number, shuffled: boolean) {
         await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuffled});
         savePosition(0);
     }
-    catch (err) {
+    catch(err) {
+        error("Play Playlist Global (Error) - Error Playing Playlist: " + err);
         console.log(`Error trying to play playlist - globalV: ${err}`);
     } 
 }
 
 
 export function clearLocalStorage() {
+    info("Clearing Local Storage");
     localStorage.clear();
 }

@@ -48,7 +48,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 ## To Do Features
 
 - [ ] Add Search for Lyrics in Song Details (can be used to replace lyrics)
-- [ ] Improve Error Event log file for debugging
+- [ ] Improve Event logger for debugging
 - [ ] Equalizer?
 - [ ] Linux support
 - [ ] Drag and Drop playlist order
