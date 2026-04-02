@@ -47,8 +47,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
-- [ ] Add Search for Lyrics in Song Details (can be used to replace lyrics)
-- [ ] Improve Event logger for debugging
+
 - [ ] Equalizer?
 - [ ] Linux support
 - [ ] Drag and Drop playlist order
@@ -56,6 +55,8 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] Better DPI aware CSS
+- [x] Add Search for Lyrics (can be used to replace lyrics)
+- [x] Improve Event logger for debugging
 - [x] Gapless playback
 - [x] Notification of version updates
 - [x] Update queue page when queue is changed
