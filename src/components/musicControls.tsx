@@ -410,7 +410,7 @@ export default function MusicControls() {
             }
         }
         catch(e) {
-            error("Controls - Error getting music lyrics");
+            // error("Controls - Error getting music lyrics: " + e);
             setHasLyrics(false);
             setSongLyrics(undefined);
         }

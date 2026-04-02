@@ -141,6 +141,17 @@ export interface SongLyrics {
     plain_lyrics: string,
     synced_lyrics: string,
 }
+export interface SongLyricsSearch {
+    id: number,
+    artistName: string,
+    albumName: string,
+    trackName: string,
+    name: string,
+    duration: number,
+    plainLyrics: string,
+    syncedLyrics: string,
+    instrumental: boolean
+}
 
 // &, 0-9, A-Z, ...
 export const alphabeticallyOrdered = [

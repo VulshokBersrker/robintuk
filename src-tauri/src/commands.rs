@@ -567,6 +567,32 @@ pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String
     }
 }
 
+// Update Lyrics
+#[tauri::command(rename_all = "snake_case")]
+pub async fn update_remote_lyrics(state: State<AppState, '_>, path: String, plain_lyrics: String, synced_lyrics: String, lyrics_id: i64) -> Result<(), String> {
+
+    let mut lyrics: LrclibLyrics = LrclibLyrics {
+        ..LrclibLyrics::default()
+    };
+    lyrics.synced_lyrics = Some(synced_lyrics);
+    lyrics.plain_lyrics = plain_lyrics;
+    lyrics.lyrics_id = lyrics_id;
+
+    let res: (bool,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM lyrics WHERE song_id = $1)")
+        .bind(&path)
+        .fetch_one(&state.pool)
+        .await.unwrap();
+
+    if res.0 {
+        let _ = db::update_lyrics(state, lyrics, path).await;
+        Ok(())
+    }
+    else {
+        let _ = db::add_lyrics(state, lyrics, path).await;
+        Ok(())
+    }     
+}
+
 #[tauri::command]
 pub fn check_for_ongoing_scan(state: State<AppState, '_>) -> bool {
     return *state.is_scan_ongoing.lock().unwrap()

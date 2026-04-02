@@ -1794,7 +1794,7 @@ button img {
   border: 2px var(--font-color-three) solid;
   background-color: var(--gradient-two);
   width: 42rem;
-  height: 28rem;
+  height: 29rem;
   z-index: 9999;
 }
 
@@ -2286,13 +2286,83 @@ option:hover, option:active, option:focus {
 }
 
 
+/* ---------- Search LRCLIB Lyrics Styles ---------- */
+.lyrics-loader {
+  font-size: 1.4rem;
+}
+.lyrics-loader div {
+  margin: 10px 0px;
+}
+.lyrics-loader .loader {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--font-color-one);
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+.lyrics.song-row {
+  padding: 10px 0px;
+}
+.lyrics-synced {
+  padding: 0.3rem 0.2rem;
+  background-color: var(--highlight-hover);
+  border-radius: 6px;
+  color: var(--font-color-hover);
+}
+.lyrics-plain {
+  padding: 0.3rem 0.2rem;
+  background-color: #7d7d7d;
+  border-radius: 6px;
+  color: var(--font-color-hover);
+}
+.lyrics-instrumental {
+  padding: 0.3rem 0.2rem;
+  background-color: #7d7d7d;
+  border-radius: 6px;
+  color: var(--font-color-hover);
+}
+.song-details-modal.lyrics {
+  height: 42rem;
+}
+.song-details-modal.lyrics .header {
+  margin-top: 20px;
+}
+.song-details-modal.lyrics .header .title {
+  border-radius: var(--border-radius);
+  padding: 8px 10px;
+}
+.song-details-modal.lyrics .header .title.active {
+  border-radius: var(--border-radius);
+  background-color: var(--highlight-hover);
+  color: var(--font-color-hover);
+}
+
+.song-details-modal.lyrics .simplebar-content {
+  font-size: 1.1rem;
+  white-space: pre-line;
+  line-height: 1.8rem;
+  overflow: hidden;
+}
+.song-details-modal.lyrics .simplebar-content:before {
+  display: none;
+}
+.song-details-modal.lyrics .simplebar-track,
+.song-details-modal.lyrics .simplebar-scrollable-y {
+  /* margin-top: 0.9rem; */
+  height: 30rem !important;
+}
+
 /* ---------- Context Menu Styles ---------- */
 .context-menu-container {
   z-index: 200;
   width: 9.8rem;
   background: var(--gradient-two);
   border: 2px solid var(--font-color-three);
-  padding: 0rem 0.4rem 0.85rem 0.4rem;
+  padding: 0rem 0.4rem 0.4rem 0.4rem;
   border-radius: var(--border-radius);
 }
 .context-menu-container li {

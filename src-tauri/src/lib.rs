@@ -3,11 +3,9 @@
 
 // Tauri Plugins
 use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
-use tauri_plugin_log::{Target, TargetKind};
+use tauri_plugin_log::{Target, TargetKind, log};
 use tauri_plugin_prevent_default::Flags;
 use tauri::{Builder, Manager, Emitter};
-use tauri_plugin_log::log;
-use tauri_plugin_log::{fern};
 use tauri::{State};
 
 // Rust Libraries
@@ -48,6 +46,10 @@ pub fn run() -> Result<(), String> {
     // Generate the pool for the database, so it can be reused
     let pool: Pool<Sqlite> = Runtime::new().unwrap().block_on(establish_connection())?;
 
+    // Datetime stampes for error log files
+    let now = chrono::Local::now();
+    let file_name = format!("{}.log", now.format("%Y_%m_%d"));
+
     Builder::default()
         // .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
         //     println!("{}, {argv:?}, {cwd}", app.package_info().name);
@@ -59,9 +61,10 @@ pub fn run() -> Result<(), String> {
             .level(log::LevelFilter::Info)
             .level(log::LevelFilter::Error)
             .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
-            .targets([Target::new(TargetKind::Dispatch(
-                fern::Dispatch::new().chain(fern::DateBased::new("logs/", "%Y-%m-%d-my-program.log")),
-            ))])
+            .target(Target::new(TargetKind::LogDir {
+                // Specify the generated fixed filename
+                file_name: Some(file_name),
+            }))
             .build()
         )
         .plugin(tauri_plugin_dialog::init())
@@ -203,6 +206,7 @@ pub fn run() -> Result<(), String> {
             commands::scan_for_lyrics,
             commands::check_for_single_lyrics,
             commands::cancel_lyrics_scan,
+            commands::update_remote_lyrics,
             // Settings Functions
             scan_directory,
             db::get_directory,

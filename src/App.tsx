@@ -11,12 +11,15 @@ import { AlbumDetails, AllArtistResults, AllGenreResults, SongsFull } from "./gl
 import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
 import MusicControls from "./components/musicControls";
 import RightSideBar from "./components/rightSideBar";
+import Popup from "./components/popups";
 
 // Pages
 import PlaylistOverviewPage from "./pages/details/playlistDetails";
 import ArtistOverviewPage from "./pages/details/artistDetails";
+import LRCLIBSearchResults from "./pages/lyrics/LRCLIBSearch";
 import AlbumOverviewPage from "./pages/details/albumDetails";
 import GenreOverviewPage from "./pages/details/genreDetails";
+import SongLyricSearch from'./pages/lyrics/lyricSearch';
 import QueueOverviewPage from "./pages/queue";
 import PlayHistoryPage from "./pages/history";
 import PlaylistPage from "./pages/playlist";
@@ -26,7 +29,7 @@ import Settings from "./pages/settings";
 import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
 import Home from "./pages/home";
-import Popup from "./components/popups";
+
 
 
 function App() {
@@ -171,7 +174,7 @@ function App() {
 
   return(
     <div 
-      onContextMenu={(e) =>  e.preventDefault() }
+      // onContextMenu={(e) =>  e.preventDefault() }
     >
       <BrowserRouter>
         <CustomWindowsBar />
@@ -193,6 +196,9 @@ function App() {
             <Route path="/artists/overview" element={ <ArtistOverviewPage />} />
             <Route path="/genres/overview" element={ <GenreOverviewPage />} />
             <Route path="/playlists/overview" element={ <PlaylistOverviewPage />} />
+            {/* Lyric Routes */}
+            <Route path="/lyrics/song-search" element={ <SongLyricSearch songs={songList} />} />
+            <Route path="/lyrics/lrclib-results" element={ <LRCLIBSearchResults />} />
           </Routes>
         </div>
       </BrowserRouter>      
