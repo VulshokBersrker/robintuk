@@ -29,9 +29,9 @@
 
 ## [Screenshots](./assets/screenshots/index.md)
 
-![](./assets/screenshots/1.jpg)
-![](./assets/screenshots/3.jpg)
-![](./assets/screenshots/6.jpg)
+![](./assets/screenshots/1.png)
+![](./assets/screenshots/3.png)
+![](./assets/screenshots/5.png)
 
 
 More: [See all screenshots](./assets/screenshots/index.md)
@@ -47,7 +47,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
-- [ ] Improve Error Event log file for debugging
+
 - [ ] Equalizer?
 - [ ] Linux support
 - [ ] Drag and Drop playlist order
@@ -55,6 +55,8 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] Better DPI aware CSS
+- [x] Add Search for Lyrics (can be used to replace lyrics)
+- [x] Improve Event logger for debugging
 - [x] Gapless playback
 - [x] Notification of version updates
 - [x] Update queue page when queue is changed

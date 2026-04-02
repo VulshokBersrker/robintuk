@@ -2,11 +2,12 @@
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
+import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 
-import { DirectoryInfo, PlaylistList } from '../globalValues';
+import { clearLocalStorage, DirectoryInfo, PlaylistList } from '../globalValues';
 
 // Images
 import CheckIcon from '../images/circle-check-regular-full.svg';
@@ -17,6 +18,7 @@ import ImportIcon from '../images/download-solid-full.svg';
 import LryicsIcon from '../images/qrcode-solid-full.svg';
 import ExportIcon from '../images/upload-solid-full.svg';
 import logo from '../images/logo.svg';
+
 
 interface ScanResults {
     success: number,
@@ -44,6 +46,7 @@ interface LyricsInfo {
 
 export default function Settings() {
     
+    const navigate = useNavigate();
     const [showResults, setShowResults] = useState<boolean>(false);
     
     // Music Scanning Values
@@ -100,6 +103,9 @@ export default function Settings() {
         }        
     }, []);
 
+    function navigateToLyricsSearch() {
+        navigate("/lyrics/song-search");
+    }
 
     // Functions for Scanning Music
     async function scanMusic() {
@@ -248,6 +254,7 @@ export default function Settings() {
         }
         finally {
             // Reset Theme Color to base Red
+            clearLocalStorage();
             setTheme("red");
             document.querySelector('body')?.setAttribute("data-theme", "red");
             localStorage.setItem('theme', "red");
@@ -271,7 +278,6 @@ export default function Settings() {
     async function getTheme() {
         try {
             const res: string = await invoke("get_settings");
-            console.log("theme " + res);
             setTheme(res);            
         }
         catch(e) {
@@ -515,13 +521,18 @@ export default function Settings() {
                 <div className="sub-font font-0" style={{marginBottom: '10px'}}>Get lyrics for your songs using the LRCLIB service.</div>
 
                 <div className="d-flex vertical-centered">
-                    <span>
+                    <div>
                         <button className="white vertical-centered font-1 header-font" onClick={scanForLyrics} disabled={loading || isBackupRestore || isLyrics}>
                             {!isLyrics && <img src={LryicsIcon} alt="icon" />}
                             {isLyrics && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
                             &nbsp;Look for Lyrics
                         </button>
-                    </span>
+                    </div>
+                    <div style={{marginLeft: '10px'}}>
+                        <button className="white vertical-centered font-1 header-font" onClick={navigateToLyricsSearch} disabled={loading || isBackupRestore || isLyrics}>
+                            <img src={LryicsIcon} alt="icon" />  &nbsp;Select Songs for Lyrics
+                        </button>
+                    </div>
 
                     {currentLyricsInfo !== undefined &&
                         <pre className="sub-font" style={{marginLeft: "15px"}}>
@@ -537,7 +548,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font font-1">Robintuk v0.2.9 <span className="sub-font font-0">&#169; 2026 VulshokBersrker</span></div>
+                <div className="header-font font-1">Robintuk v0.3.0 <span className="sub-font font-0">&#169; 2026 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button

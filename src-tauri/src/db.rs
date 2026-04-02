@@ -974,6 +974,20 @@ pub async fn add_lyrics(state: State<'_, AppState>, lyrics: LrclibLyrics, path: 
     Ok(())
 }
 
+
+pub async fn update_lyrics(state: State<'_, AppState>, lyrics: LrclibLyrics, path: String) -> Result<(), String> {
+
+    let _ = sqlx::query("UPDATE lyrics SET lyrics_id = $1, plain_lyrics = $2, synced_lyrics = $3 WHERE song_id = $4")
+        .bind(lyrics.lyrics_id)
+        .bind(lyrics.plain_lyrics)
+        .bind(lyrics.synced_lyrics)
+        .bind(path)
+        .execute(&state.pool)
+        .await;
+    
+    Ok(())
+}
+
 #[tauri::command(rename_all = "snake_case")]
 pub async fn get_lyrics(state: State<AppState, '_>, song_id: String) -> Result<LrclibLyrics, String> {
 

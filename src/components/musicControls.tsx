@@ -1,7 +1,8 @@
 // Core Libraries
+import { info, error } from '@tauri-apps/plugin-log';
+import { useEffect, useRef, useState } from "react";
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useRef, useState } from "react";
 
 // Custom Components
 import { GetCurrentSong, savePosition, Songs, SongLyrics, DirectoryInfo } from "../globalValues";
@@ -139,6 +140,7 @@ export default function MusicControls() {
             await invoke("player_play");            
         }
         catch(e) {
+            error("Controls - Error playing Music");
             console.log(e);
         }          
     }
@@ -149,6 +151,7 @@ export default function MusicControls() {
             await invoke("player_pause");
         }
         catch(e) {
+            error("Controls - Error pausing Music");
             console.log(e);
         }   
     }
@@ -181,6 +184,7 @@ export default function MusicControls() {
             currentLineNumberRef.current = null;
         }
         catch(e) {
+            error("Controls - Error moving to the next song");
             console.log("Error playing the next song: " + e);
         }
         finally {
@@ -213,6 +217,7 @@ export default function MusicControls() {
                 currentLineNumberRef.current = null;
             }
             catch(e) {
+                error("Controls - Error moving to the previous song");
                 console.log(e);
             }
             finally {
@@ -257,6 +262,7 @@ export default function MusicControls() {
             }
         }
         catch(e) {
+            error("Controls - Error updating shuffle");
             console.log("Error Updating the Shuffle: " + e);
         }
     }
@@ -268,6 +274,7 @@ export default function MusicControls() {
             await invoke("player_set_seek", { pos: value });
         }
         catch(e) {
+            error("Controls - Error seeking music");
             console.log(e);
         }
         finally {
@@ -285,6 +292,7 @@ export default function MusicControls() {
             await invoke('player_setup_queue_and_song', { queue: queue, index: index });
         }
         catch(e) {
+            error("Controls - Failed to send queue to backend");
             console.log(`Failed to setup player: ${e}`);
             setIsLoaded(false);
         }
@@ -296,6 +304,7 @@ export default function MusicControls() {
 
         pauseMusic();
         if(qPosition !== null) {
+            info("Controls (Info) - Loaded Volume Level: " + JSON.parse(qPosition));
             try {
                 // Get the last played song, if exists
                 const queue: Songs[] = await invoke<Songs[]>("get_queue", {shuffled: shuffleMode !== null ? shuffleMode : false});
@@ -303,9 +312,11 @@ export default function MusicControls() {
 
                 if(queue.length === 0) {
                     setIsLoaded(false);
+                    info("Controls (Info) - There is a Queue");
                 }
                 else if(queue.length < parseInt(qPosition)) {
                     console.log("qPosition is greater than queue length - cannot load");
+                    error("Controls (Error) - Queue Position is greater than Queue Length - Cannot load Controls");
                 }
                 else {
                     setSongDetails(queue[JSON.parse(qPosition!)]);
@@ -325,20 +336,24 @@ export default function MusicControls() {
                     else {
                         setIsShuffle(false);
                     }
+                    info("Controls (Info) - Loaded Shuffle Status: " + shuffleMode);
                 }
             }
             catch(e) {
-                alert(`Failed load music controls: ${e}`);
+                error("Controls - Failed to load music controls");
+                console.log(`Failed load music controls: ${e}`);
                 setIsLoaded(false);
             }
         }
         else {
+            info("Controls (Info) - Loaded Volume Level: null");
             setIsLoaded(false);
         }
 
         const storedVolume = localStorage.getItem("volume-level");
         if(storedVolume !== null) {
             updateVolume(JSON.parse(storedVolume));
+            info("Controls (Info) - Loaded Volume Level: " + JSON.parse(storedVolume));
         }
         else {
             updateVolume(volume);
@@ -395,6 +410,7 @@ export default function MusicControls() {
             }
         }
         catch(e) {
+            // error("Controls - Error getting music lyrics: " + e);
             setHasLyrics(false);
             setSongLyrics(undefined);
         }
@@ -411,6 +427,7 @@ export default function MusicControls() {
             setSongDetails(song);
         }
         catch(e) {
+            error("Controls - Failed to update song details");
             console.log(e);
         }
     }
@@ -423,7 +440,8 @@ export default function MusicControls() {
             await checkForLyrics(q.path);
         }
         catch(e) {
-            alert(`Failed to get song: ${e}`);
+            error(`Controls - Error loading song: ${e}`);
+            console.log(`Failed to get song: ${e}`);
             setIsLoaded(false);
             setIsPlaying(false);
         }
@@ -457,6 +475,7 @@ export default function MusicControls() {
             }
         }
         catch(e) {
+            error("Controls - Error pre-loading the next song: " + e);
             console.log("Error loading the next song: " + e);
         }
     }
@@ -477,6 +496,7 @@ export default function MusicControls() {
             }
         }
         catch(e) {
+            error("Controls - Error getting new song details");
             console.log("Error getting the new song details: " + e);
             setLockShuffle(false);
         }
