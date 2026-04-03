@@ -650,7 +650,7 @@ export default function MusicControls() {
                         </div>                        
                     </span>
                     {hasLyrics && songLyrics !== undefined &&
-                        <span className="lyrics">
+                        <span className="lyrics border">
                             <div style={{paddingTop: "40px"}} />
                             {songLyrics.plain_lyrics.length > 0 && songLyrics.synced_lyrics.length > 0 && songLyrics.synced_lyrics.map((entry, i): any => {
                                 let timestamp: string = "";

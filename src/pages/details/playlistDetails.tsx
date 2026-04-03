@@ -403,7 +403,7 @@ export default function PlaylistOverviewPage() {
     }
     else if(loading === false && playlist.length !== 0) {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="playlist-main">
                 <div className="album-container">
 
                     {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}

@@ -207,6 +207,7 @@ pub fn run() -> Result<(), String> {
             commands::check_for_single_lyrics,
             commands::cancel_lyrics_scan,
             commands::update_remote_lyrics,
+            commands::search_remote_lyrics,
             // Settings Functions
             scan_directory,
             db::get_directory,

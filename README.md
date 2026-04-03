@@ -66,7 +66,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
-- [ ] Wrong song is loaded when app is opened with a shuffled queue
+- [ ] Sometimes wrong song is loaded when app is opened with a shuffled queue
 - [ ] Small chance of crash on song change (Unknown reason why)
 - [ ] Error on load sometimes where the wrong queue is saved or removed
 - [ ] Some album artwork is not deleted when songs are removed

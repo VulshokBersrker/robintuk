@@ -10,9 +10,7 @@ import { SongsFull, alphabeticallyOrdered, } from "../../globalValues";
 // Image
 import SearchIcon from '../../images/search_icon.svg';
 
-type Props = {
-    songs: SongsFull[]
-}
+type Props = { songs: SongsFull[] }
 
 export default function LyricSearch({songs}: Props) {
 
@@ -21,7 +19,6 @@ export default function LyricSearch({songs}: Props) {
     const [scrollParent, setScrollParent] = useState<any>(null);
     const virtuoso = useRef<any>(null);
 
-    // const [loading, setLoading] = useState(false);
     const [songList] = useState<SongsFull[]>(songs);
     const [searchValue, setSearchValue] = useState<string>("");
 
@@ -101,7 +98,8 @@ export default function LyricSearch({songs}: Props) {
 
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="songs-main">
                 <div className="song-page-list">
-                    <div className="search-filters d-flex justify-content-end vertical-centered"> 
+                    <div className="search-filters d-flex justify-content-between vertical-centered">
+                        <h2 style={{textAlign: 'left'}}>Song Lyrics Search</h2> 
                         <span className="search-bar">
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
                             <input

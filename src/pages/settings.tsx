@@ -36,10 +36,6 @@ interface ScanProgress {
     current: number
 }
 
-interface LyricsInfo {
-    name: string,
-    album: string
-}
 
 // Add function to remove all entries if the list is emptied
 // Add an "Are you sure" message to let the user know all the music will be gone
@@ -71,10 +67,6 @@ export default function Settings() {
     const [isExport, setIsExport] = useState<boolean>(false);
     const [isImport, setisImport] = useState<boolean>(false);
 
-    // Lyrics Values
-    const [isLyrics, setIsLyrics] = useState<boolean>(false);
-    const [currentLyricsInfo, setCurrentLyricsInfo] = useState<LyricsInfo>();
-
     // Get the list of directories on load
     useEffect(() => {
         getDirectories();
@@ -90,14 +82,11 @@ export default function Settings() {
         const unlisten_backup_finished = listen("ending-backup", () => { setIsBackup(false); setIsBackupRestore(false); });
         const unlisten_restore_finished = listen("ending-restore", () => { setIsRestore(false); setIsBackupRestore(false); });
         const unlisten_reset_finished = listen("ending-reset", () => { setIsBackupRestore(false); });
-
-        const unlisten_lyrics_info = listen<LyricsInfo>("lyrics-scan-info", (event) => { setIsLyrics(true); setIsBackupRestore(true); setCurrentLyricsInfo({name: event.payload.name, album: event.payload.album}) });
         
         return () => {
             unlisten_scan_finished.then(f => f()),
             unlisten_scan_progress.then(f => f()),
             unlisten_backup_finished.then(f => f()),
-            unlisten_lyrics_info.then(f => f()),
             unlisten_reset_finished.then(f => f()),
             unlisten_restore_finished.then(f => f());
         }        
@@ -283,35 +272,6 @@ export default function Settings() {
         catch(e) {
             console.log(e);
             setTheme("red");
-        }
-    }
-
-    
-    // Functions for Lyrics
-    async function scanForLyrics() {
-        try {
-            setIsLyrics(true);
-            await invoke("scan_for_lyrics");
-        }
-        catch(e) {
-            console.log("Error while scanning for lyrics: " + e);
-            setIsLyrics(false);
-        }
-        finally {
-            setIsLyrics(false);
-        }
-    }
-    async function cancelLyricsScan() {
-        try{
-            await invoke("cancel_lyrics_scan");
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            setIsBackupRestore(false);
-            setIsLyrics(false);
-            setCurrentLyricsInfo(undefined);
         }
     }
 
@@ -521,26 +481,10 @@ export default function Settings() {
                 <div className="sub-font font-0" style={{marginBottom: '10px'}}>Get lyrics for your songs using the LRCLIB service.</div>
 
                 <div className="d-flex vertical-centered">
-                    <div>
-                        <button className="white vertical-centered font-1 header-font" onClick={scanForLyrics} disabled={loading || isBackupRestore || isLyrics}>
-                            {!isLyrics && <img src={LryicsIcon} alt="icon" />}
-                            {isLyrics && <span style={{paddingLeft: '5px', paddingRight: '5px', paddingBottom: '3px', paddingTop: '3px'}}><span className="loader large" /></span>}
-                            &nbsp;Look for Lyrics
-                        </button>
-                    </div>
-                    <div style={{marginLeft: '10px'}}>
-                        <button className="white vertical-centered font-1 header-font" onClick={navigateToLyricsSearch} disabled={loading || isBackupRestore || isLyrics}>
-                            <img src={LryicsIcon} alt="icon" />  &nbsp;Select Songs for Lyrics
-                        </button>
-                    </div>
-
-                    {currentLyricsInfo !== undefined &&
-                        <pre className="sub-font" style={{marginLeft: "15px"}}>
-                            Asking LRCLIB for Lyrics: &#10;&#13;{currentLyricsInfo.name} - {currentLyricsInfo.album}
-                        </pre>
-                    }
+                    <button className="white vertical-centered font-1 header-font" onClick={navigateToLyricsSearch} disabled={loading || isBackupRestore}>
+                        <img src={LryicsIcon} alt="icon" />&nbsp;Look for Lyrics
+                    </button>
                 </div>
-                {isLyrics && <div> <button className="white" onClick={cancelLyricsScan}>Cancel</button> </div> }
             </div>
 
             {/* About */}
@@ -548,7 +492,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font font-1">Robintuk v0.3.0 <span className="sub-font font-0">&#169; 2026 VulshokBersrker</span></div>
+                <div className="header-font font-1">Robintuk v0.3.1 <span className="sub-font font-0">&#169; 2026 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
