@@ -454,6 +454,11 @@ a {
   -webkit-box-orient: vertical;
 }
 
+h1, h2, h3, h4 {
+  font-family: var(--header-family);
+  font-weight: var(--header-weight);
+}
+
 /* /*-------------- Button Tags /*-------------- */
 button {
   -webkit-touch-callout: none; /* iOS Safari */
@@ -2862,6 +2867,14 @@ img.search-icon:hover {
     z-index: 100;
   }
 
+  #root:has(.music-control-container) {
+    .songs-main .empty-space {
+      height: 250px;
+    }
+    .playlist-main .empty-space {
+      height: 220px;
+    }
+  }
 }
 /* styles for smaller iPads/Kindle */
 @media screen and (min-width: 800px) and (max-width: 1199px) { 
@@ -2889,7 +2902,15 @@ img.search-icon:hover {
     height: 30rem;
     z-index: 100;
   }
-  
+
+  #root:has(.music-control-container) {
+    .songs-main .empty-space {
+      height: 250px;
+    }
+    .playlist-main .empty-space {
+      height: 220px;
+    }
+  }  
 }
 
 @media screen and (min-width: 1200px) and (max-width: 1800px) {
@@ -2910,7 +2931,7 @@ img.search-icon:hover {
   }
 
   .fullscreen-music .artwork.lyric {
-    transform: translate(-37rem, -50%);
+    transform: translate(-33rem, -50%);
   }
 
   .fullscreen-music .artwork div {
@@ -2919,7 +2940,7 @@ img.search-icon:hover {
 
   .fullscreen-music .lyrics {
     width: 32rem;
-    transform: translate(5.5rem, -55%);
+    transform: translate(8rem, -55%);
   }
   
 }

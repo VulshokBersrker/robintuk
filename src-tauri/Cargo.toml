@@ -1,7 +1,7 @@
 [package]
 name = "robintuk_player"
-version = "0.3.0"
-description = "A Tauri App"
+version = "0.3.1"
+description = "A beautiful and colorful music player for Windows"
 authors = ["you"]
 edition = "2021"
 

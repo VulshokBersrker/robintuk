@@ -70,15 +70,14 @@ export default function LRCLIBSearchResults() {
     async function getSongLyricsResults(name: string, artist: string, album: string) {
         try{
             setLyricsLoading(true);
-            await fetch(`https://lrclib.net/api/search?artist_name=${artist}&track_name=${name}&album_name=${album}`, {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "User-Agent": "Robintuk v0.3.0 Music Player",
-                }
-                }).then(response => response.json())
-                .then(data => {
-                    setLyricsResults(data);
-                });
+
+            const res = await invoke<SongLyricsSearch[]>("search_remote_lyrics", {name: name, artist: artist, album: album});
+            if(res.length > 0) {
+                setLyricsResults(res);
+            }
+            else {
+                setLyricsResults([]);
+            }            
         }
         catch(e) {
             error("LRCLIB Search Results - Error Getting Song Lyrics: " + e);

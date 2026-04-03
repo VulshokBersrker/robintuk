@@ -567,6 +567,50 @@ pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String
     }
 }
 
+#[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct LRCLIBSearchResults {
+    pub id: i64,
+    pub track_name: Option<String>,
+    pub artist_name: Option<String>,
+    pub album_name: Option<String>,
+    pub plain_lyrics: Option<String>,
+    pub synced_lyrics: Option<String>,
+    pub duration: Option<f64>,
+    pub instrumental: Option<bool>
+}
+
+// Get Search Results for Song
+#[tauri::command(rename_all = "snake_case")]
+pub async fn search_remote_lyrics(name: String, artist: String, album: String) -> Result<Vec<LRCLIBSearchResults>, String> {
+    // Setup the client
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".parse().unwrap());
+    headers.insert(USER_AGENT, "Robintuk Music Player".parse().unwrap());
+
+    let url_client = Client::builder().default_headers(headers).build().unwrap();
+
+    let url = format!("https://lrclib.net/api/search?artist_name={artist}&track_name={name}&album_name={album}");
+    let first_res = url_client.get(&url).send().await;
+
+    if first_res.is_ok() {
+        let res = first_res.unwrap().json::<Vec<LRCLIBSearchResults>>().await;
+
+        if res.is_ok() {
+            Ok(res.unwrap())
+        }
+        else {
+            log::error!("Search For Lyrics - Error in Fetch");
+            Err("Search For Lyrics - Error in Fetch".to_string())
+        }
+    }
+    else {
+        log::error!("Search For Lyrics (Error) - {:?}", first_res.unwrap_err());
+        Err("Error Searching for Remote Lyrics".to_string())
+    }
+}
+
+
 // Update Lyrics
 #[tauri::command(rename_all = "snake_case")]
 pub async fn update_remote_lyrics(state: State<AppState, '_>, path: String, plain_lyrics: String, synced_lyrics: String, lyrics_id: i64) -> Result<(), String> {
