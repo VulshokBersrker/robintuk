@@ -111,7 +111,8 @@ export default function AlbumPage({albums}: P) {
         setSearchValue(value);
         const temp_section = albumList.filter((entry): any => {
             if(entry.album !== undefined && entry.album_artist !== undefined) {
-                return (entry.album.toLowerCase().includes(value.toLowerCase()) || entry.album_artist.toLowerCase().includes(value.toLowerCase()) )
+                return (entry.album.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
+                || entry.album_artist.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase()) )
             }
         })
         setFilteredAlbums(temp_section);

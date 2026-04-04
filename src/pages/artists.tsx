@@ -54,7 +54,7 @@ export default function ArtistsPage({artists}: P) {
     function updateSearchResults(value: string) {
         setSearchValue(value);
         const temp_section = artistList.filter((entry): any => {
-            return entry.album_artist.toLowerCase().includes(value.toLowerCase());
+            return entry.album_artist.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase());
         })
         setFilteredArtists(temp_section);
 

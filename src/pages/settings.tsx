@@ -3,6 +3,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
 import { useNavigate } from 'react-router-dom';
+import { error } from '@tauri-apps/plugin-log';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
@@ -18,6 +19,7 @@ import ImportIcon from '../images/download-solid-full.svg';
 import LryicsIcon from '../images/qrcode-solid-full.svg';
 import ExportIcon from '../images/upload-solid-full.svg';
 import logo from '../images/logo.svg';
+
 
 
 interface ScanResults {
@@ -56,6 +58,7 @@ export default function Settings() {
     const [themeColor, setThemeColor] = useState<string>(localStorage.getItem('theme') !== null ? localStorage.getItem('theme')! : "purple");
 
     // Reset / Restore / Backup Values
+    const [isDupDirectory, setIsDupDirectory] = useState<boolean>(false);
     const [isBackup, setIsBackup] = useState<boolean>(false);
     const [isRestore, setIsRestore] = useState<boolean>(false);
     const [isBackupRestore, setIsBackupRestore] = useState<boolean>(false);
@@ -177,15 +180,16 @@ export default function Settings() {
                     await invoke("add_directory", { directory_name: folder_path.toString() });
                 }
                 else {
-                    setShowResults(true);
+                    setIsDupDirectory(true);
                     setTimeout(() => {
-                        setShowResults(false);
+                        setIsDupDirectory(false);
                     }, 5000);
                 }          
             }            
         }
         catch(err) {
-            alert(`Failed to add directories: ${err}`);
+            error("Settings (Error) - Failed to add Directories: " + err);
+            console.log(`Failed to add directories: ${err}`);
         }
     }
     async function removeDirectory(value: string) {
@@ -237,9 +241,13 @@ export default function Settings() {
         try{
             setIsBackupRestore(true);
             await invoke("reset_database");
+            setIsReset(false);
+            await invoke("clear_queue");
+            await invoke("player_clear_queue");
         }
         catch(e) {
             console.log("Error reseting database: ", e);
+            error("Setting (Error) - Error Reseting Database: " + e);
         }
         finally {
             // Reset Theme Color to base Red
@@ -247,7 +255,8 @@ export default function Settings() {
             setTheme("red");
             document.querySelector('body')?.setAttribute("data-theme", "red");
             localStorage.setItem('theme', "red");
-            setIsReset(false);
+            setDirectoryList([]);
+            
         }
     }
     
@@ -326,13 +335,13 @@ export default function Settings() {
         <SimpleBar forceVisible="y" autoHide={false} className="scrollbar-settings-content" >
 
             {(showResults === true && scanResults !== undefined) &&
-                <ErrorPopup success={scanResults.success} updated={scanResults.updated} error={scanResults.error} error_dets={scanResults.error_dets} type={0} />
+                <ErrorPopup success={scanResults.success} updated={scanResults.updated} error={scanResults.error} type={0} />
+            }
+            {(isDupDirectory === true && scanResults === undefined) &&
+                <ErrorPopup success={0} updated={0} error={1} type={1} />
             }
             {(showResults === true && scanResults === undefined) &&
-                <ErrorPopup success={0} updated={0} error={1} error_dets={null} type={1} />
-            }
-            {(showResults === true && scanResults === undefined) &&
-                <ErrorPopup success={0} updated={0} error={1} error_dets={null} type={2} />
+                <ErrorPopup success={0} updated={0} error={1} type={2} />
             }
             <div className="settings-section">
                 <span className="header-font font-3">Folders to Scan</span>
@@ -492,7 +501,7 @@ export default function Settings() {
                 <div className="header-font font-3">About</div>
 
                 <div><img src={logo} alt={"logo"} style={{height: '160px', width: '160px'}}/></div>
-                <div className="header-font font-1">Robintuk v0.3.1 <span className="sub-font font-0">&#169; 2026 VulshokBersrker</span></div>
+                <div className="header-font font-1">Robintuk v0.3.2 <span className="sub-font font-0">&#169; 2026 VulshokBersrker</span></div>
                 <div className="sub-font font-0">Open Source Music Player</div>    
                 <div>
                     <button
@@ -540,53 +549,24 @@ type Props = {
     success: number,
     updated: number,
     error: number,
-    error_dets: ErrorInfo[] | null,
     type: number,
 };
 
-const ErrorPopup = ({success, error, updated, type, error_dets}: Props) => {    
-
+const ErrorPopup = ({success, error, updated, type}: Props) => {    
     // 0 - Directory Scan
     if(type === 0) {
-        console.log("Scanned " + (error + success + updated) + " songs - " + (success) + " songs added - "+ (updated) + " songs updated - " + (error) + " songs had errors");
-        if(error === 1 && error_dets![0].error_type.includes("ongoing")) {
-            return(
-                <div className="status-container error d-flex vertical-centered">
-                    <span>
-                        <img src={ErrorIcon} alt={"ff"} className="scan-status-icon error"/>
-                    </span>
-                    <span style={{paddingLeft: "10px"}}>
-                        <div>A scan is already on going - please wait</div>                    
-                    </span>
-                </div>
-            );
-        }
-        else if(error !== 0) {
-            return(
-                <div className="status-container error d-flex vertical-centered">
-                    <span>
-                        <img src={ErrorIcon} alt={"ff"} className="scan-status-icon error"/>
-                    </span>
-                    <span style={{paddingLeft: "10px"}}>
-                        <div>Folders Scanned</div>
-                        <div>Scanned {error + success + updated} songs - {success} songs added - {updated} songs updated - {error} songs had errors</div>                    
-                    </span>
-                </div>
-            );
-        }
-        else {
-            return(
-                <div className="status-container success d-flex vertical-centered">
-                    <span>
-                        <img src={CheckIcon} alt={"ff"} className="scan-status-icon success"/>
-                    </span>
-                    <span style={{paddingLeft: "10px"}}>
-                        <div>Folders Scanned</div>
-                        <div>Scanned {error + success + updated} songs - {success} songs added - {updated} songs updated - {error} songs had errors</div>                    
-                    </span>
-                </div>
-            );
-        }
+        return(
+            <div className="status-container success d-flex vertical-centered">
+                <span>
+                    <img src={CheckIcon} alt={"ff"} className="scan-status-icon success"/>
+                </span>
+                <span style={{paddingLeft: "10px"}}>
+                    <div>Folders Scanned</div>
+                    <div>Scanned {error + success + updated} songs - {success} songs added - {updated} songs updated - {error} songs had errors</div>                    
+                </span>
+            </div>
+        );
+        
     }
     // Duplicate/Subfolder added to directory list
     else if(type === 1) {

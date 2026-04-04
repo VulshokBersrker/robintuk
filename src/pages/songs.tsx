@@ -76,8 +76,9 @@ export default function SongPage({songs}: Props) {
 
         const temp_section = songList.filter((entry) => {
             if(entry.name !== undefined && entry.album !== undefined && entry.album_artist !== undefined) {
-                return (entry.name.toLowerCase().includes(value.toLowerCase()) || entry.album.toLowerCase().includes(value.toLowerCase())
-                || entry.album_artist.toLowerCase().includes(value.toLowerCase())
+                return (entry.name.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
+                || entry.album.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
+                || entry.album_artist.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
             )
             }
             else {

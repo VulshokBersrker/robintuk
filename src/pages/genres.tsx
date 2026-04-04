@@ -52,7 +52,7 @@ export default function GenresPage({genres}: P) {
     function updateSearchResults(value: string) {
         setSearchValue(value);
         const temp_section = artistList.filter((entry): any => {
-            return entry.genre.toLowerCase().includes(value.toLowerCase());
+            return entry.genre.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase());
         })
         setFilteredArtists(temp_section);
 

@@ -1,6 +1,6 @@
 // Libraries
 use std::{
-    fs::{self}, hash::{BuildHasher, DefaultHasher, Hash, Hasher, RandomState}, os::windows::fs::MetadataExt, path::{Path, PathBuf}
+    fs::{self}, hash::{BuildHasher, DefaultHasher, Hash, Hasher, RandomState}, os::windows::fs::MetadataExt, path::{PathBuf}
 };
 use tauri_plugin_log::log;
 
@@ -9,7 +9,7 @@ use lofty::{config::{ParseOptions, ParsingMode}, file::TaggedFileExt, tag::ItemK
 use lofty::prelude::*;
 
 // How you import in files that aren't lib or main
-use crate::{SongDataResults, types::{ SongTable, SongTableUpload }};
+use crate::{ types::{ SongTable, SongTableUpload }};
 
 // import keys from https://docs.rs/lofty/latest/lofty/tag/enum.ItemKey.html
 
@@ -68,13 +68,7 @@ fn get_section_marker(first_char: char) -> Option<i32> {
 }
 
 // Get the song metadata for the database
-pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
-
-    let file_name: String = Path::new(&path)
-        .file_name()
-        .and_then(|x| x.to_str())
-        .map(|x| x.to_string())
-        .unwrap();
+pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
 
     let file_size = fs::metadata(&path).unwrap().file_size();
 
@@ -82,8 +76,6 @@ pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
         path: path.to_string(),
         ..SongTableUpload::default()
     };
-
-    let errors: String;
 
     // Prevents an error where a file might have a bad Timestamp
     let parsing_options = ParseOptions::new().parsing_mode(ParsingMode::BestAttempt);
@@ -108,15 +100,11 @@ pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
                 if Some(value) == None {
                     if Some(tag.get_string(&ItemKey::TrackTitle).unwrap().to_string()) != None {
                         song_data.name = Some(tag.get_string(&ItemKey::TrackTitle).unwrap().to_string());
+
+                        let char_array: Vec<char> = tag.get_string(&ItemKey::TrackTitle).unwrap().to_string().chars().collect();
+                        let first_char: char = char_array[0].to_ascii_uppercase();
+                        song_data.song_section = get_section_marker(first_char);
                     }
-                    else {
-                        song_data.name = None;
-                    }
-                    let name: String = file_name.clone().replace(".mp3", "").replace(".flac", "").replace(".wav", "");
-                    let char_array: Vec<char> = name.chars().collect();
-                    let first_char: char = char_array[0].to_ascii_uppercase();
-                    song_data.song_section = get_section_marker(first_char);
-                    
                 }
                 else {
                     song_data.name = Some(value.to_string());
@@ -126,6 +114,10 @@ pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
                     let first_char: char = char_array[0].to_ascii_uppercase();
                     song_data.song_section = get_section_marker(first_char);
                 }
+            }
+            // This song has no title tag - will not be added to the app
+            else {
+                return Err(());
             }
 
             // Get album tag
@@ -317,23 +309,21 @@ pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
                 }
                 covers_path.push(&song_cover_path);
 
-                fs::write(&covers_path, &tag.pictures()[0].data())?;
+                let _ = fs::write(&covers_path, &tag.pictures()[0].data());
                 // Save the cover for the database
                 song_data.cover = Some(song_cover_path);
             }
 
-            errors = " ".to_string();
+            
         }
         else {
-            println!("File contains not tags: {:?}", &path);
-            errors = "No-Tags".to_string();
-            log::error!("Get Song Data - file does not contain tags");
+            log::error!("Get Song Data - file does not contain tags: {:?}", &path);
+            return Err(());
         }
     }
     else {
-        // let _ = tagged_file.inspect_err(|f| println!("Lofty Error: {:?} - {:?}", f, &path));
-        errors = "Lofty-Error".to_string();
-        log::error!("Get Song Data - Lofty Metadata Error");
+        let _ = tagged_file.inspect_err(|f|log::error!("Get Song Data - Lofty Metadata Error: {:?} -- {:?}", f, &path));
+        return Err(());
     }
     
     // println!("{:?}\nName: {:?}\nAlbum: {:?}\nTrack: {:?}\nArtist: {:?}\nRelease: {:?}\nDisc: {:?}\n",
@@ -342,10 +332,7 @@ pub async fn get_song_data(path: String) -> std::io::Result<SongDataResults> {
     //     &song_data.release, &song_data.disc
     // );
 
-    return Ok(SongDataResults {
-        song_data,
-        error_details: errors,
-    });
+    return Ok(song_data);
 }
 
 

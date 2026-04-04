@@ -1,8 +1,8 @@
 [package]
 name = "robintuk_player"
-version = "0.3.1"
+version = "0.3.2"
 description = "A beautiful and colorful music player for Windows"
-authors = ["you"]
+authors = ["VulshokBersrker"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
