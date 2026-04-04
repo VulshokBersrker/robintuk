@@ -1799,7 +1799,7 @@ button img {
   border: 2px var(--font-color-three) solid;
   background-color: var(--gradient-two);
   width: 42rem;
-  height: 29rem;
+  height: 33rem;
   z-index: 9999;
 }
 
@@ -2863,7 +2863,7 @@ img.search-icon:hover {
   .song-details-modal {
     transform: translate(-42%, -50%);
     width: 29rem;
-    height: 31rem;
+    height: 33rem;
     z-index: 100;
   }
 
@@ -2899,7 +2899,7 @@ img.search-icon:hover {
   .song-details-modal {
     transform: translate(-42%, -50%);
     width: 35rem;
-    height: 30rem;
+    height: 33rem;
     z-index: 100;
   }
 

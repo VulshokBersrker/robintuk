@@ -725,7 +725,7 @@ export default function AlbumOverviewPage() {
                                                 </span>
                                                 <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />
                                             </span>
-                                            <span className="section-1 track">{albumList[index].track}</span>
+                                            <span className="section-1 track">{albumList[index].track !== 0 && <>{albumList[index].track}</>}</span>
                                             <span className="section-9 font-0 name ">{albumList[index].name}</span>
                                             <span className="section-8 artist ">{albumList[index].artist}</span>
                                             <span className="section-1 header-font duration ">{new Date(albumList[index].duration * 1000).toISOString().slice(14, 19)}</span>

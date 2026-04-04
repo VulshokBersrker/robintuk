@@ -376,7 +376,7 @@ pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AllAlbumRe
 #[tauri::command(rename_all = "snake_case")]
 pub async fn get_album(state: State<AppState, '_>, name: String) -> Result<Vec<SongTable>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC;")
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC, name ASC;")
         .bind(name)
         .fetch_all(&state.pool)
         .await

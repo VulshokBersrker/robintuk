@@ -24,7 +24,7 @@ mod db;
 use crate::{
     db::establish_connection,
     helper::get_song_data, music::MusicPlayer,  
-    types::{SongTableUpload, GetCurrentSong}
+    types::{ GetCurrentSong }
 };
 
 pub struct AppState {
@@ -236,20 +236,7 @@ pub fn run() -> Result<(), String> {
 struct ScanResults {
     pub success: i64,
     pub updated: i64,
-    pub error: i64,
-    pub error_dets: Vec<ErrorInfo>,
-}
-
-#[derive(serde::Serialize)]
-struct ErrorInfo {
-    file_name: String,
-    error_type: String
-}
-
-#[derive(Debug)]
-pub struct SongDataResults {
-    pub song_data: SongTableUpload,
-    pub error_details: String,
+    pub error: i64
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -266,7 +253,6 @@ pub struct GetScanStatus {
 // use the path value to check, since that is a unique value in each entry (files cannot share paths)
 #[tauri::command]
 async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<ScanResults, String> {
-    let mut error_details: Vec<ErrorInfo> = Vec::new();
     // Keep track of how many entires pass or fail
     let mut num_added = 0;
     let mut num_error = 0;
@@ -279,15 +265,11 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
     let second_state  = state.clone();
     
     app.emit("scan-started", GetScanStatus { res: *second_state.is_scan_ongoing.lock().unwrap()}).unwrap();
-    println!("Scan has started");
+    log::info!("Scan has started");
 
     if *second_state.is_scan_ongoing.lock().unwrap() {
         log::info!("There is a Music Scan already active");
         num_error += 1;
-        error_details.push(ErrorInfo {
-            file_name: "".to_string(),
-            error_type: "Scan is ongoing".to_string(),
-        });
     }
     else {
         *second_state.is_scan_ongoing.lock().unwrap() = true;
@@ -316,8 +298,12 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                 // walk through the entire directory, sub folders and all
                 for entry in jwalk::WalkDir::new(path.dir_path).into_iter().filter_map(|e| e.ok()).filter(|x| x.file_type().is_file())  {
                     // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
-                    if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".flac") || entry.path().display().to_string().contains(".m4a")
-                        || entry.path().display().to_string().contains(".aiff") || entry.path().display().to_string().contains(".ogg")  || entry.path().display().to_string().contains(".wav")
+                    if entry.path().display().to_string().contains(".mp3")
+                        || entry.path().display().to_string().contains(".flac")
+                        || entry.path().display().to_string().contains(".m4a")
+                        || entry.path().display().to_string().contains(".aiff")
+                        || entry.path().display().to_string().contains(".ogg")
+                        || entry.path().display().to_string().contains(".wav")
                     {
                         tx1.send(entry.path().display().to_string()).unwrap();
                     }
@@ -332,15 +318,12 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
 
             if song_res.is_ok() {
                 if does_exist {
-                    let _ = db::update_song(song_res.unwrap().song_data, &state.pool).await;
+                    let _ = db::update_song(song_res.unwrap(), &state.pool).await;
                     num_updated += 1;
                 }
                 else {
-                    let res = song_res.unwrap();
-                    if res.error_details.contains(" ") {
-                        let _ = db::add_song(res.song_data, &state.pool).await;
-                        num_added += 1;
-                    }
+                    let _ = db::add_song(song_res.unwrap(), &state.pool).await;
+                    num_added += 1;                    
                 }
             }
             else {
@@ -361,23 +344,22 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
 
     *second_state.is_scan_ongoing.lock().unwrap() = false;
     app.emit("scan-length", ScanProgress {length: scan_length, current: num_scanned}).unwrap();
-     
+
+    app.emit("scan-finished", GetScanStatus { res: false}).unwrap();    
+
     // Remove all songs that are no longer in the directories - When there were no errors
     if num_error == 0 {
         let _ = db::remove_songs(&state.pool).await.unwrap();
     }
 
-    app.emit("scan-finished", GetScanStatus { res: false}).unwrap(); 
-
-    println!("Scan has finished = {:?} added - {:?} updated - {:?} errors", &num_added, &num_updated, &num_error);
-    log::info!("Scan Music - Results ---> Total Scanned: {:?} --  Number Added: {:?}, Number Updated: {:?}, Number Errors: {:?}", &num_scanned, &num_added, &num_updated, &num_error);
+    // println!("Scan has finished = {:?} added - {:?} updated - {:?} errors", &num_added, &num_updated, &num_error);
+    log::info!("Music Scan - Results ---> Total Scanned: {:?} --  Added: {:?}, Updated: {:?}, Errors: {:?}", &num_scanned, &num_added, &num_updated, &num_error);
     
     // At the end, will return the number of successes and failures
     Ok(ScanResults {
         success: num_added,
         updated: num_updated,
-        error: num_error,
-        error_dets: error_details,
+        error: num_error
     })
 }
 
@@ -402,7 +384,6 @@ async fn scan_for_deleted(state: State<AppState, '_>, app: tauri::AppHandle) -> 
                 .execute(&state.pool)
                 .await;
         }
-
     }    
     app.emit("remove-song", false).unwrap();
     Ok(())

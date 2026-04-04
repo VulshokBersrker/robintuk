@@ -9,7 +9,7 @@ use lofty::{config::{ParseOptions, ParsingMode}, file::TaggedFileExt, tag::ItemK
 use lofty::prelude::*;
 
 // How you import in files that aren't lib or main
-use crate::{SongDataResults, types::{ SongTable, SongTableUpload }};
+use crate::{ types::{ SongTable, SongTableUpload }};
 
 // import keys from https://docs.rs/lofty/latest/lofty/tag/enum.ItemKey.html
 
@@ -68,7 +68,7 @@ fn get_section_marker(first_char: char) -> Option<i32> {
 }
 
 // Get the song metadata for the database
-pub async fn get_song_data(path: String) -> Result<SongDataResults, ()> {
+pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
 
     let file_size = fs::metadata(&path).unwrap().file_size();
 
@@ -76,8 +76,6 @@ pub async fn get_song_data(path: String) -> Result<SongDataResults, ()> {
         path: path.to_string(),
         ..SongTableUpload::default()
     };
-
-    let errors: String;
 
     // Prevents an error where a file might have a bad Timestamp
     let parsing_options = ParseOptions::new().parsing_mode(ParsingMode::BestAttempt);
@@ -316,18 +314,16 @@ pub async fn get_song_data(path: String) -> Result<SongDataResults, ()> {
                 song_data.cover = Some(song_cover_path);
             }
 
-            errors = " ".to_string();
+            
         }
         else {
-            println!("File contains not tags: {:?}", &path);
-            errors = "No-Tags".to_string();
-            log::error!("Get Song Data - file does not contain tags");
+            log::error!("Get Song Data - file does not contain tags: {:?}", &path);
+            return Err(());
         }
     }
     else {
-        // let _ = tagged_file.inspect_err(|f| println!("Lofty Error: {:?} - {:?}", f, &path));
-        errors = "Lofty-Error".to_string();
-        log::error!("Get Song Data - Lofty Metadata Error");
+        let _ = tagged_file.inspect_err(|f|log::error!("Get Song Data - Lofty Metadata Error: {:?} -- {:?}", f, &path));
+        return Err(());
     }
     
     // println!("{:?}\nName: {:?}\nAlbum: {:?}\nTrack: {:?}\nArtist: {:?}\nRelease: {:?}\nDisc: {:?}\n",
@@ -336,10 +332,7 @@ pub async fn get_song_data(path: String) -> Result<SongDataResults, ()> {
     //     &song_data.release, &song_data.disc
     // );
 
-    return Ok(SongDataResults {
-        song_data,
-        error_details: errors,
-    });
+    return Ok(song_data);
 }
 
 

@@ -805,7 +805,7 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
                         let res = helper::get_song_data(entry.uri).await;
                             
                         if res.is_ok() {
-                            let song = res.unwrap().song_data;
+                            let song = res.unwrap();
                             let _ = db::add_song(song.clone(), &state.pool).await;
                             
                             let _ = sqlx::query("INSERT INTO playlist_tracks

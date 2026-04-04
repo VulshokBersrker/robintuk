@@ -47,7 +47,6 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
-
 - [ ] Equalizer?
 - [ ] Linux support
 - [ ] Drag and Drop playlist order
