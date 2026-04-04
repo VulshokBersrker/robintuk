@@ -16,7 +16,7 @@
 
 ## Features
 
-- Play most music formats (mp3, flac, ogg, aiff, m4a)
+- Play most music formats (mp3, flac, ogg, aiff, m4a, wav)
 - Great performance with 10,000+ songs loaded
 - Custom playlist artwork (including animated images)
 - Customize the look with multiple color themes
@@ -24,7 +24,7 @@
 - Search to find your music faster
 - Fast scans to add your music quickly (~5000 songs per minute)
 - Backup, Restore, or Reset your music database and images
-- Use m3u/m3u8 files to import playlists from other apps or export your playlists for safe keepings
+- Use m3u/m3u8 files to import playlists from other apps or export your playlists for safe keeping
 - Download song lyrics using LRCLIB
 
 ## [Screenshots](./assets/screenshots/index.md)

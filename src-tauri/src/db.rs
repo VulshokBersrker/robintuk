@@ -491,7 +491,7 @@ pub async fn get_artist_songs(state: State<'_, AppState>, album_artist: String) 
 pub async fn get_all_genres(state: State<AppState, '_>) -> Result<Vec<AllGenreResults>, String> {
 
     let temp: Vec<AllGenreResults> = sqlx::query_as::<_, AllGenreResults>(
-        "SELECT DISTINCT genre, genre_section FROM songs WHERE genre IS NOT NULL
+        "SELECT DISTINCT genre, genre_section FROM songs WHERE genre IS NOT NULL AND album IS NOT NULL
         GROUP BY genre
         ORDER BY genre_section ASC, genre ASC;",
     )
@@ -516,7 +516,8 @@ pub async fn get_genre(state: State<AppState, '_>, name: String) -> Result<SongT
 
 pub async fn get_genre_songs(state: State<'_, AppState>, genre: String) -> Result<Vec<SongTable>, String> {
 
-    let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre = ? ORDER BY album ASC, disc_number ASC, track ASC")
+    // Ignore albums with no name
+    let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre = ? AND album IS NOT NULL ORDER BY album ASC, disc_number ASC, track ASC")
         .bind(&genre)
         .fetch_all(&state.pool)
         .await

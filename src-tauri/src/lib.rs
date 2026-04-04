@@ -203,7 +203,6 @@ pub fn run() -> Result<(), String> {
             commands::set_shuffle_mode,
             // Lyrics Functions
             db::get_lyrics,
-            commands::scan_for_lyrics,
             commands::check_for_single_lyrics,
             commands::cancel_lyrics_scan,
             commands::update_remote_lyrics,
@@ -301,6 +300,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                 || x.path().display().to_string().contains(".m4a")
                 || x.path().display().to_string().contains(".aiff")
                 || x.path().display().to_string().contains(".ogg")
+                || x.path().display().to_string().contains(".wav")
             ).count();
             scan_length += t;
         }
@@ -317,7 +317,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                 for entry in jwalk::WalkDir::new(path.dir_path).into_iter().filter_map(|e| e.ok()).filter(|x| x.file_type().is_file())  {
                     // if the files are music files (For now only grab mp3 and wav files \ flac to be added later)
                     if entry.path().display().to_string().contains(".mp3") || entry.path().display().to_string().contains(".flac") || entry.path().display().to_string().contains(".m4a")
-                        || entry.path().display().to_string().contains(".aiff") || entry.path().display().to_string().contains(".ogg")
+                        || entry.path().display().to_string().contains(".aiff") || entry.path().display().to_string().contains(".ogg")  || entry.path().display().to_string().contains(".wav")
                     {
                         tx1.send(entry.path().display().to_string()).unwrap();
                     }
@@ -344,8 +344,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                 }
             }
             else {
-                log::error!("Scan Music - Error reading Metadata");
-                let _ = song_res.inspect_err(|e| println!("Error reading metadata: {:?}", e));
+                let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
                 num_error += 1;
             }
 

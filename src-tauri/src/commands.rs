@@ -442,57 +442,6 @@ pub struct SongDataLyrics {
     pub duration: u64
 }
 
-#[derive(Clone, serde::Serialize)]
-pub struct LyricsDetails {
-    name: String,
-    album: String
-}
-
-#[tauri::command(rename_all = "snake_case")]
-pub async fn scan_for_lyrics(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
-    println!("Starting Remote Search for Lyrics");
-    *state.is_lyric_scan_ongoing.lock().unwrap() = true;
-
-    // Get all the songs that do not have lyrics
-    let songs_without_lyrics: Vec<SongDataLyrics> = sqlx::query_as::<_, SongDataLyrics>("SELECT artist, album, name, duration, path FROM songs WHERE path NOT IN 
-    (SELECT song_id from lyrics)")
-    .fetch_all(&state.pool).await.unwrap();
-
-    // Setup the client
-    let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".parse().unwrap());
-    headers.insert(USER_AGENT, "Robintuk music player".parse().unwrap());
-
-    let url_client = Client::builder().default_headers(headers).build().unwrap();
-
-    for entry in songs_without_lyrics {
-        // End the loop if the user wants to
-        let check = state.clone();
-        if *check.is_lyric_scan_ongoing.lock().unwrap() == false {
-            break;
-        }
-        let info = entry.clone();
-        let res = get_remote_lyrics(&url_client, entry.name, entry.artist, entry.album, entry.duration).await;
-
-        // If it is a success, add the lyrics to the database
-        if res.is_ok() {
-            let lyrics = res.unwrap();
-            let _ = app.emit("lyrics-scan-info", LyricsDetails{name: info.name, album: info.album});
-
-            if lyrics.lyrics_id != 0 {
-                let _ = db::add_lyrics(state.clone(), lyrics, entry.path).await;
-            }
-        }
-        // If an error, skip to the next
-        else {
-            log::error!("Lyrics Scan - Error getting remote lyric data");
-            continue;
-        }
-    }
-    println!("Ending Remote Search for Lyrics");
-    Ok(())
-}
-
 // Check is a song has lyrics when it is played
 #[tauri::command(rename_all = "snake_case")]
 pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::AppHandle, song_id: String) -> Result<(), String> {
