@@ -1628,6 +1628,9 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   border-radius: var(--border-radius);
   transition: 0.2s ease-in-out;
 }
+.height-preserving-container {
+  height: 64px;
+}
 
 /* Checkbox Styles */
 .form-control {
@@ -2916,7 +2919,10 @@ img.search-icon:hover {
 @media screen and (min-width: 1200px) and (max-width: 1800px) {
   #root:has(.music-control-container) {
     .empty-space {
-      height: 220px;
+      height: 240px;
+    }
+    .playlist-main .empty-space {
+      height: 120px !important;
     }
     .albums-main .empty-space,
     .artists-main .empty-space {
@@ -2950,6 +2956,9 @@ img.search-icon:hover {
   #root:has(.music-control-container) {
     .empty-space {
       height: 15.5rem;
+    }
+    .playlist-main .empty-space {
+      height: 120px
     }
     .albums-main .empty-space,
     .artists-main .empty-space {

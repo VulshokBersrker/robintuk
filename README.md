@@ -49,11 +49,11 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 - [ ] Equalizer?
 - [ ] Linux support
-- [ ] Drag and Drop playlist order
 - [ ] Get artist data from online service for artist page (No great options once you have more than 100 songs)
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] Better DPI aware CSS
+- [x] Drag and Drop playlist order
 - [x] Add Search for Lyrics (can be used to replace lyrics)
 - [x] Improve Event logger for debugging
 - [x] Gapless playback
