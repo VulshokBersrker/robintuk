@@ -684,18 +684,38 @@ pub async fn delete_playlist(state: State<AppState, '_>, name: String) -> Result
 
 // Take in an array of strings (hashes) to update the position values of the playlist
 #[tauri::command(rename_all = "snake_case")]
-pub async fn reorder_playlist(state: State<AppState, '_>, playlist_id: i64, songs: Vec<SongTable>) -> Result<(), String> {
+pub async fn reorder_playlist(state: State<AppState, '_>, playlist_id: i64, song_path: String, start: i64, end: i64) -> Result<(), String> {
 
-    let mut i = 1;
-    for item in songs {
-        let _ = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
-            .bind(&i)
+    
+
+    if end < start {
+        let _ = sqlx::query("UPDATE playlist_tracks SET position = position + 1 WHERE playlist_id = $1 AND position >= $2 AND position < $3")
             .bind(&playlist_id)
-            .bind(&item.path)
+            .bind(&end)
+            .bind(&start)
             .execute(&state.pool)
             .await;
-        i += 1;
     }
+    else if end > start {
+        let _ = sqlx::query("UPDATE playlist_tracks SET position = position - 1 WHERE playlist_id = $1 AND position > $2 AND position <= $3")
+            .bind(&playlist_id)
+            .bind(&start)
+            .bind(&end)
+            .execute(&state.pool)
+            .await;
+    }
+    else {
+        return Ok(());
+    }
+
+    // Update the entry that was moved
+    let _ = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
+        .bind(&end)
+        .bind(&playlist_id)
+        .bind(&song_path)
+        .execute(&state.pool)
+        .await;
+
     Ok(())
 }
 
