@@ -39,7 +39,7 @@ export default function LRCLIBSearchResults() {
             const res: Songs = await invoke("get_song", {song_path: location.state.name});
             setSong(res);
             getSongLyrics();
-            getSongLyricsResults(res.name, res.album_artist, res.album);
+            getSongLyricsResults(res.name, res.album_artist);
         }
         catch(e) {
             error("LRCLIB Search Results - Error Getting Song Information: " + e);
@@ -67,11 +67,11 @@ export default function LRCLIBSearchResults() {
     }
 
     // Move this to backend soon
-    async function getSongLyricsResults(name: string, artist: string, album: string) {
+    async function getSongLyricsResults(name: string,album: string) {
         try{
             setLyricsLoading(true);
 
-            const res = await invoke<SongLyricsSearch[]>("search_remote_lyrics", {name: name, artist: artist, album: album});
+            const res = await invoke<SongLyricsSearch[]>("search_remote_lyrics", {name: name, album: album});
             if(res.length > 0) {
                 setLyricsResults(res);
             }
@@ -82,6 +82,7 @@ export default function LRCLIBSearchResults() {
         catch(e) {
             error("LRCLIB Search Results - Error Getting Song Lyrics: " + e);
             console.log("Error getting song lyrics: " + e);
+            setLyricsResults([]);
         }
         finally {
             setLyricsLoading(false);

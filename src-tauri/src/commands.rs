@@ -531,7 +531,7 @@ pub struct LRCLIBSearchResults {
 
 // Get Search Results for Song
 #[tauri::command(rename_all = "snake_case")]
-pub async fn search_remote_lyrics(name: String, artist: String, album: String) -> Result<Vec<LRCLIBSearchResults>, String> {
+pub async fn search_remote_lyrics(name: String, album: String) -> Result<Vec<LRCLIBSearchResults>, String> {
     // Setup the client
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".parse().unwrap());
@@ -539,7 +539,7 @@ pub async fn search_remote_lyrics(name: String, artist: String, album: String) -
 
     let url_client = Client::builder().default_headers(headers).build().unwrap();
 
-    let url = format!("https://lrclib.net/api/search?artist_name={artist}&track_name={name}&album_name={album}");
+    let url = format!("https://lrclib.net/api/search?&track_name={name}&album_name={album}");
     let first_res = url_client.get(&url).send().await;
 
     if first_res.is_ok() {

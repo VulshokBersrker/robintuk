@@ -619,54 +619,96 @@ export default function PlaylistOverviewPage() {
                         </div>
                         <hr />
 
-                        <DragDropContext onDragEnd={(e) => onDragEnd(e)}>
-                            <Droppable
-                                droppableId="droppable"
-                                mode="virtual"
-                                renderClone={(provided, snapshot, rubric) => {
+                        {!isEdit &&
+                            <Virtuoso 
+                                totalCount={playlist.length}
+                                itemContent={(index) => {
                                     return(
-                                        <Item
-                                            provided={provided}
-                                            isDragging={snapshot.isDragging}
-                                            item={playlist[rubric.source.index]}
-                                            itemIndex={rubric.source.index}
-                                        />
-                                    )
-                                }}
-                            >
-                            {(provided) => {
-                                const ref = (el: Window | HTMLElement | null) => provided.innerRef(el as HTMLElement);
-                                
-                                return (
-                                    <Virtuoso
-                                        components={{ Item: HeightPreservingItem }}
-                                        scrollerRef={ref}
-                                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                                        data={playlist}
-                                        // totalCount={playlist.length}
-                                        itemContent={(index, item) => {
-                                            return (
-                                                <Draggable
-                                                    draggableId={item.path}
-                                                    index={index}
-                                                    key={item.path}
-                                                >
-                                                    {(provided) => (
-                                                        <Item
-                                                            provided={provided}
-                                                            item={item}
-                                                            isDragging={false}
-                                                            itemIndex={index}
+                                        <div key={index} >
+                                            <div
+                                                className={`grid-20 song-row align-items-center ${playlist[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
+                                                onContextMenu={(e) => {
+                                                    e.preventDefault();
+                                                    handleContextMenu(e, playlist[index].album, playlist[index].album_artist, index);
+                                                }}
+                                            >
+                                                <span className="section-1 play">
+                                                    <span className="form-control">
+                                                        <input
+                                                            type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                            onClick={(e) => editSelection(playlist[index], e.currentTarget.checked, index)}
+                                                            onChange={() => {}}
+                                                            checked={checkBoxNumber[index]}
                                                         />
-                                                    )}
-                                                </Draggable>
-                                            );
-                                        }}
-                                    />
-                                );
-                            }}
-                            </Droppable>
-                        </DragDropContext>
+                                                    </span>
+                                                    <img src={PlayOutlineIcon} onClick={() => playPlaylist(index, false)} />
+                                                </span>
+                                                <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={playlist[index].cover} alt="" image_type="playlist-song" /></span>
+                                                <span className="section-9 font-0 name">{playlist[index].name}</span>
+                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(playlist[index].album)}>{playlist[index].album}</span>
+                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(playlist[index].album_artist)}>{playlist[index].album_artist}</span>
+                                                <span className="section-1 header-font duration">{new Date(playlist[index].duration * 1000).toISOString().slice(14, 19)}</span>
+                                            </div>
+                                            <hr />
+                                        </div>
+                                    );                                
+                                }}
+                                customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                            />
+                        }
+
+                        {/* You can only Drag and Drop when you are editing a playlist */}
+                        {isEdit &&
+                            <DragDropContext onDragEnd={(e) => onDragEnd(e)}>
+                                <Droppable
+                                    droppableId="droppable"
+                                    mode="virtual"
+                                    renderClone={(provided, snapshot, rubric) => {
+                                        return(
+                                            <Item
+                                                provided={provided}
+                                                isDragging={snapshot.isDragging}
+                                                item={playlist[rubric.source.index]}
+                                                itemIndex={rubric.source.index}
+                                            />
+                                        )
+                                    }}
+                                >
+                                {(provided) => {
+                                    const ref = (el: Window | HTMLElement | null) => provided.innerRef(el as HTMLElement);
+                                    
+                                    return (
+                                        <Virtuoso
+                                            components={{ Item: HeightPreservingItem }}
+                                            scrollerRef={ref}
+                                            customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                                            data={playlist}
+                                            // totalCount={playlist.length}
+                                            itemContent={(index, item) => {
+                                                return (
+                                                    <Draggable
+                                                        draggableId={item.path}
+                                                        index={index}
+                                                        key={item.path}
+                                                    >
+                                                        {(provided) => (
+                                                            <Item
+                                                                provided={provided}
+                                                                item={item}
+                                                                isDragging={false}
+                                                                itemIndex={index}
+                                                            />
+                                                        )}
+                                                    </Draggable>
+                                                );
+                                            }}
+                                        />
+                                    );
+                                }}
+                                </Droppable>
+                            </DragDropContext>
+                        }
+                        
                     </div>
 
                     <CustomContextMenu
