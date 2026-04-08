@@ -176,6 +176,12 @@ export default function ArtistsPage({artists}: P) {
                         }
                         customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                     />
+
+                    {searchValue.length > 0 && filteredArtists.length === 0 &&
+                        <div>
+                            No Results
+                        </div>
+                    }
                     <div className="empty-space"/>
                 </SimpleBar>
             </>
