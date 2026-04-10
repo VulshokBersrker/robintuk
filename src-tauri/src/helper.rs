@@ -1,6 +1,6 @@
 // Libraries
 use std::{
-    fs::{self}, hash::{BuildHasher, DefaultHasher, Hash, Hasher, RandomState}, os::windows::fs::MetadataExt, path::{PathBuf}
+    fs::{self}, hash::{BuildHasher, DefaultHasher, Hash, Hasher, RandomState}, os::{linux::fs::MetadataExt }, path::PathBuf
 };
 use tauri_plugin_log::log;
 
@@ -70,7 +70,7 @@ fn get_section_marker(first_char: char) -> Option<i32> {
 // Get the song metadata for the database
 pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
 
-    let file_size = fs::metadata(&path).unwrap().file_size();
+    let file_size = fs::metadata(&path).unwrap().len();
 
     let mut song_data: SongTableUpload = SongTableUpload {
         path: path.to_string(),

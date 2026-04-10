@@ -1065,6 +1065,7 @@ img.off {
   z-index: 100;
   /* Frosted Glass Effect */
   backdrop-filter: blur(12px);
+  
   /* Gradient Border */
   border-top: 1px solid #fff;
   border-left-width: 0;
@@ -2079,6 +2080,7 @@ select {
   border: 2px solid #cdcdcd;
   border-radius: var(--border-radius);
   background: rgba(0, 0, 0, 0);
+  background-color: transparent;
   padding: 0.4rem;
   transition: 0.4s;
   width: 12rem;
@@ -2087,6 +2089,11 @@ select {
   text-indent: 3rem;
   display: flex;
   align-items: center;
+
+  -webkit-appearance: none;
+  color: var(--font-color-one);
+  font-family: var(--header-family);
+  font-size: 1rem;
 }
 select.playlists {
   border: 2px solid #cdcdcd;

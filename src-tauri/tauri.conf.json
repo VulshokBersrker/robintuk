@@ -24,7 +24,7 @@
     "security": {
       "csp": {
         "default-src": "'self' customprotocol: asset:",
-        "connect-src": "ipc: http://ipc.localhost",
+        "connect-src": ["ipc: http://ipc.localhost", "tauri://localhost"],
         "font-src": ["https://fonts.gstatic.com"],
         "img-src": "'self' asset: http://asset.localhost blob: data:",
         "style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com",
@@ -42,7 +42,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi", "rpm", "appimage", "deb"],
+    "targets": ["nsis", "msi", "rpm", "deb"],
     "category": "Music",
     "copyright": "copyright",    
     "shortDescription": "A beautiful music player made with Tauri and React",
@@ -86,8 +86,7 @@
     },
     "linux": {
       "appimage": {
-        "bundleMediaFramework": true,
-        "files": {}
+        "bundleMediaFramework": true
       }
     }
   }
