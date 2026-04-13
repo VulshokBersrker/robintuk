@@ -447,6 +447,12 @@ export default function AlbumPage({albums}: P) {
                         }
                         customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                     />
+
+                    {searchValue.length > 0 && filteredAlbums.length === 0 &&
+                        <div>
+                            No Results
+                        </div>
+                    }
                     <div className="empty-space"/>
                 </SimpleBar>
                 

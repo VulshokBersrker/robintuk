@@ -176,6 +176,12 @@ export default function LyricSearch({songs}: Props) {
                             customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                         />
                     </div>
+
+                    {searchValue.length > 0 && filteredSongs.length === 0 &&
+                        <div>
+                            No Results
+                        </div>
+                    }
                     <div className="empty-space"/>
                 </div>            
             </SimpleBar>
