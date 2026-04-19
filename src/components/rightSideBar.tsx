@@ -133,7 +133,7 @@ export default function RightSideBar() {
     }
 
     return(
-        <div className="grid-10 side-navbar">
+        <div className="grid-10 side-navbar ">
 
             <div className="section-10">
                 <Link to={"/"} className={`nav-item nav-link d-flex align-items-center ${location.pathname === "/" ? "active" : ""}`} >

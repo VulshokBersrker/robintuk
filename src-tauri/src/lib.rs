@@ -69,7 +69,16 @@ pub fn run() -> Result<(), String> {
         )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build())
+        .plugin(
+            // Allow native context menu in dev mode
+            if cfg!(dev) {
+                tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all().difference(Flags::CONTEXT_MENU)).build()
+            }
+            // Remove native context menu in build mode
+            else {
+                tauri_plugin_prevent_default::Builder::new().with_flags(Flags::all()).build()
+            }
+        )
         .setup(|app: &mut tauri::App| {
             
             app.manage(AppState { player,

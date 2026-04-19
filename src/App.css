@@ -809,10 +809,21 @@ img.off {
   display: flex;
   flex-direction: column;
   position: fixed;
-  height: calc(95%);
+  height: 95.5%;
   z-index: 90;
   /* Scrollbar Styles */
   overflow: hidden;
+}
+
+@media screen and (max-height: 700px) {
+  .side-navbar {
+    height: 95%;
+  }
+}
+@media screen and (max-height: 450px) {
+  .side-navbar {
+    height: 93%;
+  }
 }
 
 .nav-item {
@@ -2468,7 +2479,7 @@ img.search-icon:hover {
     display: grid;
 
     /* Allow sidebar to scroll for tall menus */
-    height: calc(100vh - 19rem);
+    height: calc(100vh - 18rem);
     overflow-y: auto;
 
     scrollbar-color: rgba(176, 176, 176, 0.87) rgba(0,0,0,0);
@@ -2922,7 +2933,7 @@ img.search-icon:hover {
       height: 240px;
     }
     .playlist-main .empty-space {
-      height: 120px !important;
+      height: 240px !important;
     }
     .albums-main .empty-space,
     .artists-main .empty-space {
