@@ -173,9 +173,7 @@ function App() {
   }
 
   return(
-    <div 
-      onContextMenu={(e) =>  e.preventDefault() }
-    >
+    <div>
       <BrowserRouter>
         <CustomWindowsBar />
         <RightSideBar />
