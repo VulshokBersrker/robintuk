@@ -172,6 +172,17 @@ pub async fn set_keep(pool: &Pool<Sqlite>) -> Result<(), String> {
     Ok(())
 }
 
+pub async fn set_keep_single(pool: &Pool<Sqlite>, boolean: bool, path: &String) -> Result<(), String> {
+
+    let _ = sqlx::query("UPDATE songs SET keep = ?1 WHERE path = ?2")
+        .bind(boolean)
+        .bind(&path)
+        .execute(pool)
+        .await;
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn get_settings(state: State<AppState, '_>) -> Result<String, String> {
 
