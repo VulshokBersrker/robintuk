@@ -10,9 +10,11 @@ use tauri::{State};
 
 // Rust Libraries
 use rodio::{OutputStream, Sink, OutputStreamBuilder};
-use std::{path::Path, sync::{Arc, Mutex}};
 use sqlx::{Pool, Sqlite, prelude::FromRow};
+use std::{path::Path, sync::{Arc, Mutex}};
 use tokio::runtime::Runtime;
+use std::time::SystemTime;
+use std::fs;
 
 // Import files
 mod commands;
@@ -321,24 +323,53 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
         }
        
         for received in rx.iter() {
+                        
+            let last_modified = fs::metadata(&received).unwrap().modified().unwrap();
+            let time_since = SystemTime::now().duration_since(last_modified).unwrap();
+
+            // If the last modified Date was less than ten days
             let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
 
-            let song_res = get_song_data(received).await;
 
-            if song_res.is_ok() {
-                if does_exist {
-                    let _ = db::update_song(song_res.unwrap(), &state.pool).await;
-                    num_updated += 1;
+            if does_exist {
+                if time_since.as_secs() < 864000 {                
+                    let song_res = get_song_data(received).await;
+
+                    if song_res.is_ok() {
+                        if does_exist {
+                            let _ = db::update_song(song_res.unwrap(), &state.pool).await;
+                            num_updated += 1;
+                        }
+                        else {
+                            let _ = db::add_song(song_res.unwrap(), &state.pool).await;
+                            num_added += 1;                    
+                        }
+                    }
+                    else {
+                        let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
+                        num_error += 1;
+                    }
                 }
+                // If the last modified Date was more than ten days - skip updating the values - but mark as keeping
                 else {
-                    let _ = db::add_song(song_res.unwrap(), &state.pool).await;
-                    num_added += 1;                    
+                    let _ = db::set_keep_single(&state.pool, true, &received).await;
                 }
             }
             else {
-                let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
-                num_error += 1;
+                let song_res = get_song_data(received).await;
+
+                if song_res.is_ok() {
+                    let _ = db::add_song(song_res.unwrap(), &state.pool).await;
+                    num_added += 1;                    
+                    
+                }
+                else {
+                    let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
+                    num_error += 1;
+                }
             }
+            
+
 
             num_scanned += 1;
             if num_scanned % 25 == 0 {
@@ -356,10 +387,9 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
 
     app.emit("scan-finished", GetScanStatus { res: false}).unwrap();    
 
-    // Remove all songs that are no longer in the directories - When there were no errors
-    if num_error == 0 {
-        let _ = db::remove_songs(&state.pool).await.unwrap();
-    }
+    // Remove all songs that are no longer in the directories
+    let _ = db::remove_songs(&state.pool).await.unwrap();
+    
 
     // println!("Scan has finished = {:?} added - {:?} updated - {:?} errors", &num_added, &num_updated, &num_error);
     log::info!("Music Scan - Results ---> Total Scanned: {:?} --  Added: {:?}, Updated: {:?}, Errors: {:?}", &num_scanned, &num_added, &num_updated, &num_error);
