@@ -106,6 +106,11 @@ pub struct History {
     pub song_id: String,
 }
 
+#[derive(sqlx::FromRow, Default, Clone, Serialize, Debug)]
+pub struct SettingsScanDate {
+    pub last_scan_date: String
+}
+
 #[serde_as]
 #[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
 pub struct SongHistory {

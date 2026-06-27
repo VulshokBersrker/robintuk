@@ -97,6 +97,8 @@ pub async fn player_load_album(state: State<AppState, '_>, app: tauri::AppHandle
         let q_length = state.player.lock().unwrap().get_queue_length();
 
         for i in index..q_length {
+            if *state.songs_being_added.lock().unwrap() > 0 { break; }
+
             let s_status = state.player.lock().unwrap().load_song(i);
             if s_status.is_ok() {
                 let _ = state.player.lock().unwrap().update_current_index(i);
@@ -165,6 +167,8 @@ pub async fn shuffle_queue(state: State<AppState, '_>, song: String, shuffled: b
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, playlist_id: i64, index: usize, shuffled: bool) -> Result<(), String> {
 
+    *state.songs_being_added.lock().unwrap() += 1;
+
     let mut playlist = db::get_playlist(state.clone(), playlist_id).await.unwrap().songs;
     let q = playlist.clone();
 
@@ -182,6 +186,15 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
         let _ = app.clone().emit("queue-changed", false);
         let _ = db::create_queue(state.clone(), &q).await;
     }
+
+
+    if *state.songs_being_added.lock().unwrap() > 0 {
+        *state.songs_being_added.lock().unwrap() -= 1;
+    }
+    else if *state.songs_being_added.lock().unwrap() == 1 {
+        *state.songs_being_added.lock().unwrap() = 0;
+    }
+
     let _ = check_for_single_lyrics(state.clone(), app.clone(), playlist[index].path.clone()).await;
 
     Ok(())
@@ -189,6 +202,8 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_name: String, index: usize, shuffled: bool) -> Result<bool, String> {
+
+    *state.songs_being_added.lock().unwrap() += 1;
 
     let mut album: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC;")
         .bind(album_name)
@@ -224,6 +239,13 @@ pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album
         }
     }
 
+    if *state.songs_being_added.lock().unwrap() > 0 {
+        *state.songs_being_added.lock().unwrap() -= 1;
+    }
+    else if *state.songs_being_added.lock().unwrap() == 1 {
+        *state.songs_being_added.lock().unwrap() = 0;
+    }
+
     let _ = check_for_single_lyrics(state.clone(), app.clone(), album[index].path.clone()).await;
 
     Ok(checker)
@@ -246,6 +268,8 @@ pub async fn play_song(state: State<AppState, '_>, app: tauri::AppHandle, song: 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, album_artist: String, shuffled: bool) -> Result<(), String> {
 
+    *state.songs_being_added.lock().unwrap() += 1;
+    
     let mut songs: Vec<SongTable> = db::get_artist_songs(state.clone(), album_artist).await.unwrap();
     let q = songs.clone();
 
@@ -262,6 +286,13 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
         let _ = db::create_queue(state.clone(), &q).await;
     }
 
+    if *state.songs_being_added.lock().unwrap() > 0 {
+        *state.songs_being_added.lock().unwrap() -= 1;
+    }
+    else if *state.songs_being_added.lock().unwrap() == 1 {
+        *state.songs_being_added.lock().unwrap() = 0;
+    }
+
     let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
     
     Ok(())
@@ -269,6 +300,8 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre: String, shuffled: bool) -> Result<(), String> {
+
+    *state.songs_being_added.lock().unwrap() += 1;
 
     let mut songs: Vec<SongTable> = db::get_genre_songs(state.clone(), genre).await.unwrap();
     let q = songs.clone();
@@ -286,6 +319,13 @@ pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre
         let _ = db::create_queue(state.clone(), &q).await;
     }
 
+    if *state.songs_being_added.lock().unwrap() > 0 {
+        *state.songs_being_added.lock().unwrap() -= 1;
+    }
+    else if *state.songs_being_added.lock().unwrap() == 1 {
+        *state.songs_being_added.lock().unwrap() = 0;
+    }
+
     let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
     
     Ok(())
@@ -293,6 +333,8 @@ pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, songs: Vec<SongTable>, shuffled: bool) -> Result<(), String> {
+
+    *state.songs_being_added.lock().unwrap() += 1;
 
     let mut arr = songs;
     let q = arr.clone();    
@@ -308,6 +350,13 @@ pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, s
         let _ = player_load_album(state.clone(), app.clone(), q.clone(), 0).await;
         update_current_song_played(state.clone(), app.clone());
         let _ = db::create_queue(state.clone(), &q).await;
+    }
+
+    if *state.songs_being_added.lock().unwrap() > 0 {
+        *state.songs_being_added.lock().unwrap() -= 1;
+    }
+    else if *state.songs_being_added.lock().unwrap() == 1 {
+        *state.songs_being_added.lock().unwrap() = 0;
     }
 
     let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
