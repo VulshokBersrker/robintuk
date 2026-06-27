@@ -23,7 +23,7 @@
 - Customize the look with multiple color themes
 - Last 100 songs played history
 - Search to find your music faster
-- Fast scans to add your music quickly (~5000 songs per minute)
+- Fast scans to add your music quickly (~7000 songs per minute)
 - Backup, Restore, or Reset your music database and images
 - Use m3u/m3u8 files to import playlists from other apps or export your playlists for safe keeping
 - Download song lyrics using LRCLIB
@@ -51,12 +51,14 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] Better DPI aware CSS
+- [ ] Add Remove from Queue on Queue page
+- [ ] Add Select All to select form
+- [ ] Improve Song Details and Lyrics popup CSS
+- [ ] Update Create Playlist order to improve load time of new playlist appearance
 - [x] Drag and Drop playlist order
-- [x] Improve Event logger for debugging
 - [x] Gapless playback
-- [x] Get and display Lyrics for songs using LRCLIB
 
-## Far Out Features
+## Stretch Features
 
 - [ ] Equalizer
 - [ ] Linux support
@@ -64,7 +66,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
-- [ ] Error on start sometimes where the wrong queue is saved or removed
+- [x] Issue when jumping between large playlists - The first playlist will override the new
 - [ ] Some album artwork is not deleted when songs are removed
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)

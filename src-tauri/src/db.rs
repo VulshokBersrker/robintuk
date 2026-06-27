@@ -1,16 +1,16 @@
 use std::ffi::OsStr;
 use std::{fs};
 use std::path::{Path};
-use chrono::Utc;
+use chrono::{Utc};
 use sqlx::sqlite::SqlitePool;
 use tauri_plugin_log::log;
+
 // SQLITE Libraries
 use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite};
 use tauri::{Emitter, State};
 
 use crate::types::{
-    AllAlbumResults, AllArtistResults, ArtistDetailsResults, DirsTable, History, PlaylistFull, PlaylistTable, SongHistory, SongTable, SongTableUpload,
-    DoesExist, AllGenreResults, GenreDetailsResults, LrclibLyrics
+    AllAlbumResults, AllArtistResults, AllGenreResults, ArtistDetailsResults, DirsTable, DoesExist, GenreDetailsResults, History, LrclibLyrics, PlaylistFull, PlaylistTable, SettingsScanDate, SongHistory, SongTable, SongTableUpload
 };
 use crate::{AppState, commands};
 
@@ -67,6 +67,26 @@ async fn apply_initial_migrations() -> Result<(), String> {
     let pool = establish_connection().await?;
 
     let _ = pool.execute(include_str!("../migrations/0001_init.sql")).await;
+
+    let does_exist: Result<(String,), sqlx::Error> = sqlx::query_as("SELECT last_scan_date FROM settings")
+        .fetch_one(&pool)
+        .await;
+
+    if does_exist.is_err() {
+        let _ = pool.execute(include_str!("../migrations/0002_settings.sql")).await;
+    }
+
+    let settings: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM settings")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+    if settings.0 == 0 {
+        let _ = sqlx::query("INSERT INTO settings (id, theme) VALUES (1, ?1)")
+            .bind("red")
+            .execute(&pool)
+            .await;
+    }
 
     Ok(())
 }
@@ -201,10 +221,34 @@ pub async fn get_settings(state: State<AppState, '_>) -> Result<String, String> 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn set_theme(state: State<AppState, '_>, theme_color: String) -> Result<(), String> {
 
-    let _ = sqlx::query("INSERT OR REPLACE INTO settings (id, theme) VALUES (?1, ?2)")
-        .bind(1)
+    let _ = sqlx::query("UPDATE settings SET theme = ?1 WHERE id = 1")
         .bind(theme_color)
         .execute(&state.pool)
+        .await;
+
+    Ok(())
+}
+
+pub async fn get_last_scan_date(pool: &Pool<Sqlite>) -> Result<SettingsScanDate, String> {
+
+    let value = sqlx::query_as::<_, SettingsScanDate>("SELECT last_scan_date FROM settings WHERE id = 1 AND last_scan_date IS NOT NULL")
+        .fetch_one(pool)
+        .await;
+
+    if value.is_ok() {
+        Ok(value.unwrap())
+    }
+    else {
+        Err("0".to_string())
+    }
+}
+
+pub async fn set_last_scan_date(pool: &Pool<Sqlite>) -> Result<(), String> {
+    let today = Utc::now().timestamp().to_string();
+
+    let _ = sqlx::query("UPDATE settings SET last_scan_date = ?1 WHERE id = 1")
+        .bind(today)
+        .execute(pool)
         .await;
 
     Ok(())
