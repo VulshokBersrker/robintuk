@@ -136,8 +136,9 @@ export default function PlaylistOverviewPage() {
             setCurrentPlaylistName(res.name);
         }
         catch(e) {
-            error("Playlist Overview (Error) - Error Getting Playlist Details");
-            console.log("Error getting playlist: " + e)
+            console.log("Error getting playlist: " + e);
+            error(`Playlist Overview (Error) - Error Getting Playlist Details ${location.state.name}`);
+            navigate("/playlists");
         }
         finally {
             isLoading(false);

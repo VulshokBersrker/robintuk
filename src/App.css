@@ -288,10 +288,6 @@ body[data-theme="tau-ceti"] {
   .album-link:hover .header-font .artist-name {
     color: var(--gradient-one);
   }
-  .album-link.artist:hover img,
-  .album-link.genre:hover img {
-    filter: brightness(0%);
-  }
   
   .songs.home .song:hover {
     background-color: var(--highlight-hover);

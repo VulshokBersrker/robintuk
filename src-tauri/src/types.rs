@@ -72,7 +72,8 @@ pub struct AllAlbumResults {
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct AllArtistResults {
     pub album_artist: String,
-    pub artist_section: i32
+    pub artist_section: i32,
+    pub image: String
 }
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
@@ -83,10 +84,11 @@ pub struct AllGenreResults {
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct ArtistDetailsResults {
-    pub num_tracks: usize,
+    pub num_tracks: u64,
     pub total_duration: u64,
     pub album_artist: String,
-    pub albums: Vec<AllAlbumResults>
+    pub albums: Vec<AllAlbumResults>,
+    pub image: Option<String>
 }
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
@@ -148,6 +150,11 @@ pub struct GetPlaylistList {
   pub playlist: Vec<PlaylistTable>
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetArtistList {
+  pub artists: Vec<AllArtistResults>
+}
 
 
 #[derive(sqlx::FromRow, Default, Debug, serde::Serialize, serde::Deserialize)]

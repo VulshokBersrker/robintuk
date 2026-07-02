@@ -10,7 +10,7 @@ use chrono::{DateTime, Utc};
 use tauri::{State};
 
 // Rust Libraries
-use rodio::{OutputStream, Sink, OutputStreamBuilder};
+use rodio::{MixerDeviceSink, Player, DeviceSinkBuilder};
 use sqlx::{Pool, Sqlite, prelude::FromRow};
 use std::{path::Path, sync::{Arc, Mutex}};
 use tokio::runtime::Runtime;
@@ -44,8 +44,8 @@ pub struct AppState {
 pub fn run() -> Result<(), String> {
     db::init();
 
-    let stream_handle: OutputStream = OutputStreamBuilder::open_default_stream().expect("open default audio stream");
-    let sink = Sink::connect_new(&stream_handle.mixer());
+    let stream_handle: MixerDeviceSink = DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
+    let sink = Player::connect_new(&stream_handle.mixer());
     let player = Arc::new(Mutex::new(MusicPlayer::new(sink)?));
     // Generate the pool for the database, so it can be reused
     let pool: Pool<Sqlite> = Runtime::new().unwrap().block_on(establish_connection())?;
@@ -215,6 +215,7 @@ pub fn run() -> Result<(), String> {
             commands::update_current_song_played,
             commands::new_playlist_added,
             commands::set_shuffle_mode,
+            commands::new_artist_cover_added,
             // Lyrics Functions
             db::get_lyrics,
             commands::check_for_single_lyrics,
@@ -236,6 +237,8 @@ pub fn run() -> Result<(), String> {
             commands::import_playlist,
             commands::export_playlist,
             db::reset_database,
+            // Misc Functions
+            db::add_artist_cover,
             scan_for_deleted
         ])        
         .run(tauri::generate_context!())

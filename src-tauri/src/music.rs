@@ -1,11 +1,11 @@
 use std::{ fs::File, io::BufReader, time };
-use rodio::{ Decoder, Sink };
+use rodio::{ Decoder, Player };
 use tauri_plugin_log::log;
 
 use crate::{ types::SongTable };
 
 pub struct MusicPlayer {
-    pub sink: Sink,
+    pub sink: Player,
     pub position: usize,
     pub repeat_mode: i64,
     pub queue: Vec<SongTable>
@@ -13,7 +13,7 @@ pub struct MusicPlayer {
 
 // Rework Parts
 impl MusicPlayer {
-    pub fn new(sink: Sink) -> Result<Self, String> {
+    pub fn new(sink: Player) -> Result<Self, String> {
         sink.pause();
 
         Ok(Self{

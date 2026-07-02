@@ -2,6 +2,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { error } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
 import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
@@ -123,7 +124,9 @@ export default function AlbumOverviewPage() {
             setDiscGroups(tempDiscArray);
         }
         catch(e) {
-            alert("Error getting album")
+            console.log("Error getting album")
+            error(`Error getting album ${location.state.name}`);
+            navigate("/albums");
         }
         finally {
             isLoading(false);

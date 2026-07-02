@@ -308,15 +308,14 @@ export default function MusicControls() {
             try {
                 // Get the last played song, if exists
                 const queue: Songs[] = await invoke<Songs[]>("get_queue", {shuffled: shuffleMode !== null ? shuffleMode : false});
-                // console.log(queue);
 
                 if(queue.length === 0) {
                     setIsLoaded(false);
                     info("Controls (Info) - There is a Queue");
                 }
-                else if(queue.length < parseInt(qPosition)) {
-                    console.log("qPosition is greater than queue length - cannot load");
-                    error("Controls (Error) - Queue Position is greater than Queue Length - Cannot load Controls");
+                else if(queue.length <= parseInt(qPosition)) {
+                    console.log("qPosition is equal to or greater than queue length - cannot load");
+                    error("Music Controls - Queue Position is equal to or greater than Queue Length - Cannot load Controls");
                 }
                 else {
                     setSongDetails(queue[JSON.parse(qPosition!)]);
@@ -329,6 +328,7 @@ export default function MusicControls() {
                             sendQueueToBackend(queue, JSON.parse(qPosition!));
                         }
                         else {
+                            setIsShuffle(false);
                             sendQueueToBackend(queue, JSON.parse(qPosition!));
                         }
                         await checkForLyrics(queue[JSON.parse(qPosition!)].path);
@@ -340,7 +340,7 @@ export default function MusicControls() {
                 }
             }
             catch(e) {
-                error("Controls - Failed to load music controls");
+                error(`Music Controls - Failed load music controls: ${e}`);
                 console.log(`Failed load music controls: ${e}`);
                 setIsLoaded(false);
             }

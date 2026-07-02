@@ -66,8 +66,11 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
+- [x] Jumping between song that don't have lyrics in the database will cause the wrong song to appear on the player
+- [ ] Small chance of an anti-virus false positive when importing playlists or scanning
 - [x] Issue when jumping between large playlists - The first playlist will override the new
 - [ ] Some album artwork is not deleted when songs are removed
+- [ ] Some deleted albums are not removed when a new scan is finished
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)
 

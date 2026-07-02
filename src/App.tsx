@@ -55,12 +55,14 @@ function App() {
     const unlisten_reset_finished = listen("ending-reset", () => { getTheme(); getValues(); });
     const unlisten_reload_albums = listen("remove-song", () => { getValues(); });
 
-    
+    const unlisten_new_artists = listen("new-artist_cover-created", () => {getArtists(); })
+
     return () => {
       unlisten_scan_finished.then(f => f()),
       unlisten_reload_albums.then(f => f()),
       unlisten_reset_finished.then(f => f()),
-      unlisten_restore_finished.then(f => f());
+      unlisten_restore_finished.then(f => f()),
+      unlisten_new_artists.then(f => f());
     }
   }, []);
 

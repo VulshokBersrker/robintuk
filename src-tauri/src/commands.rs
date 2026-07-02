@@ -1,9 +1,7 @@
 // Imports
 use crate::{
-    types::{DirsTable, DoesExist, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable },
-    db::{self, create_playlist, get_playlist}, 
-    helper::{self},
-    AppState
+    AppState, db::{self, create_playlist, get_playlist}, helper::{self},
+    types::{DirsTable, DoesExist, GetArtistList, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable }
 };
 
 // Core Libraries
@@ -195,7 +193,7 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
         *state.songs_being_added.lock().unwrap() = 0;
     }
 
-    let _ = check_for_single_lyrics(state.clone(), app.clone(), playlist[index].path.clone()).await;
+    // let _ = check_for_single_lyrics(state.clone(), app.clone(), playlist[index].path.clone()).await;
 
     Ok(())
 }
@@ -246,7 +244,7 @@ pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album
         *state.songs_being_added.lock().unwrap() = 0;
     }
 
-    let _ = check_for_single_lyrics(state.clone(), app.clone(), album[index].path.clone()).await;
+    // let _ = check_for_single_lyrics(state.clone(), app.clone(), album[index].path.clone()).await;
 
     Ok(checker)
 }
@@ -260,7 +258,7 @@ pub async fn play_song(state: State<AppState, '_>, app: tauri::AppHandle, song: 
     update_current_song_played(state.clone(), app.clone());
     let _ = db::create_queue(state.clone(), &arr).await;
 
-    let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
+    // let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
     
     Ok(())
 }
@@ -293,7 +291,7 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
         *state.songs_being_added.lock().unwrap() = 0;
     }
 
-    let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
+    // let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
     
     Ok(())
 }
@@ -326,7 +324,7 @@ pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre
         *state.songs_being_added.lock().unwrap() = 0;
     }
 
-    let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
+    // let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
     
     Ok(())
 }
@@ -359,7 +357,7 @@ pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, s
         *state.songs_being_added.lock().unwrap() = 0;
     }
 
-    let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
+    // let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
     
     Ok(())
 }
@@ -472,6 +470,15 @@ pub async fn new_playlist_added(state: State<AppState, '_>, app: tauri::AppHandl
 }
 
 #[tauri::command]
+pub async fn new_artist_cover_added(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
+    // Tell the music controls that there is a new song to look at
+    let q =  db::get_all_artists(state).await.unwrap();
+
+    app.emit("new-artist_cover-created", GetArtistList { artists: q }).unwrap();
+    Ok(())
+}
+
+#[tauri::command]
 pub fn set_shuffle_mode(app: tauri::AppHandle, mode: bool) {
     app.emit("player-shuffle-mode", mode).unwrap();
 }
@@ -514,7 +521,7 @@ pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::App
 
         // If it is a success, add the lyrics to the database
         if res.is_ok() {
-            let lyrics = res.unwrap();
+            let lyrics: LrclibLyrics = res.unwrap();
             if lyrics.lyrics_id != 0 {
                 // println!("Adding...");
                 let _ = db::add_lyrics(state.clone(), lyrics, song.path).await;
@@ -522,7 +529,7 @@ pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::App
             }
         }
         else {
-            log::error!("Check for Lyric - Error on fetch response");
+            log::error!("Check for Lyric - Error on fetch response - ${song_id}");
         }
     }
     Ok(())
@@ -540,8 +547,15 @@ pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String
         let res = first_res.unwrap().text().await;
         if res.is_ok() {
             let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
-
+            
             for (key, value) in result.as_object().unwrap() {
+                if key.contains("statusCode") {
+                    // If there is no track found
+                    if value.as_i64().unwrap() == 404 {
+                        log::error!("Get Remote Lyrics - Track Not Found (404) {:?} - {:?} - {:?}", &name, &album, &artist);
+                        return Err("404".to_string())
+                    }
+                }
                 if key.contains("id") {
                     lyrics.lyrics_id = value.as_i64().unwrap();
                 }
@@ -555,14 +569,15 @@ pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String
             Ok(lyrics)
         }
         else {
-            log::error!("Get Remote Lyrics - Error getting remote lyrics - res");
+            let _ = res.inspect_err(|f| log::error!("Get Remote Lyrics - Error getting remote lyrics - {:?}", f) );    
             Err("Error Getting Remote Lyrics".to_string())
         }
     }
     else {
-        log::error!("Get Remote Lyrics - Error getting remote lyrics - first res");
+        let _ = first_res.inspect_err(|f| log::error!("Get Remote Lyrics - Error getting remote lyrics - {:?}", f) );        
         Err("Error Getting Remote Lyrics".to_string())
     }
+
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]

@@ -9,7 +9,6 @@ import {alphabeticallyOrdered, AllArtistResults } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
-import PlaceholderArtistImage from '../images/placeholder_artist.png';
 import SearchIcon from '../images/search_icon.svg';
 
 type P = {
@@ -166,7 +165,7 @@ export default function ArtistsPage({artists}: P) {
                                     }}
                                 >                                    
                                     <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist)} >
-                                        <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].album_artist} image_type={"artist"} />
+                                        <ImageWithFallBack image={filteredArtists[index].image} alt={filteredArtists[index].album_artist} image_type={"artist"} />
                                     </div>
                                     <div className="album-image-name header-font">
                                         <div className="album-name">{filteredArtists[index].album_artist}</div>

@@ -1,8 +1,10 @@
 // Core Libraries
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { open } from '@tauri-apps/plugin-dialog';
+import { error } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
 import { VirtuosoGrid } from "react-virtuoso";
-import { useEffect, useRef, useState } from "react";
 import SimpleBar from "simplebar-react";
 import { forwardRef } from 'react';
 
@@ -34,7 +36,7 @@ export default function ArtistOverviewPage() {
     const [scrollParent, setScrollParent] = useState<any>(null);
 
     const [loading, isLoading] = useState<boolean>(false);
-    const [artistDetails, setArtistDetails] = useState<ArtistDetails>({ total_duration: 0, album_artist: "", albums: [], num_tracks: 0});
+    const [artistDetails, setArtistDetails] = useState<ArtistDetails>({ total_duration: 0, album_artist: "", albums: [], num_tracks: 0, image: ArtistPlaceholderImage});
 
     const [albumSelection, setAlbumSelection] = useState<String[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
@@ -73,7 +75,9 @@ export default function ArtistOverviewPage() {
             setCheckBoxNumber(Array(res.albums.length).fill(false));
         }
         catch(e) {
-            alert(e)
+            console.log("Error getting albums")
+            error(`Error getting albums ${location.state.name}`);
+            navigate("/artists");
         }
         finally {
             isLoading(false);
@@ -111,6 +115,28 @@ export default function ArtistOverviewPage() {
         finally {
             localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
             await invoke("set_shuffle_mode", { mode: shuffled });
+        }
+    }
+
+    // Doesn't update image if you change the file of the old uploaded image with a new image (same name and extension but different image)
+    async function addCustomArtistArtwork() {
+        let cover_image: string = "";
+        try {
+            const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
+            if(file_path !== null) {
+                cover_image = file_path.toString();
+                await invoke("add_artist_cover", { file_path: file_path.toString(), artist_name: location.state.name });
+            }
+        }
+        catch(err) {
+            error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
+            console.log(`Failed to add custom artwork: ${err}`);
+        }
+        finally {
+            if(cover_image !== "") {
+                setArtistDetails({ ...artistDetails, image: cover_image });
+                await invoke('new_artist_cover_added');
+            }
         }
     }
 
@@ -364,8 +390,10 @@ export default function ArtistOverviewPage() {
 
                     {/* Album Details */}
                     <div className="d-flex">
-                        <div className="album-details d-flex">   
-                            <ImageWithFallBack image={ArtistPlaceholderImage} alt={""} image_type={"artist"}/>
+                        <div className="album-details d-flex">
+                            <div onClick={addCustomArtistArtwork} className="image-upload">
+                                <ImageWithFallBack image={artistDetails.image} alt={"upload new image"} image_type={"artist"}/>
+                            </div>
 
                             <span style={{paddingLeft: "10px"}} className="grid-15">
                                 <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">{artistDetails.album_artist}</div>

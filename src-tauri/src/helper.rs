@@ -77,6 +77,8 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
         ..SongTableUpload::default()
     };
 
+    // println!("{:?}", &path);
+
     // Prevents an error where a file might have a bad Timestamp
     let parsing_options = ParseOptions::new().parsing_mode(ParsingMode::BestAttempt);
 
@@ -232,7 +234,7 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
                     }
                     else {
                         song_data.release = None;
-                    }            
+                    }
                 }
                 else {
                     song_data.release = Some(value.to_string());
