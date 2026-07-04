@@ -3,22 +3,23 @@ import { info, error } from '@tauri-apps/plugin-log';
 import { useEffect, useRef, useState } from "react";
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
+import "./musicControls.css";
 
 // Custom Components
-import { GetCurrentSong, savePosition, Songs, SongLyrics, DirectoryInfo } from "../globalValues";
-import ImageWithFallBack from "./imageFallback";
+import { GetCurrentSong, savePosition, Songs, SongLyrics, DirectoryInfo } from "../../globalValues";
+import ImageWithFallBack from "../imageFallback";
 
 // Images
-import BackwardButton from '../images/backward-step-solid-full.svg';
-import ForwardButton from '../images/backward-step-solid-full.svg';
-import VolumeStandard from '../images/volume-low-solid-full.svg';
-import VolumeEmpty from '../images/volume-off-solid-full.svg';
-import ShuffleButton from '../images/shuffle-solid-full.svg';
-import RepeatButton from '../images/repeat-solid-full.svg';
-import PauseButton from '../images/pause-solid-full.svg';
-import PlayButton from '../images/play-solid-full.svg';
-import RepeatOneIcon from '../images/repeat-one.svg';
-import Circle from '../images/circle.svg';
+import BackwardButton from '../../images/backward-step-solid-full.svg';
+import ForwardButton from '../../images/backward-step-solid-full.svg';
+import VolumeStandard from '../../images/volume-low-solid-full.svg';
+import VolumeEmpty from '../../images/volume-off-solid-full.svg';
+import ShuffleButton from '../../images/shuffle-solid-full.svg';
+import RepeatButton from '../../images/repeat-solid-full.svg';
+import PauseButton from '../../images/pause-solid-full.svg';
+import PlayButton from '../../images/play-solid-full.svg';
+import RepeatOneIcon from '../../images/repeat-one.svg';
+import Circle from '../../images/circle.svg';
 
 // Update Volume Mute to return the volume to what is was before the mute
 

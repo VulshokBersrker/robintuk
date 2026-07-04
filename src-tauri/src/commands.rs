@@ -911,9 +911,8 @@ pub async fn check_for_new_version(app: tauri::AppHandle) -> Result<bool, bool> 
 
     let first_res = url_client.get("https://raw.githubusercontent.com/VulshokBersrker/robintuk/refs/heads/main/package.json")
         .send().await;
-    let version: String;
 
-    let current_version = app.package_info().version.to_string();
+    let current_version = app.package_info().version.to_string().replace(".", "").parse::<i64>().unwrap();
 
     if first_res.is_ok() {
         let res = first_res.unwrap().text().await;
@@ -922,8 +921,9 @@ pub async fn check_for_new_version(app: tauri::AppHandle) -> Result<bool, bool> 
 
             for (key, value) in result.as_object().unwrap() {
                 if key.contains("version") {
-                    version = value.to_string().replace("\"", "");
-                    if current_version != version {
+                    let version = value.to_string().replace("\"", "").replace(".", "").parse::<i64>().unwrap();
+
+                    if current_version < version {
                         return Ok(true)
                     }
                     else {

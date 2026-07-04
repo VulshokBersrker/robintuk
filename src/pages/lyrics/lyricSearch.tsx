@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
+import './lyricsData.css';
 
 // Custom Components
 import { SongsFull, alphabeticallyOrdered, } from "../../globalValues";

@@ -259,3 +259,13 @@ export function clearLocalStorage() {
     info("Clearing Local Storage");
     localStorage.clear();
 }
+
+export async function clearQueue() {
+    try{
+        await invoke("player_clear_queue");
+    }
+    catch(e){
+        error(`Error Clearing Queue - ${e}`);
+        console.log(`Error Clearing Queue - ${e}`);
+    }
+}

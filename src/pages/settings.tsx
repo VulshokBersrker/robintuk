@@ -8,7 +8,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 
-import { clearLocalStorage, DirectoryInfo, PlaylistList } from '../globalValues';
+import { clearLocalStorage, clearQueue, DirectoryInfo, PlaylistList } from '../globalValues';
 
 // Images
 import CheckIcon from '../images/circle-check-regular-full.svg';
@@ -522,7 +522,7 @@ export default function Settings() {
                     <button
                         style={{marginLeft: "50px"}} className="red"
                         disabled={isBackupRestore}
-                        onClick={clearLocalStorage}
+                        onClick={() => {clearLocalStorage(); clearQueue()}}
                     >
                         Clear Cache
                     </button>

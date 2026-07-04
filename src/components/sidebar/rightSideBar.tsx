@@ -3,34 +3,35 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
+import "./sidebar.css";
 
 // Custom Components
-import { Playlists, playPlaylist } from "../globalValues";
-import ImageWithFallBack from "./imageFallback";
+import { Playlists, playPlaylist } from "../../globalValues";
+import ImageWithFallBack from "../imageFallback";
 
 // Images
-import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
-import ShuffleIcon from '../images/shuffle-solid-full.svg';
-import PlayIcon from '../images/play-solid-full.svg';
+import AlbumIcon from '../../images/vinyl-record-svgrepo-com.svg';
+import ShuffleIcon from '../../images/shuffle-solid-full.svg';
+import PlayIcon from '../../images/play-solid-full.svg';
 
 // Images - Filled
-import PlaylistFillIcon from '../images/playlist-fill.svg';
-import GenreFullIcon from '../images/radio-solid-full.svg';
-import AlbumsFillIcon from '../images/albums-fill.svg';
-import QueueFullIcon from '../images/queue-fill.svg';
-import ArtistFullIcon from '../images/user-fill.svg';
-import SongFullIcon from '../images/songs-fill.svg';
-import HomeFullIcon from '../images/home-fill.svg';
+import PlaylistFillIcon from '../../images/playlist-fill.svg';
+import GenreFullIcon from '../../images/radio-solid-full.svg';
+import AlbumsFillIcon from '../../images/albums-fill.svg';
+import QueueFullIcon from '../../images/queue-fill.svg';
+import ArtistFullIcon from '../../images/user-fill.svg';
+import SongFullIcon from '../../images/songs-fill.svg';
+import HomeFullIcon from '../../images/home-fill.svg';
 
 
 // Images - Outlined
-import PlaylistOutlineIcon from '../images/playlist-outline.svg';
-import GenreOutlineIcon from '../images/radio-solid-outline.svg';
-import ArtistOutlineIcon from '../images/user-regular-full.svg';
-import AlbumsOutlineIcon from '../images/albums-outline.svg';
-import HomeOutlineIcon from '../images/home-svgrepo-com.svg';
-import QueueOutlineIcon from '../images/queue-outline.svg';
-import SongOutlineIcon from '../images/songs-outline.svg';
+import PlaylistOutlineIcon from '../../images/playlist-outline.svg';
+import GenreOutlineIcon from '../../images/radio-solid-outline.svg';
+import ArtistOutlineIcon from '../../images/user-regular-full.svg';
+import AlbumsOutlineIcon from '../../images/albums-outline.svg';
+import HomeOutlineIcon from '../../images/home-svgrepo-com.svg';
+import QueueOutlineIcon from '../../images/queue-outline.svg';
+import SongOutlineIcon from '../../images/songs-outline.svg';
 
 type NewPlaylistList = {
     playlist: Playlists[]

@@ -6,6 +6,7 @@ import { error } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
 import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
+import './details.css';
 
 // Custom Components
 import { GetCurrentSong, savePosition, Songs, PlaylistList } from "../../globalValues";

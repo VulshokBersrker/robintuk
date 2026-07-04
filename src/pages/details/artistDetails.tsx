@@ -7,6 +7,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { VirtuosoGrid } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 import { forwardRef } from 'react';
+import './details.css';
 
 // Custom Components
 import { ArtistDetails, PlaylistList, playSelection, savePosition, Songs } from "../../globalValues";

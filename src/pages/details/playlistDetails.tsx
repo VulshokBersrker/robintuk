@@ -1,13 +1,14 @@
 // Core Libraries
-import { useLocation, useNavigate } from "react-router-dom";
+import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from "@tauri-apps/api/event";
 import { error } from '@tauri-apps/plugin-log';
 import { invoke } from "@tauri-apps/api/core";
 import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
-import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
+import './details.css';
 
 // Custom Components
 import { GetCurrentSong, PlaylistFull, PlaylistList, playSelection, savePosition, Songs } from "../../globalValues";

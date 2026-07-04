@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
+import './lyricsData.css';
 
 // Custom Components
 import ImageWithFallBack from "../../components/imageFallback";
