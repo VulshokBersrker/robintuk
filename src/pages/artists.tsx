@@ -1,6 +1,6 @@
+import { VirtuosoGrid, VirtuosoGridHandle } from 'react-virtuoso';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from 'react-router-dom';
-import { VirtuosoGrid } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 import { forwardRef } from 'react';
 
@@ -21,7 +21,8 @@ export default function ArtistsPage({artists}: P) {
 
     // Used to add SimpleBar to React Virtuoso
     const [scrollParent, setScrollParent] = useState<any>(null);
-    const virtuoso = useRef<any>(null);
+    const virtuoso = useRef<VirtuosoGridHandle>(null);
+    const location = useLocation();
 
     const [loading, setLoading] = useState(true);
     const [artistList] = useState<AllArtistResults[]>(artists);
@@ -47,7 +48,6 @@ export default function ArtistsPage({artists}: P) {
             setLoading(false);
         }
         setupArtists();
-        // getArtists();
     }, []);
 
     function updateSearchResults(value: string) {
@@ -64,11 +64,11 @@ export default function ArtistsPage({artists}: P) {
             const results = temp_section.filter(obj => obj.artist_section === alphabeticallyOrdered[i] ).length;
             tempSectionArray[i] = results;
         }
-        // console.log(tempSectionArray);
         setArtistSections(tempSectionArray);
     }
 
-    const navigateToArtistOverview = (name: string) => {
+    const navigateToArtistOverview = (name: string, artist_tag: number) => {
+        navigate(`/artists#${artist_tag}`, { replace: true});
         navigate("/artists/overview", {state: {name: name}});
     }
 
@@ -123,7 +123,8 @@ export default function ArtistsPage({artists}: P) {
                                 <div
                                     id={`main-${section}`} key={`main-${section}`} className="section-key"
                                     onClick={() => {
-                                        virtuoso.current.scrollToIndex({ index: totalIndex });
+                                        virtuoso.current!.scrollToIndex({ index: totalIndex });
+                                        navigate(`/artists#${totalIndex}`, { replace: true});
                                         return false;
                                     }}
                                 >
@@ -154,6 +155,7 @@ export default function ArtistsPage({artists}: P) {
                     <VirtuosoGrid
                         totalCount={filteredArtists.length}
                         components={gridComponents}
+                        initialTopMostItemIndex={location.hash.length !== 0 ? parseInt(location.hash.replace("#", "")) : 0}
                         ref={virtuoso}
                         increaseViewportBy={{ top: 210, bottom: 420 }}
                         itemContent={(index) =>
@@ -164,7 +166,7 @@ export default function ArtistsPage({artists}: P) {
                                         // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
                                     }}
                                 >                                    
-                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist)} >
+                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist, index)} >
                                         <ImageWithFallBack image={filteredArtists[index].image} alt={filteredArtists[index].album_artist} image_type={"artist"} />
                                     </div>
                                     <div className="album-image-name header-font">

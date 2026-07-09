@@ -24,7 +24,7 @@ body[data-theme="tau-ceti"] {
       var(--clip-further) var(--clip-further)
     );
     filter: var(--play-icon);
-    background-image: url("./images/node.svg");
+    background-image: url("../../images/node.svg");
   }
   input[type="range"]:hover::-webkit-slider-thumb {
     filter: var(--play-icon-hover);

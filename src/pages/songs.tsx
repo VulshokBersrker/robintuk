@@ -257,7 +257,6 @@ export default function SongPage({songs}: Props) {
         resetContextMenu();
     }
 
-
     return(
         <>  
             <div className="section-list">
