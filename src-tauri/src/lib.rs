@@ -3,14 +3,14 @@
 
 // Tauri Plugins
 use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
-use tauri_plugin_log::{Target, TargetKind, log};
+use tauri_plugin_log::{Target, TargetKind, log::{self, error}};
 use tauri_plugin_prevent_default::Flags;
 use tauri::{Builder, Manager, Emitter};
 use chrono::{DateTime, Utc};
 use tauri::{State};
 
 // Rust Libraries
-use rodio::{MixerDeviceSink, Player, DeviceSinkBuilder};
+use rodio::{DeviceSinkBuilder, MixerDeviceSink, Player, cpal::traits::HostTrait};
 use sqlx::{Pool, Sqlite, prelude::FromRow};
 use std::{path::Path, sync::{Arc, Mutex}};
 use tokio::runtime::Runtime;
@@ -44,7 +44,38 @@ pub struct AppState {
 pub fn run() -> Result<(), String> {
     db::init();
 
-    let stream_handle: MixerDeviceSink = DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
+    // Called when there is an error with the Sink/Stream
+    fn stream_error(err: rodio::cpal::StreamError) {
+        println!("Error loading Stream {:?}", &err);
+        error!("Error loading Stream {:?}", &err);
+    }
+
+    let stream_handle: MixerDeviceSink = DeviceSinkBuilder::from_default_device()
+        .and_then(|builder| {
+            builder
+                .with_buffer_size(rodio::cpal::BufferSize::Fixed(2048))
+                .with_error_callback(stream_error as fn(_))
+                .open_stream()
+        })
+        .or_else(|original_error| {
+            let devices = rodio::cpal::default_host().output_devices().map_err(|_| original_error).unwrap();
+
+            for device in devices {
+                if let Ok(builder) = rodio::DeviceSinkBuilder::from_device(device) {
+                    
+                    if let Ok(handle) = builder
+                        .with_buffer_size(rodio::cpal::BufferSize::Fixed(2048))
+                        .with_error_callback(stream_error as fn(_))
+                        .open_stream()
+                    {
+                        return Ok(handle);
+                    }
+                }
+            }
+            Err(rodio::DeviceSinkError::NoDevice)
+        })
+        .unwrap();
+
     let sink = Player::connect_new(&stream_handle.mixer());
     let player = Arc::new(Mutex::new(MusicPlayer::new(sink)?));
     // Generate the pool for the database, so it can be reused
