@@ -1,7 +1,7 @@
+import { VirtuosoGrid, VirtuosoGridHandle } from 'react-virtuoso';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
-import { VirtuosoGrid } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 import { forwardRef } from 'react';
 
@@ -23,15 +23,6 @@ import Circle from '../images/circle.svg';
 import CloseIcon from '../images/x.svg';
 
 
-
-// Need to add filtering, should be easy because all the data is there
-// Begin work on caching data
-
-// List virtualization might be good for these lists
-
-// AT THE MOMENT ---- THE SECTION BUTTONS ON THE SIDE DO NOT WORK
-// ALSO NEED TO ADD SCROLL RESTORATION AT SOME POINT
-
 type P = {
     albums: AlbumDetails[];
 }
@@ -39,10 +30,11 @@ type P = {
 export default function AlbumPage({albums}: P) {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Used to add SimpleBar to React Virtuoso
     const [scrollParent, setScrollParent] = useState<any>(null);
-    const virtuoso = useRef<any>(null);
+    const virtuoso = useRef<VirtuosoGridHandle>(null);
 
     const [loading, setLoading] = useState(true);
     const [albumList] = useState<AlbumDetails[]>(albums);
@@ -77,8 +69,7 @@ export default function AlbumPage({albums}: P) {
             setLoading(false);
         }
         setupAlbumList();
-        // getAlbums();
-        
+
 
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
@@ -92,7 +83,8 @@ export default function AlbumPage({albums}: P) {
         }
     }, []);
 
-    const navigateToAlbumOverview = (name: string) => {
+    const navigateToAlbumOverview = (name: string, album_tag: number) => {
+        navigate(`/albums#${album_tag}`, { replace: true});
         navigate("/albums/overview", {state: {name: name}});
     }
 
@@ -375,7 +367,8 @@ export default function AlbumPage({albums}: P) {
                                 <div
                                     id={`main-${section}`} key={`main-${section}`} className="section-key"
                                     onClick={() => {
-                                        virtuoso.current.scrollToIndex({ index: totalIndex });
+                                        virtuoso.current!.scrollToIndex({ index: totalIndex });
+                                        navigate(`/albums#${totalIndex}`, { replace: true});
                                         return false;
                                     }}
                                 >
@@ -406,11 +399,11 @@ export default function AlbumPage({albums}: P) {
                     <VirtuosoGrid
                         totalCount={filteredAlbums.length}
                         components={gridComponents}
-                        
+                        initialTopMostItemIndex={location.hash.length !== 0 ? parseInt(location.hash.replace("#", "")) : 0}
                         increaseViewportBy={{ top: 210, bottom: 420 }}
                         ref={virtuoso}
                         itemContent={(index) => 
-                            <div className="album-link" key={index} id={`${filteredAlbums[index].album_section}-${index}`}>
+                            <div className={`album-link ${parseInt(location.hash!.replace("#", "")) === index ? "active" : ""}`} key={index} id={`${index}`}>
                                 <div className="album-image-container"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
@@ -435,7 +428,7 @@ export default function AlbumPage({albums}: P) {
                                         <img src={Circle} className="circle"/>
                                     </div>
                                     
-                                    <div className="container" onClick={() => navigateToAlbumOverview(filteredAlbums[index].album)} >
+                                    <div className="container" onClick={() => navigateToAlbumOverview(filteredAlbums[index].album, index)} >
                                         <ImageWithFallBack image={filteredAlbums[index].cover} alt={filteredAlbums[index].album} image_type={"album"} />
                                     </div>
                                     <div className="album-image-name header-font">

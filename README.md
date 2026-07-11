@@ -51,8 +51,8 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer)
 - [ ] Better DPI aware CSS
-- [ ] Add Remove from Queue on Queue page
-- [ ] Add Select All to select form
+- [ ] Add "Remove from Queue" on Queue page
+- [ ] Add "Select All" to select form
 - [ ] Improve Song Details and Lyrics popup CSS
 - [ ] Update Create Playlist order to improve load time of new playlist appearance
 - [x] Drag and Drop playlist order
@@ -62,17 +62,18 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 - [ ] Equalizer
 - [ ] Linux support
-- [ ] Get artist data from online service for artist page (No great options once you have more than 100 songs)
+- [ ] Get artist data from online service for artist pages (No great options once you have more than 100 songs)
 
 ## Known Issues
 
-- [ ] Jumping between song that don't have lyrics in the database will cause the wrong song to appear on the player
 - [ ] Small chance of an anti-virus false positive when importing playlists
-- [x] Issue when jumping between large playlists - The first playlist will override the new
 - [ ] Some album artwork is not deleted when songs are removed
+- [ ] Some deleted albums are not removed when a new scan is finished
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)
+- [x] Issue when jumping between large playlists - The first playlist will override the new
+- [x] Jumping between song that don't have lyrics in the database will cause the wrong song to appear on the player
 
 ## Dependency Issues
 
-- [ ] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
+- [x] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)

@@ -63,7 +63,8 @@ export interface ArtistRes {
 export interface AllArtistResults {
     album_artist: string,
     name: string,
-    artist_section: number
+    artist_section: number,
+    image: string
 }
 
 export interface AllGenreResults {
@@ -76,6 +77,7 @@ export interface ArtistDetails {
     total_duration: number,
     album_artist: string,
     albums: AlbumDetails[],
+    image: string
 }
 
 export interface GenreDetails {
@@ -256,4 +258,14 @@ export async function playPlaylist(playlist_id: number, shuffled: boolean) {
 export function clearLocalStorage() {
     info("Clearing Local Storage");
     localStorage.clear();
+}
+
+export async function clearQueue() {
+    try{
+        await invoke("player_clear_queue");
+    }
+    catch(e){
+        error(`Error Clearing Queue - ${e}`);
+        console.log(`Error Clearing Queue - ${e}`);
+    }
 }

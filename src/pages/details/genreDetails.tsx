@@ -5,6 +5,7 @@ import { VirtuosoGrid } from "react-virtuoso";
 import { useEffect, useRef, useState } from "react";
 import SimpleBar from "simplebar-react";
 import { forwardRef } from 'react';
+import './details.css';
 
 // Custom Components
 import { GenreDetails, PlaylistList, playSelection, savePosition, Songs } from "../../globalValues";

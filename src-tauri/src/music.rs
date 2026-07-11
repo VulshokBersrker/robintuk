@@ -1,11 +1,11 @@
 use std::{ fs::File, io::BufReader, time };
-use rodio::{ Decoder, Sink };
+use rodio::{ Decoder, Player };
 use tauri_plugin_log::log;
 
 use crate::{ types::SongTable };
 
 pub struct MusicPlayer {
-    pub sink: Sink,
+    pub sink: Player,
     pub position: usize,
     pub repeat_mode: i64,
     pub queue: Vec<SongTable>
@@ -13,7 +13,7 @@ pub struct MusicPlayer {
 
 // Rework Parts
 impl MusicPlayer {
-    pub fn new(sink: Sink) -> Result<Self, String> {
+    pub fn new(sink: Player) -> Result<Self, String> {
         sink.pause();
 
         Ok(Self{
@@ -68,9 +68,7 @@ impl MusicPlayer {
                 // Update the current position in the player
                 let _ = self.update_current_index(new_pos);
                 // Play the next song - Create case for last song in queue
-                println!("Before Skip Length - {:?}", self.sink.len());
                 let _ = self.sink.skip_one();
-                println!("After Skip Length - {:?}", self.sink.len());
                 self.play_song();
             }
         }
@@ -153,7 +151,6 @@ impl MusicPlayer {
     
     pub fn update_current_index(&mut self, pos: usize) -> Result<(), String> {
         if pos > self.queue.len() {
-            println!("position is larger than queue length - setting to zero");
             self.position = 0;
             log::error!("Update Current Index MusicPlayer - Position is larger than Queue length");
             Err("position is larger than queue length".to_string())
@@ -205,12 +202,17 @@ impl MusicPlayer {
                 // Makes it a little faster if we are guessing with only mp3 files
                 // Length is needed for backwards seeking
                 let len = good_file.metadata().unwrap().len();
-                match Decoder::builder().with_data(BufReader::new(good_file)).with_hint("mp3").with_byte_len(len).with_seekable(true).with_gapless(true).build() {
+                match Decoder::builder().with_data(BufReader::new(good_file))
+                    .with_hint("mp3")
+                    .with_byte_len(len)
+                    .with_seekable(true)
+                    .with_gapless(true)
+                    .build()
+                {
                     Ok(source) => {
                         // On Success, load song into the sink
                         self.sink.append(source);
                         log::info!("Load Song - Song Successfully loaded - {:?} -- {:?}", &self.queue[pos].name, &self.queue[pos].album);
-                        // println!("Song is loaded");
                     },
                     Err(e) => { log::error!("Load Song - Error decoding Audio File"); eprintln!("Error decoding audio file: {}", e); }
                 };
@@ -221,6 +223,9 @@ impl MusicPlayer {
                 log::error!("Load Song - Song file does not exist");
                 return Err("Song does not exist".to_string())
             }
+        }
+        else if self.queue.len() == 0 {
+            log::error!("Load Song - Queue is set to 0. Cannot load a song");
         }
         
         Ok(())

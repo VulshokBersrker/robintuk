@@ -31,9 +31,15 @@ pub fn init() {
     let home_dir = Path::new(&covers_dir);
     fs::create_dir_all(home_dir).unwrap();
 
+    // Create the playlist image folder
     let playlist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers";
     let playlist_dir = Path::new(&playlist_cover_dir);
     fs::create_dir_all(playlist_dir).unwrap();
+
+    // Create the artist image folder
+    let artist_covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers";
+    let artist_dir = Path::new(&artist_covers_dir);
+    fs::create_dir_all(artist_dir).unwrap();
 }
 
 // Create the database file.
@@ -75,6 +81,8 @@ async fn apply_initial_migrations() -> Result<(), String> {
     if does_exist.is_err() {
         let _ = pool.execute(include_str!("../migrations/0002_settings.sql")).await;
     }
+
+    let _ = pool.execute(include_str!("../migrations/0003_artists.sql")).await;
 
     let settings: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM settings")
         .fetch_one(&pool)
@@ -121,11 +129,15 @@ pub async fn reset_database(state: State<AppState, '_>, app: tauri::AppHandle) -
     // Delete all the images for playlists and albums
     let covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers";
     let playlist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers";
+    let artist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers";
+    
     let _ = fs::remove_dir_all(&covers_dir);
     let _ = fs::remove_dir_all(&playlist_cover_dir);
+    let _ = fs::remove_dir_all(&artist_cover_dir);
     // Recreate the directories
     let _ = fs::create_dir_all(&covers_dir);
     let _ = fs::create_dir_all(&playlist_cover_dir);
+    let _ = fs::create_dir_all(&artist_cover_dir);
 
     // Trigger global refresh of all data in the app
     let _ = app.emit("ending-reset", false);
@@ -457,24 +469,34 @@ pub async fn get_albums_with_limit(state: State<AppState, '_>, limit: i64) -> Re
 #[tauri::command(rename_all = "snake_case")]
 pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: String) -> Result<ArtistDetailsResults, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album_artist=$1 ORDER BY album ASC;")
+    let duration: (u64,) = sqlx::query_as("SELECT SUM(duration) FROM songs WHERE album_artist=$1;")
         .bind(&artist)
-        .fetch_all(&state.pool)
+        .fetch_one(&state.pool)
+        .await
+        .unwrap();
+
+    let num: (u64,) = sqlx::query_as("SELECT COUNT(*) FROM songs WHERE album_artist=$1;")
+        .bind(&artist)
+        .fetch_one(&state.pool)
         .await
         .unwrap();
 
     let albums: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
         "SELECT DISTINCT album, album_artist, cover, album_section FROM songs WHERE album_artist=$1
-        GROUP BY album ORDER BY album ASC;",
+        GROUP BY album ORDER BY album ASC;"
     ).bind(&artist).fetch_all(&state.pool).await.unwrap();
 
-    let mut duration: u64 = 0;
-    let album_artist: String = albums[0].album_artist.clone();
-    for song in &temp {
-        duration += song.duration;
-    }
+    let image: Result<(String,), sqlx::Error> = sqlx::query_as("SELECT a.image FROM artist_covers a INNER JOIN songs s ON s.album_artist = a.artist_name WHERE s.album_artist=$1;")
+        .bind(&artist)
+        .fetch_one(&state.pool)
+        .await;
 
-    Ok(ArtistDetailsResults{ num_tracks: temp.len(), total_duration: duration, album_artist, albums })
+    if image.is_err() {
+        Ok(ArtistDetailsResults{ num_tracks: num.0, total_duration: duration.0, album_artist: albums[0].album_artist.clone(), albums, image: None })
+    }
+    else {
+        Ok(ArtistDetailsResults{ num_tracks: num.0, total_duration: duration.0, album_artist: albums[0].album_artist.clone(), albums, image: Some(image.unwrap().0) })
+    }    
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -505,9 +527,11 @@ pub async fn get_albums_by_genre(state: State<AppState, '_>, genre: String) -> R
 pub async fn get_all_artists(state: State<AppState, '_>) -> Result<Vec<AllArtistResults>, String> {
 
     let temp: Vec<AllArtistResults> = sqlx::query_as::<_, AllArtistResults>(
-        "SELECT DISTINCT album_artist, artist_section FROM songs WHERE album_artist IS NOT NULL
-        GROUP BY album_artist
-        ORDER BY artist_section ASC, album_artist ASC;",
+        "SELECT DISTINCT s.album_artist, s.artist_section, a.image FROM songs s
+            LEFT JOIN artist_covers a ON a.artist_name = s.album_artist
+            WHERE s.album_artist IS NOT NULL
+            GROUP BY s.album_artist
+            ORDER BY s.artist_section ASC, s.album_artist ASC",
     )
     .fetch_all(&state.pool)
     .await
@@ -641,8 +665,6 @@ pub async fn create_playlist(state: State<AppState, '_>, name: String, songs: Ve
             .execute(&state.pool)
             .await
             .unwrap();
-
-        println!("test");
 
         let id: (i64,) = sqlx::query_as("SELECT id FROM playlists WHERE name=$1;")
             .bind(&name)
@@ -867,6 +889,40 @@ pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, p
     Ok(())
 }
 
+#[tauri::command(rename_all = "snake_case")]
+pub async fn add_artist_cover(state: State<AppState, '_>, file_path: String, artist_name: String) -> Result<(), String> {
+    // First get the image file and the playlist cover directory
+    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers/";
+    let file_type = Path::new(&file_path).extension().and_then(OsStr::to_str).unwrap();
+    let new_path = image_dir.clone() + "" + &artist_name.as_str() + "." + file_type;
+
+    // Copy the file to the image directory
+    let _ = fs::copy(&file_path, &new_path);
+
+    let does_exist: (bool,) = sqlx::query_as("SELECT COUNT(*) FROM artist_covers WHERE EXISTS(SELECT 1 FROM artist_covers WHERE artist_name = $1)")
+        .bind(&artist_name)
+        .fetch_one(&state.pool)
+        .await
+        .unwrap();
+
+
+    if does_exist.0 == true {
+        let _ = sqlx::query("UPDATE artist_covers SET image = $1 WHERE artist_name = $2;")
+            .bind(&new_path)
+            .bind(&artist_name)
+            .execute(&state.pool).await;
+    }
+    else {
+        let _ = sqlx::query("INSERT INTO artist_covers (image, artist_name) VALUES (?1, ?2)")
+        .bind(&new_path)
+        .bind(&artist_name)
+        .execute(&state.pool).await;
+    }
+
+    Ok(())
+}
+
+
 // Queue DB Commands
 
 #[tauri::command(rename_all = "snake_case")]
@@ -1068,7 +1124,7 @@ pub async fn update_lyrics(state: State<'_, AppState>, lyrics: LrclibLyrics, pat
 pub async fn get_lyrics(state: State<AppState, '_>, song_id: String) -> Result<LrclibLyrics, String> {
 
     let res = sqlx::query_as::<_, LrclibLyrics>("SELECT lyrics_id, plain_lyrics, synced_lyrics FROM lyrics WHERE song_id = ?")
-        .bind(song_id)
+        .bind(&song_id)
         .fetch_one(&state.pool)
         .await;
 
@@ -1076,7 +1132,7 @@ pub async fn get_lyrics(state: State<AppState, '_>, song_id: String) -> Result<L
         Ok(res.unwrap())
     }
     else {
-        log::info!("Song does not have lyrics in the database");
+        log::info!("Song does not have lyrics in the database: ${song_id}");
         Err("No Lyrics".to_string())
     }
 }

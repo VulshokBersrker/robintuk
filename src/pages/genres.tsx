@@ -1,6 +1,6 @@
+import { VirtuosoGrid, VirtuosoGridHandle } from 'react-virtuoso';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from 'react-router-dom';
-import { VirtuosoGrid } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 import { forwardRef } from 'react';
 
@@ -19,10 +19,11 @@ type P = {
 export default function GenresPage({genres}: P) {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Used to add SimpleBar to React Virtuoso
     const [scrollParent, setScrollParent] = useState<any>(null);
-    const virtuoso = useRef<any>(null);
+    const virtuoso = useRef<VirtuosoGridHandle>(null);
 
     const [loading, setLoading] = useState(true);
     const [artistList] = useState<AllGenreResults[]>(genres);
@@ -37,7 +38,6 @@ export default function GenresPage({genres}: P) {
 
             let tempSectionArray: number[] = [];
             const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, artistList.map((o: AllGenreResults) => { return o.genre_section})) );
-            // console.log(maxSection);
 
             for(let i = 0; i < maxSection + 1; i++) {
                 const results = artistList.filter(obj => obj.genre_section === alphabeticallyOrdered[i] ).length;
@@ -66,7 +66,8 @@ export default function GenresPage({genres}: P) {
         setGenreSections(tempSectionArray);
     }
 
-    const navigateToGenreOverview = (name: string) => {
+    const navigateToGenreOverview = (name: string, genre_tag: number) => {
+        navigate(`/genres#${genre_tag}`, {replace: true});
         navigate("/genres/overview", {state: {name: name}});
     }
 
@@ -121,7 +122,8 @@ export default function GenresPage({genres}: P) {
                                 <div
                                     id={`main-${section}`} key={`main-${section}`} className="section-key"
                                     onClick={() => {
-                                        virtuoso.current.scrollToIndex({ index: totalIndex });
+                                        virtuoso.current!.scrollToIndex({ index: totalIndex });
+                                        navigate(`/genres#${totalIndex}`, {replace: true});
                                         return false;
                                     }}
                                 >
@@ -152,17 +154,18 @@ export default function GenresPage({genres}: P) {
                     <VirtuosoGrid
                         totalCount={filteredArtists.length}
                         components={gridComponents}
+                        initialTopMostItemIndex={location.hash.length !== 0 ? parseInt(location.hash.replace("#", "")) : 0}
                         ref={virtuoso}
                         increaseViewportBy={{ top: 210, bottom: 420 }}
                         itemContent={(index) =>
-                            <div className="album-link genre" key={index} id={`${filteredArtists[index].genre}-${index}`}>
+                            <div className="album-link genre" key={index} id={`${index}`}>
                                 <div className="album-image-container"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
                                         // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
                                     }}
                                 >                                    
-                                    <div className="container" onClick={() => navigateToGenreOverview(filteredArtists[index].genre)} >
+                                    <div className="container" onClick={() => navigateToGenreOverview(filteredArtists[index].genre, index)} >
                                         <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].genre} image_type={"artist"} />
                                     </div>
                                     <div className="album-image-name header-font">

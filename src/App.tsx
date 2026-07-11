@@ -9,8 +9,8 @@ import "./App.css";
 // Custom Components
 import { AlbumDetails, AllArtistResults, AllGenreResults, SongsFull } from "./globalValues";
 import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
-import MusicControls from "./components/musicControls";
-import RightSideBar from "./components/rightSideBar";
+import MusicControls from "./components/musicControls/musicControls";
+import RightSideBar from "./components/sidebar/rightSideBar";
 import Popup from "./components/popups";
 
 // Pages
@@ -29,7 +29,6 @@ import Settings from "./pages/settings";
 import AlbumPage from "./pages/albums";
 import SongPage from "./pages/songs";
 import Home from "./pages/home";
-
 
 
 function App() {
@@ -55,12 +54,14 @@ function App() {
     const unlisten_reset_finished = listen("ending-reset", () => { getTheme(); getValues(); });
     const unlisten_reload_albums = listen("remove-song", () => { getValues(); });
 
-    
+    const unlisten_new_artists = listen("new-artist_cover-created", () => {getArtists(); })
+
     return () => {
       unlisten_scan_finished.then(f => f()),
       unlisten_reload_albums.then(f => f()),
       unlisten_reset_finished.then(f => f()),
-      unlisten_restore_finished.then(f => f());
+      unlisten_restore_finished.then(f => f()),
+      unlisten_new_artists.then(f => f());
     }
   }, []);
 
@@ -131,8 +132,8 @@ function App() {
       }
     }
     catch(e) {
-      error("Main (Error) - Error Checking for new Version");
-      console.log(e);
+      error(`Main (Error) - Error Checking for new Version - ${e}`);
+      console.log(`Main (Error) - Error Checking for new Version - ${e}`);
     }
   }
 

@@ -1,0 +1,260 @@
+
+/* Custom Styles for Tau Ceti */
+body[data-theme="tau-ceti"] {
+  .nav-item.active {
+    background-color: var(--highlight-hover);
+  }
+  .nav-item:hover .nav-font,
+  .nav-item.active .nav-font {
+    color: var(--font-color-hover) !important;
+  }
+  .nav-item.nav-link:hover img.bi,
+  .nav-item.nav-link.active img.bi {
+    filter: brightness(0%);
+  }
+
+  .directory-container:hover {
+    color: var(--font-color-hover)
+  }
+
+  button, input, select {
+    border-radius: 0px;
+  }
+
+} 
+
+/* ----------------- Navbar Styles ----------------- */
+
+.navbar-menu-toggle:checked ~ .nav-scrollable {
+  display: block;
+}
+.side-navbar {
+  top: 2.2rem;
+  left: 0rem;
+  width: 9.4rem;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 95.5%;
+  z-index: 90;
+  /* Scrollbar Styles */
+  overflow: hidden;
+}
+
+@media screen and (max-height: 700px) {
+  .side-navbar {
+    height: 95%;
+  }
+}
+@media screen and (max-height: 450px) {
+  .side-navbar {
+    height: 93%;
+  }
+}
+
+.nav-item {
+  position: relative;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  min-height: 1.6rem;
+  width: 8rem;
+  margin-bottom: 0.4rem;
+  margin-left: 0.55rem;
+  font-family: var(--header-family);
+  font-weight: 500;
+}
+.nav-link:hover {
+  cursor: pointer;
+  background-color: var(--highlight-hover);
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius);
+}
+
+.nav-item.active {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius);
+}
+
+.side-navbar hr {
+  background: linear-gradient(to right, var(--hr-gradient-one),var(--hr-gradient-two), var(--hr-gradient-one));
+  margin-left: 0.68rem;
+  width: 83%;
+  height: 1px;
+  border: 0;
+}
+.side-navbar .nav-font {
+  opacity: 1;
+  font-size: 0.9rem;
+  color: var(--font-color-one);
+  padding-left: 0.6rem;
+}
+.side-navbar img.bi {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 0.3rem;
+}
+.side-navbar .sidebar-playlist-image {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin-left: 0.3rem;
+  border-radius: var(--border-radius);
+}
+/* Hide scrollbar for playlists, but still scroll */
+.side-navbar .nav-scrollable { 
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
+}
+.side-navbar.closed .nav-scrollable::-webkit-scrollbar { 
+  display: none;  /* Older Safari and Chromium */
+}
+
+.scan-status-container {
+  position: fixed;
+  display: flex;
+  top: 0.3rem;
+  right: 16rem;
+  border-radius: var(--border-radius);
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 5px 15px 5px 15px;
+  font-size: 0.8rem;
+}
+
+.scan-status-container.loaded {
+  visibility: visible;
+  transition: 0s ease;
+}
+.scan-status-container.unloaded {
+  visibility: hidden;
+  transition: 0s ease;
+}
+
+@media (min-width: 641px) {
+  .navbar-menu-toggle {
+    display: visible;
+  }
+
+  .nav-scrollable {
+    /* Never collapse the sidebar for wide screens */
+    display: grid;
+
+    /* Allow sidebar to scroll for tall menus */
+    height: calc(100vh - 18rem);
+    overflow-y: auto;
+
+    scrollbar-color: rgba(176, 176, 176, 0.87) rgba(0,0,0,0);
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+
+}
+
+
+/* Fullscreen 4K Monitor Size - 3840x2160 */
+@media screen and (min-width: 3840px) {
+
+  /* ----------------- Navbar Styles ----------------- */
+  
+  .side-navbar {
+    top: 3.6rem;
+    left: 0rem;
+    width: 12rem;
+    height: calc(97%);
+  }
+
+  .nav-item {
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+    min-height: 2rem;
+    width: 11rem;
+    margin-bottom: 0.6rem;
+    margin-left: 0.55rem;
+  }
+
+  .side-navbar .nav-font {
+    font-size: 1.3rem;
+  }
+  .side-navbar img.bi {
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-left: 0.3rem;
+  }
+  .side-navbar .sidebar-playlist-image {
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+    width: 3.2rem;
+    height: 3.2rem;
+    margin-left: 0.3rem;
+  }
+
+  .scan-status-container {
+    top: 0.3rem;
+    right: 16rem;
+    padding: 5px 15px 5px 15px;
+    font-size: 1.2rem;
+  }
+
+}
+
+
+@media (min-resolution: 120dpi)and (max-width: 1080px) and (max-resolution: 187dpi) {
+
+  .nav-scrollable {
+    height: calc(100vh - 17rem);
+  }
+
+  #root:has(.music-control-container) {
+    .nav-scrollable {
+      height: calc(100vh - 23.7rem);
+    }
+    .empty-space {
+      height: 175px;
+    }
+  }
+
+  /* ----------------- Navbar Styles ----------------- */
+  .nav-item {
+    position: relative;
+    padding-top: 0.1rem;
+    padding-bottom: 0.1rem;
+    min-height: 1.6rem;
+    width: 7.2rem;
+    margin-bottom: 0.3rem;
+    margin-left: 0.5rem;
+  }
+
+  .side-navbar .nav-font {
+    font-size: 0.7rem;
+    padding-left: 0.4rem;
+  }
+  .side-navbar img.bi {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-left: 0.3rem;
+  }
+  .side-navbar .sidebar-playlist-image {
+    width: 1.8rem;
+    height: 1.8rem;
+    margin-left: 0.3rem;
+    border-radius: var(--border-radius);
+  }
+
+  .scan-status-container {
+    position: fixed;
+    display: flex;
+    top: 0.3rem;
+    right: 16rem;
+    border-radius: var(--border-radius);
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 5px 15px 5px 15px;
+    font-size: 0.8rem;
+  }
+
+}

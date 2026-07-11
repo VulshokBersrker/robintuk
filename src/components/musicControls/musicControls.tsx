@@ -3,22 +3,23 @@ import { info, error } from '@tauri-apps/plugin-log';
 import { useEffect, useRef, useState } from "react";
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
+import "./musicControls.css";
 
 // Custom Components
-import { GetCurrentSong, savePosition, Songs, SongLyrics, DirectoryInfo } from "../globalValues";
-import ImageWithFallBack from "./imageFallback";
+import { GetCurrentSong, savePosition, Songs, SongLyrics, DirectoryInfo } from "../../globalValues";
+import ImageWithFallBack from "../imageFallback";
 
 // Images
-import BackwardButton from '../images/backward-step-solid-full.svg';
-import ForwardButton from '../images/backward-step-solid-full.svg';
-import VolumeStandard from '../images/volume-low-solid-full.svg';
-import VolumeEmpty from '../images/volume-off-solid-full.svg';
-import ShuffleButton from '../images/shuffle-solid-full.svg';
-import RepeatButton from '../images/repeat-solid-full.svg';
-import PauseButton from '../images/pause-solid-full.svg';
-import PlayButton from '../images/play-solid-full.svg';
-import RepeatOneIcon from '../images/repeat-one.svg';
-import Circle from '../images/circle.svg';
+import BackwardButton from '../../images/backward-step-solid-full.svg';
+import ForwardButton from '../../images/backward-step-solid-full.svg';
+import VolumeStandard from '../../images/volume-low-solid-full.svg';
+import VolumeEmpty from '../../images/volume-off-solid-full.svg';
+import ShuffleButton from '../../images/shuffle-solid-full.svg';
+import RepeatButton from '../../images/repeat-solid-full.svg';
+import PauseButton from '../../images/pause-solid-full.svg';
+import PlayButton from '../../images/play-solid-full.svg';
+import RepeatOneIcon from '../../images/repeat-one.svg';
+import Circle from '../../images/circle.svg';
 
 // Update Volume Mute to return the volume to what is was before the mute
 
@@ -308,15 +309,14 @@ export default function MusicControls() {
             try {
                 // Get the last played song, if exists
                 const queue: Songs[] = await invoke<Songs[]>("get_queue", {shuffled: shuffleMode !== null ? shuffleMode : false});
-                // console.log(queue);
 
                 if(queue.length === 0) {
                     setIsLoaded(false);
                     info("Controls (Info) - There is a Queue");
                 }
-                else if(queue.length < parseInt(qPosition)) {
-                    console.log("qPosition is greater than queue length - cannot load");
-                    error("Controls (Error) - Queue Position is greater than Queue Length - Cannot load Controls");
+                else if(queue.length <= parseInt(qPosition)) {
+                    console.log("qPosition is equal to or greater than queue length - cannot load");
+                    error("Music Controls - Queue Position is equal to or greater than Queue Length - Cannot load Controls");
                 }
                 else {
                     setSongDetails(queue[JSON.parse(qPosition!)]);
@@ -329,6 +329,7 @@ export default function MusicControls() {
                             sendQueueToBackend(queue, JSON.parse(qPosition!));
                         }
                         else {
+                            setIsShuffle(false);
                             sendQueueToBackend(queue, JSON.parse(qPosition!));
                         }
                         await checkForLyrics(queue[JSON.parse(qPosition!)].path);
@@ -340,7 +341,7 @@ export default function MusicControls() {
                 }
             }
             catch(e) {
-                error("Controls - Failed to load music controls");
+                error(`Music Controls - Failed load music controls: ${e}`);
                 console.log(`Failed load music controls: ${e}`);
                 setIsLoaded(false);
             }
