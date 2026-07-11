@@ -3,17 +3,17 @@
 
 // Tauri Plugins
 use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
-use tauri_plugin_log::{Target, TargetKind, log::{self, error}};
+use tauri_plugin_log::{Target, TargetKind, log::{self}};
+use tauri::{Builder, Manager, Emitter, State};
 use tauri_plugin_prevent_default::Flags;
-use tauri::{Builder, Manager, Emitter};
-use chrono::{DateTime, Utc};
-use tauri::{State};
 
 // Rust Libraries
-use rodio::{DeviceSinkBuilder, MixerDeviceSink, Player, cpal::traits::HostTrait};
+use rodio::mixer::Mixer;
+use rodio::{DeviceSinkBuilder, MixerDeviceSink, Player as Sink};
 use sqlx::{Pool, Sqlite, prelude::FromRow};
 use std::{path::Path, sync::{Arc, Mutex}};
 use tokio::runtime::Runtime;
+use chrono::{DateTime, Utc};
 use std::fs;
 
 // Import files
@@ -44,39 +44,29 @@ pub struct AppState {
 pub fn run() -> Result<(), String> {
     db::init();
 
-    // Called when there is an error with the Sink/Stream
-    fn stream_error(err: rodio::cpal::StreamError) {
-        println!("Error loading Stream {:?}", &err);
-        error!("Error loading Stream {:?}", &err);
-    }
+    // Allow for output device switching without needing to restart the app, Vleer rodio used
+    let existing_mixer: Option<Mixer> = None;
 
-    let stream_handle: MixerDeviceSink = DeviceSinkBuilder::from_default_device()
-        .and_then(|builder| {
-            builder
-                .with_buffer_size(rodio::cpal::BufferSize::Fixed(2048))
-                .with_error_callback(stream_error as fn(_))
+    let (_new_device, mixer) = if let Some(m) = existing_mixer {
+        (None, m)
+    } else {
+        let mut device: MixerDeviceSink = DeviceSinkBuilder::from_default_device()
+            .and_then(|b| {
+                b.with_buffer_size(rodio::cpal::BufferSize::Fixed(2048))
                 .open_stream()
-        })
-        .or_else(|original_error| {
-            let devices = rodio::cpal::default_host().output_devices().map_err(|_| original_error).unwrap();
+            })
+            .or_else(|_| DeviceSinkBuilder::open_default_sink())
+            .inspect_err(|f| {
+                log::error!("Device Sink Error: {:?}", f);
+                println!("Device Sink Error: {:?}", f);
+            })
+            .unwrap();
+        device.log_on_drop(false);
+        let m = device.mixer().clone();
+        (Some(device), m)
+    };
 
-            for device in devices {
-                if let Ok(builder) = rodio::DeviceSinkBuilder::from_device(device) {
-                    
-                    if let Ok(handle) = builder
-                        .with_buffer_size(rodio::cpal::BufferSize::Fixed(2048))
-                        .with_error_callback(stream_error as fn(_))
-                        .open_stream()
-                    {
-                        return Ok(handle);
-                    }
-                }
-            }
-            Err(rodio::DeviceSinkError::NoDevice)
-        })
-        .unwrap();
-
-    let sink = Player::connect_new(&stream_handle.mixer());
+    let sink = Sink::connect_new(&mixer);
     let player = Arc::new(Mutex::new(MusicPlayer::new(sink)?));
     // Generate the pool for the database, so it can be reused
     let pool: Pool<Sqlite> = Runtime::new().unwrap().block_on(establish_connection())?;
@@ -86,16 +76,18 @@ pub fn run() -> Result<(), String> {
     let file_name = format!("{}.log", now.format("%Y_%m_%d"));
 
     Builder::default()
-        // .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-        //     println!("{}, {argv:?}, {cwd}", app.package_info().name);
-        //     app.emit("single-instance", Payload { args: argv, cwd }).unwrap();
-        // }))
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            println!("{}, {argv:?}, {cwd}", app.package_info().name);
+            let _ = app.get_webview_window("main")
+                .expect("no main window")
+                .set_focus();
+        }))
         .plugin(tauri_plugin_log::Builder::new() // -> C:\Users\"Alice"\AppData\Local\com.tauri.dev\logs
             .clear_targets()
             .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
             .level(log::LevelFilter::Info)
             .level(log::LevelFilter::Error)
-            .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+            .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(10))
             .target(Target::new(TargetKind::LogDir {
                 // Specify the generated fixed filename
                 file_name: Some(file_name),
@@ -103,7 +95,6 @@ pub fn run() -> Result<(), String> {
             .build()
         )
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_opener::init())
         .plugin(
             // Allow native context menu in dev mode
             if cfg!(dev) {
@@ -116,7 +107,8 @@ pub fn run() -> Result<(), String> {
         )
         .setup(|app: &mut tauri::App| {
             
-            app.manage(AppState { player,
+            app.manage(AppState { 
+                player,
                 pool,
                 is_scan_ongoing: Mutex::new(false),
                 is_back_restore_ongoing: Mutex::new(0),
