@@ -20,17 +20,6 @@
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-unregister-all",
     "dialog:default",
-    "log:default",
-    {
-      "identifier": "opener:allow-open-path",
-      "allow": [
-        {
-          "path": "/path/to/file"
-        },
-        {
-          "path": "$APPDATA/file"
-        }
-      ]
-    }
+    "log:default"
   ]
 }
