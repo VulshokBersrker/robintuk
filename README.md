@@ -78,5 +78,4 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Dependency Issues
 
-- [ ] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio/cpal)
-- [ ] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
+- [x] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
