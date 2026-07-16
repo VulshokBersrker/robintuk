@@ -48,13 +48,14 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
+- [ ] Improve Backup and Restore functions
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
-- [ ] Open with (in file explorer)
+- [ ] Open with (in file explorer) file associations
 - [ ] Better DPI aware CSS
 - [ ] Add "Remove from Queue" on Queue page
 - [ ] Add "Select All" to select form
 - [ ] Improve Song Details and Lyrics popup CSS
-- [ ] Update Create Playlist order to improve load time of new playlist appearance
+- [ ] Update Create Playlist order to improve load time of new playlist creation
 - [x] Drag and Drop playlist order
 - [x] Gapless playback
 
@@ -62,7 +63,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 - [ ] Equalizer
 - [ ] Linux support
-- [ ] Get artist data from online service for artist pages (No great options once you have more than 100 songs)
+- [ ] Get artist data from online service for artist pages? (No great options once you have more than 100 songs)
 
 ## Known Issues
 
@@ -76,4 +77,15 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Dependency Issues
 
+- [ ] Symphonia - Some music files get "Probe Limit Reached", causing no audio to play
 - [x] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
+
+
+
+## FAQ
+
+* __What to do if Robintuk doesn't launch after a crash while scanning music:__ 
+    * Restarting your computer will fix this issue, until it crashes again.
+    
+* __My anti-virus calims Robintuk is malware:__ 
+    * While this issue is worked on, whitelisting the app should solve any false positives
