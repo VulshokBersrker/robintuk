@@ -20,6 +20,7 @@
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-unregister-all",
     "dialog:default",
-    "log:default"
+    "log:default",
+    "deep-link:default"
   ]
 }

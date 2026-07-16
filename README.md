@@ -77,7 +77,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Dependency Issues
 
-- [ ] Symphonia - Some music files get "Probe Limit Reached", causing no audio to play
+- [x] Symphonia - Some music files get "Probe Limit Reached", causing no audio to play
 - [x] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
 
 
