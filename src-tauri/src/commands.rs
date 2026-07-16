@@ -42,7 +42,7 @@ pub fn player_add_to_queue(state: State<AppState, '_>, queue: Vec<SongTable>) ->
 }
 
 #[tauri::command]
-pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), String> {
+pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), ()> {
     state.player.lock().unwrap().clear_queue();
     state.player.lock().unwrap().stop_song();
 
@@ -50,7 +50,13 @@ pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<
     state.player.lock().unwrap().set_queue(queue);
     let _ = state.player.lock().unwrap().update_current_index(index);
     // Setup the first two songs to ready to play
-    let _ = state.player.lock().unwrap().load_song(index);
+    let res = state.player.lock().unwrap().load_song(index);
+
+    if res.is_err() {
+        state.player.lock().unwrap().clear_queue();
+        let _ = db::clear_queue(state.clone()).await;
+        return Err(());
+    }
     
     Ok(())
 }

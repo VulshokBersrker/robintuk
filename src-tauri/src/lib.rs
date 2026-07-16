@@ -76,8 +76,7 @@ pub fn run() -> Result<(), String> {
     let file_name = format!("{}.log", now.format("%Y_%m_%d"));
 
     Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-            println!("{}, {argv:?}, {cwd}", app.package_info().name);
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             let _ = app.get_webview_window("main")
                 .expect("no main window")
                 .set_focus();
@@ -268,6 +267,8 @@ pub fn run() -> Result<(), String> {
         .expect("error while running tauri application");
     Ok(())
 }
+
+
 
 // ---------------------------------------- SCAN DIRECTORY AND SONG METADATA FUNCTIONS ----------------------------------------
 
