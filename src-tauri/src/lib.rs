@@ -53,7 +53,7 @@ pub fn run() -> Result<(), String> {
         let mut device: MixerDeviceSink = DeviceSinkBuilder::from_default_device()
             .and_then(|b| {
                 b
-                .with_buffer_size(rodio::cpal::BufferSize::Fixed(256))
+                .with_buffer_size(rodio::cpal::BufferSize::Fixed(48))
                 .open_stream()
             })
             .or_else(|_| DeviceSinkBuilder::open_default_sink())

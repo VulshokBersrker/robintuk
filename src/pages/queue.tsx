@@ -19,6 +19,7 @@ import PlayIcon from '../images/play-solid-full.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
 import PlusIcon from '../images/plus-solid-full.svg';
 import CloseIcon from '../images/x.svg';
+import { error } from "@tauri-apps/plugin-log";
 
 export default function QueueOverviewPage() {
 
@@ -118,6 +119,7 @@ export default function QueueOverviewPage() {
             // Update the music controls state somehow
         }
         catch (err) {
+            error(`Failed to play song: ${err}`);
             console.log(`Failed to play song: ${err}`);
         }
     }

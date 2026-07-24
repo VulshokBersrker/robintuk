@@ -763,8 +763,6 @@ pub async fn delete_playlist(state: State<AppState, '_>, name: String) -> Result
 #[tauri::command(rename_all = "snake_case")]
 pub async fn reorder_playlist(state: State<AppState, '_>, playlist_id: i64, song_path: String, start: i64, end: i64) -> Result<(), String> {
 
-    
-
     if end < start {
         let _ = sqlx::query("UPDATE playlist_tracks SET position = position + 1 WHERE playlist_id = $1 AND position >= $2 AND position < $3")
             .bind(&playlist_id)
