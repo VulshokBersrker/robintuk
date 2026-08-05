@@ -368,6 +368,14 @@ pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, s
     Ok(())
 }
 
+#[tauri::command(rename_all = "snake_case")]
+pub async fn play_song_in_queue(state: State<AppState, '_>, index: usize) -> Result<(), String> {
+
+    state.player.lock().unwrap().jump_to_song(index);
+    
+    Ok(())
+
+}
 
 
 

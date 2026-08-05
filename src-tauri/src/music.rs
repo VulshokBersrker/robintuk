@@ -127,6 +127,17 @@ impl MusicPlayer {
         }
     }
 
+    pub fn jump_to_song(&mut self, index: usize) {
+        
+        self.sink.clear();
+
+        // Update the current position in the player
+        let _ = self.update_current_index(index);
+        // Load the new song
+        let _ = self.load_song(index);
+        self.play_song();
+        
+    }
     // ------------------- Queue Functions -------------------
     // Called when a user clicks play on a song, album, or playlist
     pub fn set_queue(&mut self, q: Vec<SongTable>) {

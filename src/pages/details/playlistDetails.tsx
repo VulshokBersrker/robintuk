@@ -175,7 +175,6 @@ export default function PlaylistOverviewPage() {
             await invoke('new_playlist_added');
             setPlaylistDetails({...playlistDetails, name: currentPlaylistName});
             setIsEdit(false);
-            
         }
     }
 
@@ -398,6 +397,7 @@ export default function PlaylistOverviewPage() {
         setPlaylist(newOrder);
 
         try {
+            console.log(result.source.index + " - " + result.destination.index);
             await invoke("reorder_playlist", {playlist_id: location.state.name, song_path: movedSong, start: result.source.index + 1, end: result.destination.index + 1});
         }
         catch(e) {

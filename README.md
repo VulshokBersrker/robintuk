@@ -67,6 +67,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
+- [ ] Sometimes the drag playlist order feature doesn't save the new order correctly
 - [ ] Error with the queue page when clicking play on a song in the queue
 - [ ] Small chance of an anti-virus false positive when importing playlists
 - [ ] Some album artwork is not deleted when songs are removed
