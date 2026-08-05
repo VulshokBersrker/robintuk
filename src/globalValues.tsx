@@ -168,24 +168,6 @@ export const alphabeticallyOrdered = [
 ];
 
 
-export async function saveQueue(q: Songs[]) {
-    try {
-        await invoke('create_queue', {songs: q, shuffled: false});
-    }
-    catch(e) {
-        error("Save Queue Global (Error) - Error Saving Queue: " + e);
-        console.log(e);
-    }
-}
-export async function saveShuffledQueue(q: Songs[]) {
-    try {
-        await invoke('create_queue', {songs: q, shuffled: true});
-    }
-    catch(e) {
-        error("Save Shuffled Queue Global (Error) - Error Saving Shuffled Queue: " + e);
-        console.log(e);
-    }
-}
 export function savePosition(p: number) {
     localStorage.setItem('last-played-queue-position', p.toString());
 }

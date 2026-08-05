@@ -764,59 +764,52 @@ pub async fn delete_playlist(state: State<AppState, '_>, name: String) -> Result
 pub async fn reorder_playlist(state: State<AppState, '_>, playlist_id: i64, song_path: String, start: i64, end: i64) -> Result<(), String> {
 
     if end < start {
-        let res = sqlx::query("UPDATE playlist_tracks SET position = position + 1 WHERE playlist_id = $1 AND position >= $2 AND position < $3")
+        let _ = sqlx::query("UPDATE playlist_tracks SET position = position + 1 WHERE playlist_id = $1 AND position >= $2 AND position <= $3")
             .bind(&playlist_id)
             .bind(&end)
             .bind(&start)
             .execute(&state.pool)
             .await;
-        println!("{:?}", res);
     }
     else if end > start {
-        let res = sqlx::query("UPDATE playlist_tracks SET position = position - 1 WHERE playlist_id = $1 AND position > $2 AND position <= $3")
+        let _ = sqlx::query("UPDATE playlist_tracks SET position = position - 1 WHERE playlist_id = $1 AND position >= $2 AND position <= $3")
             .bind(&playlist_id)
             .bind(&start)
             .bind(&end)
             .execute(&state.pool)
             .await;
-        println!("{:?}", res);
     }
     else {
         return Ok(());
     }
 
     // Update the entry that was moved
-    let res = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
+    let _ = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
         .bind(&end)
         .bind(&playlist_id)
         .bind(&song_path)
         .execute(&state.pool)
         .await;
-    println!("{:?}", res);
 
     Ok(())
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn remove_song_from_playlist(state: State<AppState, '_>, playlist_id: i64, song_path: String, songs: Vec<SongTable>) -> Result<(), String> {
+pub async fn remove_song_from_playlist(state: State<AppState, '_>, playlist_id: i64, position: i64) -> Result<(), String> {
 
     // Remove the song
-    let _ = sqlx::query("DELETE FROM playlist_tracks WHERE playlist_id = $1 AND track_id = $2")
+    let _ = sqlx::query("DELETE FROM playlist_tracks WHERE playlist_id = $1 AND position = $2")
         .bind(&playlist_id)
-        .bind(&song_path)
+        .bind(&position)
         .execute(&state.pool)
         .await;
 
-    let mut i = 1;
-    for item in songs {
-        let _ = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
-            .bind(&i)
-            .bind(&playlist_id)
-            .bind(&item.path)
-            .execute(&state.pool)
-            .await;
-        i += 1;
-    }
+    let _ = sqlx::query("UPDATE playlist_tracks SET position = position - 1 WHERE playlist_id = $1 AND position > $2")
+        .bind(&playlist_id)
+        .bind(&position)
+        .execute(&state.pool)
+        .await;
+     
 
     Ok(())
 }
@@ -857,7 +850,7 @@ pub async fn remove_multiple_songs_from_playlist(state: State<AppState, '_>, pla
         .await
         .unwrap();
 
-    let mut j: i64 = 1;
+    let mut j: i64 = 0;
     for item in res {
         let _ = sqlx::query("UPDATE playlist_tracks SET position = $1 WHERE playlist_id = $2 AND track_id = $3")
             .bind(&j)

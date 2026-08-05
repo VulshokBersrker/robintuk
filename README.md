@@ -67,13 +67,13 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
-- [ ] Sometimes the drag playlist order feature doesn't save the new order correctly
-- [ ] Error with the queue page when clicking play on a song in the queue
 - [ ] Small chance of an anti-virus false positive when importing playlists
 - [ ] Some album artwork is not deleted when songs are removed
 - [ ] Some deleted albums are not removed when a new scan is finished
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)
+- [x] Sometimes the drag playlist order feature doesn't save the new order correctly
+- [x] Error with the queue page when clicking play on a song in the queue
 - [x] Issue when jumping between large playlists - The first playlist will override the new
 - [x] Jumping between song that don't have lyrics in the database will cause the wrong song to appear on the player
 
