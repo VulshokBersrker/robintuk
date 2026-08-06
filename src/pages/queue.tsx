@@ -7,7 +7,7 @@ import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 
 // Custom Components
-import { GetCurrentSong, PlaylistList, savePosition, saveQueue, saveSong, Songs } from "../globalValues";
+import { GetCurrentSong, PlaylistList, savePosition, saveSong, Songs } from "../globalValues";
 import ImageWithFallBack from "../components/imageFallback";
 
 // Images
@@ -19,6 +19,7 @@ import PlayIcon from '../images/play-solid-full.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
 import PlusIcon from '../images/plus-solid-full.svg';
 import CloseIcon from '../images/x.svg';
+import { error } from "@tauri-apps/plugin-log";
 
 export default function QueueOverviewPage() {
 
@@ -111,13 +112,13 @@ export default function QueueOverviewPage() {
     // Load the song the user clicked on but also queue the entire album
     async function playSong(index: number) {
         try {
-            await invoke('player_load_album', {queue: queue, index: index});
+            await invoke('play_song_in_queue', {index: index});
             await invoke('update_current_song_played');
-            saveQueue(queue);
             savePosition(index);
             // Update the music controls state somehow
         }
         catch (err) {
+            error(`Failed to play song: ${err}`);
             console.log(`Failed to play song: ${err}`);
         }
     }
@@ -297,7 +298,6 @@ export default function QueueOverviewPage() {
                                 </span>
                                 
                                 <div className="section-15 d-flex album-commmands">
-                                    <span><button className="borderless font-1 d-flex align-items-center" disabled={queue.length === 0} onClick={clearQueue} ><img src={ClearIcon} /></button></span>
                                     <span className="position-relative">
                                         <button className="borderless font-1" disabled={queue.length === 0} onClick={() => setDisplayAddToMenu(!displayAddToMenu)}  ><img src={PlusIcon} /></button>
                                     
@@ -325,6 +325,9 @@ export default function QueueOverviewPage() {
                                             </div>
                                         }                                    
                                     </span>
+
+                                    <span><button className="borderless red font-1 d-flex align-items-center" disabled={queue.length === 0} onClick={clearQueue} ><img src={ClearIcon} /></button></span>
+                                    
                                 </div>
                             </span>
                         </div>

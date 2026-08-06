@@ -1,6 +1,6 @@
 [package]
 name = "robintuk_player"
-version = "1.0.1"
+version = "1.0.2"
 description = "A beautiful and colorful music player for Windows"
 authors = ["VulshokBersrker"]
 edition = "2021"

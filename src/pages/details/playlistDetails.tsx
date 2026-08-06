@@ -175,7 +175,6 @@ export default function PlaylistOverviewPage() {
             await invoke('new_playlist_added');
             setPlaylistDetails({...playlistDetails, name: currentPlaylistName});
             setIsEdit(false);
-            
         }
     }
 
@@ -225,7 +224,7 @@ export default function PlaylistOverviewPage() {
             let temp: Songs[] = playlist;
             temp = playlist.filter((song) => song.path !== playlist[index].path)
             setPlaylist(temp);
-            await invoke("remove_song_from_playlist", {playlist_id: location.state.name, song_path: playlist[index].path, songs: temp });       
+            await invoke("remove_song_from_playlist", {playlist_id: location.state.name, position: index });       
         }
         catch (err) {
             alert(`Failed remove song from playlist: ${err}`);
@@ -398,7 +397,7 @@ export default function PlaylistOverviewPage() {
         setPlaylist(newOrder);
 
         try {
-            await invoke("reorder_playlist", {playlist_id: location.state.name, song_path: movedSong, start: result.source.index + 1, end: result.destination.index + 1});
+            await invoke("reorder_playlist", {playlist_id: location.state.name, song_path: movedSong, start: result.source.index, end: result.destination.index});
         }
         catch(e) {
             console.log(e);

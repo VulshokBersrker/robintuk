@@ -53,7 +53,7 @@ pub fn run() -> Result<(), String> {
         let mut device: MixerDeviceSink = DeviceSinkBuilder::from_default_device()
             .and_then(|b| {
                 b
-                .with_buffer_size(rodio::cpal::BufferSize::Fixed(256))
+                .with_buffer_size(rodio::cpal::BufferSize::Fixed(1024))
                 .open_stream()
             })
             .or_else(|_| DeviceSinkBuilder::open_default_sink())
@@ -213,6 +213,7 @@ pub fn run() -> Result<(), String> {
             commands::player_previous_song,
             commands::player_set_volume,
             // Queue Functions
+            commands::play_song_in_queue,
             commands::player_setup_queue_and_song,
             commands::player_add_to_queue,
             commands::player_set_queue,
