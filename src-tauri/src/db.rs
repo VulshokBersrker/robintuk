@@ -705,7 +705,7 @@ pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, 
         .await.unwrap();
 
     // Now add the new songs to the playlist
-    let mut i = length.0 + 1;
+    let mut i = length.0;
     for song in songs {
         let _ = sqlx::query("INSERT INTO playlist_tracks
             (playlist_id, track_id, position) 
