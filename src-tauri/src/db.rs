@@ -10,7 +10,9 @@ use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite};
 use tauri::{Emitter, State};
 
 use crate::types::{
-    AllAlbumResults, AllArtistResults, AllGenreResults, ArtistDetailsResults, DirsTable, DoesExist, GenreDetailsResults, History, LrclibLyrics, PlaylistFull, PlaylistTable, SettingsScanDate, SongHistory, SongTable, SongTableUpload
+    QueueFormat, AllAlbumResults, AllArtistResults, AllGenreResults, ArtistDetailsResults, DirsTable,
+    DoesExist, GenreDetailsResults, History, LrclibLyrics, PlaylistFull, PlaylistTable, SettingsScanDate,
+    SongHistory, SongTable, SongTableUpload
 };
 use crate::{AppState, commands};
 
@@ -657,7 +659,7 @@ pub async fn get_playlists_with_limit(state: State<AppState, '_>, limit: i64) ->
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn create_playlist(state: State<AppState, '_>, name: String, songs: Vec<SongTable>, songs_to_add: bool) -> Result<(), String> {
+pub async fn create_playlist(state: State<AppState, '_>, app: tauri::AppHandle, name: String, songs: Vec<SongTable>, songs_to_add: bool) -> Result<(), String> {
 
     if songs_to_add == true {
         sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
@@ -665,6 +667,8 @@ pub async fn create_playlist(state: State<AppState, '_>, name: String, songs: Ve
             .execute(&state.pool)
             .await
             .unwrap();
+
+        let _ = commands::new_playlist_added(state.clone(), app).await;
 
         let id: (i64,) = sqlx::query_as("SELECT id FROM playlists WHERE name=$1;")
             .bind(&name)
@@ -705,7 +709,7 @@ pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, 
         .await.unwrap();
 
     // Now add the new songs to the playlist
-    let mut i = length.0 + 1;
+    let mut i = length.0;
     for song in songs {
         let _ = sqlx::query("INSERT INTO playlist_tracks
             (playlist_id, track_id, position) 
@@ -944,11 +948,8 @@ pub async fn create_queue(state: State<'_, AppState>, songs: &Vec<SongTable>) ->
     sqlx::query("DELETE FROM queue").execute(&state.pool).await.map_err(|e| e.to_string())?;
 
     // Then add the new queue
-    // Get the last position of the playlist from the list
-    let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM queue").fetch_one(&state.pool).await.unwrap();
-
     // Now add the new songs to the playlist
-    let mut i = length.0 + 1;
+    let mut i = 0;
     for song in songs {
         let _ = sqlx::query("INSERT INTO queue (position, song_id) VALUES (?1, ?2)")
             .bind(&i)
@@ -966,11 +967,8 @@ pub async fn create_queue_shuffled(state: State<'_, AppState>, songs: &Vec<SongT
     sqlx::query("DELETE FROM queue_shuffled").execute(&state.pool).await.map_err(|e| e.to_string())?;
 
     // Then add the new queue
-    // Get the last position of the playlist from the list
-    let length: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM queue_shuffled").fetch_one(&state.pool).await.unwrap();
-
     // Now add the new songs to the playlist
-    let mut i = length.0 + 1;
+    let mut i = 0;
     for song in songs {
         let _ = sqlx::query("INSERT INTO queue_shuffled (position, song_id) VALUES (?1, ?2)")
             .bind(&i)
@@ -991,7 +989,7 @@ pub async fn add_to_queue(state: State<AppState, '_>, songs: Vec<SongTable>) -> 
         .await.unwrap();
 
     // Now add the new songs to the playlist
-    let mut i = length.0 + 1;
+    let mut i = length.0;
     for song in &songs {
         let _ = sqlx::query("INSERT INTO queue
             (position, song_id) 
@@ -1030,6 +1028,171 @@ pub async fn clear_queue(state: State<AppState, '_>) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command(rename_all = "snake_case")]
+pub async fn remove_from_queue(state: State<AppState, '_>, song_id: String) -> Result<(), String> {
+
+    let is_shuffled = state.player.lock().unwrap().get_shuffle();
+
+    if is_shuffled == false {
+        // Remove the song from Queue
+        let position: (i64,) = sqlx::query_as("SELECT position FROM queue WHERE song_id = $1")
+            .bind(&song_id)
+            .fetch_one(&state.pool)
+            .await.unwrap();
+        let _ = sqlx::query("DELETE FROM queue WHERE song_id = $1")
+            .bind(&song_id)
+            .execute(&state.pool)
+            .await;
+        let _ = sqlx::query("UPDATE queue SET position = position - 1 WHERE position > $1")
+            .bind(&position.0)
+            .execute(&state.pool)
+            .await;
+    }
+    else {
+
+        // Remove the song from Queue
+        let position: (i64,) = sqlx::query_as("SELECT position FROM queue WHERE song_id = $1")
+            .bind(&song_id)
+            .fetch_one(&state.pool)
+            .await.unwrap();
+        let _ = sqlx::query("DELETE FROM queue WHERE song_id = $1")
+            .bind(&song_id)
+            .execute(&state.pool)
+            .await;
+        let _ = sqlx::query("UPDATE queue SET position = position - 1 WHERE position > $1")
+            .bind(&position.0)
+            .execute(&state.pool)
+            .await;
+
+        // Remove the song from Shuffled Queue
+        let position_shuffled: (i64,) = sqlx::query_as("SELECT position FROM queue_shuffled WHERE song_id = $1")
+            .bind(&song_id)
+            .fetch_one(&state.pool)
+            .await.unwrap();
+        let _ = sqlx::query("DELETE FROM queue_shuffled WHERE song_id = $1")
+            .bind(&song_id)
+            .execute(&state.pool)
+            .await;
+        let _ = sqlx::query("UPDATE queue_shuffled SET position = position - 1 WHERE position > $1")
+            .bind(&position_shuffled.0)
+            .execute(&state.pool)
+            .await;
+    }
+
+    Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn remove_multiple_songs_from_queue(state: State<AppState, '_>, songs: Vec<SongTable>) -> Result<(), String> {
+
+    let is_shuffled = state.player.lock().unwrap().get_shuffle();
+
+    if is_shuffled == false {
+        let mut test_string: String = "DELETE FROM queue WHERE song_id IN (".to_string();
+        
+        let mut i: usize = 0;
+        for t in &songs {
+            test_string.push_str("'");
+            test_string.push_str(t.path.as_str());
+            test_string.push_str("'");
+            
+            i += 1;
+            if i != songs.len() {
+                test_string.push_str(", ");
+            }
+        }
+        test_string.push_str(")");
+
+        // Remove the songs
+        let _ = sqlx::query(&test_string.as_str())
+            .execute(&state.pool)
+            .await;
+
+        let res: Vec<QueueFormat> = sqlx::query_as::<_, QueueFormat>("SELECT * FROM queue ORDER BY position ASC")
+            .fetch_all(&state.pool)
+            .await
+            .unwrap();
+
+        let mut j: i32 = 0;
+        for item in res {
+            let _ = sqlx::query("UPDATE queue SET position = $1 WHERE song_id = $2")
+                .bind(&j)
+                .bind(&item.song_id)
+                .execute(&state.pool)
+                .await;
+            j += 1;
+        }
+    }
+    else {
+
+        let mut test_string: String = "DELETE FROM queue WHERE song_id IN (".to_string();
+        let mut string_shuffled: String = "DELETE FROM queue_shuffled WHERE song_id IN (".to_string();
+        
+        let mut i: usize = 0;
+        for t in &songs {
+            test_string.push_str("'");
+            test_string.push_str(t.path.as_str());
+            test_string.push_str("'");
+
+            string_shuffled.push_str("'");
+            string_shuffled.push_str(t.path.as_str());
+            string_shuffled.push_str("'");
+            
+            i += 1;
+            if i != songs.len() {
+                test_string.push_str(", ");
+                string_shuffled.push_str(", ");
+            }
+        }
+        test_string.push_str(")");
+        string_shuffled.push_str(")");
+
+        // Remove the songs
+        let _ = sqlx::query(&test_string.as_str())
+            .execute(&state.pool)
+            .await;
+
+        let res: Vec<QueueFormat> = sqlx::query_as::<_, QueueFormat>("SELECT * FROM queue ORDER BY position ASC")
+            .fetch_all(&state.pool)
+            .await
+            .unwrap();
+
+        let mut j: i32 = 0;
+        for item in res {
+            let _ = sqlx::query("UPDATE queue SET position = $1 WHERE song_id = $2")
+                .bind(&j)
+                .bind(item.song_id)
+                .execute(&state.pool)
+                .await;
+            j += 1;
+        }
+
+
+        // ---------------------------------- Shuffled Queue
+        // Remove the songs
+        let _ = sqlx::query(&string_shuffled.as_str())
+            .execute(&state.pool)
+            .await;
+
+        let res_shuffled: Vec<QueueFormat> = sqlx::query_as::<_, QueueFormat>("SELECT * FROM queue_shuffled ORDER BY position ASC")
+            .fetch_all(&state.pool)
+            .await
+            .unwrap();
+
+        j = 0;
+        for item in res_shuffled {
+            let _ = sqlx::query("UPDATE queue_shuffled SET position = $1 WHERE song_id = $2")
+                .bind(&j)
+                .bind(item.song_id)
+                .execute(&state.pool)
+                .await;
+            j += 1;
+        }
+    }
+
+    
+    Ok(())
+}
 
 
 // Create a history of songs played -- no idea what for yet

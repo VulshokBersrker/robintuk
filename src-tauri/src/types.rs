@@ -136,6 +136,12 @@ pub struct DoesExist {
     pub does_exist: bool
 }
 
+#[derive(sqlx::FromRow, Default, Debug, Clone, serde::Serialize)]
+pub struct QueueFormat {
+    pub position: i32,
+    pub song_id: String
+}
+
 // ---------------------------------------- Event Tracker Structs ----------------------------------------
 
 #[derive(Clone, Serialize)]

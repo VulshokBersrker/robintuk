@@ -42,6 +42,25 @@ pub fn player_add_to_queue(state: State<AppState, '_>, queue: Vec<SongTable>) ->
 }
 
 #[tauri::command]
+pub fn player_remove_from_queue(state: State<AppState, '_>, app: tauri::AppHandle, index: usize) -> Result<(), String> {
+    let _ = state.player.lock().unwrap().remove_from_queue(index);    
+
+    update_current_song_played(state, app);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn player_remove_multiple_songs(state: State<AppState, '_>, app: tauri::AppHandle, songs: Vec<SongTable>) -> Result<(), String> {
+
+    for song in songs {
+        let _ = state.player.lock().unwrap().remove_from_queue_by_value(song.path);
+    }
+    update_current_song_played(state, app);
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), ()> {
     state.player.lock().unwrap().clear_queue();
     state.player.lock().unwrap().stop_song();
@@ -458,6 +477,18 @@ pub fn player_get_sink_length(state: State<AppState, '_>) -> Result<usize, Strin
     Ok(state.player.lock().unwrap().get_sink_length())
 }
 
+#[tauri::command]
+pub fn player_get_shuffle(state: State<AppState, '_>) -> Result<bool, String> {
+    Ok(state.player.lock().unwrap().get_shuffle())
+}
+
+#[tauri::command]
+pub fn player_set_shuffle(state: State<AppState, '_>, mode: bool) -> Result<(), String> {
+    let _ = state.player.lock().unwrap().set_shuffle(mode);
+    Ok(())
+}
+
+
 
 // ----------------- Event Listener Commands
 #[tauri::command]
@@ -832,7 +863,7 @@ pub async fn export_playlist(state: State<AppState, '_>, playlist_id: i64, save_
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> Result<bool, String> {  
+pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, file_path: String) -> Result<bool, String> {  
 
     let file_name: String = Path::new(&file_path)
         .file_name()
@@ -856,7 +887,7 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
 
             // If the playlist does not exist, create the playlist
             if does_exist.does_exist == false {
-                let _ = create_playlist(state.clone(), file_name.clone(), vec![], false).await;
+                let _ = create_playlist(state.clone(), app, file_name.clone(), vec![], false).await;
             }
             // If the playlist does exist, replace all the songs in playlist with the one from m3u
             else {

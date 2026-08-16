@@ -52,10 +52,11 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer) file associations
 - [ ] Better DPI aware CSS
-- [ ] Add "Remove from Queue" on Queue page
-- [ ] Add "Select All" to select form
+- [ ] Add "Select All" to select forms
 - [ ] Improve Song Details and Lyrics popup CSS
 - [ ] Update Create Playlist order to improve load time of new playlist creation
+- [x] Add "Are you sure" when deleting a playlist
+- [x] Add "Remove from Queue" on Queue page
 - [x] Drag and Drop playlist order
 - [x] Gapless playback
 
@@ -91,3 +92,6 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
     
 * __My anti-virus calims Robintuk is malware:__ 
     * While this issue is worked on, whitelisting the app should solve any false positives
+
+* __Robintuk loads to white window:__ 
+    * Restarting your computer will fix this issue.

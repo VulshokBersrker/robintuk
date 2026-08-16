@@ -11,7 +11,8 @@ import SimpleBar from "simplebar-react";
 import './details.css';
 
 // Custom Components
-import { GetCurrentSong, PlaylistFull, PlaylistList, playSelection, savePosition, Songs } from "../../globalValues";
+import { GetCurrentSong, PlaylistFull, PlaylistList, savePosition, Songs } from "../../globalValues";
+import SongSelectionBar from '../../components/songSelectionBar';
 import ImageWithFallBack from "../../components/imageFallback";
 import SongDetailsModal from "../../components/songDetails";
 
@@ -47,6 +48,7 @@ export default function PlaylistOverviewPage() {
 
     const [playlist, setPlaylist] = useState<Songs[]>([]);
     const [isEdit, setIsEdit] = useState<boolean>(false);
+    const [isDelete, setIsDelete] = useState<boolean>(false);
     const [currentPlaylistName, setCurrentPlaylistName] = useState<string>("");
 
     const [loading, isLoading] = useState<boolean>(true);
@@ -56,8 +58,8 @@ export default function PlaylistOverviewPage() {
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
 
     // Playlist Values
-    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
-    const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
+    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
+    const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
 
@@ -182,11 +184,13 @@ export default function PlaylistOverviewPage() {
     async function addCustomPlaylistArtwork() {
         let cover_image: string = "";
         try {
-            const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
-            if(file_path !== null) {
-                cover_image = file_path.toString();
-                await invoke("add_playlist_cover", { file_path: file_path.toString(), playlist_name: playlistDetails.name, playlist_id: location.state.name });
-            }
+            if(isEdit) {
+                const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
+                if(file_path !== null) {
+                    cover_image = file_path.toString();
+                    await invoke("add_playlist_cover", { file_path: file_path.toString(), playlist_name: playlistDetails.name, playlist_id: location.state.name });
+                }
+            }            
         }
         catch(err) {
             error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
@@ -239,10 +243,10 @@ export default function PlaylistOverviewPage() {
             const newList = removeFromArray(selection);
             setPlaylist(newList);
             await invoke("remove_multiple_songs_from_playlist", {playlist_id: location.state.name, songs: selection });
-            
         }
         catch (err) {
-            alert(`Failed remove song from playlist: ${err}`);
+            error(`Remove Selected Songs: Failed to remove songs: ${err}`);
+            console.log(`Remove Selected Songs: Failed to remove songs: ${err}`);
         }
     }
 
@@ -270,14 +274,13 @@ export default function PlaylistOverviewPage() {
         }        
     }
     
-    async function addToPlaylist(name: string) {
-        resetContextMenu();
+    async function addToPlaylist(id: number) {
         setDisplayAddToMenu(false);
-        try {
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+        resetContextMenu();
+        try { 
+            await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
         }
         catch(e) {
-            error("Playlist Overview (Error) - Error Adding to Playlist");
             console.log(e);
         }
         finally {
@@ -289,16 +292,13 @@ export default function PlaylistOverviewPage() {
         resetContextMenu();
         setDisplayAddToMenu(false);
         try {
-            await invoke('create_playlist', {name: name});
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
+            clearSelection();
             await invoke('new_playlist_added');
         }
         catch(e) {
             error("Playlist Overview (Error) - Error Creating Playlist");
             console.log(e);
-        }
-        finally {
-            clearSelection();
         }
     }
 
@@ -319,6 +319,47 @@ export default function PlaylistOverviewPage() {
     }
 
     // ------------ Start of Selection Bar Functions ------------
+
+    function updateNewPlaylistName(name: string) {
+        setNewPlaylistName(name);
+    }
+
+    async function playSelection() {
+        try {
+            await invoke('play_selection', {songs: songSelection, shuffled: false});
+            clearSelection();
+            await invoke('update_current_song_played');
+            savePosition(0);
+            // Update the music controls state somehow
+        }
+        catch (err) {
+            error(`Failed to play song: ${err}`);
+            console.log(`Failed to play song: ${err}`);
+        }
+    }
+
+    async function addSelectedToPlaylist(id: number) {
+        setDisplayAddToMenu(false);
+        try {
+            await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
+            clearSelection();
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
+    async function createSelectedPlaylist(name: string) {
+        setDisplayAddToMenu(false);        
+        try {
+            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
+            clearSelection();
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
     
     function editSelection(song: Songs, isBeingAdded: boolean, index: number) {
         // If we are adding to the array of selected songs
@@ -493,62 +534,38 @@ export default function PlaylistOverviewPage() {
                 <div className="album-container">
 
                     {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
+
+                    {/* Warning label on deleting a playlist */}
+                    <div className={`selection-popup-container grid-20 header-font warning ${isDelete ? "open" : "closed"}`}>
+                        <div className="section-14" style={{marginLeft: "15px", marginBottom: "0px"}}>Are you sure you want to delete {playlistDetails.name}?</div>
+                        <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
+                            <button className="d-flex align-items-center red" onClick={deletePlaylist}>
+                                Yes
+                            </button>
+                        </div>
+
+                        <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
+                            <button className="d-flex align-items-center white" onClick={() => setIsDelete(false)}>
+                                No
+                            </button>
+                        </div>
+                    </div>
                     
                     {/* Song Selection Bar */}
-                    <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-6 font-0" style={{marginLeft: "8px"}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
-                        <div className="section-4 position-relative ">
-                            <button className="d-flex align-items-center" onClick={() => { playSelection(songSelection); clearSelection(); }}>
-                                <img src={PlayIcon} />
-                                &nbsp;Play
-                            </button>
-                        </div>
-                        <div className="section-4 position-relative ">
-                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
-                                <img src={AddIcon} />
-                                &nbsp;Add
-                            </button>
-
-                            {displayAddToMenu &&
-                                <div className="playlist-list-container header-font">
-                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
-                                    </div>
-                                    <hr/>
-                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                        <input
-                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
-                                            className="new-playlist" value={newPlaylistName}
-                                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                                        />
-                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
-                                    </span>
-                                    
-                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
-                                        {playlistList?.map((playlist) => {
-                                            if(playlist.id !== location.state.name) {
-                                                return(
-                                                    <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
-                                                        {playlist.name}
-                                                    </div>
-                                                );
-                                            }                                            
-                                        })}
-                                    </SimpleBar>
-                                </div>
-                            }
-                        </div>
-
-                        <div className="section-4 position-relative ">
-                            <button className="d-flex align-items-center"  onClick={() => removeSelectedSongs()}>
-                                <img src={DeselectIcon} />
-                                &nbsp;Remove
-                            </button>
-                        </div>
-
-                        <span className="section-1 vertical-centered cursor-pointer" style={{marginRight: "-15px"}} onClick={clearSelection}> <img src={CloseIcon} /></span>
-                    </div>                    
-                    {/* End of Song Selection Bar */}
+                    <SongSelectionBar
+                        selectionBarType={1}
+                        songSelection={songSelection}
+                        updateNewPlaylistName={updateNewPlaylistName}
+                        addSelectedToPlaylist={addSelectedToPlaylist}
+                        createSelectedPlaylist={createSelectedPlaylist}
+                        clearSelection={clearSelection}
+                        playlistList={playlistList}
+                        removeSelectedSongs={removeSelectedSongs}
+                        play={playSelection}
+                        addToQueue={addToQueue}
+                        currentPlaylistID={location.state.name}
+                    />
+                    
 
                     <div className="top-row">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
@@ -556,9 +573,16 @@ export default function PlaylistOverviewPage() {
                     {/* Playlist Details */}
                     <div className="d-flex">
                         <div className="album-details d-flex">   
-                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
-                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
-                            </div>
+                            {!isEdit &&
+                                <div>
+                                    <ImageWithFallBack image={playlistDetails.image} alt={"playlist image"} image_type={"album"}/>
+                                </div>
+                            }
+                            {isEdit &&
+                                <div onClick={addCustomPlaylistArtwork} className="image-upload">
+                                    <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
+                                </div>
+                            }
                             
 
                             <span style={{paddingLeft: "10px"}} className="grid-15">
@@ -599,7 +623,7 @@ export default function PlaylistOverviewPage() {
                                     <span>
                                         <button
                                             className={`font-1 borderless red ${isEdit ? "" : "display-none"}`}
-                                            onClick={deletePlaylist}
+                                            onClick={() => {setIsDelete(true)}}
                                         >
                                             <img src={DeleteIcon} />
                                         </button>
@@ -831,7 +855,7 @@ type Props = {
     name: string,
     playlistList: PlaylistList[],
     createPlaylist: (name: string) => void,
-    addToPlaylist: (name: string) => void
+    addToPlaylist: (id: number) => void
     addToQueue: () => void,
     updateSongDetailsDisplay: (bool: boolean, path: string) => void,
     ref: any
@@ -913,7 +937,7 @@ function CustomContextMenu({
                                 {playlistList?.map((playlist) => {
                                     if(playlist.name !== name) {
                                         return(
-                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
                                                 {playlist.name}
                                             </div>
                                         );
