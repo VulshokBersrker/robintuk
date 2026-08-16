@@ -42,6 +42,25 @@ pub fn player_add_to_queue(state: State<AppState, '_>, queue: Vec<SongTable>) ->
 }
 
 #[tauri::command]
+pub fn player_remove_from_queue(state: State<AppState, '_>, app: tauri::AppHandle, index: usize) -> Result<(), String> {
+    let _ = state.player.lock().unwrap().remove_from_queue(index);    
+
+    update_current_song_played(state, app);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn player_remove_multiple_songs(state: State<AppState, '_>, app: tauri::AppHandle, songs: Vec<SongTable>) -> Result<(), String> {
+
+    for song in songs {
+        let _ = state.player.lock().unwrap().remove_from_queue_by_value(song.path);
+    }
+    update_current_song_played(state, app);
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn player_setup_queue_and_song(state: State<AppState, '_>, queue: Vec<SongTable>, index: usize) -> Result<(), ()> {
     state.player.lock().unwrap().clear_queue();
     state.player.lock().unwrap().stop_song();
@@ -457,6 +476,18 @@ pub fn player_get_song_pos(state: State<AppState, '_>) -> Result<(), String> {
 pub fn player_get_sink_length(state: State<AppState, '_>) -> Result<usize, String> {
     Ok(state.player.lock().unwrap().get_sink_length())
 }
+
+#[tauri::command]
+pub fn player_get_shuffle(state: State<AppState, '_>) -> Result<bool, String> {
+    Ok(state.player.lock().unwrap().get_shuffle())
+}
+
+#[tauri::command]
+pub fn player_set_shuffle(state: State<AppState, '_>, mode: bool) -> Result<(), String> {
+    let _ = state.player.lock().unwrap().set_shuffle(mode);
+    Ok(())
+}
+
 
 
 // ----------------- Event Listener Commands

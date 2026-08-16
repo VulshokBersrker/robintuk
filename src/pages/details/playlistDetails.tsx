@@ -182,11 +182,13 @@ export default function PlaylistOverviewPage() {
     async function addCustomPlaylistArtwork() {
         let cover_image: string = "";
         try {
-            const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
-            if(file_path !== null) {
-                cover_image = file_path.toString();
-                await invoke("add_playlist_cover", { file_path: file_path.toString(), playlist_name: playlistDetails.name, playlist_id: location.state.name });
-            }
+            if(isEdit) {
+                const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
+                if(file_path !== null) {
+                    cover_image = file_path.toString();
+                    await invoke("add_playlist_cover", { file_path: file_path.toString(), playlist_name: playlistDetails.name, playlist_id: location.state.name });
+                }
+            }            
         }
         catch(err) {
             error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
@@ -239,10 +241,10 @@ export default function PlaylistOverviewPage() {
             const newList = removeFromArray(selection);
             setPlaylist(newList);
             await invoke("remove_multiple_songs_from_playlist", {playlist_id: location.state.name, songs: selection });
-            
         }
         catch (err) {
-            alert(`Failed remove song from playlist: ${err}`);
+            error(`Remove Selected Songs: Failed to remove songs: ${err}`);
+            console.log(`Remove Selected Songs: Failed to remove songs: ${err}`);
         }
     }
 
@@ -270,14 +272,13 @@ export default function PlaylistOverviewPage() {
         }        
     }
     
-    async function addToPlaylist(name: string) {
-        resetContextMenu();
+    async function addToPlaylist(id: number) {
         setDisplayAddToMenu(false);
-        try {
-            await invoke('add_to_playlist', {songs: songSelection, playlist_name: name});
+        resetContextMenu();
+        try { 
+            await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
         }
         catch(e) {
-            error("Playlist Overview (Error) - Error Adding to Playlist");
             console.log(e);
         }
         finally {
@@ -528,7 +529,7 @@ export default function PlaylistOverviewPage() {
                                         {playlistList?.map((playlist) => {
                                             if(playlist.id !== location.state.name) {
                                                 return(
-                                                    <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                                    <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
                                                         {playlist.name}
                                                     </div>
                                                 );
@@ -556,9 +557,17 @@ export default function PlaylistOverviewPage() {
                     {/* Playlist Details */}
                     <div className="d-flex">
                         <div className="album-details d-flex">   
-                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
-                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
-                            </div>
+                            {!isEdit &&
+                                <div>
+                                    <ImageWithFallBack image={playlistDetails.image} alt={"playlist image"} image_type={"album"}/>
+                                </div>
+                            }
+
+                            {isEdit &&
+                                <div onClick={addCustomPlaylistArtwork} className="image-upload">
+                                    <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
+                                </div>
+                            }
                             
 
                             <span style={{paddingLeft: "10px"}} className="grid-15">
@@ -831,7 +840,7 @@ type Props = {
     name: string,
     playlistList: PlaylistList[],
     createPlaylist: (name: string) => void,
-    addToPlaylist: (name: string) => void
+    addToPlaylist: (id: number) => void
     addToQueue: () => void,
     updateSongDetailsDisplay: (bool: boolean, path: string) => void,
     ref: any
@@ -913,7 +922,7 @@ function CustomContextMenu({
                                 {playlistList?.map((playlist) => {
                                     if(playlist.name !== name) {
                                         return(
-                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.name)}>
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
                                                 {playlist.name}
                                             </div>
                                         );

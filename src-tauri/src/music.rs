@@ -1,6 +1,6 @@
 use std::{ fs::File, io::BufReader, time };
 use rodio::{ Decoder, Player };
-use tauri_plugin_log::log;
+use tauri_plugin_log::log::{self, error};
 
 use crate::{ types::SongTable };
 
@@ -18,6 +18,7 @@ pub struct MusicPlayer {
     pub sink: Player,
     pub position: usize,
     pub repeat_mode: i64,
+    pub shuffle_mode: bool,
     pub queue: Vec<SongTable>
 }
 
@@ -30,6 +31,7 @@ impl MusicPlayer {
             sink,
             position: 0,
             repeat_mode: 1,
+            shuffle_mode: false,
             queue: vec![]
         })
     }
@@ -158,6 +160,37 @@ impl MusicPlayer {
         }
     }
 
+    pub fn remove_from_queue(&mut self, index: usize) {
+        // If the song you want to emove is curently playing, skip to next song
+        if self.position == index {
+            self.next_song();
+            self.queue.remove(index);
+            self.position = self.position - 1;
+        }
+        else {
+            if index < self.get_queue_length() {
+                self.queue.remove(index);
+            }
+            else {
+                error!("Remove From Queue: index is out of bounds");
+            }
+        }
+    }
+
+    pub fn remove_from_queue_by_value(&mut self, path: String) {
+        // If the song you want to emove is curently playing, skip to next song
+        if let Some(index) = self.queue.iter().position(|pos| *pos.path == path) {
+            if index == self.position {
+                self.next_song();
+                self.queue.remove(index);
+                self.position = self.position - 1;
+            }
+            else {
+                self.queue.remove(index);
+            }            
+        }
+    }
+
     pub fn get_current_queue(&self) -> &Vec<SongTable> {
         return &self.queue;
     }
@@ -208,7 +241,13 @@ impl MusicPlayer {
         return self.repeat_mode;
     }
 
+    pub fn set_shuffle(&mut self, mode: bool) {
+        self.shuffle_mode = mode;
+    }
 
+    pub fn get_shuffle(&self) -> bool {
+        return self.shuffle_mode;
+    }
     // ------------------- Media Loading / Setup Functions -------------------
     
     pub fn load_song(&mut self, pos: usize) -> Result<(), String> {

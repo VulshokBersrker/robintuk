@@ -1,5 +1,6 @@
 // Core Libraries
 import { useEffect, useRef, useState } from "react";
+import { error } from "@tauri-apps/plugin-log";
 import { useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
@@ -8,6 +9,7 @@ import SimpleBar from "simplebar-react";
 
 // Custom Components
 import { GetCurrentSong, PlaylistList, savePosition, saveSong, Songs } from "../globalValues";
+import SongSelectionBar from "../components/songSelectionBar";
 import ImageWithFallBack from "../components/imageFallback";
 
 // Images
@@ -19,7 +21,6 @@ import PlayIcon from '../images/play-solid-full.svg';
 import ArrowBackIcon from '../images/arrow-left.svg';
 import PlusIcon from '../images/plus-solid-full.svg';
 import CloseIcon from '../images/x.svg';
-import { error } from "@tauri-apps/plugin-log";
 
 export default function QueueOverviewPage() {
 
@@ -123,8 +124,58 @@ export default function QueueOverviewPage() {
         }
     }
 
+    async function playSelection() {
+        try {
+            await invoke('play_selection', {songs: songSelection, shuffled: false});
+            await invoke('update_current_song_played');
+            savePosition(0);
+            // Update the music controls state somehow
+        }
+        catch (err) {
+            error(`Failed to play song: ${err}`);
+            console.log(`Failed to play song: ${err}`);
+        }
+    }
+
+    async function removeFromQueue(index: number) {
+        try {
+            await invoke('remove_from_queue', {song_id: queue[index].path});
+            await invoke('player_remove_from_queue', {index: index});
+
+            setQueue(queue.filter(function(_pos, inner_index) {
+                return inner_index != index;
+            }));
+        }
+        catch (err) {
+            error(`Failed to remove song from queue: ${err}`);
+            console.log(`Failed to remove song from queue: ${err}`);
+        }
+    }
+
+    async function removeSelectedSongs() {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
+        try {
+            const selection = songSelection;
+            clearSelection();
+            const newList = removeFromArray(selection);
+            setQueue(newList);
+            await invoke("remove_multiple_songs_from_queue", { songs: selection });
+            await invoke("player_remove_multiple_songs", { songs: selection });
+        }
+        catch (err) {
+            error(`Failed to remove song from queue: ${err}`);
+            console.log(`Failed to remove song from queue: ${err}`);
+        }
+    }
+
+    function removeFromArray(args: Songs[]) {
+        return queue.filter(e => !args.some(j => j.path === e.path));
+    }
+
     // ------------ Selection Bar Functions ------------
     function editSelection(song: Songs, isBeingAdded: boolean) {
+        setDisplayAddToMenu(false);
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
             // Append to the array
@@ -150,6 +201,7 @@ export default function QueueOverviewPage() {
         }
         fetchData();        
     }, []);
+
     
     async function addToPlaylist(id: number) {
         setDisplayAddToMenu(false);
@@ -212,6 +264,12 @@ export default function QueueOverviewPage() {
         }
     }
 
+    function updateNewPlaylistName(name: string) {
+        setNewPlaylistName(name);
+    }
+
+    function addToQueue() {}
+
     // ------------ End of Selection Bar Functions ------------
 
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
@@ -254,7 +312,21 @@ export default function QueueOverviewPage() {
                     </div>
 
                     {/* Song Selection Bar */}
-                    <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
+                    <SongSelectionBar
+                        selectionBarType={0}
+                        songSelection={songSelection}
+                        updateNewPlaylistName={updateNewPlaylistName}
+                        addSelectedToPlaylist={addSelectedToPlaylist}
+                        createSelectedPlaylist={createSelectedPlaylist}
+                        clearSelection={clearSelection}
+                        playlistList={playlistList}
+                        removeSelectedSongs={removeSelectedSongs}
+                        play={playSelection}
+                        addToQueue={addToQueue}
+                        currentPlaylistID={0}
+                    />
+
+                    {/* <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
                         <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
                         <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
                         <div className="section-6 position-relative">
@@ -284,7 +356,7 @@ export default function QueueOverviewPage() {
                             }
                         </div>
                         <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                    </div>                    
+                    </div>                     */}
                     {/* End of Song Selection Bar */}
 
                     {/* Queue Details */}
@@ -319,7 +391,7 @@ export default function QueueOverviewPage() {
                                                             <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
                                                                 {playlist.name}
                                                             </div>
-                                                        );                                
+                                                        );
                                                     })}
                                                 </SimpleBar>
                                             </div>
@@ -361,6 +433,7 @@ export default function QueueOverviewPage() {
                                                     <input
                                                         type="checkbox" id={`select-${index}`} name={`select-${index}`}
                                                         onClick={(e) => editSelection(queue[index], e.currentTarget.checked)}
+                                                        onChange={() => {}}
                                                         checked={songSelection.filter(x => {
                                                             return x.path === queue[index].path
                                                         }).length > 0}
@@ -390,6 +463,7 @@ export default function QueueOverviewPage() {
                     album={contextMenu.album}
                     artist={contextMenu.artist}
                     playSong={playSong}
+                    removeFromQueue={removeFromQueue}
                     posX={contextMenu.posX}
                     posY={contextMenu.posY}
                     ref={isContextMenuOpen}
@@ -408,6 +482,7 @@ type Props = {
     index: number,
     artist: string,
     playSong: (index: number) => void,
+    removeFromQueue: (index: number) => void,
     posX: number,
     posY: number,
     ref: any,
@@ -415,7 +490,7 @@ type Props = {
 }
 
 function CustomContextMenu({ 
-    isToggled, index, album, artist, playSong, posX, posY, ref, resetContextMenu
+    isToggled, index, album, artist, playSong, removeFromQueue, posX, posY, ref, resetContextMenu
 }: Props) {
 
     const navigate = useNavigate();
@@ -448,6 +523,12 @@ function CustomContextMenu({
                 <li onClick={() => { playSong(index); resetContextMenu(); }} className="d-flex align-items-center" >
                     <span className="d-flex context-row">
                         <img src={PlayIcon} />  &nbsp; Play
+                    </span>
+                </li>
+
+                <li onClick={() => { removeFromQueue(index); resetContextMenu(); }} className="d-flex align-items-center" >
+                    <span className="d-flex context-row">
+                        <img src={CloseIcon} />  &nbsp; Remove
                     </span>
                 </li>
 

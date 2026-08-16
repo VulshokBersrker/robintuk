@@ -136,44 +136,6 @@ input[type="checkbox"]:disabled {
   cursor: not-allowed;
 }
 
-.selection-popup-container {
-  z-index: 98;
-  position: fixed;
-  border-radius: var(--border-radius);
-  left: 55%;
-  transform: translateX(-50%);
-  width: 35rem;
-  height: 3.5rem;
-  background-color: var(--gradient-two);
-  border: 2px solid var(--font-color-three);
-  align-items: center;
-  align-content: center;
-}
-
-
-.selection-popup-container.closed {
-  opacity: 0;
-  top: -100px;
-  transition: 0.0s ease-in-out;
-}
-
-.selection-popup-container.open {
-  opacity: 1;
-  top: 55px;
-  transition: 0.2s ease-in-out;
-}
-
-.selection-popup-container div {
-  margin-left: 0px;
-}
-.selection-popup-container span {
-  margin-right: 25px;
-}
-.selection-popup-container img {
-  height: 20px;
-  width: 20px;
-}
-
 button img {
   height: 18px;
   width: 18px;

@@ -49,13 +49,14 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 ## To Do Features
 
 - [ ] Improve Backup and Restore functions
+- [ ] Add "Are you sure" when deleting a playlist
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer) file associations
 - [ ] Better DPI aware CSS
-- [ ] Add "Remove from Queue" on Queue page
-- [ ] Add "Select All" to select form
+- [ ] Add "Select All" to select forms
 - [ ] Improve Song Details and Lyrics popup CSS
 - [ ] Update Create Playlist order to improve load time of new playlist creation
+- [x] Add "Remove from Queue" on Queue page
 - [x] Drag and Drop playlist order
 - [x] Gapless playback
 

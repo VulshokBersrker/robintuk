@@ -253,11 +253,13 @@ export default function MusicControls() {
                     setIsShuffle(false);
                     // Index of the current song
                     await invoke("shuffle_queue", { song: songDetails.path, shuffled: false });
+                    await invoke("player_set_shuffle", { mode: false });
                 }
                 else if(!isShuffle && songDetails !== undefined) {
                     setIsShuffle(true);
                     // Index of the current song
                     await invoke("shuffle_queue", { song: songDetails.path, shuffled: true });
+                    await invoke("player_set_shuffle", { mode: true });
                 }
                 localStorage.setItem("shuffle-mode", JSON.stringify(!isShuffle));
             }
