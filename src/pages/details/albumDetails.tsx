@@ -11,6 +11,7 @@ import './details.css';
 // Custom Components
 import { GetCurrentSong, savePosition, Songs, PlaylistList } from "../../globalValues";
 import CustomContextMenu from "../../components/customContextMenu";
+import SongSelectionBar from "../../components/songSelectionBar";
 import ImageWithFallBack from "../../components/imageFallback";
 import SongDetailsModal from "../../components/songDetails";
 
@@ -21,7 +22,6 @@ import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import PlayIcon from '../../images/play-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
-import CloseIcon from '../../images/x.svg';
 
 
 interface AlbumDetails {
@@ -296,6 +296,26 @@ export default function AlbumOverviewPage() {
         }
     }
 
+    function updateNewPlaylistName(name: string) {
+        setNewPlaylistName(name);
+    }
+
+    async function playSelection() {
+        try {
+            await invoke('play_selection', {songs: songSelection, shuffled: false});
+            clearSelection();
+            await invoke('update_current_song_played');
+            savePosition(0);
+            // Update the music controls state somehow
+        }
+        catch (err) {
+            error(`Failed to play song: ${err}`);
+            console.log(`Failed to play song: ${err}`);
+        }
+    }
+
+    function removeSelectedSongs() { }
+
     // ------------ End of Selection Bar Functions ------------
 
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
@@ -334,48 +354,22 @@ export default function AlbumOverviewPage() {
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
                 <div className="album-container">
 
-                    {/* Song Selection Bar */}
-                    <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8" style={{marginLeft: '10px'}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
-                        <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
-                        <div className="section-6 position-relative">
-                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
-                                <img src={AddIcon} />
-                                &nbsp;Add to
-                            </button>
-                            {displayAddToMenu &&
-                                <div className="playlist-list-container header-font">
-                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
-                                    </div>
-                                    <hr/>
-                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                        <input
-                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
-                                            className="new-playlist" value={newPlaylistName}
-                                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                                        />
-                                        <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
-                                    </span>
-                                    
-                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
-                                        {playlistList?.map((playlist) => {
-                                            return(
-                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                    {playlist.name}
-                                                </div>
-                                            );                                                                                      
-                                        })}
-                                    </SimpleBar>
-                                </div>
-                            }
-                        </div>
-                        <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                    </div>                    
-                    {/* End of Song Selection Bar */}
-
                     {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
                     
+                    {/* Song Selection Bar */}
+                    <SongSelectionBar
+                        selectionBarType={2}
+                        songSelection={songSelection}
+                        updateNewPlaylistName={updateNewPlaylistName}
+                        addSelectedToPlaylist={addSelectedToPlaylist}
+                        createSelectedPlaylist={createSelectedPlaylist}
+                        clearSelection={clearSelection}
+                        playlistList={playlistList}
+                        removeSelectedSongs={removeSelectedSongs}
+                        play={playSelection}
+                        addToQueue={addToQueue}
+                        currentPlaylistID={-1}
+                    />
                     
                     <div>
                         <div className="d-flex top-row justify-content-between">
@@ -595,44 +589,19 @@ export default function AlbumOverviewPage() {
                 <div className="album-container">
 
                     {/* Song Selection Bar */}
-                    <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8 font-0" style={{marginLeft: '10px'}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
-                        <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
-                        <div className="section-6 position-relative">
-                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
-                                <img src={AddIcon} />
-                                &nbsp;Add to
-                            </button>
-                            {displayAddToMenu && songSelection.length >= 1 &&
-                                <div className="playlist-list-container header-font">
-                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
-                                    </div>
-                                    <hr/>
-                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                        <input
-                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
-                                            className="new-playlist" value={newPlaylistName}
-                                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                                        />
-                                        <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
-                                    </span>
-                                    
-                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
-                                        {playlistList?.map((playlist) => {
-                                            return(
-                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                    {playlist.name}
-                                                </div>
-                                            );                                                                                      
-                                        })}
-                                    </SimpleBar>
-                                </div>
-                            }
-                        </div>
-                        <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                    </div>                    
-                    {/* End of Song Selection Bar */}
+                    <SongSelectionBar
+                        selectionBarType={2}
+                        songSelection={songSelection}
+                        updateNewPlaylistName={updateNewPlaylistName}
+                        addSelectedToPlaylist={addSelectedToPlaylist}
+                        createSelectedPlaylist={createSelectedPlaylist}
+                        clearSelection={clearSelection}
+                        playlistList={playlistList}
+                        removeSelectedSongs={removeSelectedSongs}
+                        play={playSelection}
+                        addToQueue={addToQueue}
+                        currentPlaylistID={-1}
+                    />
                     
                     {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
                     

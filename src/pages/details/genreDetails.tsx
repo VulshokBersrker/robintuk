@@ -9,6 +9,7 @@ import './details.css';
 
 // Custom Components
 import { GenreDetails, PlaylistList, playSelection, savePosition, Songs } from "../../globalValues";
+import SongSelectionBar from "../../components/songSelectionBar";
 import ImageWithFallBack from "../../components/imageFallback";
 
 // Images
@@ -22,7 +23,7 @@ import PlayIcon from '../../images/play-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import Circle from '../../images/circle.svg';
-import CloseIcon from '../../images/x.svg';
+
 
 // Add To needs to be added
 
@@ -37,7 +38,7 @@ export default function GenreOverviewPage() {
     const [loading, isLoading] = useState<boolean>(false);
     const [genreDetails, setGenreDetails] = useState<GenreDetails>({ total_duration: 0, genre: "", albums: [], num_tracks: 0});
 
-    const [genreSelection, setGenreSelection] = useState<String[]>([]);
+    const [genreSelection, setGenreSelection] = useState<string[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
 
     // Playlist Values
@@ -110,7 +111,7 @@ export default function GenreOverviewPage() {
     }
 
     // Selection Function
-    function editSelection(album: String, isBeingAdded: boolean, index: number) {
+    function editSelection(album: string, isBeingAdded: boolean, index: number) {
         resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
@@ -269,6 +270,12 @@ export default function GenreOverviewPage() {
             console.log(e);
         }      
     }
+
+    function updateNewPlaylistName(name: string) {
+        setNewPlaylistName(name);
+    }
+
+    function removeSelectedSongs() {}
     // ------------ End of Selection Bar Functions ------------
 
     function handleContextMenu(e: any, album: string, artist: string, index: number) {
@@ -311,50 +318,19 @@ export default function GenreOverviewPage() {
                     </div>
 
                     {/* Song Selection Bar */}
-                    <div className={`selection-popup-container grid-20 header-font ${genreSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8" style={{marginLeft: '10px'}}>{genreSelection.length} item{genreSelection.length > 1 && <>s</>} selected</div>
-                        <div className="section-4">
-                            <button className="d-flex align-items-center" onClick={playSelectedAlbums}>
-                                <img src={PlayIcon} />
-                                &nbsp;Play
-                            </button>
-                        </div>                        
-                        <div className="section-6 position-relative">
-                            <button className="d-flex align-items-center"onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
-                                <img src={AddIcon} />
-                                &nbsp;Add to
-                            </button>
-                            {displayAddToMenu && genreSelection.length >= 1 &&
-                                <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 20%)" : "translate(-43%, 8%)"}}>
-                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon-size"/>
-                                        <span>&nbsp;Queue</span>
-                                    </div>
-                                    <hr/>
-                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                        <input
-                                            id="new_playlist_input" type="text" placeholder="New Playlist"
-                                            className="new-playlist" value={newPlaylistName}
-                                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                                        />
-                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
-                                    </span>
-                                    
-                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
-                                        {playlistList?.map((playlist) => {
-                                            return(
-                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                    {playlist.name}
-                                                </div>
-                                            );                                                                                      
-                                        })}
-                                    </SimpleBar>
-                                </div>
-                            }
-                        </div>
-                        <span className="vertical-centered section-2 cursor-pointer" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                    </div>                    
-                    {/* End of Song Selection Bar */}
+                    <SongSelectionBar
+                        selectionBarType={3}
+                        songSelection={genreSelection}
+                        updateNewPlaylistName={updateNewPlaylistName}
+                        addSelectedToPlaylist={addSelectedToPlaylist}
+                        createSelectedPlaylist={createPlaylist}
+                        clearSelection={clearSelection}
+                        playlistList={playlistList}
+                        removeSelectedSongs={removeSelectedSongs}
+                        play={playSelectedAlbums}
+                        addToQueue={addToQueue}
+                        currentPlaylistID={-1}
+                    />
 
                     {/* Album Details */}
                     <div className="d-flex">

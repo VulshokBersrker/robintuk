@@ -15,7 +15,7 @@ import CloseIcon from '../images/x.svg';
 
 type Props = {
     selectionBarType: number,
-    songSelection: Songs[],
+    songSelection: Songs[] | string[],
     play: () => void,
     addToQueue: () => void,
     updateNewPlaylistName: (name: string) => void,
@@ -61,8 +61,8 @@ export default function SongSelectionBar({
                     </button>
 
                     {displayAddToMenu &&
-                        <div className="playlist-list-container header-font">
-                            {selectionBarType === 1 && <div className="item d-flex align-items-center" onClick={addToQueue}>
+                        <div className={`playlist-list-container header-font ${selectionBarType === 0? "queue" : ""}`}>
+                            {selectionBarType === 1 && <div className="item d-flex align-items-center" onClick={() => {setDisplayAddToMenu(false); addToQueue()}}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>}
                             <hr/>
@@ -72,7 +72,7 @@ export default function SongSelectionBar({
                                     className="new-playlist" value={newPlaylistName}
                                     onChange={(e) => setNewPlaylistName(e.target.value)}
                                 />
-                                <span><button onClick={() => {setDisplayAddToMenu(false); createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
+                                <span><button onClick={() => {setDisplayAddToMenu(false); setNewPlaylistName(""); createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
                             </span>
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
@@ -101,17 +101,17 @@ export default function SongSelectionBar({
         );
     }
     // Album Bar
-    else if(selectionBarType === 2) {
+    else if(selectionBarType === 2 || selectionBarType === 3) {
         return(
             <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                <div className="section-6 font-0 border" style={{marginLeft: "8px"}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
-                <div className="section-4 position-relative border">
-                    <button className="d-flex align-items-center" onClick={() => { play(); }}>
+                <div className="section-8 font-0" style={{marginLeft: "8px"}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
+                <div className="section-5 position-relative">
+                    <button className="d-flex align-items-center" onClick={() => { setDisplayAddToMenu(false); play(); }}>
                         <img src={PlayIcon} />
                         &nbsp;Play
                     </button>
                 </div>
-                <div className="section-4 position-relative border">
+                <div className="section-5 position-relative">
                     <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
                         <img src={AddIcon} />
                         &nbsp;Add
@@ -119,7 +119,7 @@ export default function SongSelectionBar({
 
                     {displayAddToMenu &&
                         <div className="playlist-list-container header-font">
-                            <div className="item d-flex align-items-center" onClick={addToQueue}>
+                            <div className="item d-flex align-items-center" onClick={() => {setDisplayAddToMenu(false); addToQueue()}}>
                                 <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
                             </div>
                             <hr/>
@@ -129,14 +129,14 @@ export default function SongSelectionBar({
                                     className="new-playlist" value={newPlaylistName}
                                     onChange={(e) => setNewPlaylistName(e.target.value)}
                                 />
-                                <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
+                                <span><button onClick={() => {setDisplayAddToMenu(false); setNewPlaylistName(""); createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
                             </span>
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
                                 {playlistList?.map((playlist) => {
                                     if(playlist.id !== currentPlaylistID) {
                                         return(
-                                            <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
+                                            <div className="item" key={playlist.name} onClick={() => {setDisplayAddToMenu(false); addSelectedToPlaylist(playlist.id);}}>
                                                 {playlist.name}
                                             </div>
                                         );
@@ -147,7 +147,7 @@ export default function SongSelectionBar({
                     }
                 </div>
                 
-                <span className="section-2 clear-selection border" onClick={clearSelection}> <img src={CloseIcon} /></span>
+                <span className="section-2 clear-selection" onClick={clearSelection}> <img src={CloseIcon} /></span>
             </div>  
         );
     }

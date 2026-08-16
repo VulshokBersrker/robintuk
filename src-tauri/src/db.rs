@@ -659,7 +659,7 @@ pub async fn get_playlists_with_limit(state: State<AppState, '_>, limit: i64) ->
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn create_playlist(state: State<AppState, '_>, name: String, songs: Vec<SongTable>, songs_to_add: bool) -> Result<(), String> {
+pub async fn create_playlist(state: State<AppState, '_>, app: tauri::AppHandle, name: String, songs: Vec<SongTable>, songs_to_add: bool) -> Result<(), String> {
 
     if songs_to_add == true {
         sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
@@ -667,6 +667,8 @@ pub async fn create_playlist(state: State<AppState, '_>, name: String, songs: Ve
             .execute(&state.pool)
             .await
             .unwrap();
+
+        let _ = commands::new_playlist_added(state.clone(), app).await;
 
         let id: (i64,) = sqlx::query_as("SELECT id FROM playlists WHERE name=$1;")
             .bind(&name)

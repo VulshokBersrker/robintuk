@@ -323,41 +323,8 @@ export default function QueueOverviewPage() {
                         removeSelectedSongs={removeSelectedSongs}
                         play={playSelection}
                         addToQueue={addToQueue}
-                        currentPlaylistID={0}
+                        currentPlaylistID={-1}
                     />
-
-                    {/* <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8">{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
-                        <div className="section-4 position-relative"><button className="d-flex align-items-center"><img src={PlayIcon} /> &nbsp;Play</button></div>
-                        <div className="section-6 position-relative">
-                            <button onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>Add to</button>
-                            {displayAddToMenu && songSelection.length >= 1 &&
-                                <div className="playlist-list-container add-context-menu header-font">
-                                    <hr/>
-                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                        <input
-                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
-                                            className="new-playlist" value={newPlaylistName}
-                                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                                        />
-                                        <span><button onClick={() => {createSelectedPlaylist(newPlaylistName)}}>Create</button></span>
-                                    </span>
-                                    
-                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
-                                        {playlistList?.map((playlist) => {
-                                            return(
-                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                    {playlist.name}
-                                                </div>
-                                            );                                                                                      
-                                        })}
-                                    </SimpleBar>
-                                </div>
-                            }
-                        </div>
-                        <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                    </div>                     */}
-                    {/* End of Song Selection Bar */}
 
                     {/* Queue Details */}
                     <div className="d-flex">

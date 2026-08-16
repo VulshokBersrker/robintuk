@@ -863,7 +863,7 @@ pub async fn export_playlist(state: State<AppState, '_>, playlist_id: i64, save_
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> Result<bool, String> {  
+pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, file_path: String) -> Result<bool, String> {  
 
     let file_name: String = Path::new(&file_path)
         .file_name()
@@ -887,7 +887,7 @@ pub async fn import_playlist(state: State<AppState, '_>, file_path: String) -> R
 
             // If the playlist does not exist, create the playlist
             if does_exist.does_exist == false {
-                let _ = create_playlist(state.clone(), file_name.clone(), vec![], false).await;
+                let _ = create_playlist(state.clone(), app, file_name.clone(), vec![], false).await;
             }
             // If the playlist does exist, replace all the songs in playlist with the one from m3u
             else {

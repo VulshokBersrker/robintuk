@@ -1,12 +1,14 @@
 import { VirtuosoGrid, VirtuosoGridHandle } from 'react-virtuoso';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from "react";
+import { error } from '@tauri-apps/plugin-log';
 import { invoke } from '@tauri-apps/api/core';
 import SimpleBar from 'simplebar-react';
 import { forwardRef } from 'react';
 
 // Custom Components
-import { Songs, savePosition, PlaylistList, playSelection, AlbumDetails, alphabeticallyOrdered } from "../globalValues";
+import { Songs, savePosition, PlaylistList, AlbumDetails, alphabeticallyOrdered } from "../globalValues";
+import SongSelectionBar from '../components/songSelectionBar';
 import ImageWithFallBack from "../components/imageFallback.js";
 
 // Images
@@ -20,7 +22,6 @@ import PlayIcon from '../images/play-solid-full.svg';
 import AddIcon from '../images/plus-solid-full.svg';
 import SearchIcon from '../images/search_icon.svg';
 import Circle from '../images/circle.svg';
-import CloseIcon from '../images/x.svg';
 
 
 type P = {
@@ -43,13 +44,13 @@ export default function AlbumPage({albums}: P) {
     const [filteredAlbums, setFilteredAlbums] = useState<AlbumDetails[]>(albums);
     const [albumSections, setAlbumSections] = useState<number[]>([]);    
 
-    const [albumSelection, setAlbumSelection] = useState<String[]>([]);
+    const [albumSelection, setAlbumSelection] = useState<string[]>([]);
     const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
     // Playlist Values
-    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
-    const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
+    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
+    const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
     useEffect(() => {
@@ -148,8 +149,14 @@ export default function AlbumPage({albums}: P) {
     }
 
     // ------------ Start of Selection Bar Functions ------------
+
+    function updateNewPlaylistName(name: string) {
+        setNewPlaylistName(name);
+    }
+
+    function removeSelectedSongs() { }
     
-    function editSelection(album: String, isBeingAdded: boolean) {
+    function editSelection(album: string, isBeingAdded: boolean) {
         resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
@@ -258,14 +265,16 @@ export default function AlbumPage({albums}: P) {
                 const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { name: albumSelection[i] });
                 albums_songs_arr = albums_songs_arr.concat(temp_arr);
             }
-            playSelection(albums_songs_arr);
+            clearSelection();
+            await invoke('play_selection', {songs: albums_songs_arr, shuffled: false});
+            await invoke('update_current_song_played');
+            savePosition(0);
+            // Update the music controls state somehow
         }
         catch(e) {
             console.log(e);
-        }
-        finally {
-            clearSelection();
-        }        
+            error(`Play Selected Albums: ${e}`);
+        }   
     }
 
 
@@ -312,51 +321,20 @@ export default function AlbumPage({albums}: P) {
         return(
             <div>
                 {/* Song Selection Bar */}
-                <div className={`selection-popup-container grid-20 header-font ${albumSelection.length >= 1 ? "open" : "closed"}`}>
-                    <div className="section-8" style={{marginLeft: "15px"}}>{albumSelection.length} item{albumSelection.length > 1 && <>s</>} selected</div>
-                    <div className="section-4 position-relative">
-                        <button className="d-flex align-items-center" onClick={playSelectedAlbums}>
-                            <img src={PlayIcon} />
-                            &nbsp;Play
-                        </button>
-                    </div>
-                    <div className="section-6 position-relative">
-                        <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
-                            <img src={AddIcon} />
-                             &nbsp;Add to
-                        </button>
-                        {displayAddToMenu && albumSelection.length >= 1 &&
-                            <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 20%)" : "translate(-43%, 8%)"}}>
-                                <div className="item d-flex align-items-center" onClick={addToQueue}>
-                                    <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
-                                </div>
-                                <hr/>
-                                <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                    <input
-                                        id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
-                                        className="new-playlist" value={newPlaylistName}
-                                        onChange={(e) => setNewPlaylistName(e.target.value)}
-                                    />
-                                    <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
-                                </span>
-                                
-                                <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container" 
-                                    style={{height: playlistList.length === 0 ? "0px" : "" }}
-                                >
-                                    {playlistList?.map((playlist) => {
-                                        return(
-                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
-                                                {playlist.name}
-                                            </div>
-                                        );                                                                                      
-                                    })}
-                                </SimpleBar>
-                            </div>
-                        }
-                    </div>
-                    <span className="section-2" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                </div>                    
-                {/* End of Song Selection Bar */}
+                <SongSelectionBar
+                    selectionBarType={3}
+                    songSelection={albumSelection}
+                    updateNewPlaylistName={updateNewPlaylistName}
+                    addSelectedToPlaylist={addToPlaylist}
+                    createSelectedPlaylist={createPlaylist}
+                    clearSelection={clearSelection}
+                    playlistList={playlistList}
+                    removeSelectedSongs={removeSelectedSongs}
+                    play={playSelectedAlbums}
+                    addToQueue={addToQueue}
+                    currentPlaylistID={-1}
+                />
+                
 
                 <div className="section-list">
                     {albumList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
