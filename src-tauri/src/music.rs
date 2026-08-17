@@ -1,8 +1,9 @@
 use std::{ fs::File, io::BufReader, time };
 use rodio::{ Decoder, Player };
+use tauri::State;
 use tauri_plugin_log::log::{self, error};
 
-use crate::{ types::SongTable };
+use crate::{ AppState, commands, types::SongTable };
 
 /*
 Current Errors:
@@ -160,34 +161,46 @@ impl MusicPlayer {
         }
     }
 
-    pub fn remove_from_queue(&mut self, index: usize) {
+    pub fn remove_from_queue(&mut self, index: usize, state: State<'_, AppState>, app: tauri::AppHandle) {
         // If the song you want to emove is curently playing, skip to next song
         if self.position == index {
             self.next_song();
             self.queue.remove(index);
             self.position = self.position - 1;
+            commands::update_current_song_played(state, app);
         }
-        else {
-            if index < self.get_queue_length() {
-                self.queue.remove(index);
-            }
-            else {
-                error!("Remove From Queue: index is out of bounds");
-            }
+        else if self.queue.len() < index {
+            error!("Remove From Queue: index is out of bounds: {:?} - {:?}", &self.position, index);
+        }
+        else if self.position < index {
+            self.queue.remove(index);
+        }
+        else if self.position > index {
+            self.queue.remove(index);
+            self.position = self.position - 1;
         }
     }
 
     pub fn remove_from_queue_by_value(&mut self, path: String) {
         // If the song you want to emove is curently playing, skip to next song
         if let Some(index) = self.queue.iter().position(|pos| *pos.path == path) {
-            if index == self.position {
-                self.next_song();
+            println!("---------------------\nQueue Length: {:?} - Position: {:?} - Index: {:?}", &self.queue.len(), &self.position, &index);
+            if self.position == index {
+                // self.next_song();
                 self.queue.remove(index);
                 self.position = self.position - 1;
             }
-            else {
+            else if self.queue.len() < index {
+                error!("Remove From Queue: index is out of bounds: {:?} - {:?}", &self.position, index);
+            }
+            else if self.position < index {
                 self.queue.remove(index);
-            }            
+            }
+            else if self.position > index {
+                self.queue.remove(index);
+                self.position = self.position - 1;
+            }
+            println!("Queue Length: {:?} - Position: {:?} - Index: {:?}", &self.queue.len(), &self.position, &index);
         }
     }
 

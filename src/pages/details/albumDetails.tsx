@@ -437,16 +437,30 @@ export default function AlbumOverviewPage() {
                                     let totalIndex = 0;
                                     for(let j = 1; j < discGroups.length; j++) {                                        
                                         if(totalIndex === index) {
-                                            
                                             return(
                                                 <>
                                                     <div className="grid-20 position-relative" style={{marginTop: '20px'}}>
                                                         <span className="section-20 header-font font-3" key={j}>Disc {j}</span>
-                                                        <span className="section-1" style={{width: '68px'}}>&nbsp;</span>
-                                                        <span className="section-1 track details">#</span>
-                                                        <span className="section-9 details">Name</span>
-                                                        <span className="section-8 details">Artist</span>
-                                                        <span className="section-1 details">Length</span>
+                                                        <span className="section-1 vertical-centered details" style={{width: '68px'}}>
+                                                            {j == 1 &&
+                                                                <span className="select-all-container">
+                                                                    <input
+                                                                        type="checkbox" id={`select-all`} name={`select-all`}
+                                                                        className="select-all-checkbox"
+                                                                        onClick={() => { 
+                                                                            if(songSelection.length != albumList.length) { setSongSelection(albumList); }
+                                                                            else { setSongSelection([]); }
+                                                                        }}
+                                                                        onChange={() => {}}
+                                                                        checked={songSelection.length == albumList.length}
+                                                                    />
+                                                                </span>
+                                                            }
+                                                        </span>
+                                                        <span className="section-1 vertical-centered track details">#</span>
+                                                        <span className="section-9 vertical-centered details">Name</span>
+                                                        <span className="section-8 vertical-centered details">Artist</span>
+                                                        <span className="section-1 vertical-centered details">Length</span>
                                                     </div>
                                                     <hr />
                                                     <div key={index} >
@@ -463,7 +477,9 @@ export default function AlbumOverviewPage() {
                                                                         type="checkbox" id={`select-${index}`} name={`select-${index}`}
                                                                         onClick={(e) => editSelection(albumList[index], e.currentTarget.checked, index)}
                                                                         onChange={() => {}}
-                                                                        checked={checkBoxNumber[index]}
+                                                                        checked={songSelection.filter(x => {
+                                                                            return x.path === albumList[index].path
+                                                                        }).length > 0}
                                                                     />
                                                                 </span>
                                                                 <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />
@@ -482,12 +498,25 @@ export default function AlbumOverviewPage() {
                                             return(
                                                 <>
                                                     <div className="grid-20 position-relative">
-                                                        <span className="section-20 header-font font-3" key={1}>Disc {1}</span>
-                                                        <span className="section-1" style={{width: '68px'}}>&nbsp;</span>
-                                                        <span className="section-1 track details">#</span>
-                                                        <span className="section-9 details">Name</span>
-                                                        <span className="section-8 details">Artist</span>
-                                                        <span className="section-1 details">Length</span>
+                                                        <span className="section-20 header-font font-3" key={1}>Disc 1</span>
+                                                        <span className="section-1 vertical-centered" style={{width: '68px'}}>
+                                                            <span className="select-all-container" style={{paddingRight: '3px'}}>
+                                                                <input
+                                                                    type="checkbox" id={`select-all`} name={`select-all`}
+                                                                    className="select-all-checkbox"
+                                                                    onClick={() => { 
+                                                                        if(songSelection.length != albumList.length) { setSongSelection(albumList); }
+                                                                        else { setSongSelection([]); }
+                                                                    }}
+                                                                    onChange={() => {}}
+                                                                    checked={songSelection.length == albumList.length}
+                                                                />
+                                                            </span>
+                                                        </span>
+                                                        <span className="section-1 vertical-centered track details">#</span>
+                                                        <span className="section-9 vertical-centered details">Name</span>
+                                                        <span className="section-8 vertical-centered details">Artist</span>
+                                                        <span className="section-1 vertical-centered details">Length</span>
                                                     </div>
                                                     <hr />
                                                     <div key={index} >
@@ -504,7 +533,9 @@ export default function AlbumOverviewPage() {
                                                                         type="checkbox" id={`select-${index}`} name={`select-${index}`}
                                                                         onClick={(e) => editSelection(albumList[index], e.currentTarget.checked, index)}
                                                                         onChange={() => {}}
-                                                                        checked={checkBoxNumber[index]}
+                                                                        checked={songSelection.filter(x => {
+                                                                            return x.path === albumList[index].path
+                                                                        }).length > 0}
                                                                     />
                                                                 </span>
                                                                 <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />
@@ -536,7 +567,9 @@ export default function AlbumOverviewPage() {
                                                             type="checkbox" id={`select-${index}`} name={`select-${index}`}
                                                             onClick={(e) => editSelection(albumList[index], e.currentTarget.checked, index)}
                                                             onChange={() => {}}
-                                                            checked={checkBoxNumber[index]}
+                                                            checked={songSelection.filter(x => {
+                                                                return x.path === albumList[index].path
+                                                            }).length > 0}
                                                         />
                                                     </span>
                                                     <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />
@@ -667,11 +700,24 @@ export default function AlbumOverviewPage() {
                     <div className="song-list">
                         <>
                             <div className="grid-20 position-relative">
-                                <span className="section-1" style={{width: '68px'}}>&nbsp;</span>
-                                <span className="section-1 track details">#</span>
-                                <span className="section-9 details">Name</span>
-                                <span className="section-8 details">Artist</span>
-                                <span className="section-1 details">Length</span>
+                                <span className="section-1 vertical-centered details" style={{width: '68px'}}>
+                                    <span className="select-all-container" style={{paddingRight: '3px', paddingLeft: "0px"}}>
+                                        <input
+                                            type="checkbox" id={`select-all`} name={`select-all`}
+                                            className="select-all-checkbox"
+                                            onClick={() => { 
+                                                if(songSelection.length != albumList.length) { setSongSelection(albumList); }
+                                                else { setSongSelection([]); }
+                                            }}
+                                            onChange={() => {}}
+                                            checked={songSelection.length == albumList.length}
+                                        />
+                                    </span>
+                                </span>
+                                <span className="section-1 vertical-centered track details">#</span>
+                                <span className="section-9 vertical-centered details">Name</span>
+                                <span className="section-8 vertical-centered details">Artist</span>
+                                <span className="section-1 vertical-centered details">Length</span>
                             </div>
                             <hr />
                         </>                        
@@ -693,7 +739,9 @@ export default function AlbumOverviewPage() {
                                                         type="checkbox" id={`select-${index}`} name={`select-${index}`}
                                                         onClick={(e) => editSelection(albumList[index], e.currentTarget.checked, index)}
                                                         onChange={() => {}}
-                                                        checked={checkBoxNumber[index]}
+                                                        checked={songSelection.filter(x => {
+                                                            return x.path === albumList[index].path
+                                                        }).length > 0}
                                                     />
                                                 </span>
                                                 <img src={PlayOutlineIcon} onClick={() => playSong(index, false)} />

@@ -636,11 +636,25 @@ export default function PlaylistOverviewPage() {
                     {/* Song list */}
                     <div className="song-list">
                         <div className="grid-20 position-relative">
-                            <span className="section-2" style={{width: '125px'}}>&nbsp;</span>
+                            <span className="section-1 vertical-centered">
+                                <span className="select-all-container">
+                                    <input
+                                        type="checkbox" id={`select-all`} name={`select-all`}
+                                        className="select-all-checkbox"
+                                        onClick={() => { 
+                                            if(songSelection.length != playlist.length) { setSongSelection(playlist); }
+                                            else { setSongSelection([]); }
+                                        }}
+                                        onChange={() => {}}
+                                        checked={songSelection.length == playlist.length}
+                                    />
+                                </span>
+                            </span>
+                            <span className="section-1 vertical-centered"></span>
                             <span className="section-9 vertical-centered font-0 details">Name</span>
                             <span className="section-4 vertical-centered font-0 details">Album</span>
                             <span className="section-4 vertical-centered font-0 details">Album Artist</span>
-                            <span className="section-1 details">Length</span>
+                            <span className="section-1 vertical-centered details">Length</span>
                         </div>
                         <hr />
 
@@ -663,7 +677,9 @@ export default function PlaylistOverviewPage() {
                                                             type="checkbox" id={`select-${index}`} name={`select-${index}`}
                                                             onClick={(e) => editSelection(playlist[index], e.currentTarget.checked, index)}
                                                             onChange={() => {}}
-                                                            checked={checkBoxNumber[index]}
+                                                            checked={songSelection.filter(x => {
+                                                                return x.path === playlist[index].path
+                                                            }).length > 0}
                                                         />
                                                     </span>
                                                     <img src={PlayOutlineIcon} onClick={() => playPlaylist(index, false)} />

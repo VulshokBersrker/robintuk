@@ -136,6 +136,29 @@ input[type="checkbox"]:disabled {
   cursor: not-allowed;
 }
 
+input[type="checkbox"].select-all-checkbox {
+  cursor: pointer;
+  opacity: 1;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+}
+
+body[data-theme="tau-ceti"] {
+  input[type="checkbox"].select-all-checkbox {
+    cursor: pointer;
+    opacity: 1;
+    width: 18px;
+    height: 18px;
+    border-radius: 0px;
+  }
+}
+
+input[type="checkbox"].select-all-checkbox::before {
+  width: 0.50em;
+  height: 0.50em;
+}
+
 button img {
   height: 18px;
   width: 18px;
