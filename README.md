@@ -52,9 +52,9 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer) file associations
 - [ ] Better DPI aware CSS
-- [ ] Add "Select All" to select forms
 - [ ] Improve Song Details and Lyrics popup CSS
-- [ ] Update Create Playlist order to improve load time of new playlist creation
+- [x] Update Create Playlist order to improve load time of new playlist creation
+- [x] Add "Select All"
 - [x] Add "Are you sure" when deleting a playlist
 - [x] Add "Remove from Queue" on Queue page
 - [x] Drag and Drop playlist order
@@ -75,15 +75,11 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)
 - [x] Sometimes the drag playlist order feature doesn't save the new order correctly
 - [x] Error with the queue page when clicking play on a song in the queue
-- [x] Issue when jumping between large playlists - The first playlist will override the new
-- [x] Jumping between song that don't have lyrics in the database will cause the wrong song to appear on the player
 
 ## Dependency Issues
 
 - [x] Symphonia - Some music files get "Probe Limit Reached", causing no audio to play
 - [x] When changing audio device, it will continue to play on old device (only fix is to restart the app, issue with rodio)
-
-
 
 ## FAQ
 

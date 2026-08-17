@@ -139,12 +139,18 @@ export default function QueueOverviewPage() {
 
     async function removeFromQueue(index: number) {
         try {
-            await invoke('remove_from_queue', {song_id: queue[index].path});
-            await invoke('player_remove_from_queue', {index: index});
+            if(queue.length === 1) {
+                await clearQueue();
+            }
+            else {
+                console.log(index);
+                await invoke('remove_from_queue', {song_id: queue[index].path});
+                await invoke('player_remove_from_queue', {index: index});
 
-            setQueue(queue.filter(function(_pos, inner_index) {
-                return inner_index != index;
-            }));
+                setQueue(queue.filter(function(_pos, inner_index) {
+                    return inner_index != index;
+                }));
+            }            
         }
         catch (err) {
             error(`Failed to remove song from queue: ${err}`);
@@ -156,12 +162,18 @@ export default function QueueOverviewPage() {
         resetContextMenu();
         setDisplayAddToMenu(false);
         try {
-            const selection = songSelection;
-            clearSelection();
-            const newList = removeFromArray(selection);
-            setQueue(newList);
-            await invoke("remove_multiple_songs_from_queue", { songs: selection });
-            await invoke("player_remove_multiple_songs", { songs: selection });
+            if(songSelection.length === queue.length) {
+                clearSelection();
+                await clearQueue();
+            }
+            else { 
+                const selection = songSelection;
+                clearSelection();
+                const newList = removeFromArray(selection);
+                setQueue(newList);
+                await invoke("remove_multiple_songs_from_queue", { songs: selection });
+                await invoke("player_remove_multiple_songs", { songs: selection });
+            }            
         }
         catch (err) {
             error(`Failed to remove song from queue: ${err}`);
@@ -242,7 +254,6 @@ export default function QueueOverviewPage() {
         try {
             await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
             clearSelection();
-            await invoke('new_playlist_added');
         }
         catch(e) {
             console.log(e);
@@ -375,11 +386,25 @@ export default function QueueOverviewPage() {
                     {/* Song list */}
                     <div className="song-list">
                         <div className="grid-20 position-relative">
-                            <span className="section-2"></span>
+                            <span className="section-1 vertical-centered">
+                                <span className="select-all-container" style={{paddingRight: '3px', paddingLeft: "0px"}}>
+                                    <input
+                                        type="checkbox" id={`select-all`} name={`select-all`}
+                                        className="select-all-checkbox"
+                                        onClick={() => { 
+                                            if(songSelection.length != queue.length) { setSongSelection(queue); }
+                                            else {  setSongSelection([]); }
+                                        }}
+                                        onChange={() => {}}
+                                        checked={songSelection.length == queue.length}
+                                    />
+                                </span>
+                            </span>
+                            <span className="section-1"></span>
                             <span className="section-9 vertical-centered font-0 details">Track</span>
                             <span className="section-4 vertical-centered font-0 details">Album</span>
                             <span className="section-4 vertical-centered font-0 details">Album Artist</span>
-                            <span className="section-1 details">Length</span>
+                            <span className="section-1 vertical-centered font-0 details">Length</span>
                         </div>
                         <hr />
                         
@@ -389,14 +414,14 @@ export default function QueueOverviewPage() {
                                 return(
                                     <div key={index}>
                                         <div
-                                            className={`grid-20 song-row playlist align-items-center ${queue[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
+                                            className={`grid-20 song-row playlist align-items-center ${queue[index].path === isCurrent.path ? "current-song" : ""}`}
                                             onContextMenu={(e) => {
                                                 e.preventDefault();
                                                 handleContextMenu(e, queue[index].album, queue[index].album_artist, index);
                                             }}
                                         >
                                             <span className="section-1 play">
-                                                <span style={{paddingRight: '3px', paddingLeft: "3px"}}>
+                                                <span style={{paddingRight: '3px', paddingLeft: "0px"}}>
                                                     <input
                                                         type="checkbox" id={`select-${index}`} name={`select-${index}`}
                                                         onClick={(e) => editSelection(queue[index], e.currentTarget.checked)}

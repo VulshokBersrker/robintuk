@@ -43,19 +43,30 @@ pub fn player_add_to_queue(state: State<AppState, '_>, queue: Vec<SongTable>) ->
 
 #[tauri::command]
 pub fn player_remove_from_queue(state: State<AppState, '_>, app: tauri::AppHandle, index: usize) -> Result<(), String> {
-    let _ = state.player.lock().unwrap().remove_from_queue(index);    
-
-    update_current_song_played(state, app);
+    let _ = state.player.lock().unwrap().remove_from_queue(index, state.clone(), app);    
     Ok(())
 }
 
 #[tauri::command]
 pub async fn player_remove_multiple_songs(state: State<AppState, '_>, app: tauri::AppHandle, songs: Vec<SongTable>) -> Result<(), String> {
+    
+    let old_song: SongTable = state.player.lock().unwrap().get_current_song().unwrap();
+
+    let mut is_song_removed: bool = false;
+
+    println!("{:?}", &is_song_removed);
 
     for song in songs {
+        if old_song.path == song.path {
+            is_song_removed = true;
+        }
         let _ = state.player.lock().unwrap().remove_from_queue_by_value(song.path);
     }
-    update_current_song_played(state, app);
+
+    if is_song_removed == true {
+        let _ = player_next_song(state.clone());
+        update_current_song_played(state, app);
+    }   
 
     Ok(())
 }
@@ -962,20 +973,25 @@ pub async fn check_for_new_version(app: tauri::AppHandle) -> Result<bool, bool> 
     if first_res.is_ok() {
         let res = first_res.unwrap().text().await;
         if res.is_ok() {
-            let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
+            let res_inner = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str());
 
-            for (key, value) in result.as_object().unwrap() {
-                if key.contains("version") {
-                    let version = value.to_string().replace("\"", "").replace(".", "").parse::<i64>().unwrap();
+            if res_inner.is_ok() {
+                let result = res_inner.unwrap();
+                for (key, value) in result.as_object().unwrap() {
+                    if key.contains("version") {
+                        let version = value.to_string().replace("\"", "").replace(".", "").parse::<i64>().unwrap();
 
-                    if current_version < version {
-                        return Ok(true)
-                    }
-                    else {
-                        return Ok(false)
+                        if current_version < version {
+                            return Ok(true)
+                        }
+                        else {
+                            return Ok(false)
+                        }
                     }
                 }
             }
+
+            
             return Ok(false)
         }
         else {

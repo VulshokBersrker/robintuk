@@ -10,7 +10,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-  --border-radius: 8px;
+  --border-radius: 0.5rem;
 }
 
 [data-theme="red"] {
@@ -698,7 +698,7 @@ img.off {
 .titlebar .logo {
   position: absolute;
   top: 3px;
-  left: 15px;
+  left: 12px;
 }
 .titlebar .window-logo {
   height: 30px;
@@ -1061,7 +1061,6 @@ input[type="checkbox"]:hover {
 .checkbox-container input[type="checkbox"] {
   background-color: rgba(0, 0, 0, 0.7);
 }
-
 
 /* -------------------------- Settings Page -------------------------- */
 
