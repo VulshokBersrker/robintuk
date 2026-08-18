@@ -113,10 +113,8 @@ export default function PlaylistPage() {
 
     return(
         <SimpleBar forceVisible="y" autoHide={false} >
-            <div className="header-font font-4 page-header d-flex align-items-center">Playlists</div>
-
             <div className="playlist-buttons d-flex align-items-center">
-                <span className="">
+                <span>
                     <button className={`d-flex align-items-center ${displayCreate ? "red" : "white"}`} onClick={() => {setDisplayCreate(!displayCreate)}}>
                         {!displayCreate && <> <img src={PlusIcon} alt={""} /> &nbsp; New Playlist </>}
                         {displayCreate && <> <img src={CloseIcon} alt={""} /> &nbsp; Cancel</>}

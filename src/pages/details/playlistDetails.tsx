@@ -571,66 +571,64 @@ export default function PlaylistOverviewPage() {
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                     </div>
                     {/* Playlist Details */}
-                    <div className="d-flex">
-                        <div className="album-details d-flex">   
-                            {!isEdit &&
-                                <div>
-                                    <ImageWithFallBack image={playlistDetails.image} alt={"playlist image"} image_type={"album"}/>
-                                </div>
-                            }
-                            {isEdit &&
-                                <div onClick={addCustomPlaylistArtwork} className="image-upload">
-                                    <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
-                                </div>
-                            }
-                            
+                    <div className="album-details d-flex">   
+                        {!isEdit &&
+                            <div>
+                                <ImageWithFallBack image={playlistDetails.image} alt={"playlist image"} image_type={"album"}/>
+                            </div>
+                        }
+                        {isEdit &&
+                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
+                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
+                            </div>
+                        }
+                        
 
-                            <span style={{paddingLeft: "10px"}} className="grid-15">
-                                {!isEdit && <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{currentPlaylistName}</div>}
-                                {isEdit &&
-                                    <div style={{marginTop: '-5px', marginLeft:'-9px', paddingBottom: "12px"}} className="section-15 d-flex align-items-center">
-                                        <input
-                                            id="current-playlist-name"
-                                            type="text"
-                                            className="header-font font-3"
-                                            style={{width: '300px', height: '40px'}}
-                                            placeholder={currentPlaylistName}
-                                            value={currentPlaylistName}
-                                            onChange={(e) => setCurrentPlaylistName(e.target.value) }
-                                        />
-                                        <span className="" style={{marginBottom: '0px', marginLeft: '6px'}}>
-                                            <button className="white" onClick={updatePlaylistName}>Update</button>
-                                        </span>
-                                    </div>
-                                }
-                                <span className="section-15 font-0 misc-details">
-                                    {playlistDetails.num_songs && <> {playlistDetails.num_songs} songs &#x2022;</>}
-                                    {playlistDetails.total_duration && <> {new Date(playlistDetails.total_duration * 1000).toISOString().slice(11, 19)} total runtime </>}
-                                </span>
-                                
-                                <div className="section-15 d-flex album-commmands">
-                                    <span>
-                                        <button
-                                            className="font-1 borderless"
-                                            disabled={isEdit}
-                                            onClick={() => playPlaylist(0, false)}
-                                        >
-                                            <img src={PlayIcon} />
-                                        </button>
-                                    </span>
-                                    <span><button className="font-1 borderless" disabled={isEdit} onClick={() => playPlaylist(0, true)}><img src={ShuffleIcon} /></button></span>
-                                    <span><button className="font-1 borderless" onClick={() => setIsEdit(!isEdit)}><img src={EditIcon} /></button></span>
-                                    <span>
-                                        <button
-                                            className={`font-1 borderless red ${isEdit ? "" : "display-none"}`}
-                                            onClick={() => {setIsDelete(true)}}
-                                        >
-                                            <img src={DeleteIcon} />
-                                        </button>
+                        <span style={{paddingLeft: "10px"}} className="grid-15">
+                            {!isEdit && <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{currentPlaylistName}</div>}
+                            {isEdit &&
+                                <div style={{marginTop: '-5px', marginLeft:'-9px', paddingBottom: "12px"}} className="section-15 d-flex align-items-center">
+                                    <input
+                                        id="current-playlist-name"
+                                        type="text"
+                                        className="header-font font-3"
+                                        style={{width: '300px', height: '40px'}}
+                                        placeholder={currentPlaylistName}
+                                        value={currentPlaylistName}
+                                        onChange={(e) => setCurrentPlaylistName(e.target.value) }
+                                    />
+                                    <span className="" style={{marginBottom: '0px', marginLeft: '6px'}}>
+                                        <button className="white" onClick={updatePlaylistName}>Update</button>
                                     </span>
                                 </div>
+                            }
+                            <span className="section-15 font-0 misc-details">
+                                {playlistDetails.num_songs && <> {playlistDetails.num_songs} songs &#x2022;</>}
+                                {playlistDetails.total_duration && <> {new Date(playlistDetails.total_duration * 1000).toISOString().slice(11, 19)} total runtime </>}
                             </span>
-                        </div>
+                            
+                            <div className="section-15 d-flex album-commmands">
+                                <span>
+                                    <button
+                                        className="font-1 borderless"
+                                        disabled={isEdit}
+                                        onClick={() => playPlaylist(0, false)}
+                                    >
+                                        <img src={PlayIcon} />
+                                    </button>
+                                </span>
+                                <span><button className="font-1 borderless" disabled={isEdit} onClick={() => playPlaylist(0, true)}><img src={ShuffleIcon} /></button></span>
+                                <span><button className="font-1 borderless" onClick={() => setIsEdit(!isEdit)}><img src={EditIcon} /></button></span>
+                                <span>
+                                    <button
+                                        className={`font-1 borderless red ${isEdit ? "" : "display-none"}`}
+                                        onClick={() => {setIsDelete(true)}}
+                                    >
+                                        <img src={DeleteIcon} />
+                                    </button>
+                                </span>
+                            </div>
+                        </span>
                     </div>
 
                     {/* Song list */}

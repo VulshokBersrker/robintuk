@@ -555,7 +555,7 @@ export default function MusicControls() {
                         {/* Music Control Buttons */}
                         <div className="section-5 player-buttons d-flex justify-content-center align-items-center">
                             <div className="d-flex justify-content-center align-items-center">
-                                <div className="play-button" id="shuffle">
+                                <div className="music-control-button" id="shuffle">
                                     <img
                                         src={ShuffleButton}
                                         alt="shuffle queue"
@@ -564,7 +564,7 @@ export default function MusicControls() {
                                     />
                                 </div>
 
-                                <div className="play-button cursor-pointer" id="previous">
+                                <div className="music-control-button" id="previous">
                                     <img src={BackwardButton} alt="" className={`${songDetails === undefined ? "disabled" : ""}`}  onClick={previousSong}/>
                                 </div>
 
@@ -590,11 +590,11 @@ export default function MusicControls() {
                                     }
                                 </div>
 
-                                <div className="play-button cursor-pointer" id="next">
+                                <div className="music-control-button" id="next">
                                     <img src={ForwardButton} alt="" className={`icon-flip ${songDetails === undefined ? "disabled" : ""}`} onClick={nextSong}/>
                                 </div>
 
-                                <div className="play-button" id="repeat">
+                                <div className="music-control-button" id="repeat">
                                     {repeatMode === 0 &&
                                         <img
                                             src={RepeatButton}

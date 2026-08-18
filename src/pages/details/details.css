@@ -264,10 +264,11 @@ button img {
   padding: 0px 0.4rem 0.95rem 0.4rem;
   border-radius: var(--border-radius);
   z-index: 20;
+  overflow: hidden;
 }
 .playlist-list-container.add {
   top: 50%;
-  transform: translate(-42%, 8%);
+  transform: translate(0%, 8%);
 }
 
 .playlist-list-container.add-context-menu {
@@ -284,6 +285,11 @@ button img {
 .add-playlist-container {
   margin-top: 0.7rem;
   max-height: 10rem;
+}
+
+.playlist-input-container,
+.playlist-input-container span {
+  margin: auto;
 }
 
 .playlist-list-container hr {

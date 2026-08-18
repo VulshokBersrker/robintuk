@@ -268,10 +268,10 @@ body[data-theme="tau-ceti"] {
   .play-container:hover .play-pause-icon { 
     filter: brightness(0%);
   }
-  .play-button:hover img {
+  .play-button:hover .music-control-button img {
     filter: brightness(60%);
   }
-  .play-button:hover img.off {
+  .play-button:hover .music-control-button img.off {
     filter: brightness(30%);
   }
 
