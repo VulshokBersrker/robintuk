@@ -12,7 +12,7 @@ use std::io::Write;
 
 // Tauri Libraries
 use tauri::{Emitter, State, http::HeaderMap};
-use tauri_plugin_log::log;
+use tauri_plugin_log::log::{self, error};
 
 // Misc Libraries
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
@@ -729,9 +729,6 @@ pub struct Example {
 }
 
 // ----------------- Backup and Restore Functions for the DB and images
-// New Version Idea
-// Extract all data from the DB into a json file
-// This removes the issues of file replacement for the DB
 #[tauri::command]
 pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
     let test  = state.clone();
@@ -893,10 +890,6 @@ pub async fn check_for_backup() -> Result<bool, String> {
     Ok(Path::new(&backup_path).try_exists().unwrap())
 }
 
-
-// New Version Idea
-// Extract all the entries from a json file, from songs to playlist and playlist_tracks
-// 
 #[tauri::command]
 pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
     let test  = state.clone();
@@ -942,7 +935,7 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
                 // Then all the playlists
                 println!("...Adding playlists");
                 for item in res_two.playlists {
-                    let _ = db::create_playlist(state.clone(), app.clone(), item.name, vec![], false).await;
+                    let _ = db::create_playlist_for_restore(state.clone(), item.id, item.name, item.image).await;
                 }
                 // Add Playlist Tracks
                 println!("...Adding playlist songs");
@@ -1012,6 +1005,7 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
         }
         else {
             println!("There is no backup file");
+            error!("Restore: There is nio backup file");
         }
     }
     *test.is_back_restore_ongoing.lock().unwrap() = 0;
@@ -1055,7 +1049,7 @@ pub async fn export_playlist(state: State<AppState, '_>, playlist_id: i64, save_
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, file_path: String) -> Result<bool, String> {  
-
+    let cloned_app = app.clone();
     let file_name: String = Path::new(&file_path)
         .file_name()
         .and_then(|x| x.to_str())
@@ -1102,17 +1096,17 @@ pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, 
                 
                     if check {
                         // Add the song to the db
-                        let res = helper::get_song_data(entry.uri).await;
+                        let res: DoesExist = sqlx::query_as::<_, DoesExist>("SELECT EXISTS(SELECT 1 FROM songs WHERE path = $1) AS does_exist")
+                            .bind(&entry.uri.as_str())
+                            .fetch_one(&state.pool)
+                            .await.unwrap();
                             
-                        if res.is_ok() {
-                            let song = res.unwrap();
-                            let _ = db::add_song(song.clone(), &state.pool).await;
-                            
+                        if res.does_exist == true {                            
                             let _ = sqlx::query("INSERT INTO playlist_tracks
                                 (playlist_id, track_id, position) 
                                 VALUES (?1, ?2, ?3)")
                                 .bind(&playlist_id.0)
-                                .bind(&song.path)
+                                .bind(&entry.uri)
                                 .bind(&i)
                                 .execute(&state.pool).await;
                             i = i + 1;
@@ -1120,14 +1114,17 @@ pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, 
                         }
                         else {
                             println!("Error reading song's info");
+                            error!("Import Playlist: Error adding song to playlist");
                         }                        
                     }
                     else {
                         println!("File does not exist: Not being added to playlist: {:?}", &entry.uri);
+                        error!("Import Playlist: Files does not exist: {:?}", &entry.uri);
                     }
                 }
                 else {
                     println!("Entry is not a path: {:?}", &entry.uri);
+                    error!("Import Playlist: entry is not a path: {:?}", &entry.uri);
                 }
             }
 
@@ -1135,6 +1132,7 @@ pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, 
         Result::Err(e) => println!("Parsing Error: {:?}", e),
     }
 
+    let _ = new_playlist_added(state.clone(), cloned_app).await;
     Ok(true)
 }
 

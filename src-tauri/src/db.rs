@@ -1383,3 +1383,17 @@ pub async fn set_settings(state: State<'_, AppState>, date: String, theme: Strin
 
     Ok(())
 }
+
+pub async fn create_playlist_for_restore(state: State<'_, AppState>, id:i64, name: String, image: String) -> Result<(), String> {
+
+    
+    let _ = sqlx::query("INSERT INTO playlists (id, name, image) VALUES (?1, ?2, ?3)")
+        .bind(&id)
+        .bind(&name)
+        .bind(&image)
+        .execute(&state.pool)
+        .await
+        .unwrap();
+    
+    Ok(())
+}
