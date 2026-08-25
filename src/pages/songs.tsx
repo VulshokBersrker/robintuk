@@ -10,11 +10,8 @@ import CustomContextMenu from "../components/customContextMenu";
 import SongSelectionBar from "../components/songSelectionBar";
 
 // Images
-import QueueIcon from '../images/rectangle-list-regular-full.svg';
 import PlayIcon from '../images/play-icon-outline.svg';
-import AddIcon from '../images/plus-solid-full.svg';
 import SearchIcon from '../images/search_icon.svg';
-import CloseIcon from '../images/x.svg';
 
 
 type Props = {
@@ -34,8 +31,8 @@ export default function SongPage({songs}: Props) {
     const [songSections, setSongSections] = useState<number[]>([]);
 
     // Playlist Values
-    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
-    const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
+    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
+    const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
