@@ -29,17 +29,17 @@ pub fn init() {
     let _ = tr.block_on(apply_initial_migrations());
 
     // Create the cover folder
-    let covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/covers";
+    let covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers";
     let home_dir = Path::new(&covers_dir);
     fs::create_dir_all(home_dir).unwrap();
 
     // Create the playlist image folder
-    let playlist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/playlist_covers";
+    let playlist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers";
     let playlist_dir = Path::new(&playlist_cover_dir);
     fs::create_dir_all(playlist_dir).unwrap();
 
     // Create the artist image folder
-    let artist_covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/artist_covers";
+    let artist_covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers";
     let artist_dir = Path::new(&artist_covers_dir);
     fs::create_dir_all(artist_dir).unwrap();
 }
@@ -71,7 +71,7 @@ pub fn get_db_path() -> String {
     home_dir.to_str().unwrap().to_string() + "/.config/robintuk_player/robintuk.db"
 }
 
-async fn apply_initial_migrations() -> Result<(), String> {
+pub async fn apply_initial_migrations() -> Result<(), String> {
     let pool = establish_connection().await?;
 
     let _ = pool.execute(include_str!("../migrations/0001_init.sql")).await;
@@ -143,6 +143,36 @@ pub async fn reset_database(state: State<AppState, '_>, app: tauri::AppHandle) -
 
     // Trigger global refresh of all data in the app
     let _ = app.emit("ending-reset", false);
+
+    Ok(())
+}
+
+
+pub async fn reset_database_for_restore(state: State<'_, AppState>, app: tauri::AppHandle) -> Result<(), String> {
+    
+    // Clear the player's queue
+    let _ = commands::player_stop(state.clone());
+    let _ = app.emit("queue-cleared", true);
+    let _ = commands::player_clear_queue(app.clone(), state.clone());
+
+    // First delete all the tables from the database
+    let _ = state.pool.execute(include_str!("../migrations/9999_reset.sql")).await;
+    
+    // Then use the migration files to re-add the tables to the database
+    let _ = apply_initial_migrations().await;
+
+    // Delete all the images for playlists and albums
+    let covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers";
+    let playlist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers";
+    let artist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers";
+    
+    let _ = fs::remove_dir_all(&covers_dir);
+    let _ = fs::remove_dir_all(&playlist_cover_dir);
+    let _ = fs::remove_dir_all(&artist_cover_dir);
+    // Recreate the directories
+    let _ = fs::create_dir_all(&covers_dir);
+    let _ = fs::create_dir_all(&playlist_cover_dir);
+    let _ = fs::create_dir_all(&artist_cover_dir);
 
     Ok(())
 }
@@ -325,7 +355,7 @@ pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<Sq
         .bind(&entry.artist)
         .bind(&entry.genre)
         .bind(&entry.album_artist)
-        .bind(&entry.disc)
+        .bind(&entry.disc_number)
         .bind(&entry.duration)
         .bind(false)
         .bind(&entry.song_section)
@@ -355,7 +385,7 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
         .bind(&entry.artist)
         .bind(&entry.genre)
         .bind(&entry.album_artist)
-        .bind(&entry.disc)
+        .bind(&entry.disc_number)
         .bind(&entry.duration)
         .bind(&entry.song_section)
         .bind(&entry.album_section)
@@ -867,7 +897,7 @@ pub async fn remove_multiple_songs_from_playlist(state: State<AppState, '_>, pla
 #[tauri::command(rename_all = "snake_case")]
 pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, playlist_name: String, playlist_id: i64) -> Result<(), String> {
     // First get the image file and the playlist cover directory
-    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/playlist_covers/";
+    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers/";
     let file_type = Path::new(&file_path).extension().and_then(OsStr::to_str).unwrap();
     let new_path = image_dir.clone() + "" + &playlist_name.as_str() + "." + file_type;
 
@@ -885,7 +915,7 @@ pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, p
 #[tauri::command(rename_all = "snake_case")]
 pub async fn add_artist_cover(state: State<AppState, '_>, file_path: String, artist_name: String) -> Result<(), String> {
     // First get the image file and the playlist cover directory
-    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/artist_covers/";
+    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers/";
     let file_type = Path::new(&file_path).extension().and_then(OsStr::to_str).unwrap();
     let new_path = image_dir.clone() + "" + &artist_name.as_str() + "." + file_type;
 
@@ -1287,4 +1317,69 @@ pub async fn get_lyrics(state: State<AppState, '_>, song_id: String) -> Result<L
         log::info!("Song does not have lyrics in the database: ${song_id}");
         Err("No Lyrics".to_string())
     }
+}
+
+
+
+// ------------------------------------ Restore Functions ------------------------------------
+pub async fn add_to_playlist_for_restore(state: State<'_, AppState>, song_id: String, playlist_id: i64, position: i64) -> Result<(), String> {
+
+    let _ = sqlx::query("INSERT INTO playlist_tracks
+    (playlist_id, track_id, position) 
+    VALUES (?1, ?2, ?3)")
+        .bind(&playlist_id)
+        .bind(&song_id)
+        .bind(&position)
+        .execute(&state.pool).await;
+      
+    Ok(())
+}
+
+pub async fn add_lyrics_for_restore(state: State<'_, AppState>, lyrics_id: i64, song_id: String, plain_lyrics: String, synced_lyrics: Option<String>) -> Result<(), String> {
+
+    let _ = sqlx::query("INSERT INTO lyrics (lyrics_id, plain_lyrics, synced_lyrics, song_id) VALUES (?1, ?2, ?3, ?4)")
+        .bind(lyrics_id)
+        .bind(plain_lyrics)
+        .bind(synced_lyrics)
+        .bind(song_id)
+        .execute(&state.pool)
+        .await;
+
+    Ok(())
+}
+
+pub async fn add_artist_cover_for_restore(state: State<'_, AppState>, file_path: String, artist_name: String) -> Result<(), String> {
+    let does_exist: (bool,) = sqlx::query_as("SELECT COUNT(*) FROM artist_covers WHERE EXISTS(SELECT 1 FROM artist_covers WHERE artist_name = $1)")
+        .bind(&artist_name)
+        .fetch_one(&state.pool)
+        .await
+        .unwrap();
+
+
+    if does_exist.0 == true {
+        let _ = sqlx::query("UPDATE artist_covers SET image = $1 WHERE artist_name = $2;")
+            .bind(&file_path)
+            .bind(&artist_name)
+            .execute(&state.pool).await;
+    }
+    else {
+        let _ = sqlx::query("INSERT INTO artist_covers (image, artist_name) VALUES (?1, ?2)")
+        .bind(&file_path)
+        .bind(&artist_name)
+        .execute(&state.pool).await;
+    }
+
+    Ok(())
+}
+
+pub async fn set_settings(state: State<'_, AppState>, date: String, theme: String ) -> Result<(), String> {
+
+    let _ = sqlx::query("INSERT INTO settings (id, last_scan_date, theme)")
+        .bind(1)
+        .bind(date)
+        .bind(theme)
+        .execute(&state.pool)
+        .await;
+
+    Ok(())
 }

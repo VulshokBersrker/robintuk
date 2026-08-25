@@ -262,25 +262,25 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
                 // println!("Disc: {:?}", value);
                 if Some(value) == None {
                     if Some(tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap()) != None {
-                        song_data.disc = Some(tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap());
+                        song_data.disc_number = Some(tag.get_string(&ItemKey::DiscNumber).unwrap().parse::<i32>().unwrap());
                     }
                     else {
-                        song_data.disc = None;
+                        song_data.disc_number = None;
                     }            
                 }
                 else {
-                    song_data.disc = Some(value as i32);
+                    song_data.disc_number = Some(value as i32);
                 }
             }
 
             // Get duration tag
             let properties = tagged.properties();
             let duration = properties.duration();
-            song_data.duration = duration.as_secs().to_string();
+            song_data.duration = duration.as_secs() as i32;
 
 
             // Get the directory where all the data is stored
-            let image_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/covers/";
+            let image_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers/";
             let mut covers_path = PathBuf::new();
 
             // Get Album artwork

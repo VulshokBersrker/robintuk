@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use serde_with::{serde_as, DisplayFromStr};
 
 // This struct is just for uploading data to the database
-#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
+#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SongTableUpload {
     pub name: Option<String>,
     pub path: String,
@@ -16,8 +16,8 @@ pub struct SongTableUpload {
     pub artist: Option<String>,
     pub genre: Option<String>,
     pub album_artist: Option<String>,
-    pub disc: Option<i32>,
-    pub duration: String,
+    pub disc_number: Option<i32>,
+    pub duration: i32,
     pub song_section: Option<i32>,
     pub album_section: Option<i32>,
     pub artist_section: Option<i32>,

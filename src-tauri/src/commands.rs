@@ -2,14 +2,13 @@
 use crate::{
     AppState, db::{self, create_playlist, get_playlist}, helper::{self},
     types::{DirsTable, DoesExist, GetArtistList, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable,
-    ArtistCoversTable, PlaylistTracksTable, PlaylistTable, LyricsTable, SettingsTable, Covers}
+    ArtistCoversTable, PlaylistTracksTable, PlaylistTable, LyricsTable, SettingsTable, Covers, SongTableUpload}
 };
 
 // Core Libraries
-use std::{fs::{self, File}, io::{BufWriter, Read}, path::Path};
+use std::{fs::{self, File}, io::{self, BufWriter, Read}, path::Path};
 use std::path::{PathBuf};
 use std::io::Write;
-use std::{io};
 
 // Tauri Libraries
 use tauri::{Emitter, State, http::HeaderMap};
@@ -720,7 +719,7 @@ pub async fn check_for_backup_restore(state: State<AppState, '_>) -> Result<i64,
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Example {
-    songs: Vec<SongTable>,
+    songs: Vec<SongTableUpload>,
     playlist_songs: Vec<PlaylistTracksTable>,
     playlists: Vec<PlaylistTable>,
     artist_covers: Vec<ArtistCoversTable>,
@@ -751,7 +750,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
 
         // Get the Database values
 
-        let song_res: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs")
+        let song_res: Vec<SongTableUpload> = sqlx::query_as::<_, SongTableUpload>("SELECT * FROM songs")
             .fetch_all(&state.pool)
             .await.unwrap();
 
@@ -814,9 +813,9 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
         buffer.clear();
         
 
-        zip.add_directory("robintuk_player/images/playlist_covers", SimpleFileOptions::default()).unwrap();
-        zip.add_directory("robintuk_player/images/covers", SimpleFileOptions::default()).unwrap();
-        zip.add_directory("robintuk_player/images/artist_covers", SimpleFileOptions::default()).unwrap();
+        zip.add_directory("robintuk_player/playlist_covers", SimpleFileOptions::default()).unwrap();
+        zip.add_directory("robintuk_player/covers", SimpleFileOptions::default()).unwrap();
+        zip.add_directory("robintuk_player/artist_covers", SimpleFileOptions::default()).unwrap();
  
 
         // --------------------------------------------- Album Covers
@@ -842,7 +841,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
         
         // --------------------------------------------- Playlist Covers
         println!("...Getting playlist covers");
-        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/playlist_covers").into_iter().filter_map(|e| e.ok()) {
+        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers").into_iter().filter_map(|e| e.ok()) {
             if entry.metadata().unwrap().is_file() {
                 let item = entry.path().display().to_string();
                 let path = Path::new(&item);
@@ -860,7 +859,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
         
         // --------------------------------------------- Artist Covers
         println!("...Getting artist covers");
-        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/artist_covers").into_iter().filter_map(|e| e.ok()) {
+        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers").into_iter().filter_map(|e| e.ok()) {
             if entry.metadata().unwrap().is_file() {
                 let item = entry.path().display().to_string();
                 let path = Path::new(&item);
@@ -902,7 +901,7 @@ pub async fn check_for_backup() -> Result<bool, String> {
 pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<(), String> {
     let test  = state.clone();
     // Make sure there is no scan going on, to prevent breaks in the DB
-    let scan = check_for_ongoing_scan(state);    
+    let scan = check_for_ongoing_scan(state.clone());    
 
     if scan == false {
         println!("Restoring from backup...");        
@@ -913,10 +912,70 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
         let backup_path = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_backup.zip";
 
         if PathBuf::from(&backup_path).exists() {
+            // Reset the database, images, and queue
+            let _ = db::reset_database_for_restore(state.clone(), app.clone()).await;
+
+            // Get access to the zip file
             let fname = Path::new(&backup_path);
+            let database_reader: File = fs::File::open(fname).unwrap();
             let reader: File = fs::File::open(fname).unwrap();
+            let mut database = ZipArchive::new(database_reader).unwrap();
             let mut archive = ZipArchive::new(reader).unwrap();
 
+            // Enter in the backup data from the json file
+            let database_res = database.by_name("database.json");
+
+            if database_res.is_ok() {
+                let mut res = database_res.unwrap();
+
+                let mut contents = String::new();
+                let _ = res.read_to_string(&mut contents).unwrap();
+                
+                // Get access to zipped file's data
+                let res_two: Example = serde_json::from_str(&contents.as_str()).unwrap();
+
+                // First add all the songs
+                println!("...Adding songs");
+                for item in res_two.songs {
+                    let _ = db::add_song(item, &state.clone().pool).await;
+                }
+                // Then all the playlists
+                println!("...Adding playlists");
+                for item in res_two.playlists {
+                    let _ = db::create_playlist(state.clone(), app.clone(), item.name, vec![], false).await;
+                }
+                // Add Playlist Tracks
+                println!("...Adding playlist songs");
+                for item in res_two.playlist_songs {
+                    let _ = db::add_to_playlist_for_restore(state.clone(), item.track_id, item.playlist_id, item.position).await;
+                }
+                // Add custom artist covers
+                println!("...Adding artist covers");
+                for item in res_two.artist_covers {
+                    let _ = db::add_artist_cover_for_restore(state.clone(), item.image, item.artist_name).await;
+                }
+                // Add directory
+                println!("...Adding directories");
+                for item in res_two.dirs {
+                    let _ = db::add_directory(state.clone(), item.dir_path).await;
+                }
+                // Add custom artist covers
+                println!("...Adding settings");
+                for item in res_two.settings {
+                    let _ = db::set_settings(state.clone(), item.last_scan_date, item.theme).await;
+                }
+
+                // Lastly, add the lyrics back
+                println!("...Adding lyrics");
+                for item in res_two.lyrics {
+                    let _ = db::add_lyrics_for_restore(state.clone(), item.lyrics_id, item.song_id, item.plain_lyrics, item.synced_lyrics).await;
+                }
+
+                
+            }
+
+
+            // Copy over the images from the zip file
             for i in 0..archive.len() {
                 let mut file = archive.by_index(i).unwrap();
 
@@ -924,6 +983,11 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
                     Some(path) => path,
                     None => continue,
                 };
+
+                if outpath.to_str().unwrap() == "database.json" {
+                    println!("skipping database file");
+                    continue;
+                }
 
                 if file.is_dir() {
                     let outpath_full = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/" + outpath.display().to_string().as_str();
@@ -951,6 +1015,8 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
         }
     }
     *test.is_back_restore_ongoing.lock().unwrap() = 0;
+
+    println!("...Restore successful");
 
     Ok(())
 }
