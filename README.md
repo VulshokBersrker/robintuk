@@ -52,7 +52,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer) file associations
 - [ ] Better DPI aware CSS
-- [ ] Improve Song Details and Lyrics popup CSS
+- [x] Improve Song Details and Lyrics popup CSS
 - [x] Update Create Playlist order to improve load time of new playlist creation
 - [x] Add "Select All"
 - [x] Add "Are you sure" when deleting a playlist
@@ -86,8 +86,11 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 * __What to do if Robintuk doesn't launch after a crash while scanning music:__ 
     * Restarting your computer will fix this issue, until it crashes again.
     
-* __My anti-virus calims Robintuk is malware:__ 
+* __My anti-virus claims Robintuk is malware:__ 
     * While this issue is worked on, whitelisting the app should solve any false positives
 
 * __Robintuk loads to white window:__ 
     * Restarting your computer will fix this issue.
+
+* __I'm getting an "I don't have access" error on launching Robintuk:__ 
+    * This is usually from a false positive from anti-virus protections. Restarting the computer will fix the issue until it happens again.
