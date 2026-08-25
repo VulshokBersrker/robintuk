@@ -12,9 +12,9 @@ import './details.css';
 
 // Custom Components
 import { GetCurrentSong, PlaylistFull, PlaylistList, savePosition, Songs } from "../../globalValues";
+import SongDetailsModal from "../../components/songDetails/songDetails";
 import SongSelectionBar from '../../components/songSelectionBar';
 import ImageWithFallBack from "../../components/imageFallback";
-import SongDetailsModal from "../../components/songDetails";
 
 // Images
 import DeselectIcon from '../../images/circle-xmark-regular-full.svg';

@@ -10,10 +10,10 @@ import './details.css';
 
 // Custom Components
 import { GetCurrentSong, savePosition, Songs, PlaylistList } from "../../globalValues";
+import SongDetailsModal from "../../components/songDetails/songDetails";
 import CustomContextMenu from "../../components/customContextMenu";
 import SongSelectionBar from "../../components/songSelectionBar";
 import ImageWithFallBack from "../../components/imageFallback";
-import SongDetailsModal from "../../components/songDetails";
 
 // Image Components
 import QueueIcon from '../../images/rectangle-list-regular-full.svg';
@@ -351,7 +351,7 @@ export default function AlbumOverviewPage() {
     }
     else if(loading === false && albumList.length !== 0 && discGroups.length > 0) {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="album-details-main">
                 <div className="album-container">
 
                     {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
@@ -617,7 +617,7 @@ export default function AlbumOverviewPage() {
     }
     else if(loading === false && albumList.length !== 0) {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="album-details-main">
                 <div className="album-container">
 
                     {/* Song Selection Bar */}

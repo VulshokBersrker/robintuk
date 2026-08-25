@@ -316,7 +316,7 @@ export default function QueueOverviewPage() {
     }
     else {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="queue-main">
                 <div className="album-container">
                     <div className="d-flex top-row justify-content-start">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>

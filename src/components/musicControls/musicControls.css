@@ -52,7 +52,7 @@ body[data-theme="tau-ceti"] {
   background-color: var(--music-player-bg);
   width: 100vw;
   height: 94px;
-  z-index: 100;
+  z-index: 110;
   /* Frosted Glass Effect */
   backdrop-filter: blur(12px);
   /* Gradient Border */
@@ -303,7 +303,7 @@ input[type="range"]:disabled::-webkit-slider-thumb {
   bottom: 0px;
   left: 0px;
   width: 100%;
-  z-index: 99;
+  z-index: 101;
   overflow: hidden;
   background: #30052b;
   background: linear-gradient(151deg, var(--gradient-one) 0%, var(--gradient-two) 29%, var(--gradient-three) 100%);
@@ -396,7 +396,30 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 }
 
 /* Very Skinny views */
-@media screen and (min-width: 100px) and (max-width: 799px) {
+@media screen and (min-width: 100px) and (max-width: 729px) {
+
+  .fullscreen-music .artwork.lyric {
+    transform: translate(-20rem, -50%);
+  }
+
+  .fullscreen-music span.artwork div {
+    width: 20rem;
+    text-align: center;
+  }
+  .fullscreen-music span.artwork img {
+    display: inline-table;
+    text-align: center;
+  }
+
+  .fullscreen-music .lyrics {
+    width: 21.5rem;
+    height: 80vh;
+    transform: translate(0.5rem, -55%);
+  }
+
+}
+
+@media screen and (min-width: 730px) and (max-width: 799px) {
 
   .fullscreen-music .artwork.lyric {
     transform: translate(-20rem, -50%);
@@ -612,86 +635,3 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 
 }
 
-
-@media (min-resolution: 120dpi)and (max-width: 1080px) and (max-resolution: 187dpi) {
-
-  /* -------------- Music Controls Styles -------------- */
-  .music-progress-bar {
-    width: 101%;
-    top: -0.55rem;
-    left: -1px;
-  }
-  .music-controls {
-    margin-top: 0.3rem;
-    margin-bottom: 0.1rem;
-  }
-  .music-details {
-    margin-left: 0.2rem;
-  }
-
-  .full-screen-clickable {
-    padding-top: 0.2rem;
-    padding-bottom: 0.2rem;
-    padding-right: 0rem;
-  }
-  .song-album-image {
-    margin-left: 0.3rem;
-    margin-bottom: 0rem;
-    margin-right: 0.55rem;
-  }
-  .song-album-image img {
-    height: 3.5rem;
-    width: 3.5rem;
-    margin-top: 0.15rem;
-  }
-  .music-details .song-name {
-    font-size: 1.1rem;
-  }
-  .music-details .song-album {
-    font-size: 0.75rem;
-  }
-
-  .play-container {
-    padding: 0.75rem;
-  }
-  .play-container .circle {
-    height: 2.7rem;
-    width: 2.7rem;
-  }
-  .player-buttons img {
-    height: 1.1rem;
-    width: 1.1rem;
-  }
-
-  /* Volume Controls */
-  .volume-bar {
-    margin-left: 1rem;
-  }
-  .volume-icon {
-    width: 1.1rem;
-    height: 1.1rem;
-  }
-
-  /* === range theme and appearance === */
-  input[type="range"] {
-    font-size: 0.7rem;
-    width: 100%;
-  }
-  /* Fullscreen Music Preview Styles */
-
-  .fullscreen-music .lyrics {
-    z-index: 10;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 550px;
-    height: 68vh;
-    transform: translate(30%, -55%);
-    overflow-x: hidden;
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;
-    mask-image: linear-gradient(transparent, black 10%, black 90%, transparent 100%);
-    -webkit-mask-image: linear-gradient(transparent, black 10%, black 90%, transparent 100%);
-  }
-
-}
