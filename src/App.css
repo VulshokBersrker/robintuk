@@ -268,10 +268,10 @@ body[data-theme="tau-ceti"] {
   .play-container:hover .play-pause-icon { 
     filter: brightness(0%);
   }
-  .play-button:hover img {
+  .play-button:hover .music-control-button img {
     filter: brightness(60%);
   }
-  .play-button:hover img.off {
+  .play-button:hover .music-control-button img.off {
     filter: brightness(30%);
   }
 
@@ -673,6 +673,7 @@ img.off {
   width: calc(100vw - 156px);
   margin-top: 1.8rem;
   margin-left: 9.3rem;
+  z-index: 99;
 }
 /* Allows for the blur for the music controls and the weird padding fix */
 .empty-space {
@@ -1897,10 +1898,47 @@ img.search-icon:hover {
       height: 250px;
     }
     .playlist-main .empty-space {
-      height: 220px;
+      height: 180px;
+    }
+    .album-details-main .empty-space {
+      height: 180px;
+    }
+    .queue-main .empty-space {
+      height: 180px;
     }
   }
+
 }
+
+@media screen and (min-height: 100px) and (max-height: 799px) {
+  #root:has(.music-control-container) {
+    .songs-main .empty-space {
+      height: 250px;
+    }
+    .playlist-main .empty-space {
+      height: 180px;
+    }
+    .album-details-main .empty-space {
+      height: 180px;
+    }
+    .queue-main .empty-space {
+      height: 180px;
+    }
+  }
+
+  .section-list div {
+    font-size: 0.85rem;
+  }
+  .section-list {
+    top: 46%;
+  }
+
+  .songs-main .song-list .grid-20 .section-1 {
+    min-width: 60px;
+  }
+}
+
+
 /* styles for smaller iPads/Kindle */
 @media screen and (min-width: 800px) and (max-width: 1199px) { 
 
@@ -2063,6 +2101,7 @@ img.search-icon:hover {
     width: calc(100vw - 203px);
     margin-top: 2.7rem;
     margin-left: 12.5rem;
+    z-index: 99;
   }
   /* Allows for the blur for the music controls and the weird padding fix */
   .empty-space {
@@ -2522,483 +2561,3 @@ img.search-icon:hover {
   }
 }
 
-
-@media (min-resolution: 120dpi)and (max-width: 1080px) and (max-resolution: 187dpi) {
-
-  #root:has(.music-control-container) {
-    .nav-scrollable {
-      height: calc(100vh - 23.7rem);
-    }
-    .empty-space {
-      height: 175px;
-    }
-  }
-
-  
-  .font-0 {
-    font-size: 0.65rem;
-  }
-  .font-1 {
-    font-size: 0.8rem;
-  }
-  .font-2 {
-    font-size: 1rem;
-  }
-  .font-3 {
-    font-size: 1.2rem;
-  }
-  .font-4 {
-    font-size: 1.4rem;
-  }
-  .font-5 {
-    font-size: 1.6rem;
-  }
-  .font-6 {
-    font-size: 1.8rem;
-  }
-  .page-header {
-    padding-top: 10px;
-    padding-bottom: 25px;
-  }
-
-  /* /*-------------- Button Tags /*-------------- */
-  button {
-    padding: 8px 10px 8px 10px;
-  }
-  button.white {
-    padding: 8px 10px 8px 10px;
-  }
-  button.red {
-    padding: 8px 10px 8px 10px;
-  }
-  button.red:hover {
-    padding: 8px 10px 8px 10px;;
-  }
-
-  button:disabled {
-    border: 2px solid #585858;
-  }
-  button.borderless {
-    padding: 5px !important;
-  }
-  button.close {
-    width: 80px;
-  }
-
-  .icon-size {
-    height: 30px;
-    width: 30px;
-  }
-  /* Padding for when the sidebar is collapsed */
-  .content {
-    position: relative;
-    transition: 0s ease-in-out;
-    height: calc(100vh - 30px);
-    width: calc(100vw - 156px);
-    margin-top: 1.8rem;
-    margin-left: 9.3rem;
-  }
-  /* Allows for the blur for the music controls and the weird padding fix */
-  .empty-space {
-    height: 70px;
-  }
-
-  /* ------------------ Custom Window Tab Styles ------------------*/
-  .titlebar {
-    height: 25px;
-  }
-  .titlebar .logo {
-    left: 6px;
-  }
-  .titlebar button {
-    margin: 0rem;
-    width: 2rem;
-  }
-  #titlebar-settings {
-    margin-left: 1rem;
-    margin-right: 1rem;
-    width: 1rem;
-  }
-  #titlebar-settings img {
-    width: 1.2rem;
-  }
-
-  /* -------------- Home Section Styles -------------- */
-
-  /* Albums */
-  .albums.home {
-    max-height: 22rem;
-    margin-bottom: 0rem;
-  }
-  .songs.home,
-  .playlists-history {
-    max-height: 24rem;
-  }
-  .list {
-    padding-top: 0.4rem;
-  }
-
-  .albums.home .album-link {
-    width: 7.5rem;
-    height: 9.5rem;
-  }
-
-  .albums.home .container {
-    width: 6.5rem;
-    height: 6.5rem;
-  }
-
-  .albums.home .play-album,
-  .albums.home .options {
-    left: 0.7rem;
-    bottom: 2.4rem;
-  }
-
-  .albums.home .play-album .play-pause-icon {
-    width: 1.2rem;
-    height: 1.2rem;
-  }
-  .albums.home .play-album .circle {
-    height: 1.7rem;
-    width: 1.7rem;
-  }
-
-  .albums.home img.album-image {
-    width: 6.5rem;
-    height: 6.5rem;
-  }
-
-  /* Songs */
-  .songs.home img {
-    width: 2.3rem;
-    height: 2.3rem;
-    border-radius: 4px;
-  }
-
-  .songs.home img.play {
-    width: 1.3rem;
-    height: 1.3rem;
-    transform: translate(-70%, -50%);
-  }
-
-  .songs.home .song {
-    width: 16rem;
-    margin: 0.4rem;
-  }
-
-  .song .song-name,
-  .song .album {
-    margin-left: 0rem;
-  }
-
-  .song .song-name {
-    font-size: 0.85rem;
-  }
-
-  .song .album {
-    font-size: 0.65rem;
-  }
-
-  /* Playlists */
-  .playlists.home .list {
-    height: 10.5rem;
-    row-gap: 4rem;
-  }
-  .playlists.home .album-link {
-    width: 6.8rem;
-    height: 8.5rem;
-  }
-
-  .playlists.home img.album-image {
-    width: 6.5rem;
-    height: 6.5rem;
-  }
-
-  .playlists.home .playlist .container {
-    width: 6.5rem;
-    height: 6.5rem;
-  }
-
-  .playlists.home .play-album {
-    bottom: 2.8rem;
-    left: 0.8rem;
-  }
-
-  /* History */
-  .history.home .list {
-    max-height: 9rem;
-    overflow: hidden;
-  }
-  .history.home img.album-image {
-    width: 6.5rem;
-    height: 6.5rem;
-  }
-  .history.home .container {
-    width: 6.5rem;
-    height: 6.5rem;
-  }
-  .history.home .album-link {
-    width: 6.8rem;
-    height: 6rem;
-  }
-
-  /* -------------- Album List Page -------------- */
-
-  .section-list {
-    position: fixed;
-    z-index: 11;
-    top: 50%;
-    right: 18px;
-  }
-  .section-list div {
-    padding: 3px;
-    font-size: 0.85rem;
-  }
-  .virtuoso-grid-item {
-    width: 132px !important;
-  }
-  .album-link {
-    margin: 0.2rem;
-    padding: 0rem 0.2rem 0rem 0.2rem;
-    width: 7.8rem;
-    height: 10rem;
-  }
-
-  .album-image-container .container {
-    padding-top: 0.4rem;
-    margin: auto;
-    width: 7rem;
-    height: 7rem;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-  }
-
-  .album-image-name {
-    position: relative;
-    height: 2rem;
-    width: 100%;
-    z-index: 10;
-  }
-  .album-image-name span {
-    margin-left: 0.3rem;
-    margin-right: 5px;
-    font-size: 0.9rem;
-  }
-
-  .album-image-name .album-name {
-    font-size: 0.8rem;
-  }
-  .album-image-name .artist-name {
-    font-size: 0.65rem;
-  }
-
-  .play-album .play-pause-icon {
-    width: 1.2rem;
-    height: 1.2rem;
-  }
-  .play-album .circle {
-    height: 2rem;
-    width: 2rem;
-  }
-
-  .album-image-container .play-album {
-    bottom: 2.55rem;
-    left: 0.55rem;
-  }
-
-  .checkbox-container {
-    top: 6px;
-    left: 0px;
-  }
-
-  /* -------------------------- Settings Page -------------------------- */
-
-  .settings-section {
-    padding-top: 1.2rem;
-  }
-  .settings-section div {
-    margin-bottom: 0.4rem;
-  }
-
-  .directory-padding {
-    padding-bottom: 0.9rem;
-  }
-  .directory-container {
-    padding: 0.8rem;
-    width: 15rem;
-  }
-  .remove-directory {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .loader {
-    width: 1rem;
-    height: 1rem;
-  }
-
-  .loader.large {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  .status-container {
-    position: absolute;
-    top: 3.5rem;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 1rem;
-    font-size: 0.8rem;
-  }
-  .scan-status-icon {
-    width: 2.4rem;
-    height: 2.4rem;
-  }
-  .settings-section.backup img{
-    height: 1.2rem;
-    width: 1.2rem;
-  }
-
-  .scan-progress {
-    width: 14rem;
-  }
-
-  .scan-progress.mini {
-    width: 5rem;
-  }
-
-  .scan-progress-bar {
-    height: 4px;
-  }
-
-  /* Theme Color Picker */
-  select {
-    padding: 0.4rem;
-    transition: 0.4s;
-    width: 10rem;
-    height: 3.2rem;
-    text-indent: 3rem;
-    font-size: 0.8rem;
-  }
-  select.playlists {
-    padding: 8px;
-    width: 9rem;
-    height: 2.2rem;
-  }
-  select::picker-icon {
-    width: 1.2rem;
-    height: 1.2rem;
-  }
-
-  select.themes option {
-    padding: 0.6rem;
-    padding-left: 0.95rem;
-  }
-  select.playlists option {
-    padding: 0.25rem;
-    padding-left: 0.9rem;
-    gap: 1rem;
-  }
-
-  select.themes::before {
-    top: 0.8rem;
-    left: 0.95rem;
-    height: 1.5rem;
-    width: 1.5rem;
-  }
-  select.themes option::before {
-    height: 1.5rem;
-    width: 1.5rem;
-  }
-
-  .keys-container div {
-    padding-bottom: 15px;
-  }
-  .key-binding {
-    font-size: 0.7rem;
-    padding: 0.55rem;
-    width: 6rem;
-  }
-
-
-  /* ---------- Placeholder Styles ---------- */
-  .album-link.placeholder {
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    z-index: 10;
-  }
-  .album-link.placeholder:hover {
-    cursor: auto;
-    background-color: none;
-    border-radius: var(--border-radius);
-    background-color: rgba(0, 0, 0, 0);
-  }
-
-  .album-image.placeholder {
-    margin-top: 8px;
-    width: 140px;
-    height: 140px;
-    border-radius: var(--border-radius);
-    background-color: var(--gradient-one);
-    overflow: hidden;
-    z-index: 10;
-  }
-
-  .activity {
-    position: absolute;
-    left: -45%;
-    height: 100%;
-    width: 45%;
-    background-image: linear-gradient(to left, rgba(251,251,251, .05), rgba(251,251,251, .3), rgba(251,251,251, .6), rgba(251,251,251, .3), rgba(251,251,251, .05));
-    background-image: -moz-linear-gradient(to left, rgba(251,251,251, .05), rgba(251,251,251, .3), rgba(251,251,251, .6), rgba(251,251,251, .3), rgba(251,251,251, .05));
-    background-image: -webkit-linear-gradient(to left, rgba(251,251,251, .05), rgba(251,251,251, .3), rgba(251,251,251, .6), rgba(251,251,251, .3), rgba(251,251,251, .05));
-    animation: loading 2s infinite;
-    z-index: 11;
-  }
-
-  /* ---------- Context Menu Styles ---------- */
-  .context-menu-container {
-    width: 6.8rem;
-    padding: 0rem 0.35rem 0.7rem 0.35rem;
-    font-size: 0.7rem;
-  }
-  .context-menu-container li {
-    margin-top: 0.3rem;
-    padding: 0.4rem;
-  }
-  .context-menu-container img {
-    height: 1rem;
-    width: 1rem;
-  }
-
-  /*  Search values */
-  .search-filters {
-    padding-top: 0.5rem;
-    margin-right: 0.9rem;
-    padding-bottom: 1rem;
-  }
-
-  /* Search Section */
-  span.search-bar {
-    width: 19rem;
-    position: relative;
-  }
-  input[type=text] {
-    height: 1.8rem;
-    padding: 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  input[type=text].font-3 {
-    font-size: 1.1rem;
-  }
-
-  img.search-icon {
-    top: 2px;
-    right: 1px;
-    min-width: 1.6rem;
-    height: 1.6rem;
-    transform: scale(1);
-    filter: var(--play-icon);
-  }
-}

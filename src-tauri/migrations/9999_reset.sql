@@ -7,3 +7,4 @@ DROP TABLE IF EXISTS queue_shuffled;
 DROP TABLE IF EXISTS history;
 DROP TABLE IF EXISTS dirs;
 DROP TABLE IF EXISTS playlists;
+DROP TABLE IF EXISTS artist_covers;

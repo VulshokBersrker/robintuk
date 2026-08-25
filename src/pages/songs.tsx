@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import { error } from "@tauri-apps/plugin-log";
 import { invoke } from '@tauri-apps/api/core';
 import { Virtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
-import { alphabeticallyOrdered, ContextMenu, PlaylistList, playSelection, savePosition, Songs, SongsFull } from "../globalValues";
+import { alphabeticallyOrdered, ContextMenu, PlaylistList, savePosition, Songs, SongsFull } from "../globalValues";
+import SongDetailsModal from "../components/songDetails/songDetails";
 import CustomContextMenu from "../components/customContextMenu";
-import SongDetailsModal from "../components/songDetails";
+import SongSelectionBar from "../components/songSelectionBar";
 
 // Images
-import QueueIcon from '../images/rectangle-list-regular-full.svg';
 import PlayIcon from '../images/play-icon-outline.svg';
-import AddIcon from '../images/plus-solid-full.svg';
 import SearchIcon from '../images/search_icon.svg';
-import CloseIcon from '../images/x.svg';
+
 
 type Props = {
     songs: SongsFull[]
@@ -31,8 +31,8 @@ export default function SongPage({songs}: Props) {
     const [songSections, setSongSections] = useState<number[]>([]);
 
     // Playlist Values
-    const [newPlaylistName, setNewPlaylistName] = useState<string>("");
-    const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
+    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
+    const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
@@ -224,6 +224,39 @@ export default function SongPage({songs}: Props) {
         setDisplayAddToMenu(false);
     }
 
+    async function playSelection() {
+        try {
+            await invoke('play_selection', {songs: songSelection, shuffled: false});
+            clearSelection();
+            await invoke('update_current_song_played');
+            savePosition(0);
+            // Update the music controls state somehow
+        }
+        catch (err) {
+            error(`Failed to play song: ${err}`);
+            console.log(`Failed to play song: ${err}`);
+        }
+    }
+
+    async function createSelectedPlaylist(name: string) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
+        try {
+            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
+            clearSelection();
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+
+    function updateNewPlaylistName(name: string) {
+        setNewPlaylistName(name);
+    }
+
+    function removeSelectedSongs() { }
+
     // ------------ End of Selection Bar Functions ------------
 
     // Context Menu Functions
@@ -259,6 +292,8 @@ export default function SongPage({songs}: Props) {
 
     return(
         <>  
+            {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
+
             <div className="section-list">
                 {songList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                     let totalIndex = 0;
@@ -285,6 +320,7 @@ export default function SongPage({songs}: Props) {
                 })}
             </div>
 
+
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="songs-main">
                 <div className="song-page-list">
                     <div className="search-filters d-flex justify-content-end vertical-centered"> 
@@ -300,56 +336,20 @@ export default function SongPage({songs}: Props) {
                     </div>
 
                     {/* Song Selection Bar */}
-                    <div className={`selection-popup-container grid-20 header-font ${songSelection.length >= 1 ? "open" : "closed"}`}>
-                        <div className="section-8" style={{marginLeft: '15px'}}>{songSelection.length} item{songSelection.length > 1 && <>s</>} selected</div>
-                        <div className="section-5 position-relative">
-                            <button className="d-flex align-items-center" onClick={() => {playSelection(songSelection); clearSelection(); }}>
-                                <img src={PlayIcon} />
-                                &nbsp;Play
-                            </button>
-                        </div>
-                        <div className="section-6 position-relative">
-                            <button className="d-flex align-items-center" onClick={() => setDisplayAddToMenu(!displayAddToMenu)}>
-                                <img src={AddIcon} />
-                                &nbsp;Add
-                            </button>
-
-                            {displayAddToMenu && songSelection.length >= 1 &&
-                                <div className="playlist-list-container header-font" style={{transform: playlistList.length === 0 ? "translate(-43%, 19.5%)" : "translate(-43%, 8%)"}}>
-                                    <div className="item d-flex align-items-center" onClick={addToQueue}>
-                                        <img src={QueueIcon} className="icon-size"/> &nbsp;Queue
-                                    </div>
-                                    <hr/>
-                                    <span className="playlist-input-container d-flex justify-content-center align-items-center">
-                                        <input
-                                            id="new_playlist_input" type="text" autoComplete="off" placeholder="New Playlist"
-                                            className="new-playlist" value={newPlaylistName}
-                                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                                        />
-                                        <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
-                                    </span>
-                                    
-                                    <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container"
-                                        style={{height: playlistList.length === 0 ? "0px" : "" }}
-                                    >
-                                        {playlistList?.map((playlist) => {
-                                            return(
-                                                <div className="item" key={playlist.name} onClick={() => addSelectedToPlaylist(playlist.id)}>
-                                                    {playlist.name}
-                                                </div>
-                                            );                                                                                      
-                                        })}
-                                    </SimpleBar>
-                                </div>
-                            }
-                        </div>
-
-                        <span className="vertical-centered section-1" onClick={clearSelection}> <img src={CloseIcon} /></span>
-                    </div>                    
+                    <SongSelectionBar 
+                        selectionBarType={2}
+                        songSelection={songSelection}
+                        updateNewPlaylistName={updateNewPlaylistName}
+                        addSelectedToPlaylist={addSelectedToPlaylist}
+                        createSelectedPlaylist={createSelectedPlaylist}
+                        clearSelection={clearSelection}
+                        playlistList={playlistList}
+                        removeSelectedSongs={removeSelectedSongs}
+                        play={playSelection}
+                        addToQueue={addToQueue}
+                        currentPlaylistID={-1}
+                    />
                     {/* End of Song Selection Bar */}
-
-                    {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
-
 
                     <div className="song-list">
                         <Virtuoso 
@@ -370,47 +370,45 @@ export default function SongPage({songs}: Props) {
                                                         {filteredSongs[index].song_section === 300 && <h1 className="font-6">...</h1>}
                                                     </span>
                                                     <span className="section-1"></span>
-                                                    <span className="section-6 details">Name</span>
-                                                    <span className="section-4 details">Album</span>
-                                                    <span className="section-4 details">Album Artist</span>
-                                                    <span className="section-2 details">Release</span>
-                                                    <span className="section-2 details">Genre</span>
-                                                    <span className="section-1 details">Length</span>
+                                                    <span className="section-6 vertical-centered details">Name</span>
+                                                    <span className="section-4 vertical-centered details">Album</span>
+                                                    <span className="section-4 vertical-centered details">Album Artist</span>
+                                                    <span className="section-2 vertical-centered details">Release</span>
+                                                    <span className="section-2 vertical-centered details">Genre</span>
+                                                    <span className="section-1 vertical-centered details">Length</span>
                                                 </div>
                                                 <hr />
-                                                <div className="flex items-center justify-between">
-                                                    <div className="song-link"
-                                                        onContextMenu={(e) => {
-                                                            e.preventDefault();
-                                                            handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index, songSelection.filter(x => {
-                                                                return x.path === filteredSongs[index].path
-                                                            }).length > 0);
-                                                        }}
-                                                    >
-                                                        <div className={`grid-20 song-row`}>
-                                                            <span className="section-1 vertical-centered play ">
-                                                                <span className="form-control">
-                                                                    <input
-                                                                        type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                                        onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked,)}
-                                                                        onChange={() => {}} 
-                                                                        checked={songSelection.filter(x => {
-                                                                            return x.path === filteredSongs[index].path
-                                                                        }).length > 0}
-                                                                    />
-                                                                </span>
-                                                                <img src={PlayIcon} onClick={() => {playSong(index)}}/>
+                                                <div className="song-link"
+                                                    onContextMenu={(e) => {
+                                                        e.preventDefault();
+                                                        handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index, songSelection.filter(x => {
+                                                            return x.path === filteredSongs[index].path
+                                                        }).length > 0);
+                                                    }}
+                                                >
+                                                    <div className={`grid-20 song-row`}>
+                                                        <span className="section-1 vertical-centered play ">
+                                                            <span className="form-control">
+                                                                <input
+                                                                    type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                                    onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked,)}
+                                                                    onChange={() => {}} 
+                                                                    checked={songSelection.filter(x => {
+                                                                        return x.path === filteredSongs[index].path
+                                                                    }).length > 0}
+                                                                />
                                                             </span>
-                                                            
-                                                            <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
-                                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
-                                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
-                                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
-                                                            <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
-                                                        </div>
-                                                        <hr />
+                                                            <img src={PlayIcon} onClick={() => {playSong(index)}}/>
+                                                        </span>
+                                                        
+                                                        <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
+                                                        <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
+                                                        <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
+                                                        <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
+                                                        <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
+                                                        <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
                                                     </div>
+                                                    <hr />
                                                 </div>
                                             </>
                                         );
@@ -418,39 +416,37 @@ export default function SongPage({songs}: Props) {
                                     totalIndex += songSections[j];
                                 }
                                 return(
-                                    <div className="flex items-center justify-between">
-                                        <div className="song-link"
-                                            onContextMenu={(e) => {
-                                                e.preventDefault();
-                                                handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index, songSelection.filter(x => {
-                                                    return x.path === filteredSongs[index].path
-                                                }).length > 0);
-                                            }}
-                                        >
-                                            <div className={`grid-20 song-row`}>                                            
-                                                <span className="section-1 vertical-centered play ">
-                                                    <span className="form-control">
-                                                        <input
-                                                            type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                            onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked)}
-                                                            onChange={() => {}} 
-                                                            checked={songSelection.filter(x => {
-                                                                return x.path === filteredSongs[index].path
-                                                            }).length > 0}
-                                                        />
-                                                    </span>
-                                                    <img src={PlayIcon} onClick={() => {playSong(index)}}/>
+                                    <div className="song-link"
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index, songSelection.filter(x => {
+                                                return x.path === filteredSongs[index].path
+                                            }).length > 0);
+                                        }}
+                                    >
+                                        <div className={`grid-20 song-row`}>                                            
+                                            <span className="section-1 vertical-centered play ">
+                                                <span className="form-control">
+                                                    <input
+                                                        type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                        onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked)}
+                                                        onChange={() => {}} 
+                                                        checked={songSelection.filter(x => {
+                                                            return x.path === filteredSongs[index].path
+                                                        }).length > 0}
+                                                    />
                                                 </span>
-                                                
-                                                <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
-                                                <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                                <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
-                                                <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
-                                                <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
-                                                <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
-                                            </div>
-                                            <hr />
+                                                <img src={PlayIcon} onClick={() => {playSong(index)}}/>
+                                            </span>
+                                            
+                                            <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
+                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
+                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
+                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
+                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
+                                            <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
                                         </div>
+                                        <hr />
                                     </div>
                                 );                                
                             }}

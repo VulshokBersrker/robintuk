@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use serde_with::{serde_as, DisplayFromStr};
 
 // This struct is just for uploading data to the database
-#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
+#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SongTableUpload {
     pub name: Option<String>,
     pub path: String,
@@ -16,8 +16,8 @@ pub struct SongTableUpload {
     pub artist: Option<String>,
     pub genre: Option<String>,
     pub album_artist: Option<String>,
-    pub disc: Option<i32>,
-    pub duration: String,
+    pub disc_number: Option<i32>,
+    pub duration: i32,
     pub song_section: Option<i32>,
     pub album_section: Option<i32>,
     pub artist_section: Option<i32>,
@@ -41,14 +41,41 @@ pub struct SongTable {
     pub song_section: u64
 }
 
-#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
+#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PlaylistTable {
     pub id: i64,
     pub name: String,
     pub image: String
 }
 
-#[derive(sqlx::FromRow, Default, Serialize)]
+
+#[derive(sqlx::FromRow, Default, Debug, Serialize, Deserialize)]
+pub struct PlaylistTracksTable {
+    pub playlist_id: i64,
+    pub track_id: String,
+    pub position: i64
+}
+
+#[derive(sqlx::FromRow, Default, Debug, Serialize, Deserialize)]
+pub struct ArtistCoversTable {
+    pub id: i64,
+    pub artist_name: String,
+    pub image: String
+}
+
+#[derive(sqlx::FromRow, Default, Serialize, Deserialize)]
+pub struct Covers {
+    pub cover: String
+}
+
+#[derive(sqlx::FromRow, Default, Debug, Serialize, Deserialize)]
+pub struct SettingsTable {
+    pub id: i64,
+    pub theme: String,
+    pub last_scan_date: String
+}
+
+#[derive(sqlx::FromRow, Default, Serialize, Deserialize)]
 pub struct PlaylistFull {
     pub id: i64,
     pub name: String,
@@ -56,7 +83,7 @@ pub struct PlaylistFull {
     pub songs: Vec<SongTable>
 }
 
-#[derive(sqlx::FromRow, Default, Serialize, Clone)]
+#[derive(sqlx::FromRow, Default, Serialize, Deserialize, Clone)]
 pub struct DirsTable {
     pub dir_path: String,
 }
@@ -131,12 +158,12 @@ pub struct SongHistory {
     pub song_section: u64
 }
 
-#[derive(sqlx::FromRow, Default, Debug, Clone, serde::Serialize)]
+#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
 pub struct DoesExist {
     pub does_exist: bool
 }
 
-#[derive(sqlx::FromRow, Default, Debug, Clone, serde::Serialize)]
+#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
 pub struct QueueFormat {
     pub position: i32,
     pub song_id: String
@@ -163,9 +190,17 @@ pub struct GetArtistList {
 }
 
 
-#[derive(sqlx::FromRow, Default, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(sqlx::FromRow, Default, Debug, Serialize, Deserialize)]
 pub struct LrclibLyrics {
     pub lyrics_id: i64,
     pub plain_lyrics: String,
     pub synced_lyrics: Option<String>
+}
+
+#[derive(sqlx::FromRow, Default, Debug, Serialize, Deserialize)]
+pub struct LyricsTable {
+    pub lyrics_id: i64,
+    pub plain_lyrics: String,
+    pub synced_lyrics: Option<String>,
+    pub song_id: String
 }

@@ -3,9 +3,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from "react";
 import SimpleBar from 'simplebar-react';
 
+import './songDetails.css';
 
-import { SongLyrics, Songs } from '../globalValues';
-import ImageWithFallBack from './imageFallback';
+
+import { SongLyrics, Songs } from '../../globalValues';
+import ImageWithFallBack from '../imageFallback';
 
 
 type Props = {
@@ -60,8 +62,7 @@ export default function SongDetailsModal({song_path, bool, updateSongDetailsDisp
                         bool={lyricsDisplay}
                         instrumental={false}
                         resetLyricsDisplay={resetLyricsDisplay}
-                    />
-                    
+                    />                    
                 }
                 <div className="container grid-20">
                     <div className="header-font font-2 section-20">Song Info</div>

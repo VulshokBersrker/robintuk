@@ -555,7 +555,7 @@ export default function MusicControls() {
                         {/* Music Control Buttons */}
                         <div className="section-5 player-buttons d-flex justify-content-center align-items-center">
                             <div className="d-flex justify-content-center align-items-center">
-                                <div className="play-button" id="shuffle">
+                                <div className="music-control-button" id="shuffle">
                                     <img
                                         src={ShuffleButton}
                                         alt="shuffle queue"
@@ -564,7 +564,7 @@ export default function MusicControls() {
                                     />
                                 </div>
 
-                                <div className="play-button cursor-pointer" id="previous">
+                                <div className="music-control-button" id="previous">
                                     <img src={BackwardButton} alt="" className={`${songDetails === undefined ? "disabled" : ""}`}  onClick={previousSong}/>
                                 </div>
 
@@ -590,11 +590,11 @@ export default function MusicControls() {
                                     }
                                 </div>
 
-                                <div className="play-button cursor-pointer" id="next">
+                                <div className="music-control-button" id="next">
                                     <img src={ForwardButton} alt="" className={`icon-flip ${songDetails === undefined ? "disabled" : ""}`} onClick={nextSong}/>
                                 </div>
 
-                                <div className="play-button" id="repeat">
+                                <div className="music-control-button" id="repeat">
                                     {repeatMode === 0 &&
                                         <img
                                             src={RepeatButton}
@@ -645,8 +645,8 @@ export default function MusicControls() {
                 
                 <div className={`fullscreen-music ${displayFullscreen ? "open" : "closed"}`} >
                     <span className={`d-flex artwork ${hasLyrics ? "lyric" : ""}`}>
-                        <ImageWithFallBack image={songDetails?.cover} alt="" image_type="album-larger" />
                         <div>
+                            <ImageWithFallBack image={songDetails?.cover} alt="" image_type="album-larger" />
                             <p className="header-font font-4">{songDetails?.name}</p>
                             <p className="font-3 song-album">{songDetails?.album}</p>
                             <p className="font-2 song-album">{songDetails?.artist}</p>

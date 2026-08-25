@@ -1,0 +1,72 @@
+
+
+.song-details-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: var(--border-radius);
+  border: 2px var(--font-color-three) solid;
+  background-color: var(--gradient-two);
+  width: 42rem;
+  height: 33rem;
+  z-index: 9999;
+}
+
+
+.song-details-modal .container {
+  margin: 0.8rem;
+  margin-left: 1.2rem;
+}
+
+
+
+/* Very Skinny views */
+@media screen and (min-width: 100px) and (max-width: 799px) {
+
+  .song-details-modal {
+    transform: translate(-50%, -50%);
+    width: 29rem;
+    height: 33rem;
+    z-index: 100;
+  }
+
+}
+/* styles for smaller iPads/Kindle */
+@media screen and (min-width: 800px) and (max-width: 1199px) { 
+
+  .song-details-modal {
+    transform: translate(-42%, -50%);
+    width: 35rem;
+    height: 33rem;
+    z-index: 100;
+  }
+
+}
+
+@media screen and (min-width: 1200px) and (max-width: 1800px) {
+
+}
+
+/* Fullscreen 1080p Monitor Size - 1920x1080 */
+@media screen and (min-width: 1919px) {
+
+  
+}
+
+/* Fullscreen 4K Monitor Size - 3840x2160 */
+@media screen and (min-width: 3840px) {
+  
+    .song-details-modal {
+        border: 3px var(--font-color-three) solid;
+        width: 66rem;
+        height: 45rem;
+    }
+
+    .song-details-modal .container {
+        margin: 1rem;
+        margin-left: 1.3rem;
+    }
+
+}
+

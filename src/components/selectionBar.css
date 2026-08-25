@@ -61,55 +61,55 @@
 
 .selection-popup-container {
 
-    .playlist-list-container {
-        position: absolute;
-        top: -1rem;
-        transform: translate(-30%, 20%);
-        left: 0px;
-        width: 16rem;
-        background: var(--gradient-two);
-        border: 2px solid var(--font-color-three);
-        padding: 0px 0.4rem 0.95rem 0.4rem;
-        border-radius: var(--border-radius);
-        z-index: 20;
-        overflow: hidden;
-    }
-    .playlist-list-container.queue {
-        position: absolute;
-        top: -1rem;
-        transform: translate(-30%, 23%);
-        left: 0px;
-        width: 16rem;
-        background: var(--gradient-two);
-        border: 2px solid var(--font-color-three);
-        padding: 0px 0.4rem 0.95rem 0.4rem;
-        border-radius: var(--border-radius);
-        z-index: 20;
-        overflow: hidden;
-    }
+  .playlist-list-container {
+    position: absolute;
+    top: -1rem;
+    transform: translate(-30%, 20%);
+    left: 0px;
+    width: 16rem;
+    background: var(--gradient-two);
+    border: 2px solid var(--font-color-three);
+    padding: 0px 0.4rem 0.95rem 0.4rem;
+    border-radius: var(--border-radius);
+    z-index: 20;
+    overflow: hidden;
+  }
+  .playlist-list-container.queue {
+    position: absolute;
+    top: -1rem;
+    transform: translate(-30%, 23%);
+    left: 0px;
+    width: 16rem;
+    background: var(--gradient-two);
+    border: 2px solid var(--font-color-three);
+    padding: 0px 0.4rem 0.95rem 0.4rem;
+    border-radius: var(--border-radius);
+    z-index: 20;
+    overflow: hidden;
+  }
 
-    .playlist-list-container hr {
-        background-color: var(--font-color-three);
-        opacity: 1;
-        height: 2px;
-        width: 106%;
-        margin-left: -0.4rem;
-        border: 0;
-    }
+  .playlist-list-container hr {
+    background-color: var(--font-color-three);
+    opacity: 1;
+    height: 2px;
+    width: 106%;
+    margin-left: -0.4rem;
+    border: 0;
+  }
 
-    .playlist-list-container .item {
-        margin: 0;
-        cursor: pointer;
-        margin-top: 0.4rem;
-        margin-bottom: 0.4rem;
-        margin-right: 0.95rem;
-        padding: 0.5rem;
-        transition: 0.1s ease-in-out;
-    }
+  .playlist-list-container .item {
+    margin: 0;
+    cursor: pointer;
+    margin-top: 0.4rem;
+    margin-bottom: 0.4rem;
+    margin-right: 0.95rem;
+    padding: 0.5rem;
+    transition: 0.1s ease-in-out;
+  }
 
-    .playlist-input-container,
-    .playlist-input-container span {
-        margin: auto;
-    }
+  .playlist-input-container,
+  .playlist-input-container span {
+    margin: auto;
+  }
 
 }

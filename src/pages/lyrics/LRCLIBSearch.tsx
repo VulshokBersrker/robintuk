@@ -202,12 +202,11 @@ export default function LRCLIBSearchResults() {
                                             <div
                                                 className={`grid-20 lyrics song-row align-items-center ${lyricsDisplay.index === index? "current-song" : ""}`}
                                             >
-                                                <span className="section-2 text-center">
+                                                <span className="section-3 text-center">
                                                     {lyricsResults[index].syncedLyrics !== null && <div className="lyrics-synced">Synced</div>}
                                                     {lyricsResults[index].plainLyrics !== null && lyricsResults[index].syncedLyrics === null && <div className="lyrics-plain">Plain</div>}
                                                     {lyricsResults[index].instrumental && <div className="lyrics-instrumental">Instrumental</div>}
                                                 </span>
-                                                <span className="section-1 text-center">  </span>
                                                 <span className="section-5 font-0 name ">{lyricsResults[index].name}</span>
                                                 <span className="section-5 artist ">{lyricsResults[index].albumName}</span>
                                                 <span className="section-6 artist">{lyricsResults[index].artistName}</span>

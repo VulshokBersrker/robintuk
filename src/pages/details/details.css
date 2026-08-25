@@ -233,23 +233,7 @@ button img {
   margin-right: .5rem;
 }
 
-.song-details-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border-radius: var(--border-radius);
-  border: 2px var(--font-color-three) solid;
-  background-color: var(--gradient-two);
-  width: 42rem;
-  height: 33rem;
-  z-index: 9999;
-}
 
-.song-details-modal .container {
-  margin: 0.8rem;
-  margin-left: 1.2rem;
-}
 
 /* -------------------------- Playlist Pages Styles -------------------------- */
 
@@ -264,10 +248,11 @@ button img {
   padding: 0px 0.4rem 0.95rem 0.4rem;
   border-radius: var(--border-radius);
   z-index: 20;
+  overflow: hidden;
 }
 .playlist-list-container.add {
   top: 50%;
-  transform: translate(-42%, 8%);
+  transform: translate(0%, 8%);
 }
 
 .playlist-list-container.add-context-menu {
@@ -284,6 +269,11 @@ button img {
 .add-playlist-container {
   margin-top: 0.7rem;
   max-height: 10rem;
+}
+
+.playlist-input-container,
+.playlist-input-container span {
+  margin: auto;
 }
 
 .playlist-list-container hr {
@@ -375,6 +365,19 @@ input.new-playlist {
 .playlist .playlist .album-name {
   margin-top: 0.35rem;
   font-size: 1.2rem;
+}
+
+/* Very Skinny views */
+@media screen and (min-width: 100px) and (max-width: 799px) {
+  
+  .playlist-main .song-list .grid-20 .section-1 {
+    min-width: 60px;
+  }
+
+  .queue-main .song-list .grid-20 .section-1 {
+    min-width: 60px;
+  }
+
 }
 
 
@@ -493,17 +496,6 @@ input.new-playlist {
     margin-right: .5rem;
   }
 
-  .song-details-modal {
-    border: 3px var(--font-color-three) solid;
-    width: 66rem;
-    height: 45rem;
-  }
-
-  .song-details-modal .container {
-    margin: 1rem;
-    margin-left: 1.3rem;
-  }
-
   /* -------------------------- Playlist Pages Styles -------------------------- */
 
   .playlist-list-container {
@@ -610,238 +602,6 @@ input.new-playlist {
   .playlist .playlist .album-name {
     margin-top: 0.35rem;
     font-size: 1.2rem;
-  }
-
-}
-
-
-@media (min-resolution: 120dpi)and (max-width: 1080px) and (max-resolution: 187dpi) {
-
-  /* -------------------------- Album Overview Page -------------------------- */
-
-  .top-row {
-    padding-top: 0rem;
-    padding-bottom: 0.5rem;
-  }
-  .album-container {
-    margin-top: 0.4rem;
-  }
-
-  .album-details {
-    padding-bottom: 1.1rem;
-  }
-  .album-image {
-    max-width: 9.5rem;
-    height: 9.5rem;
-  }
-  /* Fullscreen Music Artwork */
-  .album-image.larger {
-    max-width: 12rem;
-    height: 12rem;
-  }
-
-  .album-details span  {
-    margin-bottom: 0.5rem;
-  }
-  .album-commmands {
-    padding-top: 0.5rem;
-  }
-  .album-commmands > * {
-    padding-right: 0.4rem;
-  }
-
-  .album-container .song-list {
-    padding-top: 1.2rem;
-  }
-  .song-list .details {
-    font-size: 0.65rem;
-  }
-  .song-row {
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-
-  /* Checkbox Styles */
-  .form-control {
-    font-size: 1rem;
-    margin-left: 0.3rem;
-  }
-  input[type="checkbox"] {
-    width: 25px;
-    height: 25px;
-    transform: translateY(-0.075em);
-  }
-  input[type="checkbox"]::before {
-    content: "";
-    width: 0.7rem;
-    height: 0.7rem;
-  }
-
-  .selection-popup-container {
-    left: 55%;
-    transform: translateX(-50%);
-    width: 35rem;
-    height: 3.5rem;
-  }
-
-  .selection-popup-container.closed {
-    opacity: 0;
-    top: -100px;
-    transition: 0.0s ease-in-out;
-  }
-
-  .selection-popup-container.open {
-    top: 40px;
-  }
-  .selection-popup-container span {
-    margin-right: 25px;
-  }
-  .selection-popup-container img {
-    height: 18px;
-    width: 18px;
-  }
-
-  button img {
-    height: 18px;
-    width: 18px;
-  }
-  .borderless img {
-    height: 22px;
-    width: 22px;
-  }
-  .song-row .play img {
-    padding: 5px;
-  }
-  .song-row img {
-    width: 1.35rem;
-    height: 1.35rem;
-  }
-  .song-row .track {
-    font-size: 0.7rem;
-  }
-  .song-row .artist {
-    font-size: 0.7rem;
-  }
-  .song-row .duration {
-    font-size: 0.7rem;
-    margin-right: 5px;
-  }
-
-  /* -------------------------- Song Page Styles -------------------------- */
-
-  .song-page-list .song-list {
-    margin-left: 0.2rem;
-    margin-right: 0.2rem;
-  }
-
-  .song-details-modal {
-    width: 32rem;
-    height: 23rem;
-  }
-
-  /* -------------------------- Playlist Pages Styles -------------------------- */
-
-  .playlist-list-container {
-    position: absolute;
-    top: -1rem;
-    transform: translate(-43%, 20%);
-    left: 0px;
-    width: 10rem;
-    padding: 0px 0.4rem 0.8rem 0.4rem;
-  }
-  .playlist-list-container.add {
-    top: 50%;
-    transform: translate(-12%, 8%);
-  }
-
-  .playlist-list-container.add-context-menu {
-    top: 50%;
-    transform: translate(-88%, -55.4%);
-    left: 270px;
-  }
-
-  .add-playlist-container {
-    margin-top: 0.7rem;
-    max-height: 10rem;
-  }
-
-  .playlist-list-container hr {
-    background-color: var(--font-color-three);
-    opacity: 1;
-    height: 2px;
-    width: 106%;
-    margin-left: -0.4rem;
-    border: 0;
-  }
-
-  .playlist-list-container .item {
-    margin-top: 0.3rem;
-    margin-bottom: 0.4rem;
-    margin-right: 0.9rem;
-    padding: 0.4rem;
-    font-size: 0.75rem;
-  }
-  span.playlist-input-container {
-    margin-right: 0rem;
-  }
-  span.playlist-input-container span {
-    margin-left: 0.9rem;
-  }
-  span.playlist-input-container button {
-    margin-right: -0.9rem;
-  }
-  input.new-playlist {
-    width: 6rem !important;
-    height: 2rem !important;
-  }
-
-  .album-image.playlist {
-    height: 2rem !important;
-    width: 2rem !important;
-  }
-
-  .playlist-buttons {
-    padding-left: 0.9rem;
-  }
-
-  .playlist-buttons span,
-  .playlist-buttons input {
-    margin-left: 0.9rem;
-  }
-
-  .song-row.playlist {
-    padding-top: 0.2rem;
-    padding-bottom: 0.2rem;
-  }
-  .song-row.playlist .album-image {
-    width: 2rem !important;
-    height: 2rem !important;
-  }
-
-  .album-link.playlist {
-    margin: 0.3rem;
-    padding-left: 0.3rem;
-    padding-right: 0.3rem;
-    padding-bottom: 2.5rem;
-    width: 9rem;
-    height: 8.5rem;
-  }
-
-  .album-image-container.playlist .container {
-    margin-top: 0.2rem;
-    width: 8rem;
-    height: 8rem;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-  }
-  .album-image-container.playlist .play-album {
-    bottom: 2.9rem;
-    left: 0.8rem;
-  }
-
-  .playlist .playlist .album-name {
-    margin-top: 0.35rem;
-    font-size: 0.95rem;
   }
 
 }

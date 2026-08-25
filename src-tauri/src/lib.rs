@@ -370,14 +370,57 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
             let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
 
             if last_res.is_ok() {
-                let last_scan = last_res.unwrap().last_scan_date.parse::<i64>().unwrap();
-                let last_scan_system_time = DateTime::from_timestamp(last_scan, 0).unwrap();
+                let last_scan = last_res.unwrap().last_scan_date.parse::<i64>();
 
-                let last_scan_duration = last_scan_system_time.signed_duration_since(last_modified);
+                if last_scan.is_ok() {
+                    let last = last_scan.unwrap();
+                    let last_scan_system_time = DateTime::from_timestamp(last, 0).unwrap();
+                    let last_scan_duration = last_scan_system_time.signed_duration_since(last_modified);
 
-                if does_exist {
-                    // If the last modified date of the file is after the time of the last scan
-                    if last_scan_duration.num_days() < 10 {                        
+                    if does_exist {
+                        // If the last modified date of the file is after the time of the last scan
+                        if last_scan_duration.num_days() < 10 {                        
+                            let song_res = get_song_data(received).await;
+
+                            if song_res.is_ok() {
+                                if does_exist {
+                                    let _ = db::update_song(song_res.unwrap(), &state.pool).await;
+                                    num_updated += 1;
+                                }
+                                else {
+                                    let _ = db::add_song(song_res.unwrap(), &state.pool).await;
+                                    num_added += 1;                    
+                                }
+                            }
+                            else {
+                                let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
+                                num_error += 1;
+                            }
+                        }
+                        // If the last modified date of the file is before the time of the last scan - Means no info was changed
+                        else {
+                            let _ = db::set_keep_single(&state.pool, true, &received).await;
+                        }
+                    }
+                    else {
+                        let song_res = get_song_data(received).await;
+
+                        if song_res.is_ok() {
+                            let _ = db::add_song(song_res.unwrap(), &state.pool).await;
+                            num_added += 1;                    
+                            
+                        }
+                        else {
+                            let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
+                            num_error += 1;
+                        }
+                    }
+                
+                }
+                // Error - Do a full scane
+                else {
+                    let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
+                    if does_exist {
                         let song_res = get_song_data(received).await;
 
                         if song_res.is_ok() {
@@ -395,24 +438,21 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                             num_error += 1;
                         }
                     }
-                    // If the last modified date of the file is before the time of the last scan - Means no info was changed
                     else {
-                        let _ = db::set_keep_single(&state.pool, true, &received).await;
-                    }
-                }
-                else {
-                    let song_res = get_song_data(received).await;
+                        let song_res = get_song_data(received).await;
 
-                    if song_res.is_ok() {
-                        let _ = db::add_song(song_res.unwrap(), &state.pool).await;
-                        num_added += 1;                    
-                        
-                    }
-                    else {
-                        let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
-                        num_error += 1;
+                        if song_res.is_ok() {
+                            let _ = db::add_song(song_res.unwrap(), &state.pool).await;
+                            num_added += 1;                    
+                            
+                        }
+                        else {
+                            let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
+                            num_error += 1;
+                        }
                     }
                 }
+                
             }
             // There is no last scan date - do a full scan
             else { 
