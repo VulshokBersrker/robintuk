@@ -12,7 +12,7 @@ use tauri::{Emitter, State};
 use crate::types::{
     QueueFormat, AllAlbumResults, AllArtistResults, AllGenreResults, ArtistDetailsResults, DirsTable,
     DoesExist, GenreDetailsResults, History, LrclibLyrics, PlaylistFull, PlaylistTable, SettingsScanDate,
-    SongHistory, SongTable, SongTableUpload
+    SongHistory, SongTable, SongTableUpload, Covers
 };
 use crate::{AppState, commands};
 
@@ -29,17 +29,17 @@ pub fn init() {
     let _ = tr.block_on(apply_initial_migrations());
 
     // Create the cover folder
-    let covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers";
+    let covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/covers";
     let home_dir = Path::new(&covers_dir);
     fs::create_dir_all(home_dir).unwrap();
 
     // Create the playlist image folder
-    let playlist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers";
+    let playlist_cover_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/playlist_covers";
     let playlist_dir = Path::new(&playlist_cover_dir);
     fs::create_dir_all(playlist_dir).unwrap();
 
     // Create the artist image folder
-    let artist_covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers";
+    let artist_covers_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/artist_covers";
     let artist_dir = Path::new(&artist_covers_dir);
     fs::create_dir_all(artist_dir).unwrap();
 }
@@ -368,11 +368,6 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
         .await;
 
     Ok(res.unwrap())
-}
-
-#[derive(sqlx::FromRow, Default, serde::Serialize)]
-struct Covers {
-    cover: String
 }
 
 pub async fn remove_songs(pool: &Pool<Sqlite>) -> Result<(), String> {
@@ -872,7 +867,7 @@ pub async fn remove_multiple_songs_from_playlist(state: State<AppState, '_>, pla
 #[tauri::command(rename_all = "snake_case")]
 pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, playlist_name: String, playlist_id: i64) -> Result<(), String> {
     // First get the image file and the playlist cover directory
-    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers/";
+    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/playlist_covers/";
     let file_type = Path::new(&file_path).extension().and_then(OsStr::to_str).unwrap();
     let new_path = image_dir.clone() + "" + &playlist_name.as_str() + "." + file_type;
 
@@ -890,7 +885,7 @@ pub async fn add_playlist_cover(state: State<AppState, '_>, file_path: String, p
 #[tauri::command(rename_all = "snake_case")]
 pub async fn add_artist_cover(state: State<AppState, '_>, file_path: String, artist_name: String) -> Result<(), String> {
     // First get the image file and the playlist cover directory
-    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers/";
+    let image_dir =  dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/artist_covers/";
     let file_type = Path::new(&file_path).extension().and_then(OsStr::to_str).unwrap();
     let new_path = image_dir.clone() + "" + &artist_name.as_str() + "." + file_type;
 

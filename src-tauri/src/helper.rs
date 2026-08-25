@@ -280,7 +280,7 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
 
 
             // Get the directory where all the data is stored
-            let image_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/covers/";
+            let image_dir = dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/images/covers/";
             let mut covers_path = PathBuf::new();
 
             // Get Album artwork
