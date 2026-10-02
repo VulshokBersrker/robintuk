@@ -108,6 +108,8 @@ export default function PlaylistOverviewPage() {
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }        
+
+        setIsEdit(false);
     }, [location.state.name]);
 
     function navigateToAlbum(album: string) {
@@ -273,27 +275,12 @@ export default function PlaylistOverviewPage() {
             console.log(e);
         }        
     }
-    
-    async function addToPlaylist(id: number) {
-        setDisplayAddToMenu(false);
-        resetContextMenu();
-        try { 
-            await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            clearSelection();
-        }
-    }
 
-    async function createPlaylist(name: string) {
+    async function createPlaylist(name: string, song: Songs) {
         resetContextMenu();
         setDisplayAddToMenu(false);
         try {
-            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
-            clearSelection();
+            await invoke('create_playlist', {name: name, songs: [song], songs_to_add: true});
             await invoke('new_playlist_added');
         }
         catch(e) {
@@ -317,8 +304,6 @@ export default function PlaylistOverviewPage() {
             console.log(e);
         }
     }
-
-    // ------------ Start of Selection Bar Functions ------------
 
     function updateNewPlaylistName(name: string) {
         setNewPlaylistName(name);
@@ -422,6 +407,20 @@ export default function PlaylistOverviewPage() {
         resetContextMenu();
     }
 
+    async function addToPlaylistContextMenu(id: number, song: Songs) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
+        try { 
+            await invoke('add_to_playlist', {songs: [song], playlist_id: id});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            clearSelection();
+        }
+    }
+
 
     // ------------ Drag and Drop Functions ------------
     async function onDragEnd(result: any) {
@@ -521,7 +520,7 @@ export default function PlaylistOverviewPage() {
     }
 
 
-    if(loading === true) {
+    if(loading) {
         return(
             <div className="d-flex vertical-centered">
                 <span className="loader"/>
@@ -766,7 +765,7 @@ export default function PlaylistOverviewPage() {
                         playlistList={playlistList}
                         name={playlistDetails.name}
                         createPlaylist={createPlaylist} 
-                        addToPlaylist={addToPlaylist} 
+                        addToPlaylist={addToPlaylistContextMenu} 
                         addToQueue={addToQueue}
                         updateSongDetailsDisplay={updateSongDetailsDisplay}
                         ref={isContextMenuOpen}
@@ -868,8 +867,8 @@ type Props = {
     // Playlist
     name: string,
     playlistList: PlaylistList[],
-    createPlaylist: (name: string) => void,
-    addToPlaylist: (id: number) => void
+    createPlaylist: (name: string, song: Songs) => void,
+    addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
     updateSongDetailsDisplay: (bool: boolean, path: string) => void,
     ref: any
@@ -944,14 +943,14 @@ function CustomContextMenu({
                                     className="new-playlist" value={newPlaylistName}
                                     onChange={(e) => setNewPlaylistName(e.target.value)}
                                 />
-                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                <span><button onClick={() => {createPlaylist(newPlaylistName, song)}}>Create</button></span>
                             </span>
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
                                 {playlistList?.map((playlist) => {
                                     if(playlist.name !== name) {
                                         return(
-                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id, song)}>
                                                 {playlist.name}
                                             </div>
                                         );

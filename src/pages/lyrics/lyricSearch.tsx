@@ -1,6 +1,6 @@
 // Core Libraries
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 import './lyricsData.css';
@@ -15,6 +15,7 @@ type Props = { songs: SongsFull[] }
 
 export default function LyricSearch({songs}: Props) {
 
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
     const [scrollParent, setScrollParent] = useState<any>(null);
@@ -40,7 +41,17 @@ export default function LyricSearch({songs}: Props) {
             setSongSections(tempSectionArray); 
         }
         setupSongs();
+
+        if(searchParams.get("q") !== null) {
+            setSearchValue(searchParams.get("q")!);
+            updateSearchResults(searchParams.get("q")!);
+        }
     }, []);
+
+    function navigateToLyricsOverview(path: string){
+        navigate(`/lyrics/song-search?q=${searchValue}`, { replace: true });
+        navigate("/lyrics/lrclib-results", {state: {name: path }});
+    }
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
@@ -140,7 +151,7 @@ export default function LyricSearch({songs}: Props) {
                                                 <hr />
                                                 <div className="items-center justify-between">
                                                     <div className="song-link"
-                                                        onClick={() => { navigate("/lyrics/lrclib-results", {state: {name: filteredSongs[index].path }});}}
+                                                        onClick={() => { navigateToLyricsOverview(filteredSongs[index].path) }}
                                                     >
                                                         <div className={`grid-20 song-row`}>
                                                             <span className="section-5 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
@@ -160,7 +171,7 @@ export default function LyricSearch({songs}: Props) {
                                 return(
                                     <div className="items-center justify-between">
                                         <div className="song-link"
-                                            onClick={() => { navigate("/lyrics/lrclib-results", {state: {name: filteredSongs[index].path }});}}
+                                            onClick={() => { navigateToLyricsOverview(filteredSongs[index].path) }}
                                         >
                                             <div className={`grid-20 song-row`}>
                                                 <span className="section-5 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>

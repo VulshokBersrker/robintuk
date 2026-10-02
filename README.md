@@ -48,15 +48,12 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## To Do Features
 
-- [ ] Improve Backup and Restore functions
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer) file associations
 - [ ] Better DPI aware CSS
+- [x] Improve Backup and Restore functions
 - [x] Improve Song Details and Lyrics popup CSS
 - [x] Update Create Playlist order to improve load time of new playlist creation
-- [x] Add "Select All"
-- [x] Add "Are you sure" when deleting a playlist
-- [x] Add "Remove from Queue" on Queue page
 - [x] Drag and Drop playlist order
 - [x] Gapless playback
 
@@ -68,11 +65,13 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
+
 - [ ] Small chance of an anti-virus false positive when importing playlists
-- [ ] Some album artwork is not deleted when songs are removed
-- [ ] Some deleted albums are not removed when a new scan is finished
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)
+- [x] Add to Playlist Context Menu not working on Playlist Details
+- [x] Some album artwork is not deleted when songs are removed
+- [x] Some deleted albums are not removed when a new scan is finished
 - [x] Sometimes the drag playlist order feature doesn't save the new order correctly
 - [x] Error with the queue page when clicking play on a song in the queue
 
@@ -94,3 +93,6 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 * __I'm getting an "I don't have access" error on launching Robintuk:__ 
     * This is usually from a false positive from anti-virus protections. Restarting the computer will fix the issue until it happens again.
+
+* __Looking for Song lyrics often gives no results:__ 
+    * This is because LRCLIB is having a lot of traffic, it is often momentary

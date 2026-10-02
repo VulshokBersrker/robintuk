@@ -637,7 +637,7 @@ pub async fn get_genre_songs(state: State<'_, AppState>, genre: String) -> Resul
 #[tauri::command]
 pub async fn get_all_playlists(state: State<AppState, '_>) -> Result<Vec<PlaylistTable>, String> {
 
-    let temp = sqlx::query_as::<_, PlaylistTable>("SELECT * FROM playlists ORDER BY name")
+    let temp = sqlx::query_as::<_, PlaylistTable>("SELECT * FROM playlists ORDER BY name COLLATE NOCASE ASC")
         .fetch_all(&state.pool)
         .await
         .unwrap();

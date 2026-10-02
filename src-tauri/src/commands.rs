@@ -11,7 +11,7 @@ use std::path::{PathBuf};
 use std::io::Write;
 
 // Tauri Libraries
-use tauri::{Emitter, State, http::HeaderMap};
+use tauri::{Emitter, State, http::{HeaderMap}};
 use tauri_plugin_log::log::{self, error};
 
 // Misc Libraries
@@ -654,12 +654,17 @@ pub struct LRCLIBSearchResults {
 pub async fn search_remote_lyrics(name: String, album: String) -> Result<Vec<LRCLIBSearchResults>, String> {
     // Setup the client
     let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".parse().unwrap());
-    headers.insert(USER_AGENT, "Robintuk Music Player".parse().unwrap());
+    // headers.insert(CONTENT_TYPE, "application/json".parse().unwrap());
+    headers.insert(USER_AGENT, "Robintuk Music Player v1.0.5 (https://github.com/VulshokBersrker/robintuk)".parse().unwrap());
 
-    let url_client = Client::builder().default_headers(headers).build().unwrap();
 
-    let url = format!("https://lrclib.net/api/search?&track_name={name}&album_name={album}");
+    let url_client =  reqwest::ClientBuilder::new()
+        .default_headers(headers)
+        .build().unwrap();
+
+    let value: String = format!("{name} {album}");
+
+    let url = format!("https://lrclib.net/api/search?q={value}");
     let first_res = url_client.get(&url).send().await;
 
     if first_res.is_ok() {
@@ -674,7 +679,14 @@ pub async fn search_remote_lyrics(name: String, album: String) -> Result<Vec<LRC
         }
     }
     else {
-        log::error!("Search For Lyrics (Error) - {:?}", first_res.unwrap_err());
+        println!("---------------\n{:?}", &first_res);
+        
+        let first_test = first_res.unwrap_err().to_string();
+
+        println!("{:?}", first_test);
+
+
+        // log::error!("Search For Lyrics (Error) - {:?}", first_res.unwrap_err().to_string());
         Err("Error Searching for Remote Lyrics".to_string())
     }
 }
