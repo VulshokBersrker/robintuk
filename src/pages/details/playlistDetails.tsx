@@ -108,6 +108,8 @@ export default function PlaylistOverviewPage() {
         if(checkCurrentSong !== null) {
             setIsCurrent(JSON.parse(checkCurrentSong));
         }        
+
+        setIsEdit(false);
     }, [location.state.name]);
 
     function navigateToAlbum(album: string) {
@@ -274,12 +276,11 @@ export default function PlaylistOverviewPage() {
         }        
     }
 
-    async function createPlaylist(name: string) {
+    async function createPlaylist(name: string, song: Songs) {
         resetContextMenu();
         setDisplayAddToMenu(false);
         try {
-            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
-            clearSelection();
+            await invoke('create_playlist', {name: name, songs: [song], songs_to_add: true});
             await invoke('new_playlist_added');
         }
         catch(e) {
@@ -866,7 +867,7 @@ type Props = {
     // Playlist
     name: string,
     playlistList: PlaylistList[],
-    createPlaylist: (name: string) => void,
+    createPlaylist: (name: string, song: Songs) => void,
     addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
     updateSongDetailsDisplay: (bool: boolean, path: string) => void,
@@ -942,7 +943,7 @@ function CustomContextMenu({
                                     className="new-playlist" value={newPlaylistName}
                                     onChange={(e) => setNewPlaylistName(e.target.value)}
                                 />
-                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                <span><button onClick={() => {createPlaylist(newPlaylistName, song)}}>Create</button></span>
                             </span>
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">

@@ -515,8 +515,7 @@ function ContextMenu({
     async function createPlaylist(name: string) {
         try {
             const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album});
-            await invoke('create_playlist', {name: name });
-            await invoke('add_to_playlist', {songs: album_songs, playlist_name: name});
+            await invoke('create_playlist', {name: name, songs: album_songs, songs_to_add: true });
             await invoke('new_playlist_added');
         }
         catch(e) {
