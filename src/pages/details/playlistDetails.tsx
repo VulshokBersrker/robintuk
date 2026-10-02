@@ -273,20 +273,6 @@ export default function PlaylistOverviewPage() {
             console.log(e);
         }        
     }
-    
-    async function addToPlaylist(id: number) {
-        setDisplayAddToMenu(false);
-        resetContextMenu();
-        try { 
-            await invoke('add_to_playlist', {songs: songSelection, playlist_id: id});
-        }
-        catch(e) {
-            console.log(e);
-        }
-        finally {
-            clearSelection();
-        }
-    }
 
     async function createPlaylist(name: string) {
         resetContextMenu();
@@ -317,8 +303,6 @@ export default function PlaylistOverviewPage() {
             console.log(e);
         }
     }
-
-    // ------------ Start of Selection Bar Functions ------------
 
     function updateNewPlaylistName(name: string) {
         setNewPlaylistName(name);
@@ -422,6 +406,20 @@ export default function PlaylistOverviewPage() {
         resetContextMenu();
     }
 
+    async function addToPlaylistContextMenu(id: number, song: Songs) {
+        setDisplayAddToMenu(false);
+        resetContextMenu();
+        try { 
+            await invoke('add_to_playlist', {songs: [song], playlist_id: id});
+        }
+        catch(e) {
+            console.log(e);
+        }
+        finally {
+            clearSelection();
+        }
+    }
+
 
     // ------------ Drag and Drop Functions ------------
     async function onDragEnd(result: any) {
@@ -521,7 +519,7 @@ export default function PlaylistOverviewPage() {
     }
 
 
-    if(loading === true) {
+    if(loading) {
         return(
             <div className="d-flex vertical-centered">
                 <span className="loader"/>
@@ -766,7 +764,7 @@ export default function PlaylistOverviewPage() {
                         playlistList={playlistList}
                         name={playlistDetails.name}
                         createPlaylist={createPlaylist} 
-                        addToPlaylist={addToPlaylist} 
+                        addToPlaylist={addToPlaylistContextMenu} 
                         addToQueue={addToQueue}
                         updateSongDetailsDisplay={updateSongDetailsDisplay}
                         ref={isContextMenuOpen}
@@ -869,7 +867,7 @@ type Props = {
     name: string,
     playlistList: PlaylistList[],
     createPlaylist: (name: string) => void,
-    addToPlaylist: (id: number) => void
+    addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
     updateSongDetailsDisplay: (bool: boolean, path: string) => void,
     ref: any
@@ -951,7 +949,7 @@ function CustomContextMenu({
                                 {playlistList?.map((playlist) => {
                                     if(playlist.name !== name) {
                                         return(
-                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id)}>
+                                            <div className="item" key={playlist.name} onClick={() => addToPlaylist(playlist.id, song)}>
                                                 {playlist.name}
                                             </div>
                                         );

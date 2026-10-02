@@ -67,7 +67,6 @@ export default function LRCLIBSearchResults() {
         }
     }
 
-    // Move this to backend soon
     async function getSongLyricsResults(name: string, album: string) {
         try{
             setLyricsLoading(true);
@@ -78,7 +77,21 @@ export default function LRCLIBSearchResults() {
             }
             else {
                 setLyricsResults([]);
-            }            
+            }  
+            
+            // let res2 = await fetch(`https://lrclib.net/api/search?q=${name}`, 
+            //         {
+            //             method: 'GET',
+            //             headers: {
+            //                 "Content-Type": "application/json",
+            //                 "User-Agent": "Robintuk Music Player v1.0.5 (https://github.com/VulshokBersrker/robintuk)"
+            //             }
+            //         }
+            //     )
+            //     .then((result) => {result.json()})
+            //     .then((data) => {return data});
+
+            // console.log(res2);
         }
         catch(e) {
             error("LRCLIB Search Results - Error Getting Song Lyrics: " + e);
@@ -121,14 +134,14 @@ export default function LRCLIBSearchResults() {
     }
 
 
-    if(loading === true) {
+    if(loading) {
         return(
             <div className="d-flex vertical-centered">
                 <span className="loader"/>
             </div>
         );
     }
-    else if(loading === false) {
+    else if(!loading) {
         return(
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
                 <div className="d-flex top-row justify-content-between">
@@ -154,6 +167,11 @@ export default function LRCLIBSearchResults() {
                                 style={{width: '180px'}}
                             >Current Lyrics</button>
                         }
+                        <button 
+                            onClick={() => {getSongLyricsResults(song!.name, song!.album);}} 
+                            className="section-6 header-font font-1"
+                            style={{width: '180px'}}
+                        >Search Again</button>
                     </span>                    
                 </div>
 

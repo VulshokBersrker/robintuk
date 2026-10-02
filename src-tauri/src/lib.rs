@@ -505,10 +505,10 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
     *second_state.is_scan_ongoing.lock().unwrap() = false;
     app.emit("scan-length", ScanProgress {length: scan_length, current: num_scanned}).unwrap();
 
-    app.emit("scan-finished", GetScanStatus { res: false}).unwrap();    
-
     // Remove all songs that are no longer in the directories
     let _ = db::remove_songs(&state.pool).await.unwrap();
+
+    app.emit("scan-finished", GetScanStatus { res: false}).unwrap();    
 
     // Timestamp the current scan date
     let _ = set_last_scan_date(&state.pool).await;

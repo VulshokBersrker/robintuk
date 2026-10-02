@@ -1,6 +1,6 @@
 [package]
 name = "robintuk_player"
-version = "1.0.5"
+version = "1.0.6"
 description = "A beautiful and colorful music player for Windows"
 authors = ["VulshokBersrker"]
 edition = "2021"
@@ -15,10 +15,10 @@ name = "robintuk_player_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
-tauri = { version = "2.9.2", features = ["protocol-asset"] }
+tauri = { version = "2.11.5", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -38,7 +38,7 @@ m3u8-rs = "6.0.0"
 jwalk = "0.8.1"
 flume = "0.12.0"
 threadpool = "1.8.1"
-reqwest = { version = "0.13.1", features = ["json"] }
+reqwest = { version = "0.13.4", features = ["json"] }
 tauri-plugin-prevent-default = "4.0.3"
 tauri-plugin-dialog = "2"
 tauri-plugin-log = "2"
