@@ -235,17 +235,20 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_name: String, index: usize, shuffled: bool) -> Result<bool, String> {
+pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_id: i64, index: usize, shuffled: bool) -> Result<bool, String> {
 
     *state.songs_being_added.lock().unwrap() += 1;
 
-    let mut album: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC;")
-        .bind(album_name)
+    let mut album: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT
+            s.name, s.path, a.cover, s.release, s.track, a.name as album,
+            s.artist, s.genre, s.album_artist, s.disc_number, s.duration, s.song_section
+            FROM songs s INNER JOIN albums a WHERE s.album=$1 AND a.id=$1 ORDER BY s.disc_number ASC, s.track ASC;")
+        .bind(album_id)
         .fetch_all(&state.pool)
         .await
         .unwrap();
 
-    let q = album.clone();
+    let q: Vec<SongTable> = album.clone();
     let mut checker = true;
 
     if shuffled {

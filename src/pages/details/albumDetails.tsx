@@ -96,7 +96,8 @@ export default function AlbumOverviewPage() {
     async function getAlbum() {
         isLoading(true);
         try{
-            const res: Songs[] = await invoke("get_album", {name: location.state.name});
+            const res: Songs[] = await invoke("get_album", { album_id: location.state.id });
+
             // console.log(res);
             setAlbumList(res);
             let dur = 0;
@@ -125,8 +126,8 @@ export default function AlbumOverviewPage() {
             setDiscGroups(tempDiscArray);
         }
         catch(e) {
-            console.log("Error getting album")
-            error(`Error getting album ${location.state.name}`);
+            console.log(`Error getting album ${location.state.id}`)
+            error(`Error getting album ${location.state.id}`);
             navigate("/albums");
         }
         finally {
@@ -138,11 +139,12 @@ export default function AlbumOverviewPage() {
     async function playSong(index: number, shuffled: boolean) {
         resetContextMenu();
         try {
-            await invoke("play_album", {album_name: location.state.name, index: index, shuffled: shuffled});
+            await invoke("play_album", {album_id: location.state.id, index: index, shuffled: shuffled});
             savePosition(index);
         }
         catch(err) {
             console.log(`Failed to play song: ${err}`);
+            error(`Failed to play song: ${err}`);
         }
         finally {
             localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );

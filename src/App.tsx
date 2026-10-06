@@ -141,7 +141,7 @@ function App() {
   async function getAlbums() {
     try {
       const list = await invoke<AlbumDetails[]>('get_all_albums');
-      setAlbumList(list);  
+      setAlbumList(list);
     }
     catch(err) {
       error("Main (Error) - Error Getting Albums");

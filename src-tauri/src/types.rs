@@ -41,6 +41,24 @@ pub struct SongTable {
     pub song_section: u64
 }
 
+// This struct is for data retreived from the database
+#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
+pub struct SongTableLimit {
+    pub name: String,
+    pub path: String,
+    pub cover: String,
+    pub release: String,
+    pub track: i32,
+    pub album: String,
+    pub artist: String,
+    pub genre: String,
+    pub album_artist: String,
+    pub disc_number: i32,
+    pub duration: u64,
+    pub song_section: u64,
+    pub album_id: i64
+}
+
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PlaylistTable {
     pub id: i64,
@@ -90,7 +108,8 @@ pub struct DirsTable {
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct AllAlbumResults {
-    pub album: String,
+    pub id: i32,
+    pub name: String,
     pub album_artist: String,
     pub cover: String,
     pub album_section: i32
@@ -149,7 +168,7 @@ pub struct SongHistory {
     pub cover: String,
     pub release: String,
     pub track: i32,
-    pub album: String,
+    pub album: i32,
     pub artist: String,
     pub genre: String,
     pub album_artist: String,

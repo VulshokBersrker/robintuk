@@ -300,6 +300,8 @@ pub struct GetScanStatus {
 }
 
 // use the path value to check, since that is a unique value in each entry (files cannot share paths)
+
+// Oversight - change scan folder between scans - might skip over files
 #[tauri::command]
 async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<ScanResults, String> {
     // Keep track of how many entires pass or fail
@@ -508,7 +510,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
     // Remove all songs that are no longer in the directories
     let _ = db::remove_songs(&state.pool).await.unwrap();
 
-    app.emit("scan-finished", GetScanStatus { res: false}).unwrap();    
+    app.emit("scan-finished", GetScanStatus { res: false}).unwrap();
 
     // Timestamp the current scan date
     let _ = set_last_scan_date(&state.pool).await;

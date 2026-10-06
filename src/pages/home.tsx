@@ -6,7 +6,7 @@ import { invoke } from '@tauri-apps/api/core';
 import SimpleBar from 'simplebar-react';
 
 // Custom Components
-import { AlbumDetails, GetCurrentSong, playAlbum, PlayHistory, PlaylistList, Playlists, playPlaylist, Songs } from '../globalValues';
+import { AlbumDetails, GetCurrentSong, playAlbum, PlayHistory, PlaylistList, Playlists, playPlaylist, SongsLimit } from '../globalValues';
 import ImageWithFallBack from '../components/imageFallback';
 
 // Images
@@ -24,10 +24,10 @@ export default function Home() {
 
     const [playlists, setPlaylists] = useState<Playlists[]>([]);
     const [albums, setAlbums] = useState<AlbumDetails[]>([]);
-    const [songs, setSongs] = useState<Songs[]>([]);
+    const [songs, setSongs] = useState<SongsLimit[]>([]);
     const [playHistory, setPlayHistory] = useState<PlayHistory[]>([]);
 
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "", album: "", artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0 });
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "", album: -1, artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
     // Playlist Values
@@ -87,7 +87,7 @@ export default function Home() {
 
     async function getSongs() {
         try{
-            const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 40 } );
+            const list = await invoke<SongsLimit[]>('get_songs_with_limit', { limit: 40 } );
             setSongs(list);
         }
         catch(e) {
@@ -118,15 +118,15 @@ export default function Home() {
 
     // ------------------- Navigation Functions -------------------
 
-    const navigateToAlbumOverview = (name: string) => {
-        navigate("/albums/overview", {state: {name: name}});
+    const navigateToAlbumOverview = (id: number) => {
+        navigate("/albums/overview", {state: {id: id}});
     }
 
     const navigateToPlaylistOverview = (name: number) => {
         navigate("/playlists/overview", {state: {name: name}});
     }
 
-    function handleContextMenu(e: any, album: string, artist: string, playlist: number, index: number, type: string) {
+    function handleContextMenu(e: any, album: number, artist: string, playlist: number, index: number, type: string) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -146,14 +146,13 @@ export default function Home() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "", album: "", artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, context_type: "", album: -1, artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
     async function addToQueue() {
         try {
-            let songList: Songs[] = [];
-            
+            let songList: SongsLimit[] = [];
             
             await invoke('add_to_queue', {songs: songList});
             await invoke('player_add_to_queue', {queue: songList});
@@ -164,16 +163,16 @@ export default function Home() {
         resetContextMenu();
     }
     
-    async function addToPlaylist(id: number, context_type: string, song: number, album: string) {
+    async function addToPlaylist(id: number, context_type: string, song: number, album: number) {
         resetContextMenu();
         try {
-            let songList: Songs[] = [];
+            let songList: SongsLimit[] = [];
             if(context_type === "song") {
-                const res: Songs = await invoke<Songs>("get_song", { song_path: songs[song].path });
+                const res: SongsLimit = await invoke<SongsLimit>("get_song", { song_path: songs[song].path });
                 songList.push(res);
             }
             else if(context_type === "album") {
-                const res: Songs[] = await invoke<Songs[]>("get_album", { name: album });
+                const res: SongsLimit[] = await invoke<SongsLimit[]>("get_album", { album_id: album });
                 songList.push(...res);
             }
             await invoke('add_to_playlist', {songs: songList, playlist_id: id});
@@ -183,20 +182,19 @@ export default function Home() {
         }      
     }
 
-    async function createPlaylist(name: string, context_type: string, song: number, album: string) {
+    async function createPlaylist(name: string, context_type: string, song: number, album: number) {
         resetContextMenu();
         try {
-            let songList: Songs[] = [];
+            let songList: SongsLimit[] = [];
             if(context_type === "song") {
-                const res: Songs = await invoke<Songs>("get_song", { song_path: songs[song].path });
+                const res: SongsLimit = await invoke<SongsLimit>("get_song", { song_path: songs[song].path });
                 songList.push(res);
             }
             else if(context_type === "album") {
-                const res: Songs[] = await invoke<Songs[]>("get_album", { name: album });
+                const res: SongsLimit[] = await invoke<SongsLimit[]>("get_album", { album_id: album });
                 songList.push(...res);
             }      
-            await invoke('create_playlist', { name: name });
-            await invoke('add_to_playlist', { songs: songList, playlist_name: name });
+            await invoke('create_playlist', { name: name, songs: songList, songs_to_add: true });
             await invoke('new_playlist_added');
         }
         catch(e) {
@@ -220,19 +218,19 @@ export default function Home() {
                                     <div className="album-image-container"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, albums[i].album, albums[i].album_artist, 0, i, "album");
+                                            handleContextMenu(e, albums[i].id, albums[i].album_artist, 0, i, "album");
                                         }}
                                     >
-                                        <div className="play-album" onClick={() => playAlbum(entry.album, false)}>
+                                        <div className="play-album" onClick={() => playAlbum(entry.id, false)}>
                                             <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                             <img src={Circle} className="circle"/>
                                         </div>
                                         
-                                        <div className="container" onClick={() => navigateToAlbumOverview(entry.album)} >
-                                            <ImageWithFallBack image={entry.cover} alt={entry.album} image_type={"album"} />
+                                        <div className="container" onClick={() => navigateToAlbumOverview(entry.id)} >
+                                            <ImageWithFallBack image={entry.cover} alt={entry.name} image_type={"album"} />
                                         </div>
                                         <div className="album-image-name header-font">
-                                            <div className="album-name">{entry.album}</div>
+                                            <div className="album-name">{entry.name}</div>
                                             <div className="artist-name">{entry.album_artist}</div>
                                         </div>
                                     </div>
@@ -243,11 +241,11 @@ export default function Home() {
                 </div>
 
 
-                {/* Songs */}
+                {/* SongsLimit */}
                 <div className="section-10 home songs">
-                    <div className="header-font font-3 cursor-pointer" style={{width: '100px'}} onClick={() => navigate('/songs')} >Songs</div>
+                    <div className="header-font font-3 cursor-pointer" style={{width: '100px'}} onClick={() => navigate('/songs')} >SongsLimit</div>
                     <div className={`list ${songs.length === 0 ? "": "d-flex flex-wrap"}`}>
-                        {songs.length === 0 && <div className="text-center font-secondary">No Songs</div>}
+                        {songs.length === 0 && <div className="text-center font-secondary">No SongsLimit</div>}
 
                         {songs.map((song, i) => {
                             return(
@@ -255,7 +253,7 @@ export default function Home() {
                                     key={`song-${i}`} className="song grid-10"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
-                                        handleContextMenu(e, songs[i].album, songs[i].album_artist, 0, i, "song");
+                                        handleContextMenu(e, songs[i].album_id, songs[i].album_artist, 0, i, "song");
                                     }}
                                 >
                                     <span className="section-2 d-flex position-relative" onClick={() => playSong(i)}>
@@ -287,7 +285,7 @@ export default function Home() {
                                         className="album-link playlist"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, "", "", item.id, i, "playlist");
+                                            handleContextMenu(e, -1, "", item.id, i, "playlist");
                                         }}
                                     >
                                         <div className="album-image-container ">
@@ -362,11 +360,11 @@ export default function Home() {
 
 type Props = {
     isToggled: boolean,
-    context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
-    album: string,
+    context_type: string, // Album / Song / Artist / Playlist / Playlist SongsLimit
+    album: number,
     artist: string,
     index: number,
-    playAlbum: (name: string, shuffled: boolean) => void,
+    playAlbum: (id: number, shuffled: boolean) => void,
     playSong: (index: number, shuffled: boolean) => void,
     playPlaylist: (id: number, shuffled: boolean) => void,
     posX: number,
@@ -375,8 +373,8 @@ type Props = {
     // Playlist
     playlist: number,
     playlistList: PlaylistList[],
-    createPlaylist: (name: string, context_type: string, song: number, album: string) => void,
-    addToPlaylist: (id: number, context_type: string, song: number, album: string) => void
+    createPlaylist: (name: string, context_type: string, song: number, album: number) => void,
+    addToPlaylist: (id: number, context_type: string, song: number, album: number) => void
     addToQueue: () => void,
     ref: any,
     resetContextMenu: () => void
@@ -394,7 +392,7 @@ function CustomContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
         navigate("/artists/overview", {state: {name: artist}});

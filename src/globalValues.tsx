@@ -28,6 +28,21 @@ export interface Songs {
     song_section: number
 }
 
+export interface SongsLimit {
+    name: string,
+    path: string,
+    cover: string,
+    release: string,
+    track: number,
+    album: string,
+    artist: string,
+    genre: string,
+    album_artist: string,
+    disc_number: number,
+    duration: number,
+    album_id: number
+}
+
 export interface SongsFull {
     name: string,
     path: string,
@@ -49,7 +64,8 @@ export interface AlbumRes {
 }
 
 export interface AlbumDetails {
-    album: string,
+    id: number,
+    name: string,
     album_artist: string,
     cover: string,
     album_section: number
@@ -192,12 +208,12 @@ export async function playSelection(array: Songs[]) {
     }
 }
 
-export async function playAlbum(album_name: string, shuffled: boolean) {
+export async function playAlbum(album_id: number, shuffled: boolean) {
     try {
         localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
         await invoke("set_shuffle_mode", { mode: shuffled });
 
-        await invoke("play_album", {album_name: album_name, index: 0, shuffled: shuffled});
+        await invoke("play_album", {album_id: album_id, index: 0, shuffled: shuffled});
         savePosition(0);
     }
     catch(e) {

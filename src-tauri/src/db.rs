@@ -12,9 +12,9 @@ use tauri::{Emitter, State};
 use crate::types::{
     QueueFormat, AllAlbumResults, AllArtistResults, AllGenreResults, ArtistDetailsResults, DirsTable,
     DoesExist, GenreDetailsResults, History, LrclibLyrics, PlaylistFull, PlaylistTable, SettingsScanDate,
-    SongHistory, SongTable, SongTableUpload, Covers
+    SongHistory, SongTable, SongTableUpload, Covers, SongTableLimit
 };
-use crate::{AppState, commands};
+use crate::{AppState, commands, helper};
 
 
 // ---------------------------------------- Initilize Database and Check if Database exists ----------------------------------------
@@ -75,28 +75,6 @@ pub async fn apply_initial_migrations() -> Result<(), String> {
     let pool = establish_connection().await?;
 
     let _ = pool.execute(include_str!("../migrations/0001_init.sql")).await;
-
-    let does_exist: Result<(String,), sqlx::Error> = sqlx::query_as("SELECT last_scan_date FROM settings")
-        .fetch_one(&pool)
-        .await;
-
-    if does_exist.is_err() {
-        let _ = pool.execute(include_str!("../migrations/0002_settings.sql")).await;
-    }
-
-    let _ = pool.execute(include_str!("../migrations/0003_artists.sql")).await;
-
-    let settings: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM settings")
-        .fetch_one(&pool)
-        .await
-        .unwrap();
-
-    if settings.0 == 0 {
-        let _ = sqlx::query("INSERT INTO settings (id, theme) VALUES (1, ?1)")
-            .bind("red")
-            .execute(&pool)
-            .await;
-    }
 
     Ok(())
 }
@@ -304,7 +282,9 @@ pub async fn set_last_scan_date(pool: &Pool<Sqlite>) -> Result<(), String> {
 #[tauri::command]
 pub async fn get_all_songs(state: State<AppState, '_>) -> Result<Vec<SongTable>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs ORDER BY song_section ASC, name COLLATE NOCASE ASC;")
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT s.name, s.path, a.cover, s.release, s.track, a.name as album,
+        s.artist, s.genre, s.album_artist, s.disc_number, s.duration, s.song_section
+        FROM songs s INNER JOIN albums a WHERE s.album=a.id ORDER BY s.song_section ASC, s.name COLLATE NOCASE ASC;")
         .fetch_all(&state.pool)
         .await
         .unwrap();
@@ -327,10 +307,11 @@ pub async fn get_song(state: State<AppState, '_>, song_path: String) -> Result<S
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<SongTable>, String> {
+pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<SongTableLimit>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>(
-        "SELECT * FROM songs ORDER BY name ASC LIMIT $1")
+    let temp: Vec<SongTableLimit> = sqlx::query_as::<_, SongTableLimit>("SELECT s.name, s.path, a.cover, s.release, s.track, a.name as album,
+        s.artist, s.genre, s.album_artist, s.disc_number, s.duration, s.song_section, a.id as album_id
+        FROM songs s INNER JOIN albums a WHERE s.album=a.id ORDER BY s.name ASC LIMIT $1")
         .bind(limit)
         .fetch_all(&state.pool)
         .await
@@ -342,31 +323,60 @@ pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Res
 // Add a song to the database
 // -- Check the song to make sure no duplicate songs are being added?
 pub async fn add_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result<SqliteQueryResult, String> {
-    
-    let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
-        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, favorited, song_section, album_section, artist_section, genre_section, keep) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)")
-        .bind(&entry.name)
-        .bind(&entry.path)
-        .bind(&entry.cover)
-        .bind(&entry.release)
-        .bind(&entry.track)
-        .bind(&entry.album)
-        .bind(&entry.artist)
-        .bind(&entry.genre)
-        .bind(&entry.album_artist)
-        .bind(&entry.disc_number)
-        .bind(&entry.duration)
-        .bind(false)
-        .bind(&entry.song_section)
-        .bind(&entry.album_section)
-        .bind(&entry.artist_section)
-        .bind(&entry.genre_section)
-        .bind(true)
-        .execute(pool)
-        .await;
 
-    Ok(res.unwrap())
+    if entry.album != None {
+        let album_id = add_album(pool, &entry.album, &entry.album_artist, &entry.cover).await.unwrap();
+    
+        let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
+            (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, song_section, artist_section, genre_section, keep) 
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)")
+            .bind(&entry.name)
+            .bind(&entry.path)
+            .bind(&entry.cover)
+            .bind(&entry.release)
+            .bind(&entry.track)
+            .bind(&album_id)
+            .bind(&entry.artist)
+            .bind(&entry.genre)
+            .bind(&entry.album_artist)
+            .bind(&entry.disc_number)
+            .bind(&entry.duration)
+            .bind(&entry.song_section)
+            .bind(&entry.artist_section)
+            .bind(&entry.genre_section)
+            .bind(true)
+            .execute(pool)
+            .await;
+        
+        Ok(res.unwrap())
+    }
+    else {
+
+        let album: Option<i32> = None;
+    
+        let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
+            (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, song_section, artist_section, genre_section, keep) 
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)")
+            .bind(&entry.name)
+            .bind(&entry.path)
+            .bind(&entry.cover)
+            .bind(&entry.release)
+            .bind(&entry.track)
+            .bind(album)
+            .bind(&entry.artist)
+            .bind(&entry.genre)
+            .bind(&entry.album_artist)
+            .bind(&entry.disc_number)
+            .bind(&entry.duration)
+            .bind(&entry.song_section)
+            .bind(&entry.artist_section)
+            .bind(&entry.genre_section)
+            .bind(true)
+            .execute(pool)
+            .await;
+
+        Ok(res.unwrap())
+    }    
 }
 
 // Gonna be used to update values in the DB
@@ -374,8 +384,8 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
     
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("UPDATE songs
         SET name = ?1, cover = ?2, release = ?3, track = ?4, album = ?5, artist = ?6, genre = ?7,
-        album_artist = ?8, disc_number = ?9, duration = ?10, song_section = ?11, album_section = ?12, artist_section = ?13, genre_section = ?14, keep = ?15
-        WHERE path = ?16
+        album_artist = ?8, disc_number = ?9, duration = ?10, artist_section = ?11, genre_section = ?12, keep = ?13
+        WHERE path = ?14
         ")
         .bind(&entry.name)
         .bind(&entry.cover)
@@ -387,12 +397,9 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
         .bind(&entry.album_artist)
         .bind(&entry.disc_number)
         .bind(&entry.duration)
-        .bind(&entry.song_section)
-        .bind(&entry.album_section)
         .bind(&entry.artist_section)
         .bind(&entry.genre_section)
         .bind(true)
-
         .bind(entry.path)
         .execute(pool)
         .await;
@@ -453,12 +460,74 @@ pub async fn remove_song(pool: &Pool<Sqlite>, song: SongTable) -> Result<(), Str
 
 // ------------------------------------ Album Functions ------------------------------------
 
+pub async fn add_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &Option<String>, cover: &Option<String>) -> Result<Option<i64>, String> {
+
+    let exists: DoesExist = sqlx::query_as::<_, DoesExist>("SELECT EXISTS(SELECT 1 FROM albums WHERE name = ?1 AND album_artist = ?2) AS does_exist")
+        .bind(name)
+        .bind(artist)
+        .fetch_one(pool)
+        .await.unwrap();
+
+    if exists.does_exist == false {
+        let ex = name.clone().unwrap();
+        let char_array: Vec<char> = ex.chars().collect();
+        let first_char: char = char_array[0].to_ascii_uppercase();
+        let section = helper::get_section_marker(first_char);
+
+        let _ = sqlx::query("INSERT OR IGNORE INTO albums
+            (name, cover, album_artist, album_section, keep) VALUES (?1, ?2, ?3, ?4, true)")
+            .bind(name)
+            .bind(cover)
+            .bind(artist)
+            .bind(section)
+            .execute(pool)
+            .await;
+
+        let res: (i64,) = sqlx::query_as("SELECT id FROM albums WHERE name=?1")
+            .bind(name)
+            .fetch_one(pool)
+            .await.unwrap();
+
+        return Ok(Some(res.0));
+    }
+    else {
+        let res: (i64,) = sqlx::query_as("SELECT id FROM albums WHERE name=?1")
+            .bind(name)
+            .fetch_one(pool)
+            .await.unwrap();
+
+        return Ok(Some(res.0));
+    }
+}
+
+pub async fn update_album(pool: &Pool<Sqlite>, name: Option<String>, artist: Option<String>, cover: Option<String>) -> Result<(), String> {
+
+    // let exists: DoesExist = sqlx::query_as::<_, DoesExist>("SELECT id FROM albums WHERE name = ?1 AND album_artist = ?2)")
+    //     .bind(&name)
+    //     .bind(&artist)
+    //     .fetch_one(pool)
+    //     .await.unwrap();
+
+
+    let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("UPDATE albums SET
+        name = ?1, cover = ?2, album_artist = ?3, keep=true) WHERE id = ?4")
+        .bind(&name)
+        .bind(&cover)
+        .bind(&artist)
+        // .bind()
+        .execute(pool)
+        .await;
+
+
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AllAlbumResults>, String> {
 
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT album, album_artist, cover, album_section FROM songs WHERE album IS NOT NULL 
-        GROUP BY album ORDER BY album_section ASC, album ASC;",
+        "SELECT DISTINCT id, name, album_artist, cover, album_section FROM albums WHERE name IS NOT NULL 
+        ORDER BY name ASC, album_artist ASC;",
     )
     .fetch_all(&state.pool)
     .await
@@ -468,10 +537,13 @@ pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AllAlbumRe
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn get_album(state: State<AppState, '_>, name: String) -> Result<Vec<SongTable>, String> {
+pub async fn get_album(state: State<AppState, '_>, album_id: i32) -> Result<Vec<SongTable>, String> {
 
-    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC, name ASC;")
-        .bind(name)
+    let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT
+        s.name, s.path, a.cover, s.release, s.track, a.name as album,
+        s.artist, s.genre, s.album_artist, s.disc_number, s.duration, s.song_section
+        FROM songs s INNER JOIN albums a WHERE s.album=$1 AND a.id=$1 ORDER BY s.disc_number ASC, s.track ASC;")
+        .bind(album_id)
         .fetch_all(&state.pool)
         .await
         .unwrap();
@@ -483,8 +555,8 @@ pub async fn get_album(state: State<AppState, '_>, name: String) -> Result<Vec<S
 pub async fn get_albums_with_limit(state: State<AppState, '_>, limit: i64) -> Result<Vec<AllAlbumResults>, String> {
 
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT album, album_artist, cover, album_section FROM songs WHERE album IS NOT NULL 
-        GROUP BY album ORDER BY album ASC LIMIT $1")
+        "SELECT DISTINCT id, name, album_artist, cover, album_section FROM albums WHERE name IS NOT NULL 
+        ORDER BY name ASC, album_artist ASC LIMIT $1")
         .bind(limit)
         .fetch_all(&state.pool)
         .await

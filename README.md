@@ -65,7 +65,7 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 ## Known Issues
 
-
+- [ ] Albums of the same name are combined on accident
 - [ ] Small chance of an anti-virus false positive when importing playlists
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)

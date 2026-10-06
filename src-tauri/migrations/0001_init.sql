@@ -1,28 +1,35 @@
+CREATE TABLE IF NOT EXISTS albums (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    album_artist TEXT,
+    cover TEXT UNIQUE,
+    album_section INTEGER,
+    keep BOOLEAN
+);
 
 -- Create the tables for all the Music
 CREATE TABLE IF NOT EXISTS songs (
+    id INTEGER PRIMARY KEY,
     -- The name of the song
     name TEXT NOT NULL,
     -- The system path to the song
-    path TEXT NOT NULL PRIMARY KEY,
+    path TEXT NOT NULL,
     -- The image of the album (song)
     cover TEXT,
     -- --------------------- Extra metadata of the songs
     release TEXT,
     -- The track number of the song
     track INTEGER,
-    album TEXT,
+    album INTEGER,
     artist TEXT,
     genre TEXT,
     album_artist TEXT,
     disc_number INTEGER,
     duration INTEGER,
-    -- Favorited value - might not use
-    favorited BOOLEAN,
     song_section INTEGER NOT NULL,
-    album_section INTEGER,
     artist_section INTEGER,
     genre_section INTEGER,
+    -- FOREIGN KEY (album) REFERENCES albums(id),
     keep BOOLEAN
 );
 
@@ -52,7 +59,8 @@ CREATE TABLE IF NOT EXISTS dirs (
 
 CREATE TABLE IF NOT EXISTS settings (  
     id INTEGER PRIMARY KEY,
-    theme TEXT
+    theme TEXT,
+    last_scan_date TEXT
 );
 
 CREATE TABLE IF NOT EXISTS history (
@@ -82,7 +90,15 @@ CREATE TABLE IF NOT EXISTS lyrics (
     FOREIGN KEY(song_id) REFERENCES songs(path) ON DELETE CASCADE
 );
 
+
+CREATE TABLE IF NOT EXISTS artist_covers (
+    id INTEGER PRIMARY KEY,
+    artist_name TEXT NOT NULL,
+    image TEXT
+);
+
+INSERT OR IGNORE INTO settings (id, theme) VALUES (1, "red");
+
 -- Indexes can increase query speed, but increase DB file size
-CREATE INDEX IF NOT EXISTS idx_song_album ON songs(album);
 CREATE INDEX IF NOT EXISTS idx_song_artist ON songs(album_artist);
 CREATE INDEX IF NOT EXISTS idx_song_name ON songs(name);
