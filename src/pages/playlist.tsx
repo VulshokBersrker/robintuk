@@ -13,9 +13,7 @@ import ImageWithFallBack from "../components/imageFallback.js";
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
 import ShuffleIcon from '../images/shuffle-solid-full.svg';
 import PlayIcon from '../images/play-solid-full.svg';
-import PlusIcon from '../images/plus-solid-full.svg';
 import Circle from '../images/circle.svg';
-import CloseIcon from '../images/x.svg';
 
 export default function PlaylistPage() {
 
@@ -88,6 +86,11 @@ export default function PlaylistPage() {
         }
     }
 
+    function closeCreatePlaylist() {
+        setDisplayCreate(false);
+        setNewPlaylistName("");
+    }
+
     function handleContextMenu(e: any, playlist: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
@@ -112,36 +115,30 @@ export default function PlaylistPage() {
     }
 
     return(
-        <SimpleBar forceVisible="y" autoHide={false} >
-            <div className="playlist-buttons d-flex align-items-center">
-                <span>
-                    <button className={`d-flex align-items-center ${displayCreate ? "red" : "white"}`} onClick={() => {setDisplayCreate(!displayCreate)}}>
-                        {!displayCreate && <> <img src={PlusIcon} alt={""} /> &nbsp; New Playlist </>}
-                        {displayCreate && <> <img src={CloseIcon} alt={""} /> &nbsp; Cancel</>}
-                    </button>
-                </span>
-                
-                {displayCreate &&
-                    <>
-                        <input
-                            id="playlist-name"
-                            type="text"
-                            placeholder="Playlist Name"
-                            value={newPlaylistName}
-                            className=""
-                            autoComplete="off"
-                            style={{width: '280px'}}
-                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                        />
-                        <span>
-                            <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName);}}>
-                                Create
-                            </button>
-                        </span>
-                    </>
-                }
-            </div>
-
+        <SimpleBar forceVisible="y" autoHide={false} >            
+            {displayCreate &&
+                <div className="create-playlist-popup">
+                    <h2>New Playlist</h2>
+                    <input
+                        id="playlist-name"
+                        type="text"
+                        placeholder="Playlist Name"
+                        value={newPlaylistName}
+                        className=""
+                        autoComplete="off"
+                        style={{width: '280px'}}
+                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                    />
+                    <span>
+                        <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName);}}>
+                            Create
+                        </button>
+                        <button className="white d-flex align-items-center" onClick={closeCreatePlaylist}>
+                            Close
+                        </button>
+                    </span>
+                </div>
+            }
             <div className="d-flex flex-wrap" style={{marginTop: '10px'}}>
                 {playlistList.map((item, i) => {
                     return(
@@ -171,6 +168,18 @@ export default function PlaylistPage() {
                     );
                         
                 })}
+                <div className="album-link playlist" onClick={() => {setDisplayCreate(true)}}>
+                    <div className="album-image-container playlist">
+                        
+                        <div className="container" >
+                            <ImageWithFallBack image={""} alt={""} image_type={"album"} />
+                        </div>
+                        <div className="album-image-name header-font">
+                            <div className="album-name">New Playlist</div>
+                        </div>
+                    </div>
+                    
+                </div>
             </div>
             <div className="empty-space" />
 

@@ -177,7 +177,7 @@ export default function MusicControls() {
             else {
                 // At the end of the queue and shuffle is on, reshuffle the queue
                 if(isShuffle && qPosition + 1 > qLength - 1) {
-                    await invoke("shuffle_queue", {song: songDetails?.path, shuffled: isShuffle});
+                    await invoke("shuffle_queue", {song: songDetails?.id, shuffled: isShuffle});
                 }
                 await invoke("player_next_song");
                 currentLineNumberRef.current = 0;
@@ -200,7 +200,7 @@ export default function MusicControls() {
                 const pos: number = await invoke("player_get_current_position");
                 savePosition(pos);
                 await invoke("update_current_song_played");
-                await checkForLyrics(song.path);
+                await checkForLyrics(song.id);
             }
         }
     }
@@ -227,7 +227,7 @@ export default function MusicControls() {
                 const pos: number = await invoke("player_get_current_position");
                 savePosition(pos);
                 await invoke("update_current_song_played");
-                await checkForLyrics(song.path);
+                await checkForLyrics(song.id);
             }
         }
     }
@@ -334,7 +334,7 @@ export default function MusicControls() {
                             setIsShuffle(false);
                             sendQueueToBackend(queue, JSON.parse(qPosition!));
                         }
-                        await checkForLyrics(queue[JSON.parse(qPosition!)].path);
+                        await checkForLyrics(queue[JSON.parse(qPosition!)].id);
                     }
                     else {
                         setIsShuffle(false);
@@ -363,12 +363,12 @@ export default function MusicControls() {
         }
     }
 
-    async function checkForLyrics(path: string) {
+    async function checkForLyrics(song_id: number) {
         currentLineNumberRef.current = 0;
         currentLineRef.current = null;
         currentLineNumberRef.current = null;
         try {
-            const res: SongLyrics = await invoke("get_lyrics", {song_id: path});
+            const res: SongLyrics = await invoke("get_lyrics", {song_id: song_id});
             
             if(res !== undefined) {
                 if(res.plain_lyrics !== 'null') {
@@ -426,7 +426,7 @@ export default function MusicControls() {
     async function updateSongDetails(song_id: string) {
         try {
             const song: Songs = await invoke("get_song", {song_path: song_id});
-            await checkForLyrics(song.path);
+            await checkForLyrics(song.id);
             setSongDetails(song);
         }
         catch(e) {
@@ -440,7 +440,7 @@ export default function MusicControls() {
         try {
             setSongProgress(0);
             setSongDetails(q);
-            await checkForLyrics(q.path);
+            await checkForLyrics(q.id);
         }
         catch(e) {
             error(`Controls - Error loading song: ${e}`);
@@ -449,7 +449,7 @@ export default function MusicControls() {
             setIsPlaying(false);
         }
         finally {
-            await invoke('add_song_to_history', { path: q.path });
+            await invoke('add_song_to_history', { song_id: q.id });
             setIsLoaded(true);
             setIsPlaying(true);
         }
@@ -511,7 +511,7 @@ export default function MusicControls() {
             
             // Send out update that a new song is being played
             await invoke("update_current_song_played");
-            await checkForLyrics(newSong.path);
+            await checkForLyrics(newSong.id);
             setLockShuffle(false);
         }
     }

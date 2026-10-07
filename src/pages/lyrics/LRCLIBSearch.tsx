@@ -37,7 +37,7 @@ export default function LRCLIBSearchResults() {
     async function getSong() {
         isLoading(true);
         try {            
-            const res: Songs = await invoke("get_song", {song_path: location.state.name});
+            const res: Songs = await invoke("get_song", {song_id: location.state.name});
             setSong(res);
             getSongLyrics();
             getSongLyricsResults(res.name, res.album);
@@ -107,7 +107,7 @@ export default function LRCLIBSearchResults() {
         try {
             resetLyricsDisplay();
             await invoke("update_remote_lyrics", {
-                path: location.state.name,
+                song_id: location.state.name,
                 synced_lyrics: lyricsResults[lyricsDisplay.index].syncedLyrics,
                 plain_lyrics: lyricsResults[lyricsDisplay.index].plainLyrics,
                 lyrics_id: lyricsResults[lyricsDisplay.index].id
@@ -164,7 +164,7 @@ export default function LRCLIBSearchResults() {
                             <button 
                                 onClick={() => {handleLyricsDisplay(-1, false);}} 
                                 className="section-6 header-font font-1"
-                                style={{width: '180px'}}
+                                style={{width: '180px', marginRight: "8px"}}
                             >Current Lyrics</button>
                         }
                         <button 

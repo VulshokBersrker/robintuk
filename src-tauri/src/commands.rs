@@ -182,17 +182,17 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
 // ----------------- Play Commands
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn shuffle_queue(state: State<AppState, '_>, song: String, shuffled: bool) -> Result<(), String> {
+pub async fn shuffle_queue(state: State<AppState, '_>, song_id: i64, shuffled: bool) -> Result<(), String> {
     let mut q = db::get_queue(state.clone(), false).await.unwrap();
 
     if shuffled {
         helper::shuffle(&mut q);
-        let index = q.iter().position(|r| r.path == song).unwrap();
+        let index = q.iter().position(|r| r.id == song_id).unwrap();
         let _ = player_update_queue_and_pos(state.clone(), q.clone(), index);
         let _ = db::create_queue_shuffled(state.clone(), &q).await;   
     }
     else {
-        let index = q.iter().position(|r| r.path == song).unwrap();
+        let index = q.iter().position(|r| r.id == song_id).unwrap();
         let _ = player_update_queue_and_pos(state.clone(), q, index);
     }
     Ok(())
@@ -235,18 +235,11 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_id: i64, index: usize, shuffled: bool) -> Result<bool, String> {
+pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_id: i32, index: usize, shuffled: bool) -> Result<bool, String> {
 
     *state.songs_being_added.lock().unwrap() += 1;
 
-    let mut album: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT
-            s.name, s.path, a.cover, s.release, s.track, a.name as album,
-            s.artist, s.genre, s.album_artist, s.disc_number, s.duration, s.song_section
-            FROM songs s INNER JOIN albums a WHERE s.album=$1 AND a.id=$1 ORDER BY s.disc_number ASC, s.track ASC;")
-        .bind(album_id)
-        .fetch_all(&state.pool)
-        .await
-        .unwrap();
+    let mut album = db::get_album(state.clone(), album_id).await.unwrap();
 
     let q: Vec<SongTable> = album.clone();
     let mut checker = true;
@@ -559,12 +552,11 @@ pub struct SongDataLyrics {
 
 // Check is a song has lyrics when it is played
 #[tauri::command(rename_all = "snake_case")]
-pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::AppHandle, song_id: String) -> Result<(), String> {
+pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::AppHandle, song_id: i64) -> Result<(), String> {
     // println!("Checking if {:?} has lyrics", &song_id);
     // Get all the songs that do not have lyrics
-    let res = sqlx::query_as::<_, SongDataLyrics>("SELECT artist, album, name, duration, path FROM songs WHERE path NOT IN 
-    (SELECT song_id from lyrics WHERE song_id = ?1) AND path = ?2")
-    .bind(&song_id)
+    let res = sqlx::query_as::<_, SongDataLyrics>("SELECT artist, album, name, duration, path FROM songs WHERE id NOT IN 
+    (SELECT song_id from lyrics WHERE song_id = ?1)")
     .bind(&song_id)
     .fetch_one(&state.pool).await;
 
@@ -583,8 +575,8 @@ pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::App
             let lyrics: LrclibLyrics = res.unwrap();
             if lyrics.lyrics_id != 0 {
                 // println!("Adding...");
-                let _ = db::add_lyrics(state.clone(), lyrics, song.path).await;
-                let _ = app.emit("update-song", DirsTable{dir_path: song_id});
+                let _ = db::add_lyrics(state.clone(), lyrics, song_id).await;
+                // let _ = app.emit("update-song", DirsTable{dir_path: song_id});
             }
         }
         else {
@@ -697,7 +689,7 @@ pub async fn search_remote_lyrics(name: String, album: String) -> Result<Vec<LRC
 
 // Update Lyrics
 #[tauri::command(rename_all = "snake_case")]
-pub async fn update_remote_lyrics(state: State<AppState, '_>, path: String, plain_lyrics: String, synced_lyrics: String, lyrics_id: i64) -> Result<(), String> {
+pub async fn update_remote_lyrics(state: State<AppState, '_>, song_id: i64, plain_lyrics: String, synced_lyrics: String, lyrics_id: i64) -> Result<(), String> {
 
     let mut lyrics: LrclibLyrics = LrclibLyrics {
         ..LrclibLyrics::default()
@@ -707,16 +699,16 @@ pub async fn update_remote_lyrics(state: State<AppState, '_>, path: String, plai
     lyrics.lyrics_id = lyrics_id;
 
     let res: (bool,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM lyrics WHERE song_id = $1)")
-        .bind(&path)
+        .bind(&song_id)
         .fetch_one(&state.pool)
         .await.unwrap();
 
     if res.0 {
-        let _ = db::update_lyrics(state, lyrics, path).await;
+        let _ = db::update_lyrics(state, lyrics, song_id).await;
         Ok(())
     }
     else {
-        let _ = db::add_lyrics(state, lyrics, path).await;
+        let _ = db::add_lyrics(state, lyrics, song_id).await;
         Ok(())
     }     
 }
@@ -1111,24 +1103,24 @@ pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, 
                 
                     if check {
                         // Add the song to the db
-                        let res: DoesExist = sqlx::query_as::<_, DoesExist>("SELECT EXISTS(SELECT 1 FROM songs WHERE path = $1) AS does_exist")
+                        let res: Result<(i64,), sqlx::Error> = sqlx::query_as("SELECT id from songs WHERE path=$1")
                             .bind(&entry.uri.as_str())
                             .fetch_one(&state.pool)
-                            .await.unwrap();
+                            .await;
                             
-                        if res.does_exist == true {                            
+                        if res.is_ok() {                       
                             let _ = sqlx::query("INSERT INTO playlist_tracks
                                 (playlist_id, track_id, position) 
                                 VALUES (?1, ?2, ?3)")
                                 .bind(&playlist_id.0)
-                                .bind(&entry.uri)
+                                .bind(&res.unwrap().0)
                                 .bind(&i)
                                 .execute(&state.pool).await;
                             i = i + 1;
                             
                         }
                         else {
-                            println!("Error reading song's info");
+                            println!("Import Playlist - Error reading song's info");
                             error!("Import Playlist: Error adding song to playlist");
                         }                        
                     }

@@ -381,6 +381,11 @@ a {
   font-family: var(--header-family);
   font-weight: calc(var(--header-weight) - 200);
 }
+
+h1, h2, h3, h4 {
+  margin: 0px;
+}
+
 .header-color {
   color: var(--font-color-three);
 }
@@ -677,7 +682,7 @@ img.off {
 }
 /* Allows for the blur for the music controls and the weird padding fix */
 .empty-space {
-  height: 70px;
+  height: 75px;
 }
 
 /* ------------------ Custom Window Tab Styles ------------------*/
@@ -1374,6 +1379,17 @@ option:hover, option:active, option:focus {
   width: 22px;
 }
 
+.create-playlist-popup {
+  position: fixed;
+  z-index: 20;
+  border-radius: var(--border-radius);
+  border: 2px solid var(--font-color-three);
+  top: 50%;
+  left: 50%;
+  padding: 1rem;
+  transform: translate(-50%, -50%);
+  background-color: var(--gradient-one);
+}
 
 /* ---------- Placeholder Styles ---------- */
 .album-link.placeholder {

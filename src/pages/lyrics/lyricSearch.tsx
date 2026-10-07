@@ -1,17 +1,17 @@
 // Core Libraries
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Virtuoso } from "react-virtuoso";
+import { GroupedVirtuoso } from "react-virtuoso";
 import SimpleBar from "simplebar-react";
 import './lyricsData.css';
 
 // Custom Components
-import { SongsFull, alphabeticallyOrdered, } from "../../globalValues";
+import { Songs, alphabeticallyOrdered, getSectionNumber, } from "../../globalValues";
 
 // Image
 import SearchIcon from '../../images/search_icon.svg';
 
-type Props = { songs: SongsFull[] }
+type Props = { songs: Songs[] }
 
 export default function LyricSearch({songs}: Props) {
 
@@ -21,24 +21,21 @@ export default function LyricSearch({songs}: Props) {
     const [scrollParent, setScrollParent] = useState<any>(null);
     const virtuoso = useRef<any>(null);
 
-    const [songList] = useState<SongsFull[]>(songs);
+    const [songList] = useState<Songs[]>(songs);
     const [searchValue, setSearchValue] = useState<string>("");
 
-    const [filteredSongs, setFilteredSongs] = useState<SongsFull[]>(songs);
+    const [filteredSongs, setFilteredSongs] = useState<Songs[]>(songs);
     const [songSections, setSongSections] = useState<number[]>([]);
 
     
     useEffect(() => {
         function setupSongs() {
             
-            let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, songList.map((o: SongsFull) => { return o.song_section})) );
+            const groupCounts = alphabeticallyOrdered.map((letter) => {
+                return songList.filter((entry) => letter === getSectionNumber(entry.name.toUpperCase().charAt(0)) ).length
+            });
 
-            for(let i = 0; i < maxSection + 1; i++) {
-                const results = songs.filter(obj => obj.song_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setSongSections(tempSectionArray); 
+            setSongSections(groupCounts);
         }
         setupSongs();
 
@@ -48,15 +45,15 @@ export default function LyricSearch({songs}: Props) {
         }
     }, []);
 
-    function navigateToLyricsOverview(path: string){
+    function navigateToLyricsOverview(song_id: number){
         navigate(`/lyrics/song-search?q=${searchValue}`, { replace: true });
-        navigate("/lyrics/lrclib-results", {state: {name: path }});
+        navigate("/lyrics/lrclib-results", {state: {name: song_id }});
     }
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
 
-        const temp_section = songList.filter((entry) => {
+        const temp_section: Songs[] = songList.filter((entry) => {
             if(entry.name !== undefined && entry.album !== undefined && entry.album_artist !== undefined) {
                 return (entry.name.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
                 || entry.album.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
@@ -68,14 +65,10 @@ export default function LyricSearch({songs}: Props) {
             }
         });
 
-        let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.length;
-
-            for(let i = 0; i < maxSection; i++) {
-                const results = temp_section.filter(obj => obj.song_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setSongSections(tempSectionArray);
+        const groupCounts = alphabeticallyOrdered.map((letter) => {
+            return temp_section.filter((entry) => letter === getSectionNumber(entry.name.toUpperCase().charAt(0)) ).length
+        });
+        setSongSections(groupCounts);
         
         // console.log(temp_section);
         setFilteredSongs(temp_section);
@@ -125,65 +118,65 @@ export default function LyricSearch({songs}: Props) {
                     </div>
 
                     <div className="song-list">
-                        <Virtuoso 
+                        <GroupedVirtuoso
                             ref={virtuoso}
-                            totalCount={filteredSongs.length}
+                            groupCounts={songSections}
+                            style={{ height: '100%' }}
                             increaseViewportBy={{ top: 210, bottom: 10 }}
-                            itemContent={(index) => {
-                                let totalIndex = 0;
-                                for(let j = 0; j < songSections.length; j++) {                                        
-                                    if(totalIndex === index) {
-                                        return(
-                                            <>
-                                                <div className="grid-20 position-relative" key={index} id={`${index}`}>
-                                                    <span className="section-20 header-font header-color" key={j}>
-                                                        {filteredSongs[index].song_section === 0 && <h1 className="font-6">&</h1>}
-                                                        {filteredSongs[index].song_section === 1 && <h1 className="font-6">#</h1>}
-                                                        {filteredSongs[index].song_section > 1 && filteredSongs[index].song_section < 300 && <h1 className="font-p6">{String.fromCharCode(filteredSongs[index].song_section)}</h1>}
-                                                        {filteredSongs[index].song_section === 300 && <h1 className="font-6">...</h1>}
-                                                    </span>
-                                                    <span className="section-5 details">Name</span>
-                                                    <span className="section-7 details">Album</span>
-                                                    <span className="section-5 details">Album Artist</span>
-                                                    <span className="section-2 details">Release</span>
-                                                    <span className="section-1 details">Length</span>
-                                                </div>
-                                                <hr />
-                                                <div className="items-center justify-between">
-                                                    <div className="song-link"
-                                                        onClick={() => { navigateToLyricsOverview(filteredSongs[index].path) }}
-                                                    >
-                                                        <div className={`grid-20 song-row`}>
-                                                            <span className="section-5 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
-                                                            <span className="section-7 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                                            <span className="section-5 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
-                                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
-                                                            <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
-                                                        </div>
-                                                        <hr />
-                                                    </div>
-                                                </div>
-                                            </>
-                                        );
-                                    }
-                                    totalIndex += songSections[j];
-                                }
-                                return(
-                                    <div className="items-center justify-between">
-                                        <div className="song-link"
-                                            onClick={() => { navigateToLyricsOverview(filteredSongs[index].path) }}
-                                        >
-                                            <div className={`grid-20 song-row`}>
-                                                <span className="section-5 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
-                                                <span className="section-7 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                                <span className="section-5 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
-                                                <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
-                                                <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
+                            groupContent={(index) => {
+                                if(songSections[index] !== 0) {
+                                    return (
+                                        <>
+                                            <div className="grid-20 position-relative" key={index} id={`${index}`}>
+                                                <span className="section-20 header-font header-color" key={index}>
+                                                    {alphabeticallyOrdered[index] === 0 && <h1 className="font-6">&</h1>}
+                                                    {alphabeticallyOrdered[index] === 1 && <h1 className="font-6">#</h1>}
+                                                    {alphabeticallyOrdered[index] > 1 && alphabeticallyOrdered[index] < 300 && <h1 className="font-p6">{String.fromCharCode(alphabeticallyOrdered[index])}</h1>}
+                                                    {alphabeticallyOrdered[index] === 300 && <h1 className="font-6">...</h1>}
+                                                </span>
+                                                <span className="section-1"></span>
+                                                <span className="section-6 vertical-centered details">Name</span>
+                                                <span className="section-4 vertical-centered details">Album</span>
+                                                <span className="section-4 vertical-centered details">Album Artist</span>
+                                                <span className="section-2 vertical-centered details">Release</span>
+                                                <span className="section-2 vertical-centered details">Genre</span>
+                                                <span className="section-1 vertical-centered details">Length</span>
                                             </div>
                                             <hr />
+                                            <div className="song-link" style={{paddingBottom: "1px"}}/>
+                                        </>
+                                    );
+                                }
+                                else {
+                                    return(<></>);
+                                }                                
+                            }}
+                            itemContent={(index) => {
+                                return(
+                                    <div className="song-link"
+                                        onClick={() => {navigateToLyricsOverview(filteredSongs[index].id)}}
+                                        onContextMenu={(e) => { e.preventDefault(); }}
+                                    >
+                                        <div className={`grid-20 song-row`}>                                            
+                                            <span className="section-1 vertical-centered play ">
+                                            </span>
+                                            
+                                            <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
+                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
+                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
+                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
+                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
+                                            <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
                                         </div>
+                                        <hr />
                                     </div>
-                                );                                
+                                );
+                            }}
+                            components={{
+                                Group: (props) => <div {...props} style={{ position: "static" }} />,
+                                TopItemList: (props) => (
+                                    <div {...props} style={{ position: "static" }} />
+                                )
                             }}
                             customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                         />

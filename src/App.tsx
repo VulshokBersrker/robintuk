@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 // Custom Components
-import { AlbumDetails, AllArtistResults, AllGenreResults, SongsFull } from "./globalValues";
+import { AlbumDetails, AllArtistResults, AllGenreResults, Songs } from "./globalValues";
 import CustomWindowsBar from "./components/fileSystem/customWindowsBar";
 import MusicControls from "./components/musicControls/musicControls";
 import RightSideBar from "./components/sidebar/rightSideBar";
@@ -33,7 +33,7 @@ import Home from "./pages/home";
 
 function App() {
 
-  const [songList, setSongList] = useState<any[]>([]);
+  const [songList, setSongList] = useState<Songs[]>([]);
   const [albumList, setAlbumList] = useState<AlbumDetails[]>([]);
   const [artistList, setArtistList] = useState<AllArtistResults[]>([]);
   const [genreList, setGenreList] = useState<AllGenreResults[]>([]);
@@ -102,7 +102,7 @@ function App() {
 
   async function getSongs() {
     try {
-      const song_list: SongsFull[] = await invoke<SongsFull[]>('get_all_songs');
+      const song_list: Songs[] = await invoke<Songs[]>('get_all_songs');
       setSongList(song_list);
     }
     catch(err) {

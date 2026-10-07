@@ -6,7 +6,7 @@ import { invoke } from '@tauri-apps/api/core';
 import SimpleBar from 'simplebar-react';
 
 // Custom Components
-import { AlbumDetails, GetCurrentSong, playAlbum, PlayHistory, PlaylistList, Playlists, playPlaylist, SongsLimit } from '../globalValues';
+import { AlbumDetails, GetCurrentSong, playAlbum, PlayHistory, PlaylistList, Playlists, playPlaylist, Songs } from '../globalValues';
 import ImageWithFallBack from '../components/imageFallback';
 
 // Images
@@ -24,7 +24,7 @@ export default function Home() {
 
     const [playlists, setPlaylists] = useState<Playlists[]>([]);
     const [albums, setAlbums] = useState<AlbumDetails[]>([]);
-    const [songs, setSongs] = useState<SongsLimit[]>([]);
+    const [songs, setSongs] = useState<Songs[]>([]);
     const [playHistory, setPlayHistory] = useState<PlayHistory[]>([]);
 
     const [contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "", album: -1, artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0 });
@@ -87,7 +87,7 @@ export default function Home() {
 
     async function getSongs() {
         try{
-            const list = await invoke<SongsLimit[]>('get_songs_with_limit', { limit: 40 } );
+            const list = await invoke<Songs[]>('get_songs_with_limit', { limit: 40 } );
             setSongs(list);
         }
         catch(e) {
@@ -152,7 +152,7 @@ export default function Home() {
 
     async function addToQueue() {
         try {
-            let songList: SongsLimit[] = [];
+            let songList: Songs[] = [];
             
             await invoke('add_to_queue', {songs: songList});
             await invoke('player_add_to_queue', {queue: songList});
@@ -166,13 +166,13 @@ export default function Home() {
     async function addToPlaylist(id: number, context_type: string, song: number, album: number) {
         resetContextMenu();
         try {
-            let songList: SongsLimit[] = [];
+            let songList: Songs[] = [];
             if(context_type === "song") {
-                const res: SongsLimit = await invoke<SongsLimit>("get_song", { song_path: songs[song].path });
+                const res: Songs = await invoke<Songs>("get_song", { song_path: songs[song].path });
                 songList.push(res);
             }
             else if(context_type === "album") {
-                const res: SongsLimit[] = await invoke<SongsLimit[]>("get_album", { album_id: album });
+                const res: Songs[] = await invoke<Songs[]>("get_album", { album_id: album });
                 songList.push(...res);
             }
             await invoke('add_to_playlist', {songs: songList, playlist_id: id});
@@ -185,13 +185,13 @@ export default function Home() {
     async function createPlaylist(name: string, context_type: string, song: number, album: number) {
         resetContextMenu();
         try {
-            let songList: SongsLimit[] = [];
+            let songList: Songs[] = [];
             if(context_type === "song") {
-                const res: SongsLimit = await invoke<SongsLimit>("get_song", { song_path: songs[song].path });
+                const res: Songs = await invoke<Songs>("get_song", { song_path: songs[song].path });
                 songList.push(res);
             }
             else if(context_type === "album") {
-                const res: SongsLimit[] = await invoke<SongsLimit[]>("get_album", { album_id: album });
+                const res: Songs[] = await invoke<Songs[]>("get_album", { album_id: album });
                 songList.push(...res);
             }      
             await invoke('create_playlist', { name: name, songs: songList, songs_to_add: true });
@@ -241,11 +241,11 @@ export default function Home() {
                 </div>
 
 
-                {/* SongsLimit */}
+                {/* Songs */}
                 <div className="section-10 home songs">
-                    <div className="header-font font-3 cursor-pointer" style={{width: '100px'}} onClick={() => navigate('/songs')} >SongsLimit</div>
+                    <div className="header-font font-3 cursor-pointer" style={{width: '100px'}} onClick={() => navigate('/songs')} >Songs</div>
                     <div className={`list ${songs.length === 0 ? "": "d-flex flex-wrap"}`}>
-                        {songs.length === 0 && <div className="text-center font-secondary">No SongsLimit</div>}
+                        {songs.length === 0 && <div className="text-center font-secondary">No Songs</div>}
 
                         {songs.map((song, i) => {
                             return(
@@ -360,7 +360,7 @@ export default function Home() {
 
 type Props = {
     isToggled: boolean,
-    context_type: string, // Album / Song / Artist / Playlist / Playlist SongsLimit
+    context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
     album: number,
     artist: string,
     index: number,

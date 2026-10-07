@@ -38,7 +38,7 @@ export default function GenreOverviewPage() {
     const [loading, isLoading] = useState<boolean>(false);
     const [genreDetails, setGenreDetails] = useState<GenreDetails>({ total_duration: 0, genre: "", albums: [], num_tracks: 0});
 
-    const [genreSelection, setGenreSelection] = useState<string[]>([]);
+    const [genreSelection, setGenreSelection] = useState<number[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
 
     // Playlist Values
@@ -46,7 +46,7 @@ export default function GenreOverviewPage() {
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "genre", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "genre", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
 
@@ -81,16 +81,16 @@ export default function GenreOverviewPage() {
         }
     }
 
-    const navigateToAlbumOverview = (name: string) => {
-        navigate("/albums/overview", {state: {name: name}});
+    const navigateToAlbumOverview = (id: number) => {
+        navigate("/albums/overview", {state: {id: id}});
     }
 
     // Load the song the user clicked on but also queue the entire album
-    async function playAlbum(album_name: string) {
+    async function playAlbum(album_id: number) {
         resetContextMenu();
         clearSelection();
         try {
-            await invoke("play_album", {album_name: album_name, index: 0, shuffled: false});
+            await invoke("play_album", {album_id: album_id, index: 0, shuffled: false});
             savePosition(0);
         }
         catch(e) {
@@ -98,7 +98,7 @@ export default function GenreOverviewPage() {
         }
     }
 
-    async function playArtist(shuffled: boolean) {
+    async function playGenre(shuffled: boolean) {
         resetContextMenu();
         clearSelection();
         try {
@@ -111,7 +111,7 @@ export default function GenreOverviewPage() {
     }
 
     // Selection Function
-    function editSelection(album: string, isBeingAdded: boolean, index: number) {
+    function editSelection(album: number, isBeingAdded: boolean, index: number) {
         resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
@@ -160,7 +160,7 @@ export default function GenreOverviewPage() {
         try {
             let songList: Songs[] = [];
             for(let i = 0; i < genreSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: genreSelection[i]});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: genreSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
@@ -178,7 +178,7 @@ export default function GenreOverviewPage() {
         try {            
             let songList: Songs[] = [];
             for(let i = 0; i < genreSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: genreSelection[i]});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: genreSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
@@ -195,7 +195,7 @@ export default function GenreOverviewPage() {
         try { 
             let songList: Songs[] = [];
             for(let i = 0; i < genreDetails.albums.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: genreDetails.albums[i].album});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: genreDetails.albums[i].id});
                 songList.push(...temp);
             }
             clearSelection();
@@ -206,11 +206,11 @@ export default function GenreOverviewPage() {
         }      
     }
 
-    async function addToPlaylist(id: number, album: string) {
+    async function addToPlaylist(id: number, album_id: number) {
         setDisplayAddToMenu(false);
         clearSelection();
         try {
-            const songList: Songs[] = await invoke<Songs[]>('get_album', {name: album});            
+            const songList: Songs[] = await invoke<Songs[]>('get_album', {album_id: album_id});            
             await invoke('add_to_playlist', {songs: songList, playlist_id: id});
         }
         catch(e) {
@@ -227,7 +227,7 @@ export default function GenreOverviewPage() {
         try {
             let songList: Songs[] = [];
             for(let i = 0; i < genreSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: genreSelection[i]});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: genreSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
@@ -260,7 +260,7 @@ export default function GenreOverviewPage() {
         try {
             let albums_songs_arr: Songs[] = [];
             for(let i = 0; i < genreSelection.length; i++) {
-                const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { name: genreSelection[i] });
+                const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { album_id: genreSelection[i] });
                 albums_songs_arr = albums_songs_arr.concat(temp_arr);
             }
             clearSelection();
@@ -278,7 +278,7 @@ export default function GenreOverviewPage() {
     function removeSelectedSongs() {}
     // ------------ End of Selection Bar Functions ------------
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+    function handleContextMenu(e: any, album: number, artist: string, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, context_type: "genre", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -298,7 +298,7 @@ export default function GenreOverviewPage() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "genre", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, context_type: "genre", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
@@ -344,8 +344,8 @@ export default function GenreOverviewPage() {
                                 </span>
                                 
                                 <div className="section-15 d-flex album-commmands">
-                                    <span><button className="font-1 borderless" onClick={() => playArtist(false)}><img src={PlayIcon} /></button></span>
-                                    <span><button className="font-1 borderless" onClick={() => playArtist(true)}><img src={ShuffleIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={() => playGenre(false)}><img src={PlayIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={() => playGenre(true)}><img src={ShuffleIcon} /></button></span>
                                     <span className="position-relative">
                                         <button
                                             className="font-1 borderless"
@@ -400,27 +400,27 @@ export default function GenreOverviewPage() {
                                     <div className="album-image-container"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, genreDetails.albums[index].album, genreDetails.albums[index].album_artist, index);
+                                            handleContextMenu(e, genreDetails.albums[index].id, genreDetails.albums[index].album_artist, index);
                                         }}
                                     >
                                         <span className="checkbox-container">
                                             <input
                                                 type="checkbox"
                                                 id={`select-${index}`} name={`select-${index}`}
-                                                onClick={(e) => editSelection(genreDetails.albums[index].album, e.currentTarget.checked, index)}
+                                                onClick={(e) => editSelection(genreDetails.albums[index].id, e.currentTarget.checked, index)}
                                                 checked={checkBoxNumber[index]} onChange={() => {}}
                                             />
                                         </span>
-                                        <div className="play-album" onClick={() => playAlbum(genreDetails.albums[index].album)}>
+                                        <div className="play-album" onClick={() => playAlbum(genreDetails.albums[index].id)}>
                                             <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                             <img src={Circle} className="circle"/>
                                         </div>
                                         
-                                        <div className="container" onClick={() => navigateToAlbumOverview(genreDetails.albums[index].album)} >
-                                            <ImageWithFallBack image={genreDetails.albums[index].cover} alt={genreDetails.albums[index].album} image_type={"album"} />
+                                        <div className="container" onClick={() => navigateToAlbumOverview(genreDetails.albums[index].id)} >
+                                            <ImageWithFallBack image={genreDetails.albums[index].cover} alt={genreDetails.albums[index].name} image_type={"album"} />
                                         </div>
                                         <div className="album-image-name header-font">
-                                            <div className="album-name">{genreDetails.albums[index].album}</div>
+                                            <div className="album-name">{genreDetails.albums[index].name}</div>
                                             <div className="artist-name">{genreDetails.albums[index].album_artist}</div>
                                         </div>
                                     </div>
@@ -456,11 +456,11 @@ export default function GenreOverviewPage() {
 
 type Props = {
     isToggled: boolean,
-    album: string,
+    album: number,
     artist: string,
     index: number,
-    play: (name: string) => void, // playSong / playAlbum function
-    editSelection: (albums: string, isBeingAdded: boolean, index: number) => void,
+    play: (name: number) => void, // playSong / playAlbum function
+    editSelection: (albums: number, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
     posY: number,
@@ -468,7 +468,7 @@ type Props = {
     // Playlist
     playlistList: PlaylistList[],
     createPlaylist: (name: string) => void,
-    addToPlaylist: (id: number, album: string) => void
+    addToPlaylist: (id: number, album: number) => void
     addToQueue: () => void,
     ref: any
 }
@@ -485,7 +485,7 @@ function CustomContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
 
     useEffect(() => {

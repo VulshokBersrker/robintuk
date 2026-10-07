@@ -63,8 +63,8 @@ export default function PlaylistOverviewPage() {
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
 
-    const[isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "",
-        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0
+    const[isCurrent, setIsCurrent] = useState<Songs>({ id: -1,  name: "", path: "", cover: "", release: "", track: 0, album: "",
+        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0, album_id: -1
     });
 
     const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
@@ -772,7 +772,6 @@ export default function PlaylistOverviewPage() {
                     />
                     
                 </div>
-                <div className="empty-space" />
             </SimpleBar>
         );
     }

@@ -14,6 +14,7 @@ export interface SongRes {
 }
 
 export interface Songs {
+    id: number,
     name: string,
     path: string,
     cover: string,
@@ -25,7 +26,8 @@ export interface Songs {
     album_artist: string,
     disc_number: number,
     duration: number,
-    song_section: number
+    song_section: number,
+    album_id: number
 }
 
 export interface SongsLimit {
@@ -55,7 +57,8 @@ export interface SongsFull {
     album_artist: string,
     disc_number: number,
     duration: number,
-    song_section: number
+    song_section: number,
+    album_id: number
 }
 
 export interface AlbumRes {
@@ -124,7 +127,7 @@ export interface ContextMenu {
     isToggled: boolean,
     isBeingAdded: boolean,
     context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
-    album: string,
+    album: number,
     artist: string,
     index: number,
     posX: number,
@@ -183,6 +186,31 @@ export const alphabeticallyOrdered = [
     300
 ];
 
+export function getSectionNumber(first_char: string) {
+    // Special Characters
+    if (first_char === '#' || first_char === '!' || first_char === '[' || first_char === ']' || first_char === '\\' || first_char === '-'
+        || first_char === '_' || first_char === `"` || first_char === `'` || first_char === '&' || first_char === '$'
+        || first_char === '+' || first_char === '%' || first_char === '*' || first_char === '.' || first_char === '(' || first_char === ')')
+    {
+        return 0;
+    }
+    // 0 - 9
+    else if (first_char.charCodeAt(0) >= 48 && first_char.charCodeAt(0) <= 58) {
+        return 1;
+    }
+    //  A - Z
+    else if (first_char.charCodeAt(0) >= 65 && first_char.charCodeAt(0) <= 90) {
+        return first_char.charCodeAt(0);
+    }
+    // Non-ascii values
+    else if(first_char.charCodeAt(0) >= 128) {
+        return 300;
+    }
+    // Non-ascii values
+    else {
+        return 300;
+    }
+}
 
 export function savePosition(p: number) {
     localStorage.setItem('last-played-queue-position', p.toString());

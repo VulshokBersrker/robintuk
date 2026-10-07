@@ -18,8 +18,6 @@ pub struct SongTableUpload {
     pub album_artist: Option<String>,
     pub disc_number: Option<i32>,
     pub duration: i32,
-    pub song_section: Option<i32>,
-    pub album_section: Option<i32>,
     pub artist_section: Option<i32>,
     pub genre_section: Option<i32>
 }
@@ -27,6 +25,7 @@ pub struct SongTableUpload {
 // This struct is for data retreived from the database
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SongTable {
+    pub id: i64,
     pub name: String,
     pub path: String,
     pub cover: String,
@@ -38,25 +37,20 @@ pub struct SongTable {
     pub album_artist: String,
     pub disc_number: i32,
     pub duration: u64,
-    pub song_section: u64
+    pub artist_section: i32,
+    pub genre_section: i32,
+    pub album_id: i64
 }
 
-// This struct is for data retreived from the database
-#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
-pub struct SongTableLimit {
+#[derive(sqlx::FromRow, Default, Clone, Serialize)]
+pub struct AlbumTable {
+    pub id: i32,
     pub name: String,
-    pub path: String,
-    pub cover: String,
-    pub release: String,
-    pub track: i32,
-    pub album: String,
-    pub artist: String,
-    pub genre: String,
     pub album_artist: String,
-    pub disc_number: i32,
-    pub duration: u64,
-    pub song_section: u64,
-    pub album_id: i64
+    pub cover: String,
+    pub album_section: i32,
+    pub genre: String,
+    pub keep: bool
 }
 
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
@@ -139,7 +133,7 @@ pub struct ArtistDetailsResults {
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct GenreDetailsResults {
-    pub num_tracks: usize,
+    pub num_tracks: u64,
     pub total_duration: u64,
     pub genre: String,
     pub albums: Vec<AllAlbumResults>
@@ -148,33 +142,15 @@ pub struct GenreDetailsResults {
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct History {
-    pub id: String,
+    pub id: i64,
     #[serde_as(as = "DisplayFromStr")]
     pub date_played: DateTime<Utc>,
-    pub song_id: String,
+    pub song_id: i64,
 }
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize, Debug)]
 pub struct SettingsScanDate {
     pub last_scan_date: String
-}
-
-#[serde_as]
-#[derive(sqlx::FromRow, Debug, Serialize, Deserialize, Clone)]
-pub struct SongHistory {
-    pub id: String,
-    pub name: String,
-    pub path: String,
-    pub cover: String,
-    pub release: String,
-    pub track: i32,
-    pub album: i32,
-    pub artist: String,
-    pub genre: String,
-    pub album_artist: String,
-    pub disc_number: i32,
-    pub duration: u64,
-    pub song_section: u64
 }
 
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
@@ -185,7 +161,7 @@ pub struct DoesExist {
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize)]
 pub struct QueueFormat {
     pub position: i32,
-    pub song_id: String
+    pub song_id: i64
 }
 
 // ---------------------------------------- Event Tracker Structs ----------------------------------------

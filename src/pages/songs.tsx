@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { error } from "@tauri-apps/plugin-log";
 import { invoke } from '@tauri-apps/api/core';
-import { Virtuoso } from 'react-virtuoso';
+import { GroupedVirtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
-import { alphabeticallyOrdered, ContextMenu, PlaylistList, savePosition, Songs, SongsFull } from "../globalValues";
+import { alphabeticallyOrdered, ContextMenu, getSectionNumber, PlaylistList, savePosition, Songs } from "../globalValues";
 import SongDetailsModal from "../components/songDetails/songDetails";
 import CustomContextMenu from "../components/customContextMenu";
 import SongSelectionBar from "../components/songSelectionBar";
@@ -15,7 +15,7 @@ import SearchIcon from '../images/search_icon.svg';
 
 
 type Props = {
-    songs: SongsFull[]
+    songs: Songs[]
 }
 
 export default function SongPage({songs}: Props) {
@@ -24,10 +24,10 @@ export default function SongPage({songs}: Props) {
     const virtuoso = useRef<any>(null);
 
     // const [loading, setLoading] = useState(false);
-    const [songList] = useState<SongsFull[]>(songs);
+    const [songList] = useState<Songs[]>(songs);
     const [searchValue, setSearchValue] = useState<string>("");
 
-    const [filteredSongs, setFilteredSongs] = useState<SongsFull[]>(songs);
+    const [filteredSongs, setFilteredSongs] = useState<Songs[]>(songs);
     const [songSections, setSongSections] = useState<number[]>([]);
 
     // Playlist Values
@@ -37,7 +37,8 @@ export default function SongPage({songs}: Props) {
     
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
 
-    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, isBeingAdded: false, context_type: "song", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, isBeingAdded: false, context_type: "song", album: -1, 
+        artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<string>("");
@@ -45,15 +46,12 @@ export default function SongPage({songs}: Props) {
     
     useEffect(() => {
         function setupSongs() {
-            
-            let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, songList.map((o: SongsFull) => { return o.song_section})) );
 
-            for(let i = 0; i < maxSection + 1; i++) {
-                const results = songs.filter(obj => obj.song_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setSongSections(tempSectionArray); 
+            const groupCounts = alphabeticallyOrdered.map((letter) => {
+                return songList.filter((entry) => letter === getSectionNumber(entry.name.toUpperCase().charAt(0)) ).length
+            });
+
+            setSongSections(groupCounts);
         }
         setupSongs();
     }, []);
@@ -74,7 +72,7 @@ export default function SongPage({songs}: Props) {
     function updateSearchResults(value: string) {
         setSearchValue(value);
 
-        const temp_section = songList.filter((entry) => {
+        const temp_section: Songs[] = songList.filter((entry) => {
             if(entry.name !== undefined && entry.album !== undefined && entry.album_artist !== undefined) {
                 return (entry.name.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
                 || entry.album.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
@@ -86,14 +84,10 @@ export default function SongPage({songs}: Props) {
             }
         });
 
-        let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.length;
-
-            for(let i = 0; i < maxSection; i++) {
-                const results = temp_section.filter(obj => obj.song_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setSongSections(tempSectionArray);
+        const groupCounts = alphabeticallyOrdered.map((letter) => {
+            return temp_section.filter((entry) => letter === getSectionNumber(entry.name.toUpperCase().charAt(0)) ).length
+        });
+        setSongSections(groupCounts);
         
         // console.log(temp_section);
         setFilteredSongs(temp_section);
@@ -129,11 +123,11 @@ export default function SongPage({songs}: Props) {
     async function addToQueue() {
         setDisplayAddToMenu(false);
         resetContextMenu();
-        console.log("queue add")
+        
         try {
             let songList: Songs[] = [];
             for(let i = 0; i < songSelection.length; i++) {
-                const temp: Songs = await invoke<Songs>('get_song', {song_path: songSelection[i].path});
+                const temp: Songs = await invoke<Songs>('get_song', {song_id: songSelection[i].id});
                 songList.push(temp);
             }
             clearSelection();
@@ -154,8 +148,7 @@ export default function SongPage({songs}: Props) {
         catch(e) {
             console.log(e);
         }
-        finally {
-            
+        finally {            
             clearSelection();
         }
     }
@@ -215,7 +208,7 @@ export default function SongPage({songs}: Props) {
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            setSongSelection(songSelection.filter(item => item.path !== song.path));;
+            setSongSelection(songSelection.filter(item => item.id !== song.id));
         }
     }
 
@@ -261,7 +254,7 @@ export default function SongPage({songs}: Props) {
 
     // Context Menu Functions
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number, isBeingAdded: boolean) {
+    function handleContextMenu(e: any, album: number, artist: string, index: number, isBeingAdded: boolean) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -281,7 +274,7 @@ export default function SongPage({songs}: Props) {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0});
     }
 
     function updateSongDetailsDisplay(bool: boolean, path: string) {
@@ -352,74 +345,45 @@ export default function SongPage({songs}: Props) {
                     {/* End of Song Selection Bar */}
 
                     <div className="song-list">
-                        <Virtuoso 
+                        <GroupedVirtuoso
                             ref={virtuoso}
-                            totalCount={filteredSongs.length}
+                            groupCounts={songSections}
+                            style={{ height: '100%' }}
                             increaseViewportBy={{ top: 210, bottom: 10 }}
-                            itemContent={(index) => {
-                                let totalIndex = 0;
-                                for(let j = 0; j < songSections.length; j++) {                                        
-                                    if(totalIndex === index) {
-                                        return(
-                                            <>
-                                                <div className="grid-20 position-relative" key={index} id={`${index}`}>
-                                                    <span className="section-20 header-font header-color" key={j}>
-                                                        {filteredSongs[index].song_section === 0 && <h1 className="font-6">&</h1>}
-                                                        {filteredSongs[index].song_section === 1 && <h1 className="font-6">#</h1>}
-                                                        {filteredSongs[index].song_section > 1 && filteredSongs[index].song_section < 300 && <h1 className="font-p6">{String.fromCharCode(filteredSongs[index].song_section)}</h1>}
-                                                        {filteredSongs[index].song_section === 300 && <h1 className="font-6">...</h1>}
-                                                    </span>
-                                                    <span className="section-1"></span>
-                                                    <span className="section-6 vertical-centered details">Name</span>
-                                                    <span className="section-4 vertical-centered details">Album</span>
-                                                    <span className="section-4 vertical-centered details">Album Artist</span>
-                                                    <span className="section-2 vertical-centered details">Release</span>
-                                                    <span className="section-2 vertical-centered details">Genre</span>
-                                                    <span className="section-1 vertical-centered details">Length</span>
-                                                </div>
-                                                <hr />
-                                                <div className="song-link"
-                                                    onContextMenu={(e) => {
-                                                        e.preventDefault();
-                                                        handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index, songSelection.filter(x => {
-                                                            return x.path === filteredSongs[index].path
-                                                        }).length > 0);
-                                                    }}
-                                                >
-                                                    <div className={`grid-20 song-row`}>
-                                                        <span className="section-1 vertical-centered play ">
-                                                            <span className="form-control">
-                                                                <input
-                                                                    type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                                    onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked,)}
-                                                                    onChange={() => {}} 
-                                                                    checked={songSelection.filter(x => {
-                                                                        return x.path === filteredSongs[index].path
-                                                                    }).length > 0}
-                                                                />
-                                                            </span>
-                                                            <img src={PlayIcon} onClick={() => {playSong(index)}}/>
-                                                        </span>
-                                                        
-                                                        <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
-                                                        <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                                        <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
-                                                        <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
-                                                        <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
-                                                        <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
-                                                    </div>
-                                                    <hr />
-                                                </div>
-                                            </>
-                                        );
-                                    }
-                                    totalIndex += songSections[j];
+                            groupContent={(index) => {
+                                if(songSections[index] !== 0) {
+                                    return (
+                                        <>
+                                            <div className="grid-20 position-relative" key={index} id={`${index}`}>
+                                                <span className="section-20 header-font header-color" key={index}>
+                                                    {alphabeticallyOrdered[index] === 0 && <h1 className="font-6">&</h1>}
+                                                    {alphabeticallyOrdered[index] === 1 && <h1 className="font-6">#</h1>}
+                                                    {alphabeticallyOrdered[index] > 1 && alphabeticallyOrdered[index] < 300 && <h1 className="font-p6">{String.fromCharCode(alphabeticallyOrdered[index])}</h1>}
+                                                    {alphabeticallyOrdered[index] === 300 && <h1 className="font-6">...</h1>}
+                                                </span>
+                                                <span className="section-1"></span>
+                                                <span className="section-6 vertical-centered details">Name</span>
+                                                <span className="section-4 vertical-centered details">Album</span>
+                                                <span className="section-4 vertical-centered details">Album Artist</span>
+                                                <span className="section-2 vertical-centered details">Release</span>
+                                                <span className="section-2 vertical-centered details">Genre</span>
+                                                <span className="section-1 vertical-centered details">Length</span>
+                                            </div>
+                                            <hr />
+                                            <div className="song-link" style={{paddingBottom: "1px"}}/>
+                                        </>
+                                    );
                                 }
+                                else {
+                                    return(<></>);
+                                }                                
+                            }}
+                            itemContent={(index) => {
                                 return(
                                     <div className="song-link"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, filteredSongs[index].album, filteredSongs[index].album_artist, index, songSelection.filter(x => {
+                                            handleContextMenu(e, filteredSongs[index].album_id, filteredSongs[index].album_artist, index, songSelection.filter(x => {
                                                 return x.path === filteredSongs[index].path
                                             }).length > 0);
                                         }}
@@ -448,7 +412,13 @@ export default function SongPage({songs}: Props) {
                                         </div>
                                         <hr />
                                     </div>
-                                );                                
+                                );
+                            }}
+                            components={{
+                                Group: (props) => <div {...props} style={{ position: "static" }} />,
+                                TopItemList: (props) => (
+                                    <div {...props} style={{ position: "static" }} />
+                                )
                             }}
                             customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                         />

@@ -20,7 +20,7 @@ type Props = {
     isToggled: boolean,
     context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
     song: Songs,
-    album: string,
+    album: number,
     artist: string,
     index: number,
     play: (index: number, shuffled: boolean) => void, // playSong / playAlbum function
@@ -52,7 +52,7 @@ export default function CustomContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
         navigate("/artists/overview", {state: {name: artist}});

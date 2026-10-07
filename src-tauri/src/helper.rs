@@ -101,18 +101,18 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
                     if Some(tag.get_string(&ItemKey::TrackTitle).unwrap().to_string()) != None {
                         song_data.name = Some(tag.get_string(&ItemKey::TrackTitle).unwrap().to_string());
 
-                        let char_array: Vec<char> = tag.get_string(&ItemKey::TrackTitle).unwrap().to_string().chars().collect();
-                        let first_char: char = char_array[0].to_ascii_uppercase();
-                        song_data.song_section = get_section_marker(first_char);
+                        // let char_array: Vec<char> = tag.get_string(&ItemKey::TrackTitle).unwrap().to_string().chars().collect();
+                        // let first_char: char = char_array[0].to_ascii_uppercase();
+                        // song_data.song_section = get_section_marker(first_char);
                     }
                 }
                 else {
                     song_data.name = Some(value.to_string());
 
-                    let name: String = value.to_string();
-                    let char_array: Vec<char> = name.chars().collect();
-                    let first_char: char = char_array[0].to_ascii_uppercase();
-                    song_data.song_section = get_section_marker(first_char);
+                    // let name: String = value.to_string();
+                    // let char_array: Vec<char> = name.chars().collect();
+                    // let first_char: char = char_array[0].to_ascii_uppercase();
+                    // song_data.song_section = get_section_marker(first_char);
                 }
             }
             // This song has no title tag - will not be added to the app
@@ -126,24 +126,13 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
                 if Some(value) == None {
                     if Some(tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string()) != None {
                         song_data.album = Some(tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string());
-
-                        let name: String = tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string();
-                        let char_array: Vec<char> = name.chars().collect();
-                        let first_char: char = char_array[0].to_ascii_uppercase();
-                        song_data.album_section = get_section_marker(first_char);
                     }
                     else {
                         song_data.album = None;
-                        song_data.album_section = None;
                     }
                 }
                 else {
                     song_data.album = Some(value.to_string());
-
-                    let name: String = value.to_string();
-                    let char_array: Vec<char> = name.chars().collect();
-                    let first_char: char = char_array[0].to_ascii_uppercase();
-                    song_data.album_section = get_section_marker(first_char);
                 }
             }
 

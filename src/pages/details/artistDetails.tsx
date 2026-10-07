@@ -48,7 +48,7 @@ export default function ArtistOverviewPage() {
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "artist", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "artist", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
 
@@ -86,14 +86,14 @@ export default function ArtistOverviewPage() {
         }
     }
 
-    const navigateToAlbumOverview = (name: string) => {
-        navigate("/albums/overview", {state: {name: name}});
+    const navigateToAlbumOverview = (id: number) => {
+        navigate("/albums/overview", {state: {id: id}});
     }
 
     // Load the song the user clicked on but also queue the entire album
-    async function playAlbum(album_name: string) {
+    async function playAlbum(album_id: number) {
         try {
-            await invoke("play_album", {album_name: album_name, index: 0, shuffled: false});
+            await invoke("play_album", {album_id: album_id, index: 0, shuffled: false});
             savePosition(0);
         }
         catch(e) {

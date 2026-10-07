@@ -367,6 +367,16 @@ input.new-playlist {
   font-size: 1.2rem;
 }
 
+.album-container .song-list {
+  padding-bottom: 140px;
+}
+
+#root:has(.music-control-container) {
+  .album-container .song-list {
+    padding-bottom: 220px;
+  }
+}
+
 /* Very Skinny views */
 @media screen and (min-width: 100px) and (max-width: 799px) {
   
