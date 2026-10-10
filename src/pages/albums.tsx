@@ -71,6 +71,8 @@ export default function AlbumPage({albums}: P) {
         }
         setupAlbumList();
 
+        console.log(albums);
+
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
                 resetContextMenu();

@@ -35,7 +35,7 @@ type Props = {
     createPlaylist: (name: string) => void,
     addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
-    updateSongDetailsDisplay: (bool: boolean, path: string) => void,
+    updateSongDetailsDisplay: (bool: boolean, song_id: number) => void,
     ref: any
 }
 
@@ -136,7 +136,7 @@ export default function CustomContextMenu({
                         </span>
                     </li>
                 }    
-                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
+                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.id)} >
                     <span className="context-row">
                         <img src={InfoIcon} />&nbsp; Song Details
                     </span>

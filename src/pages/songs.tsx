@@ -41,7 +41,7 @@ export default function SongPage({songs}: Props) {
         artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
-    const [displaySong, setDisplaySong] = useState<string>("");
+    const [displaySong, setDisplaySong] = useState<number>(-1);
 
     
     useEffect(() => {
@@ -277,15 +277,15 @@ export default function SongPage({songs}: Props) {
         setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0});
     }
 
-    function updateSongDetailsDisplay(bool: boolean, path: string) {
+    function updateSongDetailsDisplay(bool: boolean, song_id: number) {
         setDisplaySongDetails(bool);
-        setDisplaySong(path)
+        setDisplaySong(song_id);
         resetContextMenu();
     }
 
     return(
         <>  
-            {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
+            {displaySongDetails && <SongDetailsModal song_id={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
             <div className="section-list">
                 {songList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
@@ -349,7 +349,7 @@ export default function SongPage({songs}: Props) {
                             ref={virtuoso}
                             groupCounts={songSections}
                             style={{ height: '100%' }}
-                            increaseViewportBy={{ top: 210, bottom: 10 }}
+                            increaseViewportBy={{ top: 250, bottom: 100 }}
                             groupContent={(index) => {
                                 if(songSections[index] !== 0) {
                                     return (

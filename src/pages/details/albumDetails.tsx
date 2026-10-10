@@ -57,13 +57,13 @@ export default function AlbumOverviewPage() {
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
     const[isCurrent, setIsCurrent] = useState<Songs>({ id: -1, name: "", path: "", cover: "", release: "", track: 0, album: "",
-        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0, album_id: -1
+        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0, album_id: -1, album_artist_id: -1
     });
 
     const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "album_songs", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
-    const [displaySong, setDisplaySong] = useState<string>("");
+    const [displaySong, setDisplaySong] = useState<number>(-1);
 
     // On first load get the album details
     useEffect(() => {
@@ -276,9 +276,9 @@ export default function AlbumOverviewPage() {
         }
     }
 
-    function updateSongDetailsDisplay(bool: boolean, path: string) {
+    function updateSongDetailsDisplay(bool: boolean, song_id: number) {
         setDisplaySongDetails(bool);
-        setDisplaySong(path)
+        setDisplaySong(song_id)
         resetContextMenu();
     }
 
@@ -355,7 +355,7 @@ export default function AlbumOverviewPage() {
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="album-details-main">
                 <div className="album-container">
 
-                    {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
+                    {displaySongDetails && <SongDetailsModal song_id={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
                     
                     {/* Song Selection Bar */}
                     <SongSelectionBar
@@ -635,7 +635,7 @@ export default function AlbumOverviewPage() {
                         currentPlaylistID={-1}
                     />
                     
-                    {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
+                    {displaySongDetails && <SongDetailsModal song_id={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
                     
                     
                     <div className="d-flex top-row justify-content-between">

@@ -40,7 +40,7 @@ export default function ArtistOverviewPage() {
     const [loading, isLoading] = useState<boolean>(false);
     const [artistDetails, setArtistDetails] = useState<ArtistDetails>({ total_duration: 0, album_artist: "", albums: [], num_tracks: 0, image: ArtistPlaceholderImage});
 
-    const [albumSelection, setAlbumSelection] = useState<string[]>([]);
+    const [albumSelection, setAlbumSelection] = useState<number[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
 
     // Playlist Values
@@ -48,7 +48,7 @@ export default function ArtistOverviewPage() {
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "artist", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "artist", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
 
@@ -71,14 +71,14 @@ export default function ArtistOverviewPage() {
     async function getAlbums() {
         isLoading(true);
         try{
-            const res: ArtistDetails = await invoke("get_albums_by_artist", {artist: location.state.name});
+            const res: ArtistDetails = await invoke("get_albums_by_artist", {artist: location.state.id});
             // console.log(res);
             setArtistDetails(res);
             setCheckBoxNumber(Array(res.albums.length).fill(false));
         }
         catch(e) {
             console.log("Error getting albums")
-            error(`Error getting albums ${location.state.name}`);
+            error(`Error getting albums ${location.state.id}`);
             navigate("/artists");
         }
         finally {
@@ -127,7 +127,7 @@ export default function ArtistOverviewPage() {
             const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
             if(file_path !== null) {
                 cover_image = file_path.toString();
-                await invoke("add_artist_cover", { file_path: file_path.toString(), artist_name: location.state.name });
+                await invoke("add_artist_cover", { file_path: file_path.toString(), artist_name: artistDetails.album_artist, artist_id: location.state.id });
             }
         }
         catch(err) {
@@ -143,7 +143,7 @@ export default function ArtistOverviewPage() {
     }
 
     // Selection Function
-    function editSelection(album: string, isBeingAdded: boolean, index: number) {
+    function editSelection(album: number, isBeingAdded: boolean, index: number) {
         resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
@@ -227,7 +227,7 @@ export default function ArtistOverviewPage() {
         try { 
             let songList: Songs[] = [];
             for(let i = 0; i < artistDetails.albums.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: artistDetails.albums[i].album});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: artistDetails.albums[i].id});
                 songList.push(...temp);
             }
             clearSelection();
@@ -238,11 +238,11 @@ export default function ArtistOverviewPage() {
         }      
     }
 
-    async function addToPlaylist(id: number, album: string) {
+    async function addToPlaylist(id: number, album: number) {
         setDisplayAddToMenu(false);
         clearSelection();
         try {
-            const songList: Songs[] = await invoke<Songs[]>('get_album', {name: album});            
+            const songList: Songs[] = await invoke<Songs[]>('get_album', {album_id: album});            
             await invoke('add_to_playlist', {songs: songList, playlist_id: id});
         }
         catch(e) {
@@ -310,7 +310,7 @@ export default function ArtistOverviewPage() {
     function removeSelectedSongs() { }
     // ------------ End of Selection Bar Functions ------------
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, context_type: "artist", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -330,7 +330,7 @@ export default function ArtistOverviewPage() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "artist", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, context_type: "artist", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
@@ -434,27 +434,27 @@ export default function ArtistOverviewPage() {
                                     <div className="album-image-container"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, artistDetails.albums[index].album, artistDetails.albums[index].album_artist, index);
+                                            handleContextMenu(e, artistDetails.albums[index].id, artistDetails.albums[index].album_artist_id, index);
                                         }}
                                     >
                                         <span className="checkbox-container">
                                             <input
                                                 type="checkbox"
                                                 id={`select-${index}`} name={`select-${index}`}
-                                                onClick={(e) => editSelection(artistDetails.albums[index].album, e.currentTarget.checked, index)}
+                                                onClick={(e) => editSelection(artistDetails.albums[index].id, e.currentTarget.checked, index)}
                                                 checked={checkBoxNumber[index]} onChange={() => {}}
                                             />
                                         </span>
-                                        <div className="play-album" onClick={() => playAlbum(artistDetails.albums[index].album)}>
+                                        <div className="play-album" onClick={() => playAlbum(artistDetails.albums[index].id)}>
                                             <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                             <img src={Circle} className="circle"/>
                                         </div>
                                         
-                                        <div className="container" onClick={() => navigateToAlbumOverview(artistDetails.albums[index].album)} >
-                                            <ImageWithFallBack image={artistDetails.albums[index].cover} alt={artistDetails.albums[index].album} image_type={"album"} />
+                                        <div className="container" onClick={() => navigateToAlbumOverview(artistDetails.albums[index].id)} >
+                                            <ImageWithFallBack image={artistDetails.albums[index].cover} alt={artistDetails.albums[index].name} image_type={"album"} />
                                         </div>
                                         <div className="album-image-name header-font">
-                                            <div className="album-name">{artistDetails.albums[index].album}</div>
+                                            <div className="album-name">{artistDetails.albums[index].name}</div>
                                             <div className="artist-name">{artistDetails.albums[index].album_artist}</div>
                                         </div>
                                     </div>
@@ -490,11 +490,11 @@ export default function ArtistOverviewPage() {
 
 type Props = {
     isToggled: boolean,
-    album: string,
-    artist: string,
+    album: number,
+    artist: number,
     index: number,
-    play: (name: string) => void, // playSong / playAlbum function
-    editSelection: (albums: string, isBeingAdded: boolean, index: number) => void,
+    play: (name: number) => void, // playSong / playAlbum function
+    editSelection: (albums: number, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
     posY: number,
@@ -502,7 +502,7 @@ type Props = {
     // Playlist
     playlistList: PlaylistList[],
     createPlaylist: (name: string) => void,
-    addToPlaylist: (id: number, album: string) => void
+    addToPlaylist: (id: number, album: number) => void
     addToQueue: () => void,
     ref: any
 }
@@ -519,7 +519,7 @@ function CustomContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
 
     useEffect(() => {

@@ -27,7 +27,8 @@ export interface Songs {
     disc_number: number,
     duration: number,
     song_section: number,
-    album_id: number
+    album_id: number,
+    album_artist_id: number
 }
 
 export interface SongsLimit {
@@ -71,7 +72,8 @@ export interface AlbumDetails {
     name: string,
     album_artist: string,
     cover: string,
-    album_section: number
+    album_section: number,
+    album_artist_id: number
 }
 
 export interface ArtistRes {
@@ -80,10 +82,11 @@ export interface ArtistRes {
 }
 
 export interface AllArtistResults {
+    id: number,
     album_artist: string,
     name: string,
     artist_section: number,
-    image: string
+    cover: string
 }
 
 export interface AllGenreResults {

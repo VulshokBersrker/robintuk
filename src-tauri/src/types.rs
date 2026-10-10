@@ -37,21 +37,10 @@ pub struct SongTable {
     pub album_artist: String,
     pub disc_number: i32,
     pub duration: u64,
-    pub artist_section: i32,
-    pub genre_section: i32,
-    pub album_id: i64
+    pub album_id: i64,
+    pub album_artist_id: i64
 }
 
-#[derive(sqlx::FromRow, Default, Clone, Serialize)]
-pub struct AlbumTable {
-    pub id: i32,
-    pub name: String,
-    pub album_artist: String,
-    pub cover: String,
-    pub album_section: i32,
-    pub genre: String,
-    pub keep: bool
-}
 
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PlaylistTable {
@@ -106,19 +95,23 @@ pub struct AllAlbumResults {
     pub name: String,
     pub album_artist: String,
     pub cover: String,
-    pub album_section: i32
+    pub album_section: i32,
+    pub album_artist_id: i64
 }
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct AllArtistResults {
-    pub album_artist: String,
+    pub id: i64,
+    pub name: String,
     pub artist_section: i32,
-    pub image: String
+    pub cover: String
 }
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct AllGenreResults {
-    pub genre: String,
+    pub id: i64,
+    pub name: String,
+    pub cover: String,
     pub genre_section: i32
 }
 

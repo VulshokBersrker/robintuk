@@ -1,12 +1,3 @@
-CREATE TABLE IF NOT EXISTS albums (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    album_artist TEXT,
-    cover TEXT,
-    album_section INTEGER,
-    genre TEXT,
-    keep BOOLEAN
-);
 
 -- Create the tables for all the Music
 CREATE TABLE IF NOT EXISTS songs (
@@ -23,12 +14,10 @@ CREATE TABLE IF NOT EXISTS songs (
     track INTEGER,
     album INTEGER,
     artist TEXT,
-    genre TEXT,
-    album_artist TEXT,
+    genre INTEGER,
+    album_artist INTEGER,
     disc_number INTEGER,
     duration INTEGER,
-    artist_section INTEGER,
-    genre_section INTEGER,
     -- FOREIGN KEY (album) REFERENCES albums(id),
     keep BOOLEAN
 );
@@ -90,12 +79,32 @@ CREATE TABLE IF NOT EXISTS lyrics (
     FOREIGN KEY(song_id) REFERENCES songs(id) ON DELETE CASCADE
 );
 
-
-CREATE TABLE IF NOT EXISTS artist_covers (
+CREATE TABLE IF NOT EXISTS albums (
     id INTEGER PRIMARY KEY,
-    artist_name TEXT NOT NULL,
-    image TEXT
+    name TEXT NOT NULL,
+    album_artist INTEGER,
+    cover TEXT,
+    album_section INTEGER,
+    genre INTEGER,
+    keep BOOLEAN
 );
+
+CREATE TABLE IF NOT EXISTS album_artists (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    cover TEXT,
+    artist_section INTEGER,
+    keep BOOLEAN
+);
+
+CREATE TABLE IF NOT EXISTS genres (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    cover TEXT,
+    genre_section INTEGER,
+    keep BOOLEAN
+);
+
 
 INSERT OR IGNORE INTO settings (id, theme) VALUES (1, "red");
 

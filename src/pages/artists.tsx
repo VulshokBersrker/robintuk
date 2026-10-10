@@ -67,9 +67,9 @@ export default function ArtistsPage({artists}: P) {
         setArtistSections(tempSectionArray);
     }
 
-    const navigateToArtistOverview = (name: string, artist_tag: number) => {
+    const navigateToArtistOverview = (id: number, artist_tag: number) => {
         navigate(`/artists#${artist_tag}`, { replace: true});
-        navigate("/artists/overview", {state: {name: name}});
+        navigate("/artists/overview", {state: {id: id}});
     }
 
     if(loading) {
@@ -166,11 +166,11 @@ export default function ArtistsPage({artists}: P) {
                                         // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
                                     }}
                                 >                                    
-                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist, index)} >
-                                        <ImageWithFallBack image={filteredArtists[index].image} alt={filteredArtists[index].album_artist} image_type={"artist"} />
+                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].id, index)} >
+                                        <ImageWithFallBack image={filteredArtists[index].cover} alt={filteredArtists[index].name} image_type={"artist"} />
                                     </div>
                                     <div className="album-image-name header-font">
-                                        <div className="album-name">{filteredArtists[index].album_artist}</div>
+                                        <div className="album-name">{filteredArtists[index].name}</div>
                                     </div>
                                 </div>
                             </div>
