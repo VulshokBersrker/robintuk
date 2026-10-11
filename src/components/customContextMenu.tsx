@@ -21,7 +21,7 @@ type Props = {
     context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
     song: Songs,
     album: number,
-    artist: string,
+    artist: number,
     index: number,
     play: (index: number, shuffled: boolean) => void, // playSong / playAlbum function
     editSelection: (song: Songs, isBeingAdded: boolean, index: number) => void,
@@ -55,7 +55,7 @@ export default function CustomContextMenu({
         navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
-        navigate("/artists/overview", {state: {name: artist}});
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     useEffect(() => {
@@ -129,7 +129,7 @@ export default function CustomContextMenu({
                         </span>
                     </li>
                 }
-                {(!context_type.includes("artist") || !context_type.includes("album_songs")) && artist !== "" && 
+                {(!context_type.includes("artist") || !context_type.includes("album_songs")) && artist !== -1 && 
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <span className="context-row">
                             <img src={ArtistIcon} /> &nbsp; Show Artist

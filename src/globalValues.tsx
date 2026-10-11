@@ -90,7 +90,9 @@ export interface AllArtistResults {
 }
 
 export interface AllGenreResults {
-    genre: string,
+    id: number,
+    name: string,
+    cover: string,
     genre_section: number
 }
 
@@ -103,6 +105,7 @@ export interface ArtistDetails {
 }
 
 export interface GenreDetails {
+    id: number,
     num_tracks: number,
     total_duration: number,
     genre: string,
@@ -131,7 +134,7 @@ export interface ContextMenu {
     isBeingAdded: boolean,
     context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
     album: number,
-    artist: string,
+    artist: number,
     index: number,
     posX: number,
     posY: number,

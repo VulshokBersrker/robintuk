@@ -283,8 +283,12 @@ pub async fn set_last_scan_date(pool: &Pool<Sqlite>) -> Result<(), String> {
 pub async fn get_all_songs(state: State<AppState, '_>) -> Result<Vec<SongTable>, String> {
 
     let temp = sqlx::query_as::<_, SongTable>("SELECT s.id, s.name, s.path, a.cover, s.release, s.track, a.name as album,
-        s.artist, s.genre, s.album_artist, s.disc_number, s.duration, s.artist_section, s.genre_section, a.id as album_id
-        FROM songs s INNER JOIN albums a WHERE s.album=a.id ORDER BY s.name COLLATE NOCASE ASC;")
+        s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, a.id as album_id, art.id as album_artist_id
+        FROM songs s 
+        INNER JOIN albums a ON a.id = s.album
+        INNER JOIN album_artists art ON s.album_artist = art.id
+        INNER JOIN genres g ON s.genre = g.id
+        ORDER BY s.name COLLATE NOCASE ASC;")
         .fetch_all(&state.pool)
         .await;
 
@@ -302,11 +306,11 @@ pub async fn get_all_songs(state: State<AppState, '_>) -> Result<Vec<SongTable>,
 pub async fn get_song(state: State<AppState, '_>, song_id: i64) -> Result<SongTable, String> {
 
     let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT s.id, s.name, s.path, s.cover, s.release, s.track, a.name as album,
-        s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, s.artist_section, s.genre_section, a.id as album_id
+        s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, a.id as album_id, art.id as album_artist_id
         FROM songs s
-        INNER JOIN genres g ON s.genre=g.id
-        INNER JOIN album_artists art ON s.album_artist=art.id
-        INNER JOIN albums a ON s.album=a.id WHERE s.id = ?")
+        INNER JOIN genres g ON s.genre = g.id
+        INNER JOIN album_artists art ON s.album_artist = art.id
+        INNER JOIN albums a ON s.album = a.id WHERE s.id = ?")
         .bind(&song_id)
         .fetch_one(&state.pool)
         .await
@@ -476,7 +480,7 @@ pub async fn add_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &Opti
             let first_char: char = char_array[0].to_ascii_uppercase();
             let section = helper::get_section_marker(first_char);
 
-            let rs = sqlx::query("INSERT INTO albums (name, cover, album_artist, album_section, genre, keep) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
+            let rs: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT INTO albums (name, cover, album_artist, album_section, genre, keep) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
                 .bind(name)
                 .bind(cover)
                 .bind(artist)
@@ -582,10 +586,9 @@ pub async fn set_album_details(pool: &Pool<Sqlite>, album_id: i64, duration: i32
 pub async fn get_all_albums(state: State<AppState, '_>) -> Result<Vec<AllAlbumResults>, String> {
 
     let temp: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT DISTINCT a.id, a.name, art.name as album_artist, a.cover, a.album_section, art.id as album_artist_id
+        "SELECT a.id, a.name, art.name as album_artist, a.cover, a.album_section, art.id as album_artist_id
         FROM albums a
         INNER JOIN album_artists art ON art.id=a.album_artist
-        WHERE a.name IS NOT NULL 
         ORDER BY a.name COLLATE NOCASE ASC, art.name COLLATE NOCASE ASC;",
     )
     .fetch_all(&state.pool)
@@ -640,23 +643,24 @@ pub async fn get_albums_with_limit(state: State<AppState, '_>, limit: i64) -> Re
 #[tauri::command(rename_all = "snake_case")]
 pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: i64) -> Result<ArtistDetailsResults, String> {
 
-    let temp: (u64,) = sqlx::query_as("SELECT SUM(duration) FROM songs s WHERE album_artist=$1")
+    let temp: (u64,) = sqlx::query_as("SELECT SUM(duration) FROM songs WHERE album_artist=$1")
         .bind(&artist)
         .fetch_one(&state.pool)
         .await
         .unwrap();
 
-    let num_tracks: (u64,) = sqlx::query_as("SELECT COUNT(*) FROM songs s WHERE album_artist=$1;")
+    let num_tracks: (u64,) = sqlx::query_as("SELECT COUNT(*) FROM songs WHERE album_artist=$1;")
         .bind(&artist)
         .fetch_one(&state.pool)
         .await
         .unwrap();
 
     let albums: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT DISTINCT a.id, a.name, art.name as album_artist, a.cover, a.album_section, art.id as album_artist_id
+        "SELECT a.id, a.name, a.cover, a.album_section, art.name as album_artist, art.id as album_artist_id
         FROM albums a
-        INNER JOIN album_artists art ON art.id=a.album_artist
-        WHERE a.album_artist=$1 ORDER BY a.name ASC;",
+        INNER JOIN album_artists art ON a.album_artist = art.id
+        WHERE art.id = $1
+        ORDER BY a.name ASC",
     ).bind(&artist).fetch_all(&state.pool).await.unwrap();
 
     let image: Result<(String,), sqlx::Error> = sqlx::query_as("SELECT cover FROM album_artists WHERE id=$1;")
@@ -673,26 +677,33 @@ pub async fn get_albums_by_artist(state: State<AppState, '_>, artist: i64) -> Re
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn get_albums_by_genre(state: State<AppState, '_>, genre: String) -> Result<GenreDetailsResults, String> {
+pub async fn get_albums_by_genre(state: State<AppState, '_>, genre: i64) -> Result<GenreDetailsResults, String> {
 
-    let temp: (u64,) = sqlx::query_as("SELECT SUM(duration) FROM songs s INNER JOIN albums a ON a.id=s.album WHERE a.genre=$1 ORDER BY a.name ASC;")
+    let temp: (u64,) = sqlx::query_as("SELECT SUM(duration) FROM songs WHERE album_artist=$1")
         .bind(&genre)
         .fetch_one(&state.pool)
         .await
         .unwrap();
 
-    let num_tracks: (u64,) = sqlx::query_as("SELECT COUNT(*) FROM songs s INNER JOIN albums a ON a.id=s.album WHERE a.genre=$1 ORDER BY a.name ASC;")
+    let num_tracks: (u64,) = sqlx::query_as("SELECT COUNT(*) FROM songs WHERE genre=$1;")
         .bind(&genre)
         .fetch_one(&state.pool)
         .await
         .unwrap();
 
     let albums: Vec<AllAlbumResults> = sqlx::query_as::<_, AllAlbumResults>(
-        "SELECT DISTINCT id, name, album_artist, cover, album_section FROM albums WHERE genre=$1 ORDER BY name ASC;",
+        "SELECT a.id, a.name, a.cover, a.album_section, art.name as album_artist, art.id as album_artist_id, g.name as genre
+        FROM albums a
+        INNER JOIN genres g ON a.genre = g.id
+        INNER JOIN album_artists art ON a.album_artist = art.id
+        WHERE g.id = $1
+        ORDER BY a.name ASC",
     ).bind(&genre).fetch_all(&state.pool).await.unwrap();
 
+    let name: (String,) = sqlx::query_as("SELECT name FROM genres WHERE id = $1",).bind(&genre).fetch_one(&state.pool).await.unwrap();
 
-    Ok(GenreDetailsResults{ num_tracks: num_tracks.0, total_duration: temp.0, genre, albums })
+
+    Ok(GenreDetailsResults{ id: genre, num_tracks: num_tracks.0, total_duration: temp.0, genre: name.0, albums })
 }
 
 // ------------------------------------ Artist Functions ------------------------------------
@@ -740,24 +751,38 @@ pub async fn get_all_artists(state: State<AppState, '_>) -> Result<Vec<AllArtist
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn get_artist(state: State<AppState, '_>, name: String) -> Result<AllAlbumResults, String> {
+pub async fn get_artist(state: State<AppState, '_>, id: i64) -> Result<AllAlbumResults, String> {
 
-    let temp: AllAlbumResults = sqlx::query_as::<_, AllAlbumResults>("SELECT a.id, a.name, a.cover, a.album_section, art.name as album_artist FROM albums a
+    let temp = sqlx::query_as::<_, AllAlbumResults>("
+        SELECT a.id, a.name, a.cover, a.album_section, art.name as album_artist
+        FROM albums a
         INNER JOIN album_artists art ON a.album_artist = art.id
         WHERE art.id = $1
         ORDER BY a.name ASC")
-        .bind(name)
+        .bind(id)
         .fetch_one(&state.pool)
-        .await
-        .unwrap();
+        .await;
 
-
-    Ok(temp)
+    if temp.is_ok() {
+        return Ok(temp.unwrap());
+    }
+    else {
+        let err = temp.unwrap_err();
+        return Err(format!("Error getting Artist Details - {:?}", err));
+    }
 }
 
-pub async fn get_artist_songs(state: State<'_, AppState>, album_artist: String) -> Result<Vec<SongTable>, String> {
+pub async fn get_artist_songs(state: State<'_, AppState>, album_artist: i64) -> Result<Vec<SongTable>, String> {
 
-    let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album_artist = ? ORDER BY album ASC, disc_number ASC, track ASC")
+    let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("
+        SELECT s.id, s.name, s.path, s.cover, s.release, s.track, a.name as album,
+        s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, a.id as album_id, art.id as album_artist_id
+        FROM songs s
+        INNER JOIN genres g ON s.genre = g.id
+        INNER JOIN album_artists art ON s.album_artist = art.id
+        INNER JOIN albums a ON s.album = a.id WHERE s.album_artist = ?
+        AND a.name IS NOT NULL
+        ORDER BY a.name ASC, s.disc_number ASC, s.track ASC")
         .bind(&album_artist)
         .fetch_all(&state.pool)
         .await
@@ -790,7 +815,7 @@ pub async fn add_artist_cover(state: State<AppState, '_>, file_path: String, art
 
 pub async fn add_genre(pool: &Pool<Sqlite>, genre: &Option<String>) -> Result<Option<i64>, String> {
 
-    let exists: Result<(i64,), sqlx::Error> = sqlx::query_as("SELECT id FROM album_artists WHERE name = ?1")
+    let exists: Result<(i64,), sqlx::Error> = sqlx::query_as("SELECT id FROM genres WHERE name = ?1")
         .bind(genre)
         .fetch_one(pool)
         .await;
@@ -830,7 +855,7 @@ pub async fn get_all_genres(state: State<AppState, '_>) -> Result<Vec<AllGenreRe
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn get_genre(state: State<AppState, '_>, name: String) -> Result<SongTable, String> {
+pub async fn get_genre(state: State<AppState, '_>, name: i64) -> Result<SongTable, String> {
 
     let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT s.id,
         s.name, s.path, a.cover, s.release, s.track, a.name as album, a.id as album_id,
@@ -848,10 +873,18 @@ pub async fn get_genre(state: State<AppState, '_>, name: String) -> Result<SongT
     Ok(temp)
 }
 
-pub async fn get_genre_songs(state: State<'_, AppState>, genre: String) -> Result<Vec<SongTable>, String> {
+pub async fn get_genre_songs(state: State<'_, AppState>, genre: i64) -> Result<Vec<SongTable>, String> {
 
     // Ignore albums with no name
-    let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE genre = ? AND album IS NOT NULL ORDER BY album ASC, disc_number ASC, track ASC")
+    let songs: Vec<SongTable> = sqlx::query_as::<_, SongTable>("
+        SELECT s.id, s.name, s.path, s.cover, s.release, s.track, a.name as album,
+        s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, a.id as album_id, art.id as album_artist_id
+        FROM songs s
+        INNER JOIN genres g ON s.genre = g.id
+        INNER JOIN album_artists art ON s.album_artist = art.id
+        INNER JOIN albums a ON s.album = a.id WHERE s.genre = ?
+        AND a.name IS NOT NULL 
+        ORDER BY a.name ASC, s.disc_number ASC, s.track ASC")
         .bind(&genre)
         .fetch_all(&state.pool)
         .await
@@ -886,11 +919,13 @@ pub async fn get_playlist(state: State<AppState, '_>, id: i64) -> Result<Playlis
     // Get the playlist tracks
     let song_arr: Vec<SongTable> = sqlx::query_as::<_, SongTable>("    
             SELECT s.id, s.name, s.path, a.name as album, s.artist, s.duration, a.id as album_id,
-            s.genre, s.cover, s.release, s.album_artist, s.track, s.disc_number, s.artist_section, s.genre_section
+            g.name as genre, s.cover, s.release, art.name as album_artist, s.track, s.disc_number, a.id as album_id, art.id as album_artist_id
             FROM playlist_tracks p 
             INNER JOIN songs s ON s.id = p.track_id 
 			INNER JOIN albums a ON s.album = a.id
-            WHERE p.playlist_id = ?1 ORDER BY p.position ASC
+            INNER JOIN album_artists art ON s.album_artist = art.id
+            INNER JOIN genres g ON s.genre = g.id
+            WHERE p.playlist_id = ?1 ORDER BY p.position ASC;
         ")
         .bind(&id)
         .fetch_all(&state.pool)
@@ -917,7 +952,7 @@ pub async fn get_playlists_with_limit(state: State<AppState, '_>, limit: i64) ->
 pub async fn create_playlist(state: State<AppState, '_>, app: tauri::AppHandle, name: String, songs: Vec<SongTable>, songs_to_add: bool) -> Result<(), String> {
 
     if songs_to_add == true {
-        sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
+        let id: SqliteQueryResult = sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
             .bind(&name)
             .execute(&state.pool)
             .await
@@ -925,18 +960,13 @@ pub async fn create_playlist(state: State<AppState, '_>, app: tauri::AppHandle, 
 
         let _ = commands::new_playlist_added(state.clone(), app).await;
 
-        let id: (i64,) = sqlx::query_as("SELECT id FROM playlists WHERE name=$1;")
-            .bind(&name)
-            .fetch_one(&state.pool)
-            .await.unwrap();
-
         // Now add the new songs to the playlist
         let mut i = 0;
         for song in songs {
             let _ = sqlx::query("INSERT INTO playlist_tracks
                 (playlist_id, track_id, position) 
                 VALUES (?1, ?2, ?3)")
-                .bind(&id.0)
+                .bind(&id.last_insert_rowid())
                 .bind(&song.id)
                 .bind(&i)
                 .execute(&state.pool).await;
@@ -944,7 +974,7 @@ pub async fn create_playlist(state: State<AppState, '_>, app: tauri::AppHandle, 
         }
     }
     else {
-        sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
+        let _ = sqlx::query("INSERT INTO playlists (name) VALUES (?1)")
             .bind(&name)
             .execute(&state.pool)
             .await
@@ -981,17 +1011,11 @@ pub async fn add_to_playlist(state: State<AppState, '_>, songs: Vec<SongTable>, 
 
 // Take in the new name of the playlist and update the name value of the playlist
 #[tauri::command(rename_all = "snake_case")]
-pub async fn rename_playlist(state: State<AppState, '_>, old_name: String, new_name: String) -> Result<(), String> {
+pub async fn rename_playlist(state: State<AppState, '_>, id: i64, name: String) -> Result<(), String> {
 
-    let _ = sqlx::query("UPDATE playlists SET name = $1 WHERE name = $2;")
-        .bind(&new_name)
-        .bind(&old_name)
-        .execute(&state.pool)
-        .await;
-
-    let _ = sqlx::query("UPDATE playlist_tracks SET playlist_name = $1 WHERE playlist_name = $2;")
-        .bind(&new_name)
-        .bind(&old_name)
+    let _ = sqlx::query("UPDATE playlists SET name = $1 WHERE id = $2;")
+        .bind(&name)
+        .bind(&id)
         .execute(&state.pool)
         .await;
 
@@ -1000,18 +1024,18 @@ pub async fn rename_playlist(state: State<AppState, '_>, old_name: String, new_n
 
 // Take in the new name of the playlist and update the name value of the playlist
 #[tauri::command(rename_all = "snake_case")]
-pub async fn delete_playlist(state: State<AppState, '_>, name: String) -> Result<(), String> {
+pub async fn delete_playlist(state: State<AppState, '_>, id: i64) -> Result<(), String> {
 
-    let covers_to_delete: Covers = sqlx::query_as::<_, Covers>("SELECT image AS cover FROM playlists WHERE image IS NOT NULL").fetch_one(&state.pool).await.unwrap();
+    let covers_to_delete: Covers = sqlx::query_as::<_, Covers>("SELECT image AS cover FROM playlists WHERE id=?1").bind(&id).fetch_one(&state.pool).await.unwrap();
     let _ = fs::remove_file(covers_to_delete.cover);
 
-    let _ = sqlx::query("DELETE FROM playlists WHERE name=$1;")
-        .bind(&name)
+    let _ = sqlx::query("DELETE FROM playlists WHERE id=$1;")
+        .bind(&id)
         .execute(&state.pool)
         .await;
 
-    let _ = sqlx::query("DELETE FROM playlist_tracks WHERE playlist_name=$1;")
-        .bind(&name)
+    let _ = sqlx::query("DELETE FROM playlist_tracks WHERE playlist_id=$1;")
+        .bind(&id)
         .execute(&state.pool)
         .await;
 
@@ -1150,18 +1174,26 @@ pub async fn get_queue(state: State<AppState, '_>, shuffled: bool) -> Result<Vec
 
     if shuffled == true {
         let list: Vec<SongTable> = sqlx::query_as::<_, SongTable>("
-            SELECT s.id, q.position, s.name, s.path, a.name as album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist, s.track, s.disc_number, s.artist_section, s.genre_section, a.id as album_id
+            SELECT s.id, q.position, s.name, s.path, a.name as album, s.artist, s.duration, g.name as genre, s.cover, s.release,
+            art.name as album_artist, s.track, s.disc_number, a.id as album_id, art.id as album_artist_id
             FROM queue_shuffled q 
             INNER JOIN songs s ON s.id = q.song_id
-		    INNER JOIN albums a ON a.id=s.album	ORDER BY q.position ASC").fetch_all(&state.pool).await.unwrap();
+		    INNER JOIN albums a ON a.id = s.album
+            INNER JOIN album_artists art ON art.id = s.album_artist
+            INNER JOIN genres g ON g.id = s.genre
+            ORDER BY q.position ASC").fetch_all(&state.pool).await.unwrap();
         Ok(list)
     }
     else {
         let list: Vec<SongTable> = sqlx::query_as::<_, SongTable>("
-            SELECT s.id, q.position, s.name, s.path, a.name as album, s.artist, s.duration, s.genre, s.cover, s.release, s.album_artist, s.track, s.disc_number, s.artist_section, s.genre_section, a.id as album_id
+            SELECT s.id, q.position, s.name, s.path, a.name as album, s.artist, s.duration, g.name as genre, s.cover, s.release,
+            art.name as album_artist, s.track, s.disc_number, a.id as album_id, s.album_artist as album_artist_id
             FROM queue q 
             INNER JOIN songs s ON s.id = q.song_id
-		    INNER JOIN albums a ON a.id=s.album	ORDER BY q.position ASC").fetch_all(&state.pool).await.unwrap();
+		    INNER JOIN albums a ON a.id = s.album
+            INNER JOIN album_artists art ON art.id = s.album_artist
+            INNER JOIN genres g ON g.id = s.genre
+            ORDER BY q.position ASC").fetch_all(&state.pool).await.unwrap();
         Ok(list)
     }
 }
@@ -1453,11 +1485,13 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
     if limit == -1 {
         let history: Vec<SongTable> = sqlx::query_as::<_, SongTable>("
             SELECT s.id, s.name, s.path, a.name as album, s.artist, s.duration, a.id as album_id,
-            s.genre, s.cover, s.release, art.name as album_artist, s.track, s.disc_number, art.id as album_artist_id
+            g.name as genre, s.cover, s.release, art.name as album_artist, s.track, s.disc_number, art.id as album_artist_id
             FROM history h 
             INNER JOIN songs s ON s.id = h.song_id
             INNER JOIN album_artists art ON s.album_artist = art.id
-            INNER JOIN albums a ON a.id = s.album ORDER BY h.id DESC")
+            INNER JOIN genres g ON s.genre = g.id
+            INNER JOIN albums a ON a.id = s.album
+            ORDER BY h.id DESC")
         .fetch_all(&state.pool)
         .await.unwrap();
 
@@ -1466,11 +1500,13 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
     else {
         let history: Vec<SongTable> = sqlx::query_as::<_, SongTable>("
             SELECT s.id, s.name, s.path, a.name as album, s.artist, s.duration, a.id as album_id,
-            s.genre, s.cover, s.release, art.name as album_artist, s.track, s.disc_number, art.id as album_artist_id
+            g.name as genre, s.cover, s.release, art.name as album_artist, s.track, s.disc_number, art.id as album_artist_id
             FROM history h 
             INNER JOIN songs s ON s.id = h.song_id
             INNER JOIN album_artists art ON s.album_artist = art.id
-            INNER JOIN albums a ON a.id = s.album ORDER BY h.id DESC LIMIT $1")
+            INNER JOIN genres g ON s.genre = g.id
+            INNER JOIN albums a ON a.id = s.album
+            ORDER BY h.id DESC LIMIT $1")
         .bind(limit)
         .fetch_all(&state.pool)
         .await.unwrap();

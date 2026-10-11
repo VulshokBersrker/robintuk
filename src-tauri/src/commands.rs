@@ -296,7 +296,7 @@ pub async fn play_song(state: State<AppState, '_>, app: tauri::AppHandle, song: 
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, album_artist: String, shuffled: bool) -> Result<(), String> {
+pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, album_artist: i64, shuffled: bool) -> Result<(), String> {
 
     *state.songs_being_added.lock().unwrap() += 1;
     
@@ -329,7 +329,7 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre: String, shuffled: bool) -> Result<(), String> {
+pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre: i64, shuffled: bool) -> Result<(), String> {
 
     *state.songs_being_added.lock().unwrap() += 1;
 
@@ -553,7 +553,7 @@ pub struct SongDataLyrics {
 // Check is a song has lyrics when it is played
 #[tauri::command(rename_all = "snake_case")]
 pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::AppHandle, song_id: i64) -> Result<(), String> {
-    // println!("Checking if {:?} has lyrics", &song_id);
+
     // Get all the songs that do not have lyrics
     let res = sqlx::query_as::<_, SongDataLyrics>("SELECT artist, album, name, duration, path FROM songs WHERE id NOT IN 
     (SELECT song_id from lyrics WHERE song_id = ?1)")
@@ -576,7 +576,7 @@ pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::App
             if lyrics.lyrics_id != 0 {
                 // println!("Adding...");
                 let _ = db::add_lyrics(state.clone(), lyrics, song_id).await;
-                // let _ = app.emit("update-song", DirsTable{dir_path: song_id});
+                let _ = app.emit("update-song", song_id);
             }
         }
         else {

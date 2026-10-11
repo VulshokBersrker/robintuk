@@ -33,26 +33,29 @@ export default function GenresPage({genres}: P) {
     const [genreSections, setGenreSections] = useState<number[]>([]);    
 
     useEffect(() => {
-        function setupGenres() {
-            setLoading(true);
-
-            let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, artistList.map((o: AllGenreResults) => { return o.genre_section})) );
-
-            for(let i = 0; i < maxSection + 1; i++) {
-                const results = artistList.filter(obj => obj.genre_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setGenreSections(tempSectionArray);            
-            setLoading(false);
-        }
         setupGenres();
     }, []);
+
+    useEffect(() => {
+        setupGenres();
+        setFilteredArtists(genres);
+    }, [genres]);
+
+    function setupGenres() {
+        setLoading(true);
+
+        const groupCounts = alphabeticallyOrdered.map((letter) => {
+            return artistList.filter((entry) => letter === entry.genre_section ).length
+        });
+        setGenreSections(groupCounts);
+        
+        setLoading(false);
+    }
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
         const temp_section = artistList.filter((entry): any => {
-            return entry.genre.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase());
+            return entry.name.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase());
         })
         setFilteredArtists(temp_section);
 
@@ -66,9 +69,9 @@ export default function GenresPage({genres}: P) {
         setGenreSections(tempSectionArray);
     }
 
-    const navigateToGenreOverview = (name: string, genre_tag: number) => {
+    const navigateToGenreOverview = (name: number, genre_tag: number) => {
         navigate(`/genres#${genre_tag}`, {replace: true});
-        navigate("/genres/overview", {state: {name: name}});
+        navigate("/genres/overview", {state: {id: name}});
     }
 
     if(loading) {
@@ -165,11 +168,11 @@ export default function GenresPage({genres}: P) {
                                         // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
                                     }}
                                 >                                    
-                                    <div className="container" onClick={() => navigateToGenreOverview(filteredArtists[index].genre, index)} >
-                                        <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].genre} image_type={"artist"} />
+                                    <div className="container" onClick={() => navigateToGenreOverview(filteredArtists[index].id, index)} >
+                                        <ImageWithFallBack image={PlaceholderArtistImage} alt={filteredArtists[index].name} image_type={"artist"} />
                                     </div>
                                     <div className="album-image-name header-font">
-                                        <div className="album-name">{filteredArtists[index].genre}</div>
+                                        <div className="album-name">{filteredArtists[index].name}</div>
                                     </div>
                                 </div>
                             </div>

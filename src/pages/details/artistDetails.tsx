@@ -154,7 +154,7 @@ export default function ArtistOverviewPage() {
             setCheckBoxNumber(tempArr);
             if(albumSelection.length == 0) {
                 setDisplayAddToMenu(false);
-            }
+            }            
         }
         // If we are removing a song from the array
         else {
@@ -210,7 +210,7 @@ export default function ArtistOverviewPage() {
         try {            
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: albumSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
@@ -218,6 +218,7 @@ export default function ArtistOverviewPage() {
         }
         catch(e) {
             console.log(e);
+            clearSelection();
         }      
     }
 
@@ -227,7 +228,7 @@ export default function ArtistOverviewPage() {
         try { 
             let songList: Songs[] = [];
             for(let i = 0; i < artistDetails.albums.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: artistDetails.albums[i].id});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: artistDetails.albums[i].id});
                 songList.push(...temp);
             }
             clearSelection();
@@ -235,6 +236,7 @@ export default function ArtistOverviewPage() {
         }
         catch(e) {
             console.log(e);
+            clearSelection();
         }      
     }
 
@@ -253,16 +255,46 @@ export default function ArtistOverviewPage() {
         }        
     }
 
-    async function createPlaylist(name: string) {
+    async function createPlaylistSelected(name: string) {
         resetContextMenu();
         setDisplayAddToMenu(false);
         try {
             let songList: Songs[] = [];
+            console.log(albumSelection)
             for(let i = 0; i < albumSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: albumSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
+            await invoke('create_playlist', {name: name, songs: songList, songs_to_add: true });
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+    async function createPlaylistAlbum(name: string, album: number) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
+        try {
+            
+            const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: album });
+            await invoke('create_playlist', {name: name, songs: temp, songs_to_add: true });
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+    async function createPlaylistArtist(name: string) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
+        try {
+            let songList: Songs[] = [];
+            for(let i = 0; i < artistDetails.albums.length; i++) {
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: artistDetails.albums[i].id});
+                songList.push(...temp);
+            }
             await invoke('create_playlist', {name: name, songs: songList, songs_to_add: true });
             await invoke('new_playlist_added');
         }
@@ -301,10 +333,6 @@ export default function ArtistOverviewPage() {
         catch(e) {
             console.log(e);
         }      
-    }
-
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
     }
 
     function removeSelectedSongs() { }
@@ -353,9 +381,8 @@ export default function ArtistOverviewPage() {
                     <SongSelectionBar
                         selectionBarType={3}
                         songSelection={albumSelection}
-                        updateNewPlaylistName={updateNewPlaylistName}
                         addSelectedToPlaylist={addSelectedToPlaylist}
-                        createSelectedPlaylist={createPlaylist}
+                        createSelectedPlaylist={createPlaylistSelected}
                         clearSelection={clearSelection}
                         playlistList={playlistList}
                         removeSelectedSongs={removeSelectedSongs}
@@ -401,7 +428,7 @@ export default function ArtistOverviewPage() {
                                                         className="new-playlist" value={newPlaylistName} style={{marginLeft: '-10px'}} 
                                                         onChange={(e) => setNewPlaylistName(e.target.value)}
                                                     />
-                                                    <div style={{marginLeft: '10px'}} ><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></div>
+                                                    <div style={{marginLeft: '10px'}} ><button onClick={() => {createPlaylistArtist(newPlaylistName)}}>Create</button></div>
                                                 </span>
                                                 
                                                 <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
@@ -477,7 +504,7 @@ export default function ArtistOverviewPage() {
                     posY={contextMenu.posY}
                     side={contextMenu.side}
                     playlistList={playlistList}
-                    createPlaylist={createPlaylist}
+                    createPlaylist={createPlaylistAlbum}
                     addToPlaylist={addToPlaylist}
                     addToQueue={addToQueue}
                     ref={isContextMenuOpen}
@@ -501,7 +528,7 @@ type Props = {
     side: number,
     // Playlist
     playlistList: PlaylistList[],
-    createPlaylist: (name: string) => void,
+    createPlaylist: (name: string, album: number) => void,
     addToPlaylist: (id: number, album: number) => void
     addToQueue: () => void,
     ref: any
@@ -570,7 +597,7 @@ function CustomContextMenu({
                                     className="new-playlist" value={newPlaylistName}
                                     onChange={(e) => setNewPlaylistName(e.target.value)}
                                 />
-                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                <span><button onClick={() => {createPlaylist(newPlaylistName, album)}}>Create</button></span>
                             </span>
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">

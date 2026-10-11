@@ -49,7 +49,6 @@ export default function PlaylistOverviewPage() {
     const [playlist, setPlaylist] = useState<Songs[]>([]);
     const [isEdit, setIsEdit] = useState<boolean>(false);
     const [isDelete, setIsDelete] = useState<boolean>(false);
-    const [currentPlaylistName, setCurrentPlaylistName] = useState<string>("");
 
     const [loading, isLoading] = useState<boolean>(true);
     const [playlistDetails, setPlaylistDetails] = useState<PlaylistDetails>({ name: "", total_duration: 0, image: "", num_songs: 0 });
@@ -58,19 +57,19 @@ export default function PlaylistOverviewPage() {
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
 
     // Playlist Values
-    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
+    
     const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
 
     const[isCurrent, setIsCurrent] = useState<Songs>({ id: -1,  name: "", path: "", cover: "", release: "", track: 0, album: "",
-        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0, album_id: -1
+        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0, album_id: -1, album_artist_id: -1
     });
 
     const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
-    const [displaySong, setDisplaySong] = useState<string>("");
+    const [displaySong, setDisplaySong] = useState<number>(-1);
 
     // On first load get the playlits details
     useEffect(() => {
@@ -119,6 +118,10 @@ export default function PlaylistOverviewPage() {
         navigate("/artists/overview", {state: {name: artist}});
     }
 
+    function closeEdit() {
+        setIsEdit(false);
+    }
+
     // --------------------------- Playlist Functions ---------------------------
 
     async function getPlaylist() {
@@ -138,7 +141,6 @@ export default function PlaylistOverviewPage() {
                     num_songs: res.songs.length
                 }
             );
-            setCurrentPlaylistName(res.name);
         }
         catch(e) {
             console.log("Error getting playlist: " + e);
@@ -154,7 +156,7 @@ export default function PlaylistOverviewPage() {
     async function deletePlaylist() {
         try {
             isLoading(true);
-            await invoke("delete_playlist", {name: playlistDetails.name});
+            await invoke("delete_playlist", {id: location.state.name});
             await invoke('new_playlist_added');
         }
         catch(e) {
@@ -166,43 +168,23 @@ export default function PlaylistOverviewPage() {
             isLoading(false);
         }
     }
+    function cancelDelete() {
+        setIsDelete(false);
+    }
 
-    async function updatePlaylistName() {
+    async function updatePlaylist(name: string, cover: string) {
         try {
-            invoke("rename_playlist", { old_name: playlistDetails.name, new_name: currentPlaylistName });
+            setPlaylistDetails({...playlistDetails, name: name, image: cover});
+            invoke("rename_playlist", { id: location.state.name, name: name });
+            await invoke("add_playlist_cover", { file_path: cover, playlist_name: playlistDetails.name, playlist_id: location.state.name });
         }
         catch(e) {
-            error("Playlist Overview (Error) - Error Renaming Playlist");
+            error("Playlist Overview (Error) - Error Updating Playlist Details");
             console.log(e)
         }
         finally {
             await invoke('new_playlist_added');
-            setPlaylistDetails({...playlistDetails, name: currentPlaylistName});
             setIsEdit(false);
-        }
-    }
-
-    // Doesn't update image if you change the file of the old uploaded image with a new image (same name and extension but different image)
-    async function addCustomPlaylistArtwork() {
-        let cover_image: string = "";
-        try {
-            if(isEdit) {
-                const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
-                if(file_path !== null) {
-                    cover_image = file_path.toString();
-                    await invoke("add_playlist_cover", { file_path: file_path.toString(), playlist_name: playlistDetails.name, playlist_id: location.state.name });
-                }
-            }            
-        }
-        catch(err) {
-            error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
-            console.log(`Failed to add custom artwork: ${err}`);
-        }
-        finally {
-            if(cover_image !== "") {
-                setPlaylistDetails({ ...playlistDetails, image: cover_image });
-                await invoke('new_playlist_added');
-            }
         }
     }
 
@@ -305,10 +287,6 @@ export default function PlaylistOverviewPage() {
         }
     }
 
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
-    }
-
     async function playSelection() {
         try {
             await invoke('play_selection', {songs: songSelection, shuffled: false});
@@ -401,9 +379,9 @@ export default function PlaylistOverviewPage() {
         setDisplayAddToMenu(false);
     }
 
-    function updateSongDetailsDisplay(bool: boolean, path: string) {
+    function updateSongDetailsDisplay(bool: boolean, id: number) {
         setDisplaySongDetails(bool);
-        setDisplaySong(path)
+        setDisplaySong(id);
         resetContextMenu();
     }
 
@@ -420,7 +398,6 @@ export default function PlaylistOverviewPage() {
             clearSelection();
         }
     }
-
 
     // ------------ Drag and Drop Functions ------------
     async function onDragEnd(result: any) {
@@ -532,29 +509,21 @@ export default function PlaylistOverviewPage() {
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="playlist-main">
                 <div className="album-container">
 
-                    {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
+                    <Delete isDelete={isDelete} deletePlaylist={deletePlaylist} cancelDelete={cancelDelete}/>
+                    <EditPlaylist
+                        isOpen={isEdit}
+                        playlistDetails={playlistDetails}
+                        updatePlaylist={updatePlaylist} 
+                        closeEdit={closeEdit}
+                    />                    
 
-                    {/* Warning label on deleting a playlist */}
-                    <div className={`selection-popup-container grid-20 header-font warning ${isDelete ? "open" : "closed"}`}>
-                        <div className="section-14" style={{marginLeft: "15px", marginBottom: "0px"}}>Are you sure you want to delete {playlistDetails.name}?</div>
-                        <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
-                            <button className="d-flex align-items-center red" onClick={deletePlaylist}>
-                                Yes
-                            </button>
-                        </div>
+                    {displaySongDetails && <SongDetailsModal song_id={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
-                        <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
-                            <button className="d-flex align-items-center white" onClick={() => setIsDelete(false)}>
-                                No
-                            </button>
-                        </div>
-                    </div>
                     
                     {/* Song Selection Bar */}
                     <SongSelectionBar
                         selectionBarType={1}
                         songSelection={songSelection}
-                        updateNewPlaylistName={updateNewPlaylistName}
                         addSelectedToPlaylist={addSelectedToPlaylist}
                         createSelectedPlaylist={createSelectedPlaylist}
                         clearSelection={clearSelection}
@@ -571,36 +540,10 @@ export default function PlaylistOverviewPage() {
                     </div>
                     {/* Playlist Details */}
                     <div className="album-details d-flex">   
-                        {!isEdit &&
-                            <div>
-                                <ImageWithFallBack image={playlistDetails.image} alt={"playlist image"} image_type={"album"}/>
-                            </div>
-                        }
-                        {isEdit &&
-                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
-                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
-                            </div>
-                        }
-                        
+                        <ImageWithFallBack image={playlistDetails.image} alt={"playlist image"} image_type={"album"}/>
 
                         <span style={{paddingLeft: "10px"}} className="grid-15">
-                            {!isEdit && <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{currentPlaylistName}</div>}
-                            {isEdit &&
-                                <div style={{marginTop: '-5px', marginLeft:'-9px', paddingBottom: "12px"}} className="section-15 d-flex align-items-center">
-                                    <input
-                                        id="current-playlist-name"
-                                        type="text"
-                                        className="header-font font-3"
-                                        style={{width: '300px', height: '40px'}}
-                                        placeholder={currentPlaylistName}
-                                        value={currentPlaylistName}
-                                        onChange={(e) => setCurrentPlaylistName(e.target.value) }
-                                    />
-                                    <span className="" style={{marginBottom: '0px', marginLeft: '6px'}}>
-                                        <button className="white" onClick={updatePlaylistName}>Update</button>
-                                    </span>
-                                </div>
-                            }
+                            <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{playlistDetails.name}</div>
                             <span className="section-15 font-0 misc-details">
                                 {playlistDetails.num_songs && <> {playlistDetails.num_songs} songs &#x2022;</>}
                                 {playlistDetails.total_duration && <> {new Date(playlistDetails.total_duration * 1000).toISOString().slice(11, 19)} total runtime </>}
@@ -617,12 +560,9 @@ export default function PlaylistOverviewPage() {
                                     </button>
                                 </span>
                                 <span><button className="font-1 borderless" disabled={isEdit} onClick={() => playPlaylist(0, true)}><img src={ShuffleIcon} /></button></span>
-                                <span><button className="font-1 borderless" onClick={() => setIsEdit(!isEdit)}><img src={EditIcon} /></button></span>
+                                <span><button className="font-1 borderless" onClick={() => setIsEdit(true)}><img src={EditIcon} /></button></span>
                                 <span>
-                                    <button
-                                        className={`font-1 borderless red ${isEdit ? "" : "display-none"}`}
-                                        onClick={() => {setIsDelete(true)}}
-                                    >
+                                    <button className={`font-1 borderless red`} onClick={() => setIsDelete(true)} >
                                         <img src={DeleteIcon} />
                                     </button>
                                 </span>
@@ -780,35 +720,25 @@ export default function PlaylistOverviewPage() {
             <SimpleBar forceVisible="y" autoHide={false} >
                 <div className="album-container">
 
+                    <Delete isDelete={isDelete} deletePlaylist={deletePlaylist} cancelDelete={cancelDelete}/>
+                    <EditPlaylist
+                        isOpen={isEdit}
+                        playlistDetails={playlistDetails}
+                        updatePlaylist={updatePlaylist} 
+                        closeEdit={closeEdit}
+                    />
+                
                     <div className="top-row">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                     </div>
                     {/* Playlist Details */}
                     <div className="d-flex">
                         <div className="album-details d-flex">   
-                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
-                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
-                            </div>
+                            <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
                             
-
                             <span style={{paddingLeft: "10px"}} className="grid-15">
-                                {!isEdit && <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{currentPlaylistName}</div>}
-                                {isEdit &&
-                                    <div style={{marginTop: '-5px', marginLeft:'-9px', paddingBottom: "12px"}} className="section-15 d-flex align-items-center">
-                                        <input
-                                            id="current-playlist-name"
-                                            type="text"
-                                            className="header-font font-3"
-                                            style={{width: '300px', height: '40px'}}
-                                            placeholder={currentPlaylistName}
-                                            value={currentPlaylistName}
-                                            onChange={(e) => setCurrentPlaylistName(e.target.value) }
-                                        />
-                                        <span className="" style={{marginBottom: '0px', marginLeft: '6px'}}>
-                                            <button className="white" onClick={updatePlaylistName}>Update</button>
-                                        </span>
-                                    </div>
-                                }
+                                <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{playlistDetails.name}</div>
+                               
                                 <span className="section-15 font-0 misc-details">
                                     0 songs
                                 </span>
@@ -818,10 +748,7 @@ export default function PlaylistOverviewPage() {
                                     <span><button className="font-1 borderless" disabled ><img src={ShuffleIcon} /></button></span>
                                     <span><button className="font-1 borderless" onClick={() => setIsEdit(!isEdit)}><img src={EditIcon} /></button></span>
                                     <span>
-                                        <button
-                                            className={`font-1 borderless red ${isEdit ? "" : "display-none"}`}
-                                            onClick={deletePlaylist}
-                                        >
+                                        <button className={`font-1 borderless red`} onClick={deletePlaylist} >
                                             <img src={DeleteIcon} />
                                         </button>
                                     </span>
@@ -849,6 +776,122 @@ export default function PlaylistOverviewPage() {
 }
 
 
+
+type editPlaylistProps = {
+    isOpen: boolean,
+    playlistDetails: PlaylistDetails,
+    updatePlaylist: (name: string, cover: string) => void,
+    closeEdit: () => void
+}
+
+function EditPlaylist({isOpen, playlistDetails, updatePlaylist, closeEdit}: editPlaylistProps) {
+
+    const [newPlaylistName, setNewPlaylistName] = useState<string>(playlistDetails.name);
+    const [newPlaylistImage, setNewPlaylistImage] = useState<string>(playlistDetails.image);
+
+    useEffect(() => {
+        const element = document.getElementsByClassName("simplebar-content-wrapper");
+        if(isOpen) {
+            element[0].classList.add("overflow-y-hidden");
+        }
+        else {
+            element[0].classList.remove("overflow-y-hidden");
+            closeEdit();
+        }
+    }, [isOpen]);
+
+    function updatePlaylistName(name: string) {
+        setNewPlaylistName(name);
+    }
+
+    // Doesn't update image if you change the file of the old uploaded image with a new image (same name and extension but different image)
+    async function addCustomPlaylistArtwork() {
+        let cover_image: string = "";
+        try {
+            const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
+            if(file_path !== null) {
+                cover_image = file_path.toString();
+                setNewPlaylistImage(cover_image);
+            }    
+        }
+        catch(err) {
+            error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
+            console.log(`Failed to add custom artwork: ${err}`);
+        }
+    }
+    
+    function cancelUpdate() {
+        setNewPlaylistImage(playlistDetails.image);
+        setNewPlaylistName(playlistDetails.name);
+        closeEdit();
+    }
+
+    if(isOpen) {
+        return(
+            <div className="edit-playlist-container">
+                <h2>Update Playlist Details</h2>
+                <div className="close" onClick={closeEdit}> <img src={CloseIcon} alt="" /></div>
+
+                <div className="details">
+
+                    <div onClick={addCustomPlaylistArtwork} className="image-upload">
+                        <ImageWithFallBack image={newPlaylistImage} alt={"upload new image"} image_type={"album"}/>
+                    </div>
+
+                    <input
+                        id="current-playlist-name"
+                        type="text"
+                        className="header-font font-3"
+                        autoComplete='false'
+                        placeholder={newPlaylistName}
+                        value={newPlaylistName}
+                        onChange={(e) => updatePlaylistName(e.target.value) }
+                    />
+                </div>
+
+                <span className="buttons">
+                    <span> <button className="white" onClick={() => {updatePlaylist(newPlaylistName, newPlaylistImage);}}>Update</button> </span>
+
+                    <span> <button className="red" onClick={cancelUpdate}>Cancel</button> </span>
+                </span>
+            </div>
+        );
+    }    
+}
+
+
+
+type deleteProps = {
+    isDelete: boolean,
+    deletePlaylist: () => void,
+    cancelDelete: () => void
+}
+
+function Delete({isDelete, deletePlaylist, cancelDelete}: deleteProps) {
+
+    if(isDelete) {
+        return(
+            <div className="selection-popup-container grid-20 header-font warning open">
+                <div className="section-14" style={{marginLeft: "15px", marginBottom: "0px"}}>Are you sure you want to delete this playlist?</div>
+                <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
+                    <button className="d-flex align-items-center red" onClick={deletePlaylist}>
+                        Yes
+                    </button>
+                </div>
+
+                <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
+                    <button className="d-flex align-items-center white" onClick={cancelDelete}>
+                        No
+                    </button>
+                </div>
+            </div> 
+        );
+    }
+}
+
+
+
+
 type Props = {
     isToggled: boolean,
     // Song Values
@@ -869,7 +912,7 @@ type Props = {
     createPlaylist: (name: string, song: Songs) => void,
     addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
-    updateSongDetailsDisplay: (bool: boolean, path: string) => void,
+    updateSongDetailsDisplay: (bool: boolean, id: number) => void,
     ref: any
 }
 
@@ -983,7 +1026,7 @@ function CustomContextMenu({
                 }
                 
 
-                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
+                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.id)} >
                     <span className="d-flex context-row">
                         <img src={InfoIcon} />  &nbsp; Song Details
                     </span>

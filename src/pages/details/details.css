@@ -371,6 +371,54 @@ input.new-playlist {
   padding-bottom: 140px;
 }
 
+.edit-playlist-container {
+  z-index: 100;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+  background-color: var(--gradient-two);
+  border: 2px solid var(--font-color-three);
+  border-radius: var(--border-radius);
+}
+
+.edit-playlist-container h2 {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.edit-playlist-container .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+.edit-playlist-container .close img {
+  height: 30px;
+  width: 30px;
+}
+.edit-playlist-container .buttons {
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+}
+.edit-playlist-container .buttons span {
+  margin-left: 10px;
+}
+
+.edit-playlist-container .details {
+  text-align: center;
+  padding-top: 40px;
+}
+.edit-playlist-container .image-upload {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+}
+
 #root:has(.music-control-container) {
   .album-container .song-list {
     padding-bottom: 220px;

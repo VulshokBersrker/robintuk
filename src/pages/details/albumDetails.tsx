@@ -60,7 +60,7 @@ export default function AlbumOverviewPage() {
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0, album_id: -1, album_artist_id: -1
     });
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "album_songs", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "album_songs", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<number>(-1);
@@ -297,9 +297,6 @@ export default function AlbumOverviewPage() {
         }
     }
 
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
-    }
 
     async function playSelection() {
         try {
@@ -319,7 +316,7 @@ export default function AlbumOverviewPage() {
 
     // ------------ End of Selection Bar Functions ------------
 
-    function handleContextMenu(e: any, album: number, artist: string, index: number) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, context_type: "album_songs", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -339,7 +336,7 @@ export default function AlbumOverviewPage() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "album_songs", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, context_type: "album_songs", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
@@ -361,7 +358,6 @@ export default function AlbumOverviewPage() {
                     <SongSelectionBar
                         selectionBarType={2}
                         songSelection={songSelection}
-                        updateNewPlaylistName={updateNewPlaylistName}
                         addSelectedToPlaylist={addSelectedToPlaylist}
                         createSelectedPlaylist={createSelectedPlaylist}
                         clearSelection={clearSelection}
@@ -468,7 +464,7 @@ export default function AlbumOverviewPage() {
                                                             className={`grid-20 song-row align-items-center ${albumList[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
                                                             onContextMenu={(e) => {
                                                                 e.preventDefault();
-                                                                handleContextMenu(e, albumList[index].album_id, albumList[index].album_artist, index);
+                                                                handleContextMenu(e, albumList[index].album_id, albumList[index].album_artist_id, index);
                                                             }}
                                                         >
                                                             <span className="section-1 play">
@@ -524,7 +520,7 @@ export default function AlbumOverviewPage() {
                                                             className={`grid-20 song-row align-items-center ${albumList[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
                                                             onContextMenu={(e) => {
                                                                 e.preventDefault();
-                                                                handleContextMenu(e, albumList[index].album_id, albumList[index].album_artist, index);
+                                                                handleContextMenu(e, albumList[index].album_id, albumList[index].album_artist_id, index);
                                                             }}
                                                         >
                                                             <span className="section-1 play">
@@ -558,7 +554,7 @@ export default function AlbumOverviewPage() {
                                                 className={`grid-20 song-row align-items-center ${albumList[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
                                                 onContextMenu={(e) => {
                                                     e.preventDefault();
-                                                    handleContextMenu(e, albumList[index].album_id, albumList[index].album_artist, index);
+                                                    handleContextMenu(e, albumList[index].album_id, albumList[index].album_artist_id, index);
                                                 }}
                                             >
                                                 <span className="section-1 play">
@@ -624,7 +620,6 @@ export default function AlbumOverviewPage() {
                     <SongSelectionBar
                         selectionBarType={2}
                         songSelection={songSelection}
-                        updateNewPlaylistName={updateNewPlaylistName}
                         addSelectedToPlaylist={addSelectedToPlaylist}
                         createSelectedPlaylist={createSelectedPlaylist}
                         clearSelection={clearSelection}
@@ -729,7 +724,7 @@ export default function AlbumOverviewPage() {
                                             className={`grid-20 song-row align-items-center ${albumList[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
                                             onContextMenu={(e) => {
                                                 e.preventDefault();
-                                                handleContextMenu(e, albumList[index].album_id, albumList[index].album_artist, index);
+                                                handleContextMenu(e, albumList[index].album_id, albumList[index].album_artist_id, index);
                                             }}
                                         >
                                             <span className="section-1 play">

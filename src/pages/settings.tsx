@@ -260,7 +260,6 @@ export default function Settings() {
         }
     }
     
-
     // Functions for Color Theme
     async function setTheme(theme: string) {
         try {
@@ -283,7 +282,6 @@ export default function Settings() {
             setTheme("red");
         }
     }
-
 
     // Functions for Playlist Import / Export
     async function getAllPlaylists() {

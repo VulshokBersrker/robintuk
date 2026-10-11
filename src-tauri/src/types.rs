@@ -89,7 +89,7 @@ pub struct DirsTable {
     pub dir_path: String,
 }
 
-#[derive(sqlx::FromRow, Default, Clone, Serialize)]
+#[derive(sqlx::FromRow, Default, Clone, Serialize, Debug)]
 pub struct AllAlbumResults {
     pub id: i32,
     pub name: String,
@@ -126,6 +126,7 @@ pub struct ArtistDetailsResults {
 
 #[derive(sqlx::FromRow, Default, Clone, Serialize)]
 pub struct GenreDetailsResults {
+    pub id: i64,
     pub num_tracks: u64,
     pub total_duration: u64,
     pub genre: String,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { error } from "@tauri-apps/plugin-log";
 import { invoke } from '@tauri-apps/api/core';
-import { GroupedVirtuoso } from 'react-virtuoso';
+import { GroupedVirtuoso, Virtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
 import { alphabeticallyOrdered, ContextMenu, getSectionNumber, PlaylistList, savePosition, Songs } from "../globalValues";
@@ -23,7 +23,7 @@ export default function SongPage({songs}: Props) {
     const [scrollParent, setScrollParent] = useState<any>(null);
     const virtuoso = useRef<any>(null);
 
-    // const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [songList] = useState<Songs[]>(songs);
     const [searchValue, setSearchValue] = useState<string>("");
 
@@ -31,30 +31,26 @@ export default function SongPage({songs}: Props) {
     const [songSections, setSongSections] = useState<number[]>([]);
 
     // Playlist Values
-    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
     const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
 
     const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, isBeingAdded: false, context_type: "song", album: -1, 
-        artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+        artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<number>(-1);
 
     
     useEffect(() => {
-        function setupSongs() {
-
-            const groupCounts = alphabeticallyOrdered.map((letter) => {
-                return songList.filter((entry) => letter === getSectionNumber(entry.name.toUpperCase().charAt(0)) ).length
-            });
-
-            setSongSections(groupCounts);
-        }
         setupSongs();
     }, []);
+
+    useEffect(() => {
+        setupSongs();
+        setFilteredSongs(songs);
+    }, [songs]);
 
     useEffect(() => {
         const handler = (e: any) => {
@@ -68,6 +64,17 @@ export default function SongPage({songs}: Props) {
             document.removeEventListener('mousedown', handler);
         }
     }, []);
+
+    function setupSongs() {
+        setLoading(true);
+
+        const groupCounts = alphabeticallyOrdered.map((letter) => {
+            return songList.filter((entry) => letter === getSectionNumber(entry.name.toUpperCase().charAt(0)) ).length
+        });
+
+        setSongSections(groupCounts);
+        setLoading(false);
+    }
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
@@ -244,9 +251,6 @@ export default function SongPage({songs}: Props) {
         }
     }
 
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
-    }
 
     function removeSelectedSongs() { }
 
@@ -254,7 +258,7 @@ export default function SongPage({songs}: Props) {
 
     // Context Menu Functions
 
-    function handleContextMenu(e: any, album: number, artist: string, index: number, isBeingAdded: boolean) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number, isBeingAdded: boolean) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, isBeingAdded: isBeingAdded, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -274,7 +278,7 @@ export default function SongPage({songs}: Props) {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, isBeingAdded: false, context_type: "playlistsong", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
     }
 
     function updateSongDetailsDisplay(bool: boolean, song_id: number) {
@@ -283,177 +287,218 @@ export default function SongPage({songs}: Props) {
         resetContextMenu();
     }
 
-    return(
-        <>  
-            {displaySongDetails && <SongDetailsModal song_id={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
-            <div className="section-list">
-                {songList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
-                    let totalIndex = 0;
-                    for(let j = 0; j < i; j++) { totalIndex += songSections[j]; }
-                    if(songSections[i] !== 0 && songSections[i] !== undefined) {
-                        // console.log(songSections[i] + " - " + alphabeticallyOrdered[i] + "-" + section);
-                        return(
-                            <div
-                                id={`main-${section}-${totalIndex}`} key={`main-${section}-${totalIndex}`} className="section-key"
-                                onClick={() => {
-                                    virtuoso.current.scrollToIndex({ index: totalIndex });
-                                    return false;
-                                }}
-                            >
-                                <span>
-                                    {section === 0 && "&"}
-                                    {section === 1 && "#"}
-                                    {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
-                                    {section === 300 && "..."}
-                                </span>
-                            </div>                                
-                        ); 
-                    }                          
-                })}
-            </div>
-
-
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="songs-main">
-                <div className="song-page-list">
+    if(loading) {
+        return(
+            <div>
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
                     <div className="search-filters d-flex justify-content-end vertical-centered"> 
                         <span className="search-bar">
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
                             <input
-                                type="text" placeholder="Search Songs" id="search_songs"
-                                autoComplete="off"
+                                type="text" placeholder="Search Albums" id="search_albums"
                                 value={searchValue}
-                                onChange={(e) => updateSearchResults(e.target.value)}
+                                onChange={() => {}}
                             />
                         </span>
                     </div>
 
-                    {/* Song Selection Bar */}
-                    <SongSelectionBar 
-                        selectionBarType={2}
-                        songSelection={songSelection}
-                        updateNewPlaylistName={updateNewPlaylistName}
-                        addSelectedToPlaylist={addSelectedToPlaylist}
-                        createSelectedPlaylist={createSelectedPlaylist}
-                        clearSelection={clearSelection}
-                        playlistList={playlistList}
-                        removeSelectedSongs={removeSelectedSongs}
-                        play={playSelection}
-                        addToQueue={addToQueue}
-                        currentPlaylistID={-1}
+                    <Virtuoso
+                        style={{ height: '100%', paddingBottom: '170px' }}
+                        totalCount={20}
+                        itemContent={(i) =>
+                            <div key={i} className="song-link loading" onContextMenu={(e) => { e.preventDefault() }} >
+                                <div className={`grid-20 song-row`}>                                            
+                                    <span className="section-1 vertical-centered play "></span>
+                                    <span className="section-6 vertical-centered font-0 name line-clamp-1"></span>
+                                    <span className="section-4 vertical-centered font-0 artist line-clamp-1"></span>
+                                    <span className="section-4 vertical-centered font-0 artist line-clamp-1"></span>
+                                    <span className="section-2 vertical-centered font-0 artist line-clamp-1"></span>
+                                    <span className="section-2 vertical-centered font-0 artist line-clamp-1"></span>
+                                    <span className="section-1 header-font vertical-centered duration"></span>
+                                </div>
+                                <hr />
+                            </div>
+                        }
+                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                     />
-                    {/* End of Song Selection Bar */}
+                </SimpleBar>
+            </div>
+        );
+    }
+    else {
+        return(
+            <>  
+                {displaySongDetails && <SongDetailsModal song_id={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
-                    <div className="song-list">
-                        <GroupedVirtuoso
-                            ref={virtuoso}
-                            groupCounts={songSections}
-                            style={{ height: '100%' }}
-                            increaseViewportBy={{ top: 250, bottom: 100 }}
-                            groupContent={(index) => {
-                                if(songSections[index] !== 0) {
-                                    return (
-                                        <>
-                                            <div className="grid-20 position-relative" key={index} id={`${index}`}>
-                                                <span className="section-20 header-font header-color" key={index}>
-                                                    {alphabeticallyOrdered[index] === 0 && <h1 className="font-6">&</h1>}
-                                                    {alphabeticallyOrdered[index] === 1 && <h1 className="font-6">#</h1>}
-                                                    {alphabeticallyOrdered[index] > 1 && alphabeticallyOrdered[index] < 300 && <h1 className="font-p6">{String.fromCharCode(alphabeticallyOrdered[index])}</h1>}
-                                                    {alphabeticallyOrdered[index] === 300 && <h1 className="font-6">...</h1>}
+                <div className="section-list">
+                    {songList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
+                        let totalIndex = 0;
+                        for(let j = 0; j < i; j++) { totalIndex += songSections[j]; }
+                        if(songSections[i] !== 0 && songSections[i] !== undefined) {
+                            // console.log(songSections[i] + " - " + alphabeticallyOrdered[i] + "-" + section);
+                            return(
+                                <div
+                                    id={`main-${section}-${totalIndex}`} key={`main-${section}-${totalIndex}`} className="section-key"
+                                    onClick={() => {
+                                        virtuoso.current.scrollToIndex({ index: totalIndex });
+                                        return false;
+                                    }}
+                                >
+                                    <span>
+                                        {section === 0 && "&"}
+                                        {section === 1 && "#"}
+                                        {section > 1 && section < 300 && section !== 0 && String.fromCharCode(section)}
+                                        {section === 300 && "..."}
+                                    </span>
+                                </div>                                
+                            ); 
+                        }                          
+                    })}
+                </div>
+
+
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="songs-main">
+                    <div className="song-page-list">
+                        <div className="search-filters d-flex justify-content-end vertical-centered"> 
+                            <span className="search-bar">
+                                <img src={SearchIcon} className="bi search-icon icon-size"/>
+                                <input
+                                    type="text" placeholder="Search Songs" id="search_songs"
+                                    autoComplete="off"
+                                    value={searchValue}
+                                    onChange={(e) => updateSearchResults(e.target.value)}
+                                />
+                            </span>
+                        </div>
+
+                        {/* Song Selection Bar */}
+                        <SongSelectionBar 
+                            selectionBarType={2}
+                            songSelection={songSelection}
+                            addSelectedToPlaylist={addSelectedToPlaylist}
+                            createSelectedPlaylist={createSelectedPlaylist}
+                            clearSelection={clearSelection}
+                            playlistList={playlistList}
+                            removeSelectedSongs={removeSelectedSongs}
+                            play={playSelection}
+                            addToQueue={addToQueue}
+                            currentPlaylistID={-1}
+                        />
+                        {/* End of Song Selection Bar */}
+
+                        <div className="song-list">
+                            <GroupedVirtuoso
+                                ref={virtuoso}
+                                groupCounts={songSections}
+                                style={{ height: '100%' }}
+                                increaseViewportBy={{ top: 250, bottom: 100 }}
+                                groupContent={(index) => {
+                                    if(songSections[index] !== 0) {
+                                        return (
+                                            <>
+                                                <div className="grid-20 position-relative" key={index} id={`${index}`}>
+                                                    <span className="section-20 header-font header-color" key={index}>
+                                                        {alphabeticallyOrdered[index] === 0 && <h1 className="font-6">&</h1>}
+                                                        {alphabeticallyOrdered[index] === 1 && <h1 className="font-6">#</h1>}
+                                                        {alphabeticallyOrdered[index] > 1 && alphabeticallyOrdered[index] < 300 && <h1 className="font-p6">{String.fromCharCode(alphabeticallyOrdered[index])}</h1>}
+                                                        {alphabeticallyOrdered[index] === 300 && <h1 className="font-6">...</h1>}
+                                                    </span>
+                                                    <span className="section-1"></span>
+                                                    <span className="section-6 vertical-centered details">Name</span>
+                                                    <span className="section-4 vertical-centered details">Album</span>
+                                                    <span className="section-4 vertical-centered details">Album Artist</span>
+                                                    <span className="section-2 vertical-centered details">Release</span>
+                                                    <span className="section-2 vertical-centered details">Genre</span>
+                                                    <span className="section-1 vertical-centered details">Length</span>
+                                                </div>
+                                                <hr />
+                                                <div className="song-link" style={{paddingBottom: "1px"}}/>
+                                            </>
+                                        );
+                                    }
+                                    else {
+                                        return(<></>);
+                                    }                                
+                                }}
+                                itemContent={(index) => {
+                                    return(
+                                        <div className="song-link"
+                                            onContextMenu={(e) => {
+                                                e.preventDefault();
+                                                handleContextMenu(e, filteredSongs[index].album_id, filteredSongs[index].album_artist_id, index, songSelection.filter(x => {
+                                                    return x.path === filteredSongs[index].path
+                                                }).length > 0);
+                                            }}
+                                        >
+                                            <div className={`grid-20 song-row`}>                                            
+                                                <span className="section-1 vertical-centered play ">
+                                                    <span className="form-control">
+                                                        <input
+                                                            type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                            onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked)}
+                                                            onChange={() => {}} 
+                                                            checked={songSelection.filter(x => {
+                                                                return x.path === filteredSongs[index].path
+                                                            }).length > 0}
+                                                        />
+                                                    </span>
+                                                    <img src={PlayIcon} onClick={() => {playSong(index)}}/>
                                                 </span>
-                                                <span className="section-1"></span>
-                                                <span className="section-6 vertical-centered details">Name</span>
-                                                <span className="section-4 vertical-centered details">Album</span>
-                                                <span className="section-4 vertical-centered details">Album Artist</span>
-                                                <span className="section-2 vertical-centered details">Release</span>
-                                                <span className="section-2 vertical-centered details">Genre</span>
-                                                <span className="section-1 vertical-centered details">Length</span>
+                                                
+                                                <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
+                                                <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
+                                                <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
+                                                <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
+                                                <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
+                                                <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
                                             </div>
                                             <hr />
-                                            <div className="song-link" style={{paddingBottom: "1px"}}/>
-                                        </>
-                                    );
-                                }
-                                else {
-                                    return(<></>);
-                                }                                
-                            }}
-                            itemContent={(index) => {
-                                return(
-                                    <div className="song-link"
-                                        onContextMenu={(e) => {
-                                            e.preventDefault();
-                                            handleContextMenu(e, filteredSongs[index].album_id, filteredSongs[index].album_artist, index, songSelection.filter(x => {
-                                                return x.path === filteredSongs[index].path
-                                            }).length > 0);
-                                        }}
-                                    >
-                                        <div className={`grid-20 song-row`}>                                            
-                                            <span className="section-1 vertical-centered play ">
-                                                <span className="form-control">
-                                                    <input
-                                                        type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                        onClick={(e) => editSelection(filteredSongs[index], e.currentTarget.checked)}
-                                                        onChange={() => {}} 
-                                                        checked={songSelection.filter(x => {
-                                                            return x.path === filteredSongs[index].path
-                                                        }).length > 0}
-                                                    />
-                                                </span>
-                                                <img src={PlayIcon} onClick={() => {playSong(index)}}/>
-                                            </span>
-                                            
-                                            <span className="section-6 vertical-centered font-0 name line-clamp-1">{filteredSongs[index].name}</span>
-                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album}</span>
-                                            <span className="section-4 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].album_artist}</span>
-                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].release}</span>
-                                            <span className="section-2 vertical-centered font-0 artist line-clamp-1">{filteredSongs[index].genre}</span>
-                                            <span className="section-1 header-font vertical-centered duration">{new Date(filteredSongs[index].duration * 1000).toISOString().slice(14, 19)}</span>
                                         </div>
-                                        <hr />
-                                    </div>
-                                );
-                            }}
-                            components={{
-                                Group: (props) => <div {...props} style={{ position: "static" }} />,
-                                TopItemList: (props) => (
-                                    <div {...props} style={{ position: "static" }} />
-                                )
-                            }}
-                            customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                        />
-                    </div>
-
-                    {searchValue.length > 0 && filteredSongs.length === 0 &&
-                        <div>
-                            No Results
+                                    );
+                                }}
+                                components={{
+                                    Group: (props) => <div {...props} style={{ position: "static" }} />,
+                                    TopItemList: (props) => (
+                                        <div {...props} style={{ position: "static" }} />
+                                    )
+                                }}
+                                customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                            />
                         </div>
-                    }
-                    <div className="empty-space"/>
 
-                    <CustomContextMenu
-                        isToggled={contextMenu.isToggled}
-                        context_type={contextMenu.context_type}
-                        song={filteredSongs[contextMenu.index]}
-                        album={contextMenu.album}
-                        artist={contextMenu.artist}
-                        index={contextMenu.index}
-                        play={playSong}
-                        editSelection={editSelection}
-                        isBeingAdded={contextMenu.isBeingAdded}
-                        posX={contextMenu.posX}
-                        posY={contextMenu.posY}
-                        side={contextMenu.side}
-                        name={""}
-                        playlistList={playlistList}
-                        createPlaylist={createPlaylist}
-                        addToPlaylist={addToPlaylist}
-                        addToQueue={addToQueue}
-                        updateSongDetailsDisplay={updateSongDetailsDisplay}
-                        ref={isContextMenuOpen}                
-                    />
-                </div>            
-            </SimpleBar>
-        </>
-    );
+                        {searchValue.length > 0 && filteredSongs.length === 0 &&
+                            <div>
+                                No Results
+                            </div>
+                        }
+                        <div className="empty-space"/>
+
+                        <CustomContextMenu
+                            isToggled={contextMenu.isToggled}
+                            context_type={contextMenu.context_type}
+                            song={filteredSongs[contextMenu.index]}
+                            album={contextMenu.album}
+                            artist={contextMenu.artist}
+                            index={contextMenu.index}
+                            play={playSong}
+                            editSelection={editSelection}
+                            isBeingAdded={contextMenu.isBeingAdded}
+                            posX={contextMenu.posX}
+                            posY={contextMenu.posY}
+                            side={contextMenu.side}
+                            name={""}
+                            playlistList={playlistList}
+                            createPlaylist={createPlaylist}
+                            addToPlaylist={addToPlaylist}
+                            addToQueue={addToQueue}
+                            updateSongDetailsDisplay={updateSongDetailsDisplay}
+                            ref={isContextMenuOpen}                
+                        />
+                    </div>            
+                </SimpleBar>
+            </>
+        );
+    }
+   
 }

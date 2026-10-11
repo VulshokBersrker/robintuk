@@ -36,7 +36,7 @@ export default function GenreOverviewPage() {
     const [scrollParent, setScrollParent] = useState<any>(null);
 
     const [loading, isLoading] = useState<boolean>(false);
-    const [genreDetails, setGenreDetails] = useState<GenreDetails>({ total_duration: 0, genre: "", albums: [], num_tracks: 0});
+    const [genreDetails, setGenreDetails] = useState<GenreDetails>({ id: -1, total_duration: 0, genre: "", albums: [], num_tracks: 0});
 
     const [genreSelection, setGenreSelection] = useState<number[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
@@ -69,7 +69,7 @@ export default function GenreOverviewPage() {
     async function getGenres() {
         isLoading(true);
         try{
-            const res: GenreDetails = await invoke("get_albums_by_genre", {genre: location.state.name});
+            const res: GenreDetails = await invoke("get_albums_by_genre", {genre: location.state.id});
             setGenreDetails(res);
             setCheckBoxNumber(Array(res.albums.length).fill(false));
         }
@@ -102,7 +102,7 @@ export default function GenreOverviewPage() {
         resetContextMenu();
         clearSelection();
         try {
-            await invoke("play_genre", {genre: genreDetails.genre, shuffled: shuffled});
+            await invoke("play_genre", {genre: genreDetails.id, shuffled: shuffled});
             savePosition(0);
         }
         catch(e) {
@@ -188,6 +188,23 @@ export default function GenreOverviewPage() {
             console.log(e);
         }      
     }
+    async function createSelectedToPlaylist(name: string,) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
+        try {
+            let songList: Songs[] = [];
+            for(let i = 0; i < genreSelection.length; i++) {
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: genreSelection[i]});
+                songList.push(...temp);
+            }
+            clearSelection();
+            await invoke('create_playlist', {name: name, songs: songList, songs_to_add: true });
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
 
     async function addGenreToPlaylist(id: number) {
         setDisplayAddToMenu(false);
@@ -221,16 +238,27 @@ export default function GenreOverviewPage() {
         }        
     }
 
-    async function createPlaylist(name: string) {
+    async function createPlaylistAlbum(name: string, album: number) {
+        resetContextMenu();
+        setDisplayAddToMenu(false);
+        try {
+            const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: album});
+            await invoke('create_playlist', {name: name, songs: temp, songs_to_add: true });
+            await invoke('new_playlist_added');
+        }
+        catch(e) {
+            console.log(e);
+        }
+    }
+    async function createPlaylistGenre(name: string) {
         resetContextMenu();
         setDisplayAddToMenu(false);
         try {
             let songList: Songs[] = [];
-            for(let i = 0; i < genreSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: genreSelection[i]});
+            for(let i = 0; i < genreDetails.albums.length; i++) {
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: genreDetails.albums[i].id});
                 songList.push(...temp);
             }
-            clearSelection();
             await invoke('create_playlist', {name: name, songs: songList, songs_to_add: true });
             await invoke('new_playlist_added');
         }
@@ -269,10 +297,6 @@ export default function GenreOverviewPage() {
         catch(e) {
             console.log(e);
         }      
-    }
-
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
     }
 
     function removeSelectedSongs() {}
@@ -321,9 +345,8 @@ export default function GenreOverviewPage() {
                     <SongSelectionBar
                         selectionBarType={3}
                         songSelection={genreSelection}
-                        updateNewPlaylistName={updateNewPlaylistName}
                         addSelectedToPlaylist={addSelectedToPlaylist}
-                        createSelectedPlaylist={createPlaylist}
+                        createSelectedPlaylist={createSelectedToPlaylist}
                         clearSelection={clearSelection}
                         playlistList={playlistList}
                         removeSelectedSongs={removeSelectedSongs}
@@ -367,7 +390,7 @@ export default function GenreOverviewPage() {
                                                         className="new-playlist" value={newPlaylistName} style={{marginLeft: '-10px'}} 
                                                         onChange={(e) => setNewPlaylistName(e.target.value)}
                                                     />
-                                                    <div style={{marginLeft: '10px'}} ><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></div>
+                                                    <div style={{marginLeft: '10px'}} ><button onClick={() => {createPlaylistGenre(newPlaylistName)}}>Create</button></div>
                                                 </span>
                                                 
                                                 <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
@@ -443,7 +466,7 @@ export default function GenreOverviewPage() {
                     posY={contextMenu.posY}
                     side={contextMenu.side}
                     playlistList={playlistList}
-                    createPlaylist={createPlaylist}
+                    createPlaylist={createPlaylistAlbum}
                     addToPlaylist={addToPlaylist}
                     addToQueue={addToQueue}
                     ref={isContextMenuOpen}
@@ -467,7 +490,7 @@ type Props = {
     side: number,
     // Playlist
     playlistList: PlaylistList[],
-    createPlaylist: (name: string) => void,
+    createPlaylist: (name: string, album: number) => void,
     addToPlaylist: (id: number, album: number) => void
     addToQueue: () => void,
     ref: any
@@ -536,7 +559,7 @@ function CustomContextMenu({
                                     className="new-playlist" value={newPlaylistName}
                                     onChange={(e) => setNewPlaylistName(e.target.value)}
                                 />
-                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                <span><button onClick={() => {createPlaylist(newPlaylistName, album)}}>Create</button></span>
                             </span>
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">

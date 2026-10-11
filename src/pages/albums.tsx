@@ -45,33 +45,15 @@ export default function AlbumPage({albums}: P) {
     const [albumSections, setAlbumSections] = useState<number[]>([]);    
 
     const [albumSelection, setAlbumSelection] = useState<number[]>([]);
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
     // Playlist Values
-    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
     const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
     useEffect(() => {
-        function setupAlbumList() {
-            
-            setLoading(true);
-
-            let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, albumList.map((o: AlbumDetails) => { return o.album_section})) );
-
-            for(let i = 0; i < maxSection + 1; i++) {
-                const results = albumList.filter(obj => obj.album_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setAlbumSections(tempSectionArray);
-            
-            setLoading(false);
-        }
         setupAlbumList();
-
-        console.log(albums);
 
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
@@ -85,19 +67,40 @@ export default function AlbumPage({albums}: P) {
         }
     }, []);
 
+    useEffect(() => {
+        setupAlbumList();
+        setFilteredAlbums(albums);
+    }, [albums]);
+
+    function setupAlbumList() {
+        setLoading(true);
+
+        const groupCounts = alphabeticallyOrdered.map((letter) => {
+            return albumList.filter((entry) => letter === entry.album_section ).length
+        });
+
+        setAlbumSections(groupCounts);
+        setLoading(false);
+    }
+
     const navigateToAlbumOverview = (id: number, album_tag: number) => {
         navigate(`/albums#${album_tag}`, { replace: true });
         navigate("/albums/overview", {state: {id: id}});
     }
 
-    async function playAlbum(album_id: number, artist: string, shuffled: boolean) {
+    async function playAlbum(album_id: number, shuffled: boolean) {
         resetContextMenu();
         try {
-            await invoke("play_album", {album_id: album_id, album_artist: artist, index: 0, shuffled: shuffled});
+            await invoke("play_album", {album_id: album_id, index: 0, shuffled: shuffled});
+
             savePosition(0);
         }
         catch(e) {
             console.log(e);
+        }
+        finally {
+            localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+            await invoke("set_shuffle_mode", { mode: shuffled });
         }
     }
 
@@ -121,7 +124,7 @@ export default function AlbumPage({albums}: P) {
         setAlbumSections(tempSectionArray);
     }
 
-    function handleContextMenu(e: any, album: number, artist: string, index: number, isBeingAdded: boolean) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number, isBeingAdded: boolean) {
         if(e.pageX < window.innerWidth / 2) {
             // Top Left
             if(e.pageY < window.innerHeight / 2) {
@@ -146,14 +149,10 @@ export default function AlbumPage({albums}: P) {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, isBeingAdded: false, album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, isBeingAdded: false, album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
     }
 
     // ------------ Start of Selection Bar Functions ------------
-
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
-    }
 
     function removeSelectedSongs() { }
     
@@ -289,7 +288,6 @@ export default function AlbumPage({albums}: P) {
                             <input
                                 type="text" placeholder="Search Albums" id="search_albums"
                                 value={searchValue}
-                                onChange={(e) => updateSearchResults(e.target.value)}
                             />
                         </span>
                     </div>
@@ -325,7 +323,6 @@ export default function AlbumPage({albums}: P) {
                 <SongSelectionBar
                     selectionBarType={3}
                     songSelection={albumSelection}
-                    updateNewPlaylistName={updateNewPlaylistName}
                     addSelectedToPlaylist={addToPlaylist}
                     createSelectedPlaylist={createPlaylist}
                     clearSelection={clearSelection}
@@ -386,7 +383,7 @@ export default function AlbumPage({albums}: P) {
                                 <div className="album-image-container"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
-                                        handleContextMenu(e, filteredAlbums[index].id, filteredAlbums[index].album_artist, index, albumSelection.filter(x => {
+                                        handleContextMenu(e, filteredAlbums[index].id, filteredAlbums[index].album_artist_id, index, albumSelection.filter(x => {
                                                 return x === filteredAlbums[index].id
                                             }).length > 0
                                         );
@@ -402,7 +399,7 @@ export default function AlbumPage({albums}: P) {
                                             }).length > 0} 
                                         />
                                     </span>
-                                    <div className="play-album" onClick={() => playAlbum(filteredAlbums[index].id, filteredAlbums[index].album_artist, false)}>
+                                    <div className="play-album" onClick={() => playAlbum(filteredAlbums[index].id, false)}>
                                         <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                         <img src={Circle} className="circle"/>
                                     </div>
@@ -454,9 +451,9 @@ export default function AlbumPage({albums}: P) {
 type Props = {
     isToggled: boolean,
     album: number,
-    artist: string,
+    artist: number,
     index: number,
-    play: (album_name: number, artist: string, shuffled: boolean) => void, // playSong / playAlbum function
+    play: (album_name: number, shuffled: boolean) => void, // playSong / playAlbum function
     editSelection: (album: number, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
@@ -484,7 +481,7 @@ function ContextMenu({
         navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
-        navigate("/artists/overview", {state: {name: artist}});
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     async function addToQueue() {
@@ -551,13 +548,13 @@ function ContextMenu({
                     {isBeingAdded === false && <span className="context-row"> <img src={SelectIcon} />&nbsp;Select </span> }
                 </li>
 
-                <li onClick={() => {play(album, artist, false)}} className="d-flex align-items-center">
+                <li onClick={() => {play(album, false)}} className="d-flex align-items-center">
                     <span className="context-row">
                         <img src={PlayIcon} />  &nbsp; Play
                     </span>
                 </li>
 
-                <li onClick={() => {play(album, artist, true)}} className="d-flex align-items-center">
+                <li onClick={() => {play(album, true)}} className="d-flex align-items-center">
                     <span className="context-row">
                         <img src={ShuffleIcon} />  &nbsp; Shuffle
                     </span>                    
@@ -603,7 +600,7 @@ function ContextMenu({
                     </span>                    
                 </li>
             
-            {artist !== "" &&
+            {artist !== -1 &&
                 <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                     <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
                         <img src={ArtistIcon} /> &nbsp; Show Artist

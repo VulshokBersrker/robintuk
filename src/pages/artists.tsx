@@ -32,23 +32,24 @@ export default function ArtistsPage({artists}: P) {
     const [artistSections, setArtistSections] = useState<number[]>([]);    
 
     useEffect(() => {
-        function setupArtists() {
-            setLoading(true);
-
-            let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, artistList.map((o: AllArtistResults) => { return o.artist_section})) );
-            // console.log(maxSection);
-
-            for(let i = 0; i < maxSection + 1; i++) {
-                const results = artistList.filter(obj => obj.artist_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setArtistSections(tempSectionArray);
-            
-            setLoading(false);
-        }
         setupArtists();
     }, []);
+
+    useEffect(() => {
+        setupArtists();
+        setFilteredArtists(artists);
+    }, [artists]);
+
+    function setupArtists() {
+        setLoading(true);
+
+        const groupCounts = alphabeticallyOrdered.map((letter) => {
+            return artistList.filter((entry) => letter === entry.artist_section ).length
+        });
+        setArtistSections(groupCounts);
+        
+        setLoading(false);
+    }
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
