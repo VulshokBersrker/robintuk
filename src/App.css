@@ -917,6 +917,10 @@ img.off {
   height: 6.2rem;
 }
 
+.song-page-list  {
+  padding-bottom: 120px;
+}
+
 /* -------------- Album List Page -------------- */
 
 .section-list {
@@ -1379,16 +1383,24 @@ option:hover, option:active, option:focus {
   width: 22px;
 }
 
-.create-playlist-popup {
+.edit-playlist-container.create {
+  z-index: 100;
   position: fixed;
-  z-index: 20;
-  border-radius: var(--border-radius);
-  border: 2px solid var(--font-color-three);
   top: 50%;
   left: 50%;
-  padding: 1rem;
   transform: translate(-50%, -50%);
-  background-color: var(--gradient-one);
+  padding: 15px;
+  background-color: var(--gradient-two);
+  border: 2px solid var(--font-color-three);
+  border-radius: var(--border-radius);
+}
+
+.edit-playlist-container.create input {
+  margin-top: 40px;
+}
+
+.edit-playlist-container.create .buttons button {
+  margin-left: 10px;
 }
 
 /* ---------- Placeholder Styles ---------- */
@@ -1987,8 +1999,8 @@ img.search-icon:hover {
     .artists-main .empty-space {
       height: 120px;
     }
-    .song-page-list .empty-space {
-      height: 250px;
+    .song-page-list  {
+      padding-bottom: 40px;
     }
     .album-container .empty-space {
       height: 220px !important;
@@ -2010,8 +2022,8 @@ img.search-icon:hover {
     .artists-main .empty-space {
       height: 6.7rem;
     }
-    .song-page-list .empty-space {
-      height: 18rem;
+    .song-page-list  {
+      padding-bottom: 40px;
     }
     .album-container .empty-space {
       height: 15rem !important;

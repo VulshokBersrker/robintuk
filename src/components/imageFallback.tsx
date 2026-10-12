@@ -66,6 +66,17 @@ const ImageWithFallBack = (props: Props) => {
             />
         );
     }
+    else if(props.image_type === "add") {
+        return (
+            <img
+                src={props.image !== "" ? props.image : PlaceHolderAlbumArt}
+                alt={props.alt}
+                loading="lazy"
+                onError={(e) => e.currentTarget.src = PlaceHolderAlbumArt}
+                className="album-image"
+            />
+        );
+    }
     else {
         return (
             <img

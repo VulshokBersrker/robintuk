@@ -12,8 +12,10 @@ import ImageWithFallBack from "../components/imageFallback.js";
 // Images
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
 import ShuffleIcon from '../images/shuffle-solid-full.svg';
+import CreateImage from '../images/create_playlist.png';
 import PlayIcon from '../images/play-solid-full.svg';
 import Circle from '../images/circle.svg';
+import CloseIcon from '../images/x.svg';
 
 export default function PlaylistPage() {
 
@@ -73,7 +75,7 @@ export default function PlaylistPage() {
     async function createPlaylist(name: string) {
         resetContextMenu();
         try {
-            await invoke('create_playlist', {name: name});
+            await invoke('create_playlist', {name: name, songs: [], songs_to_add: false});
             await invoke('new_playlist_added');
         }
         catch(e) {
@@ -117,8 +119,9 @@ export default function PlaylistPage() {
     return(
         <SimpleBar forceVisible="y" autoHide={false} >            
             {displayCreate &&
-                <div className="create-playlist-popup">
+                <div className="edit-playlist-container create">
                     <h2>New Playlist</h2>
+                    <div className="close" onClick={closeCreatePlaylist}> <img src={CloseIcon} alt="" /></div>
                     <input
                         id="playlist-name"
                         type="text"
@@ -129,12 +132,9 @@ export default function PlaylistPage() {
                         style={{width: '280px'}}
                         onChange={(e) => setNewPlaylistName(e.target.value)}
                     />
-                    <span>
+                    <span className="buttons">
                         <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName);}}>
                             Create
-                        </button>
-                        <button className="white d-flex align-items-center" onClick={closeCreatePlaylist}>
-                            Close
                         </button>
                     </span>
                 </div>
@@ -166,13 +166,12 @@ export default function PlaylistPage() {
                             
                         </div>
                     );
-                        
                 })}
                 <div className="album-link playlist" onClick={() => {setDisplayCreate(true)}}>
                     <div className="album-image-container playlist">
                         
                         <div className="container" >
-                            <ImageWithFallBack image={""} alt={""} image_type={"album"} />
+                            <ImageWithFallBack image={CreateImage} alt={""} image_type={"add"} />
                         </div>
                         <div className="album-image-name header-font">
                             <div className="album-name">New Playlist</div>

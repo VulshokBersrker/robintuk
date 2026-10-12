@@ -212,9 +212,8 @@ export default function AlbumOverviewPage() {
     async function addToPlaylistContextMenu(id: number, song: Songs) {
         setDisplayAddToMenu(false);
         resetContextMenu();
-        try {            
-            const arr: Songs[] = [song];            
-            await invoke('add_to_playlist', {songs: arr, playlist_id: id});
+        try {  
+            await invoke('add_to_playlist', {songs: [song], playlist_id: id});
         }
         catch(e) {
             console.log(e);
@@ -227,13 +226,15 @@ export default function AlbumOverviewPage() {
     async function addToPlaylist(id: number) {
         setDisplayAddToMenu(false);
         resetContextMenu();
-        clearSelection();
-        try { 
+        try {
             await invoke('add_to_playlist', {songs: albumList, playlist_id: id});
         }
         catch(e) {
             console.log(e);
-        }       
+        }
+        finally {
+            clearSelection();
+        } 
     }
 
     async function addSelectedToPlaylist(id: number) {

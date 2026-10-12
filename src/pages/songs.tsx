@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { error } from "@tauri-apps/plugin-log";
 import { invoke } from '@tauri-apps/api/core';
-import { GroupedVirtuoso, Virtuoso } from 'react-virtuoso';
+import { GroupedVirtuoso } from 'react-virtuoso';
 import SimpleBar from 'simplebar-react';
 
-import { alphabeticallyOrdered, ContextMenu, getSectionNumber, PlaylistList, savePosition, Songs } from "../globalValues";
+import { alphabeticallyOrdered, ContextMenu, getSectionNumber, PlaylistList, savePosition, Songs, SongsFull } from "../globalValues";
 import SongDetailsModal from "../components/songDetails/songDetails";
 import CustomContextMenu from "../components/customContextMenu";
 import SongSelectionBar from "../components/songSelectionBar";
@@ -15,7 +15,7 @@ import SearchIcon from '../images/search_icon.svg';
 
 
 type Props = {
-    songs: Songs[]
+    songs: SongsFull[]
 }
 
 export default function SongPage({songs}: Props) {
@@ -24,17 +24,16 @@ export default function SongPage({songs}: Props) {
     const virtuoso = useRef<any>(null);
 
     const [loading, setLoading] = useState(true);
-    const [songList] = useState<Songs[]>(songs);
     const [searchValue, setSearchValue] = useState<string>("");
 
-    const [filteredSongs, setFilteredSongs] = useState<Songs[]>(songs);
+    const [filteredSongs, setFilteredSongs] = useState<SongsFull[]>(songs);
     const [songSections, setSongSections] = useState<number[]>([]);
 
     // Playlist Values
     const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
-    const [songSelection, setSongSelection] = useState<Songs[]>([]);
+    const [songSelection, setSongSelection] = useState<SongsFull[]>([]);
 
     const[contextMenu, setContextMenu] = useState<ContextMenu>({ isToggled: false, isBeingAdded: false, context_type: "song", album: -1, 
         artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
@@ -66,10 +65,10 @@ export default function SongPage({songs}: Props) {
     }, []);
 
     function setupSongs() {
-        setLoading(true);
+        setLoading(true);      
 
-        const groupCounts = alphabeticallyOrdered.map((letter) => {
-            return songList.filter((entry) => letter === getSectionNumber(entry.name.toUpperCase().charAt(0)) ).length
+        const groupCounts = alphabeticallyOrdered.map((number) => {
+            return songs.filter((entry) => number === entry.song_section).length
         });
 
         setSongSections(groupCounts);
@@ -79,7 +78,7 @@ export default function SongPage({songs}: Props) {
     function updateSearchResults(value: string) {
         setSearchValue(value);
 
-        const temp_section: Songs[] = songList.filter((entry) => {
+        const temp_section: SongsFull[] = songs.filter((entry) => {
             if(entry.name !== undefined && entry.album !== undefined && entry.album_artist !== undefined) {
                 return (entry.name.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
                 || entry.album.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
@@ -160,11 +159,11 @@ export default function SongPage({songs}: Props) {
         }
     }
 
-    async function addToPlaylist(id: number, song: Songs) {
+    async function addToPlaylist(id: number, song: SongsFull) {
         setDisplayAddToMenu(false);
         resetContextMenu();
         try {
-            const arr: Songs[] = [song];            
+            const arr: SongsFull[] = [song];            
             await invoke('add_to_playlist', {songs: arr, playlist_id: id});
         }
         catch(e) {
@@ -205,7 +204,7 @@ export default function SongPage({songs}: Props) {
         }
     }
     
-    function editSelection(song: Songs, isBeingAdded: boolean) {
+    function editSelection(song: SongsFull, isBeingAdded: boolean) {
         resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
@@ -288,40 +287,24 @@ export default function SongPage({songs}: Props) {
     }
 
 
-    if(loading) {
+    if(loading === true || songs.length === 0) {
         return(
             <div>
-                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
-                    <div className="search-filters d-flex justify-content-end vertical-centered"> 
-                        <span className="search-bar">
-                            <img src={SearchIcon} className="bi search-icon icon-size"/>
-                            <input
-                                type="text" placeholder="Search Albums" id="search_albums"
-                                value={searchValue}
-                                onChange={() => {}}
-                            />
-                        </span>
-                    </div>
+                <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="songs-main">
+                    <div className="song-page-list">
+                        <div className="search-filters d-flex justify-content-end vertical-centered"> 
+                            <span className="search-bar">
+                                <img src={SearchIcon} className="bi search-icon icon-size"/>
+                                <input
+                                    type="text" placeholder="Search Songs" id="search_albums"
+                                    value={searchValue}
+                                    disabled
+                                    onChange={() => {}}
+                                />
+                            </span>
+                        </div>
 
-                    <Virtuoso
-                        style={{ height: '100%', paddingBottom: '170px' }}
-                        totalCount={20}
-                        itemContent={(i) =>
-                            <div key={i} className="song-link loading" onContextMenu={(e) => { e.preventDefault() }} >
-                                <div className={`grid-20 song-row`}>                                            
-                                    <span className="section-1 vertical-centered play "></span>
-                                    <span className="section-6 vertical-centered font-0 name line-clamp-1"></span>
-                                    <span className="section-4 vertical-centered font-0 artist line-clamp-1"></span>
-                                    <span className="section-4 vertical-centered font-0 artist line-clamp-1"></span>
-                                    <span className="section-2 vertical-centered font-0 artist line-clamp-1"></span>
-                                    <span className="section-2 vertical-centered font-0 artist line-clamp-1"></span>
-                                    <span className="section-1 header-font vertical-centered duration"></span>
-                                </div>
-                                <hr />
-                            </div>
-                        }
-                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                    />
+                    </div>
                 </SimpleBar>
             </div>
         );
@@ -332,7 +315,7 @@ export default function SongPage({songs}: Props) {
                 {displaySongDetails && <SongDetailsModal song_id={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
                 <div className="section-list">
-                    {songList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
+                    {filteredSongs.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
                         for(let j = 0; j < i; j++) { totalIndex += songSections[j]; }
                         if(songSections[i] !== 0 && songSections[i] !== undefined) {
@@ -356,7 +339,6 @@ export default function SongPage({songs}: Props) {
                         }                          
                     })}
                 </div>
-
 
                 <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="songs-main">
                     <div className="song-page-list">
@@ -499,6 +481,5 @@ export default function SongPage({songs}: Props) {
                 </SimpleBar>
             </>
         );
-    }
-   
+    }   
 }

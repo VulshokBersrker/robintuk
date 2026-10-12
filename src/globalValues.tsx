@@ -47,6 +47,7 @@ export interface SongsLimit {
 }
 
 export interface SongsFull {
+    id: number,
     name: string,
     path: string,
     cover: string,
@@ -59,7 +60,8 @@ export interface SongsFull {
     disc_number: number,
     duration: number,
     song_section: number,
-    album_id: number
+    album_id: number,
+    album_artist_id: number
 }
 
 export interface AlbumRes {
@@ -196,7 +198,9 @@ export function getSectionNumber(first_char: string) {
     // Special Characters
     if (first_char === '#' || first_char === '!' || first_char === '[' || first_char === ']' || first_char === '\\' || first_char === '-'
         || first_char === '_' || first_char === `"` || first_char === `'` || first_char === '&' || first_char === '$'
-        || first_char === '+' || first_char === '%' || first_char === '*' || first_char === '.' || first_char === '(' || first_char === ')')
+        || first_char === '+' || first_char === '%' || first_char === '*' || first_char === '.' || first_char === '(' || first_char === ')'
+        || first_char === '\'' || first_char === '\"' || first_char === '\”'  || first_char === '”' || first_char === '…'
+    )
     {
         return 0;
     }

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS songs (
     album_artist INTEGER,
     disc_number INTEGER,
     duration INTEGER,
+    song_section INTEGER,
     -- FOREIGN KEY (album) REFERENCES albums(id),
     keep BOOLEAN
 );

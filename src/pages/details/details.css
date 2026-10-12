@@ -419,6 +419,8 @@ input.new-playlist {
   padding-bottom: 20px;
 }
 
+
+
 #root:has(.music-control-container) {
   .album-container .song-list {
     padding-bottom: 220px;
