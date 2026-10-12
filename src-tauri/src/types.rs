@@ -19,7 +19,8 @@ pub struct SongTableUpload {
     pub disc_number: Option<i32>,
     pub duration: i32,
     pub artist_section: Option<i32>,
-    pub genre_section: Option<i32>
+    pub genre_section: Option<i32>,
+    pub song_section: Option<i32>
 }
 
 // This struct is for data retreived from the database
@@ -61,6 +62,33 @@ pub struct SongTableFull {
     pub song_section: i64
 }
 
+// This struct is for data retreived from the database
+#[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
+pub struct SongTableBackup {
+    pub id: i64,
+    pub name: String,
+    pub path: String,
+    pub cover: String,
+    pub release: String,
+    pub track: i32,
+    pub album: i64,
+    pub artist: String,
+    pub genre: i64,
+    pub album_artist: i64,
+    pub disc_number: i32,
+    pub duration: i64,
+    pub song_section: i64
+}
+
+#[derive(sqlx::FromRow, Default, Clone, Serialize, Debug, Deserialize)]
+pub struct AlbumTable {
+    pub id: i32,
+    pub name: String,
+    pub album_artist: i32,
+    pub cover: String,
+    pub album_section: i32,
+    pub genre: i64
+}
 
 #[derive(sqlx::FromRow, Default, Debug, Clone, Serialize, Deserialize)]
 pub struct PlaylistTable {
@@ -73,15 +101,8 @@ pub struct PlaylistTable {
 #[derive(sqlx::FromRow, Default, Debug, Serialize, Deserialize)]
 pub struct PlaylistTracksTable {
     pub playlist_id: i64,
-    pub track_id: String,
+    pub track_id: i64,
     pub position: i64
-}
-
-#[derive(sqlx::FromRow, Default, Debug, Serialize, Deserialize)]
-pub struct ArtistCoversTable {
-    pub id: i64,
-    pub artist_name: String,
-    pub image: String
 }
 
 #[derive(sqlx::FromRow, Default, Serialize, Deserialize)]
@@ -109,7 +130,7 @@ pub struct DirsTable {
     pub dir_path: String,
 }
 
-#[derive(sqlx::FromRow, Default, Clone, Serialize, Debug)]
+#[derive(sqlx::FromRow, Default, Clone, Serialize, Debug, Deserialize)]
 pub struct AllAlbumResults {
     pub id: i32,
     pub name: String,
@@ -119,7 +140,7 @@ pub struct AllAlbumResults {
     pub album_artist_id: i64
 }
 
-#[derive(sqlx::FromRow, Default, Clone, Serialize)]
+#[derive(sqlx::FromRow, Default, Clone, Serialize, Deserialize)]
 pub struct AllArtistResults {
     pub id: i64,
     pub name: String,
@@ -127,7 +148,7 @@ pub struct AllArtistResults {
     pub cover: String
 }
 
-#[derive(sqlx::FromRow, Default, Clone, Serialize)]
+#[derive(sqlx::FromRow, Default, Clone, Serialize, Deserialize)]
 pub struct AllGenreResults {
     pub id: i64,
     pub name: String,
@@ -211,5 +232,5 @@ pub struct LyricsTable {
     pub lyrics_id: i64,
     pub plain_lyrics: String,
     pub synced_lyrics: Option<String>,
-    pub song_id: String
+    pub song_id: i64
 }

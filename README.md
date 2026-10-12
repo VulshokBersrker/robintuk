@@ -65,10 +65,10 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 ## Known Issues
 
 - [ ] Cannot update playlist song order with new edit method
-- [ ] Albums of the same name are combined on accident
 - [ ] Small chance of an anti-virus false positive when importing playlists
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)
+- [x] Albums of the same name are combined on accident
 - [x] Add to Playlist Context Menu not working on Playlist Details
 - [x] Some album artwork is not deleted when songs are removed
 - [x] Some deleted albums are not removed when a new scan is finished

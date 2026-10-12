@@ -1,8 +1,8 @@
 // Imports
 use crate::{
-    AppState, db::{self, create_playlist, get_playlist}, helper::{self},
-    types::{DirsTable, DoesExist, GetArtistList, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable,
-    ArtistCoversTable, PlaylistTracksTable, PlaylistTable, LyricsTable, SettingsTable, Covers, SongTableUpload}
+    AppState, db::{self, create_playlist, get_playlist}, helper::{self}, types::{AlbumTable, AllArtistResults, AllGenreResults, Covers,
+        DirsTable, DoesExist, GetArtistList, GetCurrentSong, GetPlaylistList, LrclibLyrics, LyricsTable, PlaylistFull, PlaylistTable, 
+        PlaylistTracksTable, SettingsTable, SongTable, SongTableBackup}
 };
 
 // Core Libraries
@@ -726,10 +726,12 @@ pub async fn check_for_backup_restore(state: State<AppState, '_>) -> Result<i64,
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Example {
-    songs: Vec<SongTableUpload>,
+    songs: Vec<SongTableBackup>,
+    albums: Vec<AlbumTable>,
+    genres: Vec<AllGenreResults>,
     playlist_songs: Vec<PlaylistTracksTable>,
     playlists: Vec<PlaylistTable>,
-    artist_covers: Vec<ArtistCoversTable>,
+    album_artists: Vec<AllArtistResults>,
     dirs: Vec<DirsTable>,
     lyrics: Vec<LyricsTable>,
     settings: Vec<SettingsTable>
@@ -754,7 +756,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
 
         // Get the Database values
 
-        let song_res: Vec<SongTableUpload> = sqlx::query_as::<_, SongTableUpload>("SELECT * FROM songs")
+        let song_res: Vec<SongTableBackup> = sqlx::query_as::<_, SongTableBackup>("SELECT * FROM songs")
             .fetch_all(&state.pool)
             .await.unwrap();
 
@@ -766,7 +768,15 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
             .fetch_all(&state.pool)
             .await.unwrap();
 
-        let artists_res: Vec<ArtistCoversTable> = sqlx::query_as::<_, ArtistCoversTable>("SELECT * FROM artist_covers")
+        let artists_res: Vec<AllArtistResults> = sqlx::query_as::<_, AllArtistResults>("SELECT * FROM album_artists")
+            .fetch_all(&state.pool)
+            .await.unwrap();
+
+        let album_res: Vec<AlbumTable> = sqlx::query_as::<_, AlbumTable>("SELECT * FROM albums")
+            .fetch_all(&state.pool)
+            .await.unwrap();
+
+        let genre_res: Vec<AllGenreResults> = sqlx::query_as::<_, AllGenreResults>("SELECT * FROM genres")
             .fetch_all(&state.pool)
             .await.unwrap();
 
@@ -787,9 +797,11 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
 
         let example = Example {
             songs: song_res.clone(),
+            albums: album_res,
+            genres: genre_res,
             playlist_songs: playlist_songs_res,
             playlists: playlist_res,
-            artist_covers: artists_res,
+            album_artists: artists_res,
             dirs: dirs_res,
             lyrics: lyrics_res,
             settings: settings_res,
@@ -824,7 +836,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
 
         // --------------------------------------------- Album Covers
         println!("...Getting album covers");
-        let covers_res: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT DISTINCT cover FROM songs WHERE cover IS NOT NULL")
+        let covers_res: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM albums WHERE cover IS NOT NULL")
             .fetch_all(&state.pool)
             .await.unwrap();
 
@@ -836,46 +848,56 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
             // println!("adding file {path:?} as {name:?} ...");
             let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
             if zip_res.is_ok() {
-                let mut f = File::open(path).unwrap();
-                f.read_to_end(&mut buffer).unwrap();
-                zip.write_all(&buffer).unwrap();
-                buffer.clear();
+                let f = File::open(path);
+                if f.is_ok() {
+                    f.unwrap().read_to_end(&mut buffer).unwrap();
+                    zip.write_all(&buffer).unwrap();
+                    buffer.clear();
+                }
             }
         }
         
         // --------------------------------------------- Playlist Covers
         println!("...Getting playlist covers");
-        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers").into_iter().filter_map(|e| e.ok()) {
-            if entry.metadata().unwrap().is_file() {
-                let item = entry.path().display().to_string();
-                let path = Path::new(&item);
-                let name = path.strip_prefix(prefix).unwrap();
-                let path_as_string = name.to_str().map(str::to_owned).unwrap();
+        let playlist_covers_res: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT image as cover FROM playlists WHERE image IS NOT NULL")
+            .fetch_all(&state.pool)
+            .await.unwrap();
 
-                zip.start_file(path_as_string, SimpleFileOptions::default()).unwrap();
-                let mut f = File::open(path).unwrap();
+        for entry in playlist_covers_res {
+            let path = Path::new(&entry.cover);
+            let name = path.strip_prefix(prefix).unwrap();
+            let path_as_string = name.to_str().map(str::to_owned).unwrap();
 
-                f.read_to_end(&mut buffer).unwrap();
-                zip.write_all(&buffer).unwrap();
-                buffer.clear();
+            let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
+            if zip_res.is_ok() {
+                let f = File::open(path);
+                if f.is_ok() {
+                    f.unwrap().read_to_end(&mut buffer).unwrap();
+                    zip.write_all(&buffer).unwrap();
+                    buffer.clear();
+                }
             }
         }
         
         // --------------------------------------------- Artist Covers
         println!("...Getting artist covers");
-        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers").into_iter().filter_map(|e| e.ok()) {
-            if entry.metadata().unwrap().is_file() {
-                let item = entry.path().display().to_string();
-                let path = Path::new(&item);
-                let name = path.strip_prefix(prefix).unwrap();
-                let path_as_string = name.to_str().map(str::to_owned).unwrap();
-                
-                zip.start_file(path_as_string, SimpleFileOptions::default()).unwrap();
-                let mut f = File::open(path).unwrap();
+        let artist_covers_res: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM album_artists WHERE cover IS NOT NULL")
+            .fetch_all(&state.pool)
+            .await.unwrap();
 
-                f.read_to_end(&mut buffer).unwrap();
-                zip.write_all(&buffer).unwrap();
-                buffer.clear();
+        for entry in artist_covers_res {
+            let path = Path::new(&entry.cover);
+            let name = path.strip_prefix(prefix).unwrap();
+            let path_as_string = name.to_str().map(str::to_owned).unwrap();
+
+            let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
+            if zip_res.is_ok() {
+                let f = File::open(path);
+                if f.is_ok() {
+                    f.unwrap().read_to_end(&mut buffer).unwrap();
+                    zip.write_all(&buffer).unwrap();
+                    buffer.clear();
+                }
             }
         }
         
@@ -937,7 +959,15 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
                 // First add all the songs
                 println!("...Adding songs");
                 for item in res_two.songs {
-                    let _ = db::add_song(item, &state.clone().pool).await;
+                    let _ = db::add_song_restore(item, &state.clone().pool).await;
+                }
+                println!("...Adding albums");
+                for item in res_two.albums {
+                    let _ = db::add_album_restore(item, &state.clone().pool).await;
+                }
+                println!("...Adding genres");
+                for item in res_two.genres {
+                    let _ = db::add_genre_restore(item, &state.clone().pool).await;
                 }
                 // Then all the playlists
                 println!("...Adding playlists");
@@ -951,8 +981,8 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
                 }
                 // Add custom artist covers
                 println!("...Adding artist covers");
-                for item in res_two.artist_covers {
-                    let _ = db::add_artist_cover_for_restore(state.clone(), item.image, item.artist_name).await;
+                for item in res_two.album_artists {
+                    let _ = db::add_artist_for_restore(item, state.clone()).await;
                 }
                 // Add directory
                 println!("...Adding directories");

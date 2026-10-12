@@ -10,7 +10,7 @@ use sqlx::{sqlite::SqliteQueryResult, Executor, Pool, Sqlite};
 use tauri::{Emitter, State};
 
 use crate::types::{
-    AllAlbumResults, AllArtistResults, AllGenreResults, ArtistDetailsResults, Covers, DirsTable, DoesExist, GenreDetailsResults, History, LrclibLyrics, PlaylistFull, PlaylistTable, QueueFormat, SettingsScanDate, SongTable, SongTableFull, SongTableUpload
+    AlbumTable, AllAlbumResults, AllArtistResults, AllGenreResults, ArtistDetailsResults, Covers, DirsTable, DoesExist, GenreDetailsResults, History, LrclibLyrics, PlaylistFull, PlaylistTable, QueueFormat, SettingsScanDate, SongTable, SongTableBackup, SongTableFull, SongTableUpload
 };
 use crate::{AppState, commands, helper};
 
@@ -1564,7 +1564,60 @@ pub async fn get_lyrics(state: State<AppState, '_>, song_id: i64) -> Result<Lrcl
 
 
 // ------------------------------------ Restore Functions ------------------------------------
-pub async fn add_to_playlist_for_restore(state: State<'_, AppState>, song_id: String, playlist_id: i64, position: i64) -> Result<(), String> {
+pub async fn add_song_restore(entry: SongTableBackup, pool: &Pool<Sqlite>) -> Result<SqliteQueryResult, String> {
+
+    let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT OR IGNORE INTO songs
+        (name, path, cover, release, track, album, artist, genre, album_artist, disc_number, duration, song_section, keep) 
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)")
+        .bind(&entry.name)
+        .bind(&entry.path)
+        .bind(&entry.cover)
+        .bind(&entry.release)
+        .bind(&entry.track)
+        .bind(&entry.album)
+        .bind(&entry.artist)
+        .bind(&entry.genre)
+        .bind(&entry.album_artist)
+        .bind(&entry.disc_number)
+        .bind(&entry.duration)
+        .bind(&entry.song_section)
+        .bind(true)
+        .execute(pool)
+        .await;
+
+    Ok(res.unwrap())
+}
+
+pub async fn add_album_restore(album: AlbumTable, pool: &Pool<Sqlite>) -> Result<(), String> {
+
+    let _ = sqlx::query("INSERT INTO albums (id, name, cover, album_artist, album_section, genre, keep) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
+        .bind(album.id)
+        .bind(album.name)
+        .bind(album.cover)
+        .bind(album.album_artist)
+        .bind(album.album_section)
+        .bind(album.genre)
+        .bind(true)
+        .execute(pool)
+        .await;
+
+    Ok(())
+}
+
+pub async fn add_genre_restore(genre: AllGenreResults, pool: &Pool<Sqlite>) -> Result<(), String> {
+
+    let _ = sqlx::query("INSERT INTO genres (id, name, genre_section, keep) VALUES (?1, ?2, ?3, ?4)")
+        .bind(genre.id)
+        .bind(genre.name)
+        .bind(genre.genre_section)
+        .bind(true)
+        .execute(pool)
+        .await;
+
+    Ok(())        
+}
+
+pub async fn add_to_playlist_for_restore(state: State<'_, AppState>, song_id: i64, playlist_id: i64, position: i64) -> Result<(), String> {
 
     let _ = sqlx::query("INSERT INTO playlist_tracks
     (playlist_id, track_id, position) 
@@ -1577,7 +1630,7 @@ pub async fn add_to_playlist_for_restore(state: State<'_, AppState>, song_id: St
     Ok(())
 }
 
-pub async fn add_lyrics_for_restore(state: State<'_, AppState>, lyrics_id: i64, song_id: String, plain_lyrics: String, synced_lyrics: Option<String>) -> Result<(), String> {
+pub async fn add_lyrics_for_restore(state: State<'_, AppState>, lyrics_id: i64, song_id: i64, plain_lyrics: String, synced_lyrics: Option<String>) -> Result<(), String> {
 
     let _ = sqlx::query("INSERT INTO lyrics (lyrics_id, plain_lyrics, synced_lyrics, song_id) VALUES (?1, ?2, ?3, ?4)")
         .bind(lyrics_id)
@@ -1590,27 +1643,16 @@ pub async fn add_lyrics_for_restore(state: State<'_, AppState>, lyrics_id: i64, 
     Ok(())
 }
 
-pub async fn add_artist_cover_for_restore(state: State<'_, AppState>, file_path: String, artist_name: String) -> Result<(), String> {
-    let does_exist: (bool,) = sqlx::query_as("SELECT COUNT(*) FROM artist_covers WHERE EXISTS(SELECT 1 FROM artist_covers WHERE artist_name = $1)")
-        .bind(&artist_name)
-        .fetch_one(&state.pool)
-        .await
-        .unwrap();
+pub async fn add_artist_for_restore(artist: AllArtistResults, state: State<'_, AppState>) -> Result<(), String> {
 
-
-    if does_exist.0 == true {
-        let _ = sqlx::query("UPDATE artist_covers SET image = $1 WHERE artist_name = $2;")
-            .bind(&file_path)
-            .bind(&artist_name)
-            .execute(&state.pool).await;
-    }
-    else {
-        let _ = sqlx::query("INSERT INTO artist_covers (image, artist_name) VALUES (?1, ?2)")
-        .bind(&file_path)
-        .bind(&artist_name)
+    let _ = sqlx::query("INSERT INTO album_artists (id, name, cover, artist_section, keep) VALUES (?1, ?2, ?3, ?4, ?5)")
+        .bind(&artist.id)
+        .bind(&artist.name)
+        .bind(artist.cover)
+        .bind(artist.artist_section)
+        .bind(true)
         .execute(&state.pool).await;
-    }
-
+    
     Ok(())
 }
 
