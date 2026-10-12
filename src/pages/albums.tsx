@@ -316,7 +316,7 @@ export default function AlbumPage({albums}: P) {
                 
 
                 <div className="section-list">
-                    {albumList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
+                    {albums.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
                         for(let j = 0; j < i; j++) { totalIndex += albumSections[j]; }
                         if(albumSections[i] !== 0 && albumSections[i] !== undefined) {

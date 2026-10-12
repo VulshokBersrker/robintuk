@@ -32,14 +32,15 @@ export default function QueueOverviewPage() {
     const [duration, setDuration] = useState<number>(0);
 
     const [songSelection, setSongSelection] = useState<Songs[]>([]);
-    const [isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "", artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0 });
+    const [isCurrent, setIsCurrent] = useState<Songs>({ id: -1, name: "", path: "", cover: "", release: "", track: 0, song_section: -1,
+        album: "", artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, album_id: -1, album_artist_id: -1 });
 
     // Playlist Values
     const [newPlaylistName, setNewPlaylistName] = useState<string>("");
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, album: "", artist: "", index: 0, posX: 0, posY: 0 });
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, album: -1, artist: -1, index: 0, posX: 0, posY: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
     // On first load get the album details
@@ -103,11 +104,11 @@ export default function QueueOverviewPage() {
         }
     }
 
-    const navigateToAlbumOverview = (name: string) => {
-        navigate("/albums/overview", {state: {name: name}});
+    const navigateToAlbumOverview = (name: number) => {
+        navigate("/albums/overview", {state: {id: name}});
     }
-    const navigateToArtistOverview = (name: string) => {
-        navigate("/artists/overview", {state: {name: name}});
+    const navigateToArtistOverview = (name: number) => {
+        navigate("/artists/overview", {state: {id: name}});
     }
 
     // Load the song the user clicked on but also queue the entire album
@@ -144,7 +145,7 @@ export default function QueueOverviewPage() {
             }
             else {
                 console.log(index);
-                await invoke('remove_from_queue', {song_id: queue[index].path});
+                await invoke('remove_from_queue', {song_id: queue[index].id});
                 await invoke('player_remove_from_queue', {index: index});
 
                 setQueue(queue.filter(function(_pos, inner_index) {
@@ -182,7 +183,7 @@ export default function QueueOverviewPage() {
     }
 
     function removeFromArray(args: Songs[]) {
-        return queue.filter(e => !args.some(j => j.path === e.path));
+        return queue.filter(e => !args.some(j => j.id === e.id));
     }
 
     // ------------ Selection Bar Functions ------------
@@ -196,7 +197,7 @@ export default function QueueOverviewPage() {
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            setSongSelection(songSelection.filter(item => item.path !== song.path));
+            setSongSelection(songSelection.filter(item => item.id !== song.id));
         }
     }
 
@@ -275,15 +276,11 @@ export default function QueueOverviewPage() {
         }
     }
 
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
-    }
-
     function addToQueue() {}
 
     // ------------ End of Selection Bar Functions ------------
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY});
@@ -303,7 +300,7 @@ export default function QueueOverviewPage() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, album: "", artist: "", index: 0, posX: 0, posY: 0});
+        setContextMenu({ isToggled: false, album: -1, artist: -1, index: 0, posX: 0, posY: 0});
     }
 
 
@@ -326,7 +323,6 @@ export default function QueueOverviewPage() {
                     <SongSelectionBar
                         selectionBarType={0}
                         songSelection={songSelection}
-                        updateNewPlaylistName={updateNewPlaylistName}
                         addSelectedToPlaylist={addSelectedToPlaylist}
                         createSelectedPlaylist={createSelectedPlaylist}
                         clearSelection={clearSelection}
@@ -417,7 +413,7 @@ export default function QueueOverviewPage() {
                                             className={`grid-20 song-row playlist align-items-center ${queue[index].path === isCurrent.path ? "current-song" : ""}`}
                                             onContextMenu={(e) => {
                                                 e.preventDefault();
-                                                handleContextMenu(e, queue[index].album, queue[index].album_artist, index);
+                                                handleContextMenu(e, queue[index].album_id, queue[index].album_artist_id, index);
                                             }}
                                         >
                                             <span className="section-1 play">
@@ -435,8 +431,8 @@ export default function QueueOverviewPage() {
                                             </span>
                                             <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={queue[index].cover} alt="" image_type="playlist-song" /></span>
                                             <span className="section-9 font-0 name">{queue[index].name}</span>
-                                            <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbumOverview(queue[index].album)}>{queue[index].album}</span>
-                                            <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtistOverview(queue[index].album_artist)}>{queue[index].album_artist}</span>
+                                            <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbumOverview(queue[index].album_id)}>{queue[index].album}</span>
+                                            <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtistOverview(queue[index].album_artist_id)}>{queue[index].album_artist}</span>
                                             <span className="section-1 header-font duration">{new Date(queue[index].duration * 1000).toISOString().slice(14, 19)}</span>
                                         </div>
                                         <hr />
@@ -470,9 +466,9 @@ export default function QueueOverviewPage() {
 
 type Props = {
     isToggled: boolean,
-    album: string,
+    album: number,
     index: number,
-    artist: string,
+    artist: number,
     playSong: (index: number) => void,
     removeFromQueue: (index: number) => void,
     posX: number,
@@ -488,10 +484,10 @@ function CustomContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
-        navigate("/artists/overview", {state: {name: artist}});
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     useEffect(() => {
@@ -524,14 +520,14 @@ function CustomContextMenu({
                     </span>
                 </li>
 
-                {album !== "" && 
+                {album !== -1 && 
                     <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
                         <span className="d-flex context-row">
                             <img src={AlbumIcon} /> &nbsp; Show Album
                         </span>
                     </li>
                 }
-                {artist !== "" && 
+                {artist !== -1 && 
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <span className="d-flex context-row">
                             <img src={ArtistIcon} /> &nbsp; Show Artist

@@ -98,6 +98,7 @@ export default function Home() {
     async function getHistory() {
         try{
             const list = await invoke<PlayHistory[]>('get_play_history', { limit: 25 } );
+            console.log(list)
             setPlayHistory(list);
         }
         catch(e) {

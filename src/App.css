@@ -903,6 +903,7 @@ img.off {
 .history.home .list {
   max-height: 10rem;
   overflow: hidden;
+  display: flex;
 }
 .history.home img.album-image {
   width: 6rem;

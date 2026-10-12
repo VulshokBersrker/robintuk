@@ -1488,14 +1488,14 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
             SELECT s.id, s.name, s.path, a.name as album, s.artist, s.duration, a.id as album_id,
             g.name as genre, s.cover, s.release, art.name as album_artist, s.track, s.disc_number, art.id as album_artist_id
             FROM history h 
-            INNER JOIN songs s ON s.id = h.song_id
-            INNER JOIN album_artists art ON s.album_artist = art.id
-            INNER JOIN genres g ON s.genre = g.id
-            INNER JOIN albums a ON a.id = s.album
+            LEFT JOIN songs s ON s.id = h.song_id
+            LEFT JOIN album_artists art ON s.album_artist = art.id
+            LEFT JOIN genres g ON s.genre = g.id
+            LEFT JOIN albums a ON a.id = s.album
             ORDER BY h.id DESC")
         .fetch_all(&state.pool)
         .await.unwrap();
-
+    
         Ok(history)
     }
     else {
@@ -1503,10 +1503,10 @@ pub async fn get_play_history(state: State<AppState, '_>, limit: i64) -> Result<
             SELECT s.id, s.name, s.path, a.name as album, s.artist, s.duration, a.id as album_id,
             g.name as genre, s.cover, s.release, art.name as album_artist, s.track, s.disc_number, art.id as album_artist_id
             FROM history h 
-            INNER JOIN songs s ON s.id = h.song_id
-            INNER JOIN album_artists art ON s.album_artist = art.id
-            INNER JOIN genres g ON s.genre = g.id
-            INNER JOIN albums a ON a.id = s.album
+            LEFT JOIN songs s ON s.id = h.song_id
+            LEFT JOIN album_artists art ON s.album_artist = art.id
+            LEFT JOIN genres g ON s.genre = g.id
+            LEFT JOIN albums a ON a.id = s.album
             ORDER BY h.id DESC LIMIT $1")
         .bind(limit)
         .fetch_all(&state.pool)
