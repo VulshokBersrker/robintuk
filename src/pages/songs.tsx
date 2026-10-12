@@ -174,11 +174,11 @@ export default function SongPage({songs}: Props) {
         }        
     }
 
-    async function createPlaylist(name: string) {
+    async function createPlaylist(name: string, song: Songs) {
         resetContextMenu();
         setDisplayAddToMenu(false);
         try {
-            await invoke('create_playlist', {name: name, songs: songSelection, songs_to_add: true});
+            await invoke('create_playlist', {name: name, songs: [song], songs_to_add: true});
             await invoke('new_playlist_added');
         }
         catch(e) {

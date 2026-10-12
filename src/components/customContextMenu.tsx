@@ -32,7 +32,7 @@ type Props = {
     // Playlist
     name: string,
     playlistList: PlaylistList[],
-    createPlaylist: (name: string) => void,
+    createPlaylist: (name: string, song: Songs) => void,
     addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
     updateSongDetailsDisplay: (bool: boolean, song_id: number) => void,
@@ -104,7 +104,7 @@ export default function CustomContextMenu({
                                     className="new-playlist" value={newPlaylistName}
                                     onChange={(e) => setNewPlaylistName(e.target.value)}
                                 />
-                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                <span><button onClick={() => {createPlaylist(newPlaylistName, song)}}>Create</button></span>
                             </span>
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">

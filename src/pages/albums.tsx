@@ -92,7 +92,6 @@ export default function AlbumPage({albums}: P) {
         resetContextMenu();
         try {
             await invoke("play_album", {album_id: album_id, index: 0, shuffled: shuffled});
-
             savePosition(0);
         }
         catch(e) {
@@ -278,7 +277,7 @@ export default function AlbumPage({albums}: P) {
     }
 
 
-    if(loading) {
+    if(loading === true || albums.length === 0) {
         return(
             <div>
                 <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
@@ -287,31 +286,13 @@ export default function AlbumPage({albums}: P) {
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
                             <input
                                 type="text" placeholder="Search Albums" id="search_albums"
-                                value={searchValue}
+                                value={searchValue} disabled
+                                onChange={() => {}}
                             />
                         </span>
                     </div>
 
-                    <VirtuosoGrid
-                        style={{ paddingBottom: '170px' }}
-                        totalCount={Array(70).length}
-                        components={gridComponents}
-                        increaseViewportBy={{ top: 210, bottom: 420 }}
-                        itemContent={(i) =>
-                            <div key={`place-${i}`} className="album-link placeholder" id={`place-${i}`}>
-                                <div className="album-image-container placeholder">                                                
-                                    <div className="album-image placeholder">
-                                        {/* <div className="activity"/> */}
-                                    </div>
-                                    <div className="album-image-name header-font">
-                                    <div className="album-name"></div>
-                                    <div className="artist-name"></div>
-                                </div>
-                                </div>
-                            </div>
-                        }
-                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                    />
+                    
                 </SimpleBar>
             </div>
         );
