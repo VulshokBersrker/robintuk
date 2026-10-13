@@ -303,18 +303,25 @@ pub async fn get_all_songs(state: State<AppState, '_>) -> Result<Vec<SongTableFu
 #[tauri::command(rename_all = "snake_case")]
 pub async fn get_song(state: State<AppState, '_>, song_id: i64) -> Result<SongTable, String> {
 
-    let temp: SongTable = sqlx::query_as::<_, SongTable>("SELECT s.id, s.name, s.path, s.cover, s.release, s.track, a.name as album,
+    let temp = sqlx::query_as::<_, SongTable>("SELECT s.id, s.name, s.path, s.cover, s.release, s.track, a.name as album,
         s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, a.id as album_id, art.id as album_artist_id
         FROM songs s
-        INNER JOIN genres g ON s.genre = g.id
-        INNER JOIN album_artists art ON s.album_artist = art.id
-        INNER JOIN albums a ON s.album = a.id WHERE s.id = ?")
+        LEFT JOIN genres g ON s.genre = g.id
+        LEFT JOIN album_artists art ON s.album_artist = art.id
+        LEFT JOIN albums a ON s.album = a.id 
+        WHERE s.id = ?")
         .bind(&song_id)
         .fetch_one(&state.pool)
-        .await
-        .unwrap();
+        .await;
 
-    Ok(temp)
+    if temp.is_ok() {
+        Ok(temp.unwrap())
+    }
+    else {
+        let err = temp.unwrap_err();
+        Err(format!("Error Getting Song - {:?}", err))
+    }
+
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -323,9 +330,9 @@ pub async fn get_songs_with_limit(state: State<AppState, '_>, limit: i64) -> Res
     let temp: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT s.id, s.name, s.path, a.cover, s.release, s.track, a.name as album,
         s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, a.id as album_id, art.id as album_artist_id
         FROM songs s 
-        INNER JOIN albums a ON a.id=s.album
-        INNER JOIN album_artists art ON s.album_artist=art.id
-        INNER JOIN genres g ON s.genre=g.id
+        LEFT JOIN albums a ON a.id=s.album
+        LEFT JOIN album_artists art ON s.album_artist=art.id
+        LEFT JOIN genres g ON s.genre=g.id
         ORDER BY s.name COLLATE NOCASE ASC LIMIT $1")
         .bind(limit)
         .fetch_all(&state.pool)
@@ -758,7 +765,7 @@ pub async fn get_artist(state: State<AppState, '_>, id: i64) -> Result<AllAlbumR
     let temp = sqlx::query_as::<_, AllAlbumResults>("
         SELECT a.id, a.name, a.cover, a.album_section, art.name as album_artist
         FROM albums a
-        INNER JOIN album_artists art ON a.album_artist = art.id
+        LEFT JOIN album_artists art ON a.album_artist = art.id
         WHERE art.id = $1
         ORDER BY a.name ASC")
         .bind(id)
@@ -780,9 +787,9 @@ pub async fn get_artist_songs(state: State<'_, AppState>, album_artist: i64) -> 
         SELECT s.id, s.name, s.path, s.cover, s.release, s.track, a.name as album,
         s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, a.id as album_id, art.id as album_artist_id
         FROM songs s
-        INNER JOIN genres g ON s.genre = g.id
-        INNER JOIN album_artists art ON s.album_artist = art.id
-        INNER JOIN albums a ON s.album = a.id WHERE s.album_artist = ?
+        LEFT JOIN genres g ON s.genre = g.id
+        LEFT JOIN album_artists art ON s.album_artist = art.id
+        LEFT JOIN albums a ON s.album = a.id WHERE s.album_artist = ?
         AND a.name IS NOT NULL
         ORDER BY a.name ASC, s.disc_number ASC, s.track ASC")
         .bind(&album_artist)
@@ -863,9 +870,9 @@ pub async fn get_genre(state: State<AppState, '_>, name: i64) -> Result<SongTabl
         s.name, s.path, a.cover, s.release, s.track, a.name as album, a.id as album_id,
         s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, s.artist_section, s.genre_section, art.id as album_artist_id
         FROM songs s
-        INNER JOIN genres g ON s.genre=g.id
-        INNER JOIN album_artists art ON s.album_artist=art.id
-        INNER JOIN albums a ON s.album=a.id
+        LEFT JOIN genres g ON s.genre=g.id
+        LEFT JOIN album_artists art ON s.album_artist=art.id
+        LEFT JOIN albums a ON s.album=a.id
         WHERE s.genre=$1 AND g.id=$1 ORDER BY a.name ASC;")
         .bind(name)
         .fetch_one(&state.pool)
@@ -882,9 +889,9 @@ pub async fn get_genre_songs(state: State<'_, AppState>, genre: i64) -> Result<V
         SELECT s.id, s.name, s.path, s.cover, s.release, s.track, a.name as album,
         s.artist, g.name as genre, art.name as album_artist, s.disc_number, s.duration, a.id as album_id, art.id as album_artist_id
         FROM songs s
-        INNER JOIN genres g ON s.genre = g.id
-        INNER JOIN album_artists art ON s.album_artist = art.id
-        INNER JOIN albums a ON s.album = a.id WHERE s.genre = ?
+        LEFT JOIN genres g ON s.genre = g.id
+        LEFT JOIN album_artists art ON s.album_artist = art.id
+        LEFT JOIN albums a ON s.album = a.id WHERE s.genre = ?
         AND a.name IS NOT NULL 
         ORDER BY a.name ASC, s.disc_number ASC, s.track ASC")
         .bind(&genre)
@@ -1178,10 +1185,10 @@ pub async fn get_queue(state: State<AppState, '_>, shuffled: bool) -> Result<Vec
             SELECT s.id, q.position, s.name, s.path, a.name as album, s.artist, s.duration, g.name as genre, s.cover, s.release,
             art.name as album_artist, s.track, s.disc_number, a.id as album_id, art.id as album_artist_id
             FROM queue_shuffled q 
-            INNER JOIN songs s ON s.id = q.song_id
-		    INNER JOIN albums a ON a.id = s.album
-            INNER JOIN album_artists art ON art.id = s.album_artist
-            INNER JOIN genres g ON g.id = s.genre
+            LEFT JOIN songs s ON s.id = q.song_id
+		    LEFT JOIN albums a ON a.id = s.album
+            LEFT JOIN album_artists art ON art.id = s.album_artist
+            LEFT JOIN genres g ON g.id = s.genre
             ORDER BY q.position ASC").fetch_all(&state.pool).await.unwrap();
         Ok(list)
     }
@@ -1190,10 +1197,10 @@ pub async fn get_queue(state: State<AppState, '_>, shuffled: bool) -> Result<Vec
             SELECT s.id, q.position, s.name, s.path, a.name as album, s.artist, s.duration, g.name as genre, s.cover, s.release,
             art.name as album_artist, s.track, s.disc_number, a.id as album_id, s.album_artist as album_artist_id
             FROM queue q 
-            INNER JOIN songs s ON s.id = q.song_id
-		    INNER JOIN albums a ON a.id = s.album
-            INNER JOIN album_artists art ON art.id = s.album_artist
-            INNER JOIN genres g ON g.id = s.genre
+            LEFT JOIN songs s ON s.id = q.song_id
+		    LEFT JOIN albums a ON a.id = s.album
+            LEFT JOIN album_artists art ON art.id = s.album_artist
+            LEFT JOIN genres g ON g.id = s.genre
             ORDER BY q.position ASC").fetch_all(&state.pool).await.unwrap();
         Ok(list)
     }
@@ -1555,7 +1562,7 @@ pub async fn get_lyrics(state: State<AppState, '_>, song_id: i64) -> Result<Lrcl
     if res.is_ok() {
         Ok(res.unwrap())
     }
-    else {
+    else {            
         log::info!("Song does not have lyrics in the database: ${song_id}");
         Err("No Lyrics".to_string())
     }

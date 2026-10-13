@@ -620,13 +620,15 @@ pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String
             Ok(lyrics)
         }
         else {
-            let _ = res.inspect_err(|f| log::error!("Get Remote Lyrics - Error getting remote lyrics - {:?}", f) );    
-            Err("Error Getting Remote Lyrics".to_string())
+            let err = res.unwrap_err();
+            log::error!("Get Remote Lyrics - Error getting remote lyrics - {:?}", &err);
+            Err(format!("Get Remote Lyrics - Error getting remote lyrics - {:?}", err))
         }
     }
     else {
-        let _ = first_res.inspect_err(|f| log::error!("Get Remote Lyrics - Error getting remote lyrics - {:?}", f) );        
-        Err("Error Getting Remote Lyrics".to_string())
+        let err = first_res.unwrap_err();
+        log::error!("Get Remote Lyrics - Error with url response - {:?}", &err);
+        Err(format!("Get Remote Lyrics - Error with url response - {:?}", err))
     }
 
 }
@@ -669,16 +671,17 @@ pub async fn search_remote_lyrics(name: String, album: String) -> Result<Vec<LRC
             Ok(res.unwrap())
         }
         else {
-            log::error!("Search For Lyrics - Error in Fetch");
-            Err("Search For Lyrics - Error in Fetch".to_string())
+            let err = res.unwrap_err();
+            log::error!("Search Remote Lyrics - {:?}", err);
+            Err(format!("Error 503"))
         }
     }
     else {
         println!("---------------\n{:?}", &first_res);
         
-        let first_test = first_res.unwrap_err().to_string();
+        let first_test = first_res.unwrap_err();
 
-        println!("{:?}", first_test);
+        println!("-> {:?}", &first_test);
 
 
         // log::error!("Search For Lyrics (Error) - {:?}", first_res.unwrap_err().to_string());
@@ -713,6 +716,12 @@ pub async fn update_remote_lyrics(state: State<AppState, '_>, song_id: i64, plai
     }     
 }
 
+
+
+
+
+
+
 #[tauri::command]
 pub fn check_for_ongoing_scan(state: State<AppState, '_>) -> bool {
     return *state.is_scan_ongoing.lock().unwrap()
@@ -723,6 +732,12 @@ pub fn check_for_ongoing_scan(state: State<AppState, '_>) -> bool {
 pub async fn check_for_backup_restore(state: State<AppState, '_>) -> Result<i64, String> {
     Ok(*state.is_back_restore_ongoing.lock().unwrap())
 }
+
+
+
+
+
+
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Example {
