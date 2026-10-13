@@ -20,8 +20,6 @@ import LryicsIcon from '../images/qrcode-solid-full.svg';
 import ExportIcon from '../images/upload-solid-full.svg';
 import logo from '../images/logo.svg';
 
-
-
 interface ScanResults {
     success: number,
     updated: number,
@@ -32,12 +30,10 @@ interface ErrorInfo {
     file_name: string,
     error_type: string,
 }
-
 interface ScanProgress {
     length: number,
     current: number
 }
-
 
 // Add function to remove all entries if the list is emptied
 // Add an "Are you sure" message to let the user know all the music will be gone
@@ -236,7 +232,6 @@ export default function Settings() {
             await getTheme();
         }
     }
-
     async function resetApp() {
         try{
             setIsBackupRestore(true);
@@ -398,6 +393,7 @@ export default function Settings() {
                     <option value="green" id="theme-green"> Green </option>
                     <option value="dark-wave" id="theme-dark-wave"> Dark Wave </option>
                     <option value="tau-ceti" id="theme-tau-ceti"> Tau Ceti </option>
+                    <option value="ares" id="theme-ares"> Ares </option>
                 </select>
             </div>
 

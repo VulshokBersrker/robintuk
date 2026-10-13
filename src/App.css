@@ -182,6 +182,34 @@
   /* Checkbox Colors */
   --checkbox-checked-color: #8e159c;
 }
+[data-theme="ares"] {
+  /* Font Colors */
+  --font-color-one: #f3f3f3;
+  --font-color-two: #877373;
+  --font-color-three: #890909;
+  /* Gradient Colors */
+  --gradient-one: #010101;
+  --gradient-two: #010101;
+  --gradient-three: #010101;
+  /* Hover / Highlight Colors */
+  --current-song-one: #460202;
+  --current-song-two: #1301040d;
+  --highlight-color: #22222286;
+  --highlight-hover: #720606;
+  /* Hr Colors */
+  --hr-gradient-one: #580b0b;
+  --hr-gradient-two: #580b0b;
+  /* Music Player Colors */
+  --music-player-bg: rgba(16, 1, 1, 0.55);
+  --music-player-border: linear-gradient(to right, rgb(159, 0, 0), rgb(28, 28, 28)) 1 stretch;
+  --slider-color-one: #970505;
+  /* Album Overview Colors */
+  --play-icon: brightness(0) saturate(100%) invert(10%) sepia(36%) saturate(7033%) hue-rotate(340deg) brightness(91%) contrast(94%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(12%) sepia(93%) saturate(3421%) hue-rotate(342deg) brightness(83%) contrast(89%);
+  --arrow-icon: brightness(0) saturate(100%) invert(15%) sepia(99%) saturate(2579%) hue-rotate(344deg) brightness(84%) contrast(86%);
+  /* Checkbox Colors */
+  --checkbox-checked-color: rgb(214, 42, 42);
+}
 [data-theme="tau-ceti"] {
   /* Font Colors */
   --font-color-one: #f3f3f3;
@@ -1321,6 +1349,9 @@ select.themes option::before {
 }
 #theme-tau-ceti::before {
   background-image: url("./images/tau-ceti.svg"); 
+}
+#theme-ares::before {
+  background-image: url("./images/ares.svg"); 
 }
 
 option::checkmark {

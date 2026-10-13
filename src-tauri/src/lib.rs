@@ -248,7 +248,6 @@ pub fn run() -> Result<(), String> {
             commands::new_artist_cover_added,
             // Lyrics Functions
             db::get_lyrics,
-            commands::check_for_single_lyrics,
             commands::cancel_lyrics_scan,
             commands::update_remote_lyrics,
             commands::search_remote_lyrics,
