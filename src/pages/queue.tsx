@@ -443,7 +443,6 @@ export default function QueueOverviewPage() {
                         />
                     </div>
                 </div>
-                <div className="empty-space"/>
 
                 <CustomContextMenu 
                     isToggled={contextMenu.isToggled}
