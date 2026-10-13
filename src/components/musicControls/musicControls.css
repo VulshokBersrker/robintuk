@@ -42,6 +42,21 @@ body[data-theme="tau-ceti"] {
   }
 } 
 
+body[data-theme="ares"] {
+ 
+
+  .play-container:hover .play-pause-icon { 
+    filter: brightness(0%);
+  }
+  .play-button:hover .music-control-button img {
+    filter: brightness(60%);
+  }
+  .play-button:hover .music-control-button img.off {
+    filter: brightness(30%);
+  }
+
+} 
+
 
 /* -------------- Music Controls Styles -------------- */
 
@@ -149,6 +164,7 @@ body[data-theme="tau-ceti"] {
   width: 3.2rem;
   transform: translate(-50%, -50%);
   filter: var(--play-icon);
+  transition: 0.1s ease-in-out;
 }
 .play-container:hover .circle {
   filter: var(--play-icon-hover);

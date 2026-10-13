@@ -19,13 +19,14 @@ import ArtistPlaceholderImage from '../../images/placeholder_artist.png';
 import DeselectIcon from '../../images/circle-xmark-regular-full.svg';
 import QueueIcon from '../../images/rectangle-list-regular-full.svg';
 import SelectIcon from '../../images/circle-check-regular-full.svg';
+import EditIcon from '../../images/pen-to-square-regular-full.svg';
 import AlbumIcon from '../../images/vinyl-record-svgrepo-com.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import PlayIcon from '../../images/play-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
 import Circle from '../../images/circle.svg';
-
+import CloseIcon from '../../images/x.svg';
 
 // Add To needs to be added
 
@@ -42,6 +43,7 @@ export default function ArtistOverviewPage() {
 
     const [albumSelection, setAlbumSelection] = useState<number[]>([]);
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
+    const [isEdit, setIsEdit] = useState<boolean>(false);
 
     // Playlist Values
     const [newPlaylistName, setNewPlaylistName] = useState<string>("");
@@ -108,7 +110,7 @@ export default function ArtistOverviewPage() {
     async function playArtist(shuffled: boolean) {
         clearSelection();
         try {
-            await invoke("play_artist", {album_artist: artistDetails.album_artist, shuffled: shuffled});
+            await invoke("play_artist", {album_artist: location.state.id, shuffled: shuffled});
             savePosition(0);
         }
         catch(e) {
@@ -117,28 +119,6 @@ export default function ArtistOverviewPage() {
         finally {
             localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
             await invoke("set_shuffle_mode", { mode: shuffled });
-        }
-    }
-
-    // Doesn't update image if you change the file of the old uploaded image with a new image (same name and extension but different image)
-    async function addCustomArtistArtwork() {
-        let cover_image: string = "";
-        try {
-            const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
-            if(file_path !== null) {
-                cover_image = file_path.toString();
-                await invoke("add_artist_cover", { file_path: file_path.toString(), artist_name: artistDetails.album_artist, artist_id: location.state.id });
-            }
-        }
-        catch(err) {
-            error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
-            console.log(`Failed to add custom artwork: ${err}`);
-        }
-        finally {
-            if(cover_image !== "") {
-                setArtistDetails({ ...artistDetails, image: cover_image });
-                await invoke('new_artist_cover_added');
-            }
         }
     }
 
@@ -361,6 +341,25 @@ export default function ArtistOverviewPage() {
         setContextMenu({ isToggled: false, context_type: "artist", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
     }
 
+    async function updateArtist(cover: string) {
+        try {
+            setArtistDetails({ ...artistDetails, image: cover });
+            await invoke("add_artist_cover", { file_path: cover, artist_name: artistDetails.album_artist, artist_id: location.state.id });
+        }
+        catch(e) {
+            error("Playlist Overview (Error) - Error Updating Playlist Details");
+            console.log(e)
+        }
+        finally {
+            await invoke('new_artist_cover_added');
+            setIsEdit(false);
+        }    
+    }
+
+    function closeEdit() {
+        setIsEdit(false);
+    }
+
 
     if(loading) {
         return(
@@ -372,6 +371,13 @@ export default function ArtistOverviewPage() {
     else {
         return(
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+                <EditArtist
+                    isOpen={isEdit}
+                    artistDetails={artistDetails}
+                    updateArtist={updateArtist}
+                    closeEdit={closeEdit}                
+                />
+
                 <div className="album-container">
                     <div className="d-flex top-row justify-content-start">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
@@ -394,9 +400,8 @@ export default function ArtistOverviewPage() {
                     {/* Album Details */}
                     <div className="d-flex">
                         <div className="album-details d-flex">
-                            <div onClick={addCustomArtistArtwork} className="image-upload">
-                                <ImageWithFallBack image={artistDetails.image} alt={"upload new image"} image_type={"artist"}/>
-                            </div>
+                            <ImageWithFallBack image={artistDetails.image} alt={"upload new image"} image_type={"artist"}/>
+                         
 
                             <span style={{paddingLeft: "10px"}} className="grid-15">
                                 <div style={{paddingBottom: "10px"}} className="section-15 header-font font-3">{artistDetails.album_artist}</div>
@@ -407,6 +412,7 @@ export default function ArtistOverviewPage() {
                                 <div className="section-15 d-flex album-commmands">
                                     <span><button className="font-1 borderless" onClick={() => playArtist(false)}><img src={PlayIcon} /></button></span>
                                     <span><button className="font-1 borderless" onClick={() => playArtist(true)}><img src={ShuffleIcon} /></button></span>
+                                    <span><button className="font-1 borderless" onClick={() => setIsEdit(!isEdit)}><img src={EditIcon} /></button></span>
                                     <span className="position-relative">
                                         <button
                                             className="font-1 borderless"
@@ -622,6 +628,69 @@ function CustomContextMenu({
         );
     }
     else { return; }    
+}
+
+type editPlaylistProps = {
+    isOpen: boolean,
+    artistDetails: ArtistDetails,
+    updateArtist: (cover: string) => void,
+    closeEdit: () => void
+}
+
+function EditArtist({isOpen, artistDetails, updateArtist, closeEdit}: editPlaylistProps) {
+
+    const [newImage, setNewImage] = useState<string>(artistDetails.image);
+
+    useEffect(() => {
+        const element = document.getElementsByClassName("simplebar-content-wrapper");
+        if(isOpen) {
+            element[0].classList.add("overflow-y-hidden");
+        }
+        else {
+            element[0].classList.remove("overflow-y-hidden");
+            closeEdit();
+        }
+    }, [isOpen]);
+
+    // Doesn't update image if you change the file of the old uploaded image with a new image (same name and extension but different image)
+    async function addCustomArtistArtwork() {
+        try {
+            const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
+            if(file_path !== null) {
+                setNewImage(file_path.toString());
+            }    
+        }
+        catch(err) {
+            error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
+            console.log(`Failed to add custom artwork: ${err}`);
+        }
+    }
+    
+    function cancelUpdate() {
+        setNewImage(artistDetails.image);
+        closeEdit();
+    }
+
+    if(isOpen) {
+        return(
+            <div className="edit-playlist-container artist">
+                <h2>Update Artist Image</h2>
+                <div className="close" onClick={closeEdit}> <img src={CloseIcon} alt="" /></div>
+
+                <div className="details">
+                    <div onClick={addCustomArtistArtwork} className="image-upload">
+                        <ImageWithFallBack image={newImage} alt={"upload new image"} image_type={"album"}/>
+                    </div>
+                </div>
+
+                <span className="buttons">
+                    <span> <button className="white" onClick={() => {updateArtist(newImage);}}>Update</button> </span>
+
+                    <span> <button className="red" onClick={cancelUpdate}>Cancel</button> </span>
+                </span>
+            </div>
+        );
+    }    
 }
 
 

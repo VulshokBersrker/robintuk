@@ -177,7 +177,7 @@ export default function MusicControls() {
             else {
                 // At the end of the queue and shuffle is on, reshuffle the queue
                 if(isShuffle && qPosition + 1 > qLength - 1) {
-                    await invoke("shuffle_queue", {song: songDetails?.id, shuffled: isShuffle});
+                    await invoke("shuffle_queue", {song_id: songDetails?.id, shuffled: isShuffle});
                 }
                 await invoke("player_next_song");
                 currentLineNumberRef.current = 0;

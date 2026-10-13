@@ -382,6 +382,9 @@ input.new-playlist {
   border: 2px solid var(--font-color-three);
   border-radius: var(--border-radius);
 }
+.edit-playlist-container.artist {
+  width: 300px;
+}
 
 .edit-playlist-container h2 {
   position: absolute;

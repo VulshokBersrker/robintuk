@@ -144,7 +144,6 @@ export default function QueueOverviewPage() {
                 await clearQueue();
             }
             else {
-                console.log(index);
                 await invoke('remove_from_queue', {song_id: queue[index].id});
                 await invoke('player_remove_from_queue', {index: index});
 

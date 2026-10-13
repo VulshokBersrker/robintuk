@@ -206,21 +206,25 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
     let mut playlist = db::get_playlist(state.clone(), playlist_id).await.unwrap().songs;
     let q = playlist.clone();
 
-    if shuffled {
-        helper::shuffle(&mut playlist);
-        let _ = player_load_album(state.clone(), app.clone(), playlist.clone(), index).await;
-        update_current_song_played(state.clone(), app.clone());
-        let _ = app.clone().emit("queue-changed", false);
-        let _ = db::create_queue_shuffled(state.clone(), &playlist).await;
-        let _ = db::create_queue(state.clone(), &q).await;
+    if playlist.len() != 0 {
+        if shuffled {
+            helper::shuffle(&mut playlist);
+            let _ = player_load_album(state.clone(), app.clone(), playlist.clone(), index).await;
+            update_current_song_played(state.clone(), app.clone());
+            let _ = app.clone().emit("queue-changed", false);
+            let _ = db::create_queue_shuffled(state.clone(), &playlist).await;
+            let _ = db::create_queue(state.clone(), &q).await;
+        }
+        else {
+            let _ = player_load_album(state.clone(), app.clone(), q.clone(), index).await;
+            update_current_song_played(state.clone(), app.clone());
+            let _ = app.clone().emit("queue-changed", false);
+            let _ = db::create_queue(state.clone(), &q).await;
+        }
     }
     else {
-        let _ = player_load_album(state.clone(), app.clone(), q.clone(), index).await;
-        update_current_song_played(state.clone(), app.clone());
-        let _ = app.clone().emit("queue-changed", false);
-        let _ = db::create_queue(state.clone(), &q).await;
+        return Err("Playlist is empty - cannot play".to_string())
     }
-
 
     if *state.songs_being_added.lock().unwrap() > 0 {
         *state.songs_being_added.lock().unwrap() -= 1;

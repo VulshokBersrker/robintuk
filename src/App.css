@@ -204,8 +204,8 @@
   --music-player-border: linear-gradient(to right, rgb(159, 0, 0), rgb(28, 28, 28)) 1 stretch;
   --slider-color-one: #970505;
   /* Album Overview Colors */
-  --play-icon: brightness(0) saturate(100%) invert(10%) sepia(36%) saturate(7033%) hue-rotate(340deg) brightness(91%) contrast(94%);
-  --play-icon-hover: brightness(0) saturate(100%) invert(12%) sepia(93%) saturate(3421%) hue-rotate(342deg) brightness(83%) contrast(89%);
+  --play-icon: brightness(0) saturate(100%) invert(16%) sepia(67%) saturate(7497%) hue-rotate(8deg) brightness(86%) contrast(125%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(19%) sepia(100%) saturate(3421%) hue-rotate(8deg) brightness(100%) contrast(100%);
   --arrow-icon: brightness(0) saturate(100%) invert(15%) sepia(99%) saturate(2579%) hue-rotate(344deg) brightness(84%) contrast(86%);
   /* Checkbox Colors */
   --checkbox-checked-color: rgb(214, 42, 42);
@@ -1577,14 +1577,7 @@ img.search-icon:hover {
 
 @media (min-width: 641px) {
 
-  #root:has(.music-control-container) {
-    .nav-scrollable {
-      height: calc(100vh - 26.4rem);
-    }
-    .empty-space {
-      height: 110px;
-    }
-  }
+ 
 
   .scrollbar-settings-content .empty-space {
     height: 7rem !important;
@@ -1958,8 +1951,8 @@ img.search-icon:hover {
     .songs-main .empty-space {
       height: 250px;
     }
-    .playlist-main .empty-space {
-      height: 180px;
+    .playlist-main {
+      padding-bottom: 120px;
     }
     .album-details-main .empty-space {
       height: 180px;
@@ -1976,8 +1969,8 @@ img.search-icon:hover {
     .songs-main .empty-space {
       height: 250px;
     }
-    .playlist-main .empty-space {
-      height: 180px;
+    .playlist-main {
+      padding-bottom: 120px;
     }
     .album-details-main .empty-space {
       height: 180px;
@@ -2014,8 +2007,8 @@ img.search-icon:hover {
     .songs-main .empty-space {
       height: 250px;
     }
-    .playlist-main .empty-space {
-      height: 220px;
+    .playlist-main {
+      padding-bottom: 80px;
     }
   }  
 }
@@ -2025,8 +2018,8 @@ img.search-icon:hover {
     .empty-space {
       height: 240px;
     }
-    .playlist-main .empty-space {
-      height: 240px !important;
+    .playlist-main {
+      padding-bottom: 120px;
     }
     .albums-main .empty-space,
     .artists-main .empty-space {
@@ -2048,8 +2041,8 @@ img.search-icon:hover {
     .empty-space {
       height: 15.5rem;
     }
-    .playlist-main .empty-space {
-      height: 120px
+    .playlist-main {
+      padding-bottom: 120px;
     }
     .albums-main .empty-space,
     .artists-main .empty-space {

@@ -27,7 +27,7 @@ export default function Home() {
     const [songs, setSongs] = useState<Songs[]>([]);
     const [playHistory, setPlayHistory] = useState<PlayHistory[]>([]);
 
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "", album: -1, artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0 });
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "", album: -1, artist: -1, playlist: 0, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
     // Playlist Values
@@ -98,7 +98,6 @@ export default function Home() {
     async function getHistory() {
         try{
             const list = await invoke<PlayHistory[]>('get_play_history', { limit: 25 } );
-            console.log(list)
             setPlayHistory(list);
         }
         catch(e) {
@@ -127,7 +126,7 @@ export default function Home() {
         navigate("/playlists/overview", {state: {name: name}});
     }
 
-    function handleContextMenu(e: any, album: number, artist: string, playlist: number, index: number, type: string) {
+    function handleContextMenu(e: any, album: number, artist: number, playlist: number, index: number, type: string) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, context_type: type, album: album, artist: artist, playlist: playlist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -147,7 +146,7 @@ export default function Home() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "", album: -1, artist: "", playlist: 0, index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, context_type: "", album: -1, artist: -1, playlist: 0, index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
@@ -219,7 +218,7 @@ export default function Home() {
                                     <div className="album-image-container"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, albums[i].id, albums[i].album_artist, 0, i, "album");
+                                            handleContextMenu(e, albums[i].id, albums[i].album_artist_id, 0, i, "album");
                                         }}
                                     >
                                         <div className="play-album" onClick={() => playAlbum(entry.id, false)}>
@@ -254,7 +253,7 @@ export default function Home() {
                                     key={`song-${i}`} className="song grid-10"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
-                                        handleContextMenu(e, songs[i].album_id, songs[i].album_artist, 0, i, "song");
+                                        handleContextMenu(e, songs[i].album_id, songs[i].album_artist_id, 0, i, "song");
                                     }}
                                 >
                                     <span className="section-2 d-flex position-relative" onClick={() => playSong(i)}>
@@ -286,7 +285,7 @@ export default function Home() {
                                         className="album-link playlist"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, -1, "", item.id, i, "playlist");
+                                            handleContextMenu(e, -1, -1, item.id, i, "playlist");
                                         }}
                                     >
                                         <div className="album-image-container ">
@@ -363,7 +362,7 @@ type Props = {
     isToggled: boolean,
     context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
     album: number,
-    artist: string,
+    artist: number,
     index: number,
     playAlbum: (id: number, shuffled: boolean) => void,
     playSong: (index: number, shuffled: boolean) => void,
@@ -396,7 +395,7 @@ function CustomContextMenu({
         navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
-        navigate("/artists/overview", {state: {name: artist}});
+        navigate("/artists/overview", {state: {id: artist}});
     }
     function NavigateToPlaylist() {
         navigate("/playlists/overview", {state: {name: playlist}});
@@ -501,7 +500,7 @@ function CustomContextMenu({
                         </span>
                     </li>
                 }
-                {(context_type !== "artist" && context_type !== "playlist") && artist !== "" && 
+                {(context_type !== "artist" && context_type !== "playlist") && artist !== -1 && 
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <span className="context-row">
                             <img src={ArtistIcon} /> &nbsp; Show Artist

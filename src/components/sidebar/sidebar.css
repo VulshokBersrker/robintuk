@@ -134,10 +134,6 @@ body[data-theme="tau-ceti"] {
 }
 
 @media (min-width: 641px) {
-  .navbar-menu-toggle {
-    display: visible;
-  }
-
   .nav-scrollable {
     /* Never collapse the sidebar for wide screens */
     display: grid;
@@ -145,8 +141,18 @@ body[data-theme="tau-ceti"] {
     /* Allow sidebar to scroll for tall menus */
     height: calc(100vh - 18rem);
     overflow-y: auto;
+    
   }
 
+   #root:has(.music-control-container) {
+    .nav-scrollable {
+      height: calc(100vh - 26.4rem);
+      margin-bottom: 100px;
+    }
+    .empty-space {
+      height: 110px;
+    }
+  }
 }
 
 
