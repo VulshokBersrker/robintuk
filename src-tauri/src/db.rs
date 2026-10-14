@@ -439,8 +439,7 @@ pub async fn update_song(entry: SongTableUpload, pool: &Pool<Sqlite> ) -> Result
     let res: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("UPDATE songs
         SET name = ?1, cover = ?2, release = ?3, track = ?4, album = ?5, artist = ?6, genre = ?7,
         album_artist = ?8, disc_number = ?9, duration = ?10, song_section = ?11, keep = ?12
-        WHERE path = ?13
-        ")
+        WHERE path = ?13")
         .bind(&entry.name)
         .bind(&entry.cover)
         .bind(&entry.release)
@@ -624,8 +623,8 @@ pub async fn update_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &O
             return Ok(Some(album_id));
         }
         else {
-            println!("Error - Album doesn't exist: {:?} - {:?}", name, artist);
-            Err("Error - Album doesn't exist".to_string())
+            let res = add_album(pool, name, artist, genre, cover).await;
+            return Ok(res.unwrap());
         }
     }
     else {
@@ -659,8 +658,8 @@ pub async fn update_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &O
             return Ok(Some(album_id));
         }
         else {
-            println!("Error - Album doesn't exist: {:?} - {:?}", name, artist);
-            Err("Error - Album doesn't exist".to_string())
+            let res = add_album(pool, name, artist, genre, cover).await;
+            return Ok(res.unwrap());
         }
     }
 }
