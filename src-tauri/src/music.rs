@@ -291,19 +291,21 @@ impl MusicPlayer {
                     },
                     Err(e) => {
                         log::error!("Load Song - Error decoding Audio File {:?} - {:?}", &e, &path);
-                        eprintln!("Error decoding audio file: {:?} - {:?}", &e, &path);
+                        println!("Error decoding audio file: {:?} - {:?}", &e, &path);
                         return Err("Error decoding audio file".to_string());
                     }
                 };
             }
             // If there is an error reading in the file (ex. File has been moved an doesn't exist in that location)
             else {
+                println!("file is not okay - error");
                 log::error!("Load Song - {:?}", file.unwrap_err());
                 return Err("Song does not exist".to_string())
             }
         }
         else if self.queue.len() == 0 {
             log::error!("Load Song - Queue is set to 0. Cannot load a song");
+            println!("Load Song - Queue is set to 0. Cannot load a song");
             return Err("Load Song - Queue is set to 0. Cannot load a song".to_string());
         }
         

@@ -56,15 +56,13 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 - [x] Drag and Drop playlist order
 - [x] Gapless playback
 
-## Stretch Features
+## Possible Future Features
 
 - [ ] Equalizer
 - [ ] Linux support
-- [ ] Get artist data from online service for artist pages? (No great options once you have more than 100 songs)
 
 ## Known Issues
 
-- [ ] Cannot update playlist song order with new edit method
 - [ ] Small chance of an anti-virus false positive when importing playlists
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)

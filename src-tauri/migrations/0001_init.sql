@@ -110,5 +110,4 @@ CREATE TABLE IF NOT EXISTS genres (
 INSERT OR IGNORE INTO settings (id, theme) VALUES (1, "red");
 
 -- Indexes can increase query speed, but increase DB file size
-CREATE INDEX IF NOT EXISTS idx_song_artist ON songs(album_artist);
 CREATE INDEX IF NOT EXISTS idx_song_name ON songs(name);

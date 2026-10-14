@@ -160,10 +160,13 @@ pub fn player_load_song(state: State<AppState, '_>, index: usize) -> Result<Resu
 }
 
 #[tauri::command]
-pub fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, String> {
-    let current_song = state.player.lock().unwrap().get_current_song();    
+pub async fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, String> {
+    let current_song: Result<SongTable, bool> = state.player.lock().unwrap().get_current_song();    
     if current_song.is_ok() {
-        Ok(current_song.unwrap())
+        let song_id: i64 = current_song.unwrap().id;
+
+        let res: Result<SongTable, String> = db::get_song(state.clone(), song_id).await;
+        Ok(res.unwrap())
     }
     else {
         log::error!("Player Get Current Song - Error getting current song");
@@ -768,44 +771,42 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
         
         // --------------------------------------------- Playlist Covers
         println!("...Getting playlist covers");
-        let playlist_covers_res: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT image as cover FROM playlists WHERE image IS NOT NULL")
-            .fetch_all(&state.pool)
-            .await.unwrap();
+        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/playlist_covers").into_iter().filter_map(|e| e.ok()) {
+            if entry.metadata().unwrap().is_file() {
+                let item = entry.path().display().to_string();
+                let path = Path::new(&item);
+                let name = path.strip_prefix(prefix).unwrap();
+                let path_as_string = name.to_str().map(str::to_owned).unwrap();
 
-        for entry in playlist_covers_res {
-            let path = Path::new(&entry.cover);
-            let name = path.strip_prefix(prefix).unwrap();
-            let path_as_string = name.to_str().map(str::to_owned).unwrap();
-
-            let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
-            if zip_res.is_ok() {
-                let f = File::open(path);
-                if f.is_ok() {
-                    f.unwrap().read_to_end(&mut buffer).unwrap();
-                    zip.write_all(&buffer).unwrap();
-                    buffer.clear();
+                let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
+                if zip_res.is_ok() {
+                    let f = File::open(path);
+                    if f.is_ok() {
+                        f.unwrap().read_to_end(&mut buffer).unwrap();
+                        zip.write_all(&buffer).unwrap();
+                        buffer.clear();
+                    }
                 }
             }
         }
         
         // --------------------------------------------- Artist Covers
         println!("...Getting artist covers");
-        let artist_covers_res: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM album_artists WHERE cover IS NOT NULL")
-            .fetch_all(&state.pool)
-            .await.unwrap();
-
-        for entry in artist_covers_res {
-            let path = Path::new(&entry.cover);
-            let name = path.strip_prefix(prefix).unwrap();
-            let path_as_string = name.to_str().map(str::to_owned).unwrap();
-
-            let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
-            if zip_res.is_ok() {
-                let f = File::open(path);
-                if f.is_ok() {
-                    f.unwrap().read_to_end(&mut buffer).unwrap();
-                    zip.write_all(&buffer).unwrap();
-                    buffer.clear();
+        for entry in jwalk::WalkDir::new(dirs::home_dir().unwrap().to_str().unwrap().to_string() + "/.config/robintuk_player/artist_covers").into_iter().filter_map(|e| e.ok()) {
+            if entry.metadata().unwrap().is_file() {
+                let item = entry.path().display().to_string();
+                let path = Path::new(&item);
+                let name = path.strip_prefix(prefix).unwrap();
+                let path_as_string = name.to_str().map(str::to_owned).unwrap();
+                
+                let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
+                if zip_res.is_ok() {
+                    let f = File::open(path);
+                    if f.is_ok() {
+                        f.unwrap().read_to_end(&mut buffer).unwrap();
+                        zip.write_all(&buffer).unwrap();
+                        buffer.clear();
+                    }
                 }
             }
         }

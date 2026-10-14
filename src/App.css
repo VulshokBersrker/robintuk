@@ -54,7 +54,7 @@
   --current-song-one: #04134f;
   --current-song-two: #2841a400;
   --highlight-color: #f4f4f421;
-  --highlight-hover: #140e6d;
+  --highlight-hover: #150c99;
   /* Hr Colors */
   --hr-gradient-one: #212a4a;
   --hr-gradient-two: #1c1e55;
@@ -326,7 +326,33 @@ body[data-theme="tau-ceti"] {
     filter: brightness(0%);
     transition: 0.1s ease-in-out;
   }
+
+  select.themes option::before {
+    outline: 2px solid rgba(96, 95, 95, 0.354);
+  }
+
+  option:hover, option:active, option:focus {
+    color: #000;
+    background-color: var(--highlight-hover) !important;
+  }
 } 
+
+body[data-theme="ares"] {
+
+  .nav-item.active {
+    background-color: var(--highlight-hover);
+  }
+  
+  select.themes option::before {
+    outline: 2px solid rgba(96, 95, 95, 0.354);
+  }
+
+  option:hover, option:active, option:focus {
+    color: #ece7e7;
+    background-color: var(--highlight-hover) !important;
+  }
+  
+}
 
 .border {
   border: 1px solid #fff;
@@ -699,13 +725,14 @@ img.off {
   filter: brightness(0) saturate(100%) invert(36%) sepia(94%) saturate(0%) hue-rotate(210deg) brightness(95%) contrast(94%);
 }
 
+
 /* Padding for when the sidebar is collapsed */
 .content {
   position: relative;
   transition: 0s ease-in-out;
-  height: calc(100vh - 30px);
+  height: calc(100vh - 32px);
   width: calc(100vw - 156px);
-  margin-top: 1.8rem;
+  margin-top: 2rem;
   margin-left: 9.3rem;
   z-index: 99;
 }
@@ -725,7 +752,7 @@ img.off {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 700;
+  z-index: 900;
 }
 .titlebar > .controls {
   display: flex;
@@ -1100,6 +1127,16 @@ input[type="checkbox"]:hover {
 
 .checkbox-container input[type="checkbox"] {
   background-color: rgba(0, 0, 0, 0.7);
+}
+
+.bg-screen {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  z-index: 500;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.749);
 }
 
 /* -------------------------- Settings Page -------------------------- */
@@ -1576,9 +1613,6 @@ img.search-icon:hover {
 
 
 @media (min-width: 641px) {
-
- 
-
   .scrollbar-settings-content .empty-space {
     height: 7rem !important;
   }

@@ -53,7 +53,7 @@ pub fn run() -> Result<(), String> {
         let mut device: MixerDeviceSink = DeviceSinkBuilder::from_default_device()
             .and_then(|b| {
                 b
-                .with_buffer_size(rodio::cpal::BufferSize::Fixed(1024))
+                // .with_buffer_size(rodio::cpal::BufferSize::Fixed(1024))
                 .open_stream()
             })
             .or_else(|_| DeviceSinkBuilder::open_default_sink())
@@ -368,9 +368,8 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
 
             let last_modified: DateTime<Utc> = fs::metadata(&received).unwrap().modified().unwrap().into();
 
-            let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
-
             if last_res.is_ok() {
+                let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
                 let last_scan = last_res.unwrap().last_scan_date.parse::<i64>();
 
                 if last_scan.is_ok() {
@@ -418,7 +417,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                     }
                 
                 }
-                // Error - Do a full scane
+                // Error - Do a full scan
                 else {
                     let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
                     if does_exist {
@@ -508,6 +507,9 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
 
     // Remove all songs that are no longer in the directories
     let _ = db::remove_songs(&state.pool).await.unwrap();
+    let _ = db::remove_album(&state.pool).await.unwrap();
+    let _ = db::remove_album_artist(&state.pool).await.unwrap();
+    let _ = db::remove_genre(&state.pool).await.unwrap();
 
     app.emit("scan-finished", GetScanStatus { res: false}).unwrap();
 

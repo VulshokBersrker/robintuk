@@ -1,5 +1,5 @@
 // Core Libraries
-import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
+import { DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { open } from '@tauri-apps/plugin-dialog';
@@ -24,6 +24,7 @@ import EditIcon from '../../images/pen-to-square-regular-full.svg';
 import AlbumIcon from '../../images/vinyl-record-svgrepo-com.svg';
 import PlayOutlineIcon from '../../images/play-icon-outline.svg';
 import DeleteIcon from '../../images/trash-can-regular-full.svg';
+import DragIcon from '../../images/grip-vertical-solid-full.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import ArtistIcon from '../../images/user-regular-full.svg';
 import PlayIcon from '../../images/play-solid-full.svg';
@@ -410,11 +411,11 @@ export default function PlaylistOverviewPage() {
 
         const newOrder = reorder(playlist, result.source.index, result.destination.index);
         // Save the song id from before the reorder for the backend
-        const movedSong = playlist[result.source.index].path;
+        const movedSong = playlist[result.source.index].id;
         setPlaylist(newOrder);
 
         try {
-            await invoke("reorder_playlist", {playlist_id: location.state.name, song_path: movedSong, start: result.source.index, end: result.destination.index});
+            await invoke("reorder_playlist", {playlist_id: location.state.name, song_id: movedSong, start: result.source.index, end: result.destination.index});
         }
         catch(e) {
             console.log(e);
@@ -461,10 +462,9 @@ export default function PlaylistOverviewPage() {
     function Item({ provided, item, isDragging, itemIndex }: any) {
         return (
             <div
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-                ref={provided.innerRef}
                 style={provided.draggableProps.style}
+                ref={provided.innerRef}                
+                {...provided.draggableProps}
                 className={`item ${isDragging ? "is-dragging" : ""}`}
             >
                 <div
@@ -486,10 +486,13 @@ export default function PlaylistOverviewPage() {
                         <img src={PlayOutlineIcon} onClick={() => playPlaylist(itemIndex, false)} />
                     </span>
                     <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={item.cover} alt="" image_type="playlist-song" /></span>
-                    <span className="section-9 font-0 name">{item.name}</span>
+                    <span className="section-8 font-0 name">{item.name}</span>
                     <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(item.album)}>{item.album}</span>
                     <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(item.album_artist)}>{item.album_artist}</span>
                     <span className="section-1 header-font duration">{new Date(item.duration * 1000).toISOString().slice(14, 19)}</span>
+                    <span className="section-1 drag-icon">
+                        <img src={DragIcon} {...provided.dragHandleProps}  />
+                    </span>
                 </div>
                 <hr />
             </div>
@@ -588,14 +591,15 @@ export default function PlaylistOverviewPage() {
                                 </span>
                             </span>
                             <span className="section-1 vertical-centered"></span>
-                            <span className="section-9 vertical-centered font-0 details">Name</span>
+                            <span className="section-8 vertical-centered font-0 details">Name</span>
                             <span className="section-4 vertical-centered font-0 details">Album</span>
                             <span className="section-4 vertical-centered font-0 details">Album Artist</span>
                             <span className="section-1 vertical-centered details">Length</span>
+                            <span className="section-1 vertical-centered details"></span>
                         </div>
                         <hr />
 
-                        {!isEdit &&
+                        {/* {!isEdit &&
                             <Virtuoso 
                                 totalCount={playlist.length}
                                 itemContent={(index) => {
@@ -633,10 +637,10 @@ export default function PlaylistOverviewPage() {
                                 }}
                                 customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
                             />
-                        }
+                        } */}
 
                         {/* You can only Drag and Drop when you are editing a playlist */}
-                        {isEdit &&
+                        
                             <DragDropContext onDragEnd={(e) => onDragEnd(e)}>
                                 <Droppable
                                     droppableId="droppable"
@@ -663,11 +667,11 @@ export default function PlaylistOverviewPage() {
                                             data={playlist}
                                             // totalCount={playlist.length}
                                             itemContent={(index, item) => {
-                                                return (
+                                                return(
                                                     <Draggable
                                                         draggableId={item.path}
                                                         index={index}
-                                                        key={item.path}
+                                                        key={item.id}
                                                     >
                                                         {(provided) => (
                                                             <Item
@@ -685,7 +689,7 @@ export default function PlaylistOverviewPage() {
                                 }}
                                 </Droppable>
                             </DragDropContext>
-                        }
+                        
                         
                     </div>
 
@@ -828,33 +832,36 @@ function EditPlaylist({isOpen, playlistDetails, updatePlaylist, closeEdit}: edit
 
     if(isOpen) {
         return(
-            <div className="edit-playlist-container">
-                <h2>Update Playlist Details</h2>
-                <div className="close" onClick={closeEdit}> <img src={CloseIcon} alt="" /></div>
+            <>
+                <div className="edit-playlist-container">
+                    <h2>Update Playlist Details</h2>
+                    <div className="close" onClick={closeEdit}> <img src={CloseIcon} alt="" /></div>
 
-                <div className="details">
+                    <div className="details">
 
-                    <div onClick={addCustomPlaylistArtwork} className="image-upload">
-                        <ImageWithFallBack image={newPlaylistImage} alt={"upload new image"} image_type={"album"}/>
+                        <div onClick={addCustomPlaylistArtwork} className="image-upload">
+                            <ImageWithFallBack image={newPlaylistImage} alt={"upload new image"} image_type={"album"}/>
+                        </div>
+
+                        <input
+                            id="current-playlist-name"
+                            type="text"
+                            className="header-font font-3"
+                            autoComplete='false'
+                            placeholder={newPlaylistName}
+                            value={newPlaylistName}
+                            onChange={(e) => updatePlaylistName(e.target.value) }
+                        />
                     </div>
 
-                    <input
-                        id="current-playlist-name"
-                        type="text"
-                        className="header-font font-3"
-                        autoComplete='false'
-                        placeholder={newPlaylistName}
-                        value={newPlaylistName}
-                        onChange={(e) => updatePlaylistName(e.target.value) }
-                    />
+                    <span className="buttons">
+                        <span> <button className="white" onClick={() => {updatePlaylist(newPlaylistName, newPlaylistImage);}}>Update</button> </span>
+
+                        <span> <button className="red" onClick={cancelUpdate}>Cancel</button> </span>
+                    </span>
                 </div>
-
-                <span className="buttons">
-                    <span> <button className="white" onClick={() => {updatePlaylist(newPlaylistName, newPlaylistImage);}}>Update</button> </span>
-
-                    <span> <button className="red" onClick={cancelUpdate}>Cancel</button> </span>
-                </span>
-            </div>
+                <div className="bg-screen" />
+            </>
         );
     }    
 }

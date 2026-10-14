@@ -73,6 +73,15 @@
   transition: 0.2s ease-in-out;
   position: relative;
 }
+
+.item.is-dragging .song-row {
+ background-color: var(--gradient-two);
+  border: 1px solid var(--highlight-hover);
+}
+.item.is-dragging hr {
+ display: none;
+}
+
 .song-row.current-song {
   color: var(--font-color-one) !important;
   background: linear-gradient(90deg, var(--current-song-one) 0%, var(--current-song-two) 100%);
@@ -372,7 +381,7 @@ input.new-playlist {
 }
 
 .edit-playlist-container {
-  z-index: 100;
+  z-index: 600;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -421,6 +430,17 @@ input.new-playlist {
   justify-content: center;
   padding-bottom: 20px;
 }
+
+.drag-icon {
+  display: flex;
+  position: absolute;
+  right: 10px;
+}
+.drag-icon img {
+  opacity: 0.5;
+  cursor: grab;
+}
+
 
 
 
