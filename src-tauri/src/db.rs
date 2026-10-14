@@ -227,11 +227,11 @@ pub async fn set_keep(pool: &Pool<Sqlite>) -> Result<(), String> {
     Ok(())
 }
 
-pub async fn set_keep_single(pool: &Pool<Sqlite>, boolean: bool, path: &String) -> Result<(), String> {
+pub async fn set_keep_single(pool: &Pool<Sqlite>, boolean: bool, song: SongTableBackup) -> Result<(), String> {
 
     let _ = sqlx::query("UPDATE songs SET keep = ?1 WHERE path = ?2")
         .bind(boolean)
-        .bind(&path)
+        .bind(&song.path)
         .execute(pool)
         .await;
 
@@ -337,6 +337,23 @@ pub async fn get_song(state: State<AppState, '_>, song_id: i64) -> Result<SongTa
         Err(format!("Error Getting Song - {:?}", err))
     }
 
+}
+
+pub async fn get_song_raw(pool: &Pool<Sqlite>, song_path: String) -> Result<SongTableBackup, String> {
+
+    let temp = sqlx::query_as::<_, SongTableBackup>("SELECT *
+        FROM songs WHERE path = ?")
+        .bind(&song_path)
+        .fetch_one(pool)
+        .await;
+
+    if temp.is_ok() {
+        Ok(temp.unwrap())
+    }
+    else {
+        let err = temp.unwrap_err();
+        Err(format!("Error Getting Song - {:?}", err))
+    }
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -526,24 +543,14 @@ pub async fn add_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &Opti
             let first_char: char = char_array[0].to_ascii_uppercase();
             let section = helper::get_section_marker(first_char);
 
-            let rs: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT INTO albums (name, cover, album_artist, album_section, genre, keep) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
+            let rs: Result<SqliteQueryResult, sqlx::Error> = sqlx::query("INSERT INTO albums (name, cover, album_artist, album_section, genre) VALUES (?1, ?2, ?3, ?4, ?5)")
                 .bind(name)
                 .bind(cover)
                 .bind(artist)
                 .bind(section)
                 .bind(genre)
-                .bind(true)
                 .execute(pool)
                 .await;
-
-            // println!("-------------\n{:?} - {:?} -- {:?}", name, artist, &rs);
-
-            // let res: Result<(i64,), sqlx::Error> = sqlx::query_as("SELECT id FROM albums WHERE name=?1 AND album_artist IS NULL")
-            //     .bind(name)
-            //     .fetch_one(pool)
-            //     .await;
-
-            // println!("{:?}\n-----------------", &res);
 
             return Ok(Some(rs.unwrap().last_insert_rowid()));
         }
@@ -564,25 +571,14 @@ pub async fn add_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &Opti
             let first_char: char = char_array[0].to_ascii_uppercase();
             let section = helper::get_section_marker(first_char);
 
-            let rs = sqlx::query("INSERT INTO albums (name, cover, album_artist, album_section, genre, keep) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
+            let rs = sqlx::query("INSERT INTO albums (name, cover, album_artist, album_section, genre, keep) VALUES (?1, ?2, ?3, ?4, ?5)")
                 .bind(name)
                 .bind(cover)
                 .bind(artist)
                 .bind(section)
                 .bind(genre)
-                .bind(true)
                 .execute(pool)
                 .await;
-
-            // println!("-------------\n{:?} - {:?} -- {:?}", name, artist, &rs);
-
-            // let res: Result<(i64,), sqlx::Error> = sqlx::query_as("SELECT id FROM albums WHERE name=?1 AND album_artist = ?2")
-            //     .bind(name)
-            //     .bind(artist)
-            //     .fetch_one(pool)
-            //     .await;
-
-            // println!("{:?}\n-----------------", &res);
 
             return Ok(Some(rs.unwrap().last_insert_rowid()));
         }
@@ -643,14 +639,13 @@ pub async fn update_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &O
             let section = helper::get_section_marker(first_char);
 
             let _ = sqlx::query("UPDATE albums
-                SET name = ?1, cover = ?2, album_artist = ?3, album_section = ?4, genre = ?5, keep = ?6
-                WHERE id = ?7")
+                SET name = ?1, cover = ?2, album_artist = ?3, album_section = ?4, genre = ?5
+                WHERE id = ?6")
                 .bind(name)
                 .bind(cover)
                 .bind(artist)
                 .bind(section)
                 .bind(genre)
-                .bind(true)
                 .bind(album_id)
                 .execute(pool)
                 .await;
@@ -666,7 +661,7 @@ pub async fn update_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &O
 
 pub async fn remove_album(pool: &Pool<Sqlite>) -> Result<(), String> {
     
-    let _ = sqlx::query("DELETE FROM album WHERE keep = false")
+    let _ = sqlx::query("DELETE FROM albums a WHERE NOT EXISTS (SELECT * FROM songs s WHERE s.album = a.id)")
         .execute(pool)
         .await;
     Ok(())
@@ -810,10 +805,9 @@ pub async fn add_album_artist(pool: &Pool<Sqlite>, artist: &Option<String>) -> R
         let first_char: char = char_array[0].to_ascii_uppercase();
         let section = helper::get_section_marker(first_char);
 
-        let rs = sqlx::query("INSERT INTO album_artists (name, artist_section, keep) VALUES (?1, ?2, ?3)")
+        let rs = sqlx::query("INSERT INTO album_artists (name, artist_section) VALUES (?1, ?2)")
             .bind(artist)
             .bind(section)
-            .bind(true)
             .execute(pool)
             .await;
 
@@ -832,19 +826,8 @@ pub async fn update_album_artist(pool: &Pool<Sqlite>, artist: &Option<String>) -
         .await;
 
     if id.is_err() {
-        let ex = artist.clone().unwrap();
-        let char_array: Vec<char> = ex.chars().collect();
-        let first_char: char = char_array[0].to_ascii_uppercase();
-        let section = helper::get_section_marker(first_char);
-
-        let rs = sqlx::query("INSERT INTO album_artists (name, artist_section, keep) VALUES (?1, ?2, ?3)")
-            .bind(artist)
-            .bind(section)
-            .bind(true)
-            .execute(pool)
-            .await;
-
-        return Ok(Some(rs.unwrap().last_insert_rowid()));
+        let res: Option<i64> = add_album_artist(pool, artist).await.unwrap();
+        return Ok(res);
     }
     else {
         let artist_id = id.unwrap().0;
@@ -854,12 +837,9 @@ pub async fn update_album_artist(pool: &Pool<Sqlite>, artist: &Option<String>) -
         let first_char: char = char_array[0].to_ascii_uppercase();
         let section = helper::get_section_marker(first_char);
 
-        let _ = sqlx::query("UPDATE album_artists
-            SET name = ?1, artist_section = ?2, keep = ?3
-            WHERE id = ?4")
+        let _ = sqlx::query("UPDATE album_artists SET name = ?1, artist_section = ?2 WHERE id = ?3")
             .bind(artist)
             .bind(section)
-            .bind(true)
             .bind(artist_id)
             .execute(pool)
             .await;
@@ -871,7 +851,7 @@ pub async fn update_album_artist(pool: &Pool<Sqlite>, artist: &Option<String>) -
 
 pub async fn remove_album_artist(pool: &Pool<Sqlite>) -> Result<(), String> {
     
-    let _ = sqlx::query("DELETE FROM album_artists WHERE keep = false")
+    let _ = sqlx::query("DELETE FROM album_artists art WHERE NOT EXISTS (SELECT * FROM songs s WHERE s.album_artist = art.id)")
         .execute(pool)
         .await;
     Ok(())
@@ -968,10 +948,9 @@ pub async fn add_genre(pool: &Pool<Sqlite>, genre: &Option<String>) -> Result<Op
         let first_char: char = char_array[0].to_ascii_uppercase();
         let section = helper::get_section_marker(first_char);
 
-        let rs = sqlx::query("INSERT INTO genres (name, genre_section, keep) VALUES (?1, ?2, ?3)")
+        let rs = sqlx::query("INSERT INTO genres (name, genre_section) VALUES (?1, ?2)")
             .bind(genre)
             .bind(section)
-            .bind(true)
             .execute(pool)
             .await;
 
@@ -990,19 +969,8 @@ pub async fn update_genre(pool: &Pool<Sqlite>, genre: &Option<String>) -> Result
         .await;
 
     if id.is_err() {
-        let ex = genre.clone().unwrap();
-        let char_array: Vec<char> = ex.chars().collect();
-        let first_char: char = char_array[0].to_ascii_uppercase();
-        let section = helper::get_section_marker(first_char);
-
-        let rs = sqlx::query("INSERT INTO genres (name, genre_section, keep) VALUES (?1, ?2, ?3)")
-            .bind(genre)
-            .bind(section)
-            .bind(true)
-            .execute(pool)
-            .await;
-
-        return Ok(Some(rs.unwrap().last_insert_rowid()));
+        let res = add_genre(pool, genre).await.unwrap();
+        return Ok(res);
     }
     else {
         let genre_id = id.unwrap().0;
@@ -1011,11 +979,9 @@ pub async fn update_genre(pool: &Pool<Sqlite>, genre: &Option<String>) -> Result
         let first_char: char = char_array[0].to_ascii_uppercase();
         let section = helper::get_section_marker(first_char);
 
-        let _ = sqlx::query("UPDATE genres SET
-            name = ?1, genre_section = ?2, keep = ?3 WHERE id = ?4")
+        let _ = sqlx::query("UPDATE genres SET name = ?1, genre_section = ?2 WHERE id = ?3")
             .bind(genre)
             .bind(section)
-            .bind(true)
             .bind(genre_id)
             .execute(pool)
             .await;
@@ -1024,10 +990,9 @@ pub async fn update_genre(pool: &Pool<Sqlite>, genre: &Option<String>) -> Result
     }        
 }
 
-
 pub async fn remove_genre(pool: &Pool<Sqlite>) -> Result<(), String> {
     
-    let _ = sqlx::query("DELETE FROM genres WHERE keep = false")
+    let _ = sqlx::query("DELETE FROM genres g WHERE NOT EXISTS (SELECT * FROM songs s WHERE s.genre = g.id)")
         .execute(pool)
         .await;
     Ok(())

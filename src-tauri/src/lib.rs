@@ -389,17 +389,20 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                                 }
                                 else {
                                     let _ = db::add_song(song_res.unwrap(), &state.pool).await;
-                                    num_added += 1;                    
+                                    num_added += 1;
                                 }
                             }
                             else {
-                                let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
+                                let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata: {:?}", e));
                                 num_error += 1;
                             }
                         }
                         // If the last modified date of the file is before the time of the last scan - Means no info was changed
                         else {
-                            let _ = db::set_keep_single(&state.pool, true, &received).await;
+                            let song_res = db::get_song_raw(&state.pool, received).await;
+                            if song_res.is_ok() {
+                                let _ = db::set_keep_single(&state.pool, true, song_res.unwrap()).await;
+                            }                            
                         }
                     }
                     else {
@@ -452,7 +455,6 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                         }
                     }
                 }
-                
             }
             // There is no last scan date - do a full scan
             else { 

@@ -86,24 +86,21 @@ CREATE TABLE IF NOT EXISTS albums (
     album_artist INTEGER,
     cover TEXT,
     album_section INTEGER,
-    genre INTEGER,
-    keep BOOLEAN
+    genre INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS album_artists (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     cover TEXT,
-    artist_section INTEGER,
-    keep BOOLEAN
+    artist_section INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS genres (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     cover TEXT,
-    genre_section INTEGER,
-    keep BOOLEAN
+    genre_section INTEGER
 );
 
 
