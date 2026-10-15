@@ -15,10 +15,9 @@ import CloseIcon from '../images/x.svg';
 
 type Props = {
     selectionBarType: number,
-    songSelection: Songs[] | string[],
+    songSelection: Songs[] | number[],
     play: () => void,
     addToQueue: () => void,
-    updateNewPlaylistName: (name: string) => void,
     addSelectedToPlaylist: (id: number) => void,
     createSelectedPlaylist: (name: string) => void,
     clearSelection: () => void,

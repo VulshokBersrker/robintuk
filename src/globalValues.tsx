@@ -14,6 +14,7 @@ export interface SongRes {
 }
 
 export interface Songs {
+    id: number,
     name: string,
     path: string,
     cover: string,
@@ -25,10 +26,28 @@ export interface Songs {
     album_artist: string,
     disc_number: number,
     duration: number,
-    song_section: number
+    song_section: number,
+    album_id: number,
+    album_artist_id: number
+}
+
+export interface SongsLimit {
+    name: string,
+    path: string,
+    cover: string,
+    release: string,
+    track: number,
+    album: string,
+    artist: string,
+    genre: string,
+    album_artist: string,
+    disc_number: number,
+    duration: number,
+    album_id: number
 }
 
 export interface SongsFull {
+    id: number,
     name: string,
     path: string,
     cover: string,
@@ -40,7 +59,9 @@ export interface SongsFull {
     album_artist: string,
     disc_number: number,
     duration: number,
-    song_section: number
+    song_section: number,
+    album_id: number,
+    album_artist_id: number
 }
 
 export interface AlbumRes {
@@ -49,10 +70,12 @@ export interface AlbumRes {
 }
 
 export interface AlbumDetails {
-    album: string,
+    id: number,
+    name: string,
     album_artist: string,
     cover: string,
-    album_section: number
+    album_section: number,
+    album_artist_id: number
 }
 
 export interface ArtistRes {
@@ -61,14 +84,17 @@ export interface ArtistRes {
 }
 
 export interface AllArtistResults {
+    id: number,
     album_artist: string,
     name: string,
     artist_section: number,
-    image: string
+    cover: string
 }
 
 export interface AllGenreResults {
-    genre: string,
+    id: number,
+    name: string,
+    cover: string,
     genre_section: number
 }
 
@@ -81,6 +107,7 @@ export interface ArtistDetails {
 }
 
 export interface GenreDetails {
+    id: number,
     num_tracks: number,
     total_duration: number,
     genre: string,
@@ -108,8 +135,8 @@ export interface ContextMenu {
     isToggled: boolean,
     isBeingAdded: boolean,
     context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
-    album: string,
-    artist: string,
+    album: number,
+    artist: number,
     index: number,
     posX: number,
     posY: number,
@@ -167,6 +194,33 @@ export const alphabeticallyOrdered = [
     300
 ];
 
+export function getSectionNumber(first_char: string) {
+    // Special Characters
+    if (first_char === '#' || first_char === '!' || first_char === '[' || first_char === ']' || first_char === '\\' || first_char === '-'
+        || first_char === '_' || first_char === `"` || first_char === `'` || first_char === '&' || first_char === '$'
+        || first_char === '+' || first_char === '%' || first_char === '*' || first_char === '.' || first_char === '(' || first_char === ')'
+        || first_char === '\'' || first_char === '\"' || first_char === '\”'  || first_char === '”' || first_char === '…'
+    )
+    {
+        return 0;
+    }
+    // 0 - 9
+    else if (first_char.charCodeAt(0) >= 48 && first_char.charCodeAt(0) <= 58) {
+        return 1;
+    }
+    //  A - Z
+    else if (first_char.charCodeAt(0) >= 65 && first_char.charCodeAt(0) <= 90) {
+        return first_char.charCodeAt(0);
+    }
+    // Non-ascii values
+    else if(first_char.charCodeAt(0) >= 128) {
+        return 300;
+    }
+    // Non-ascii values
+    else {
+        return 300;
+    }
+}
 
 export function savePosition(p: number) {
     localStorage.setItem('last-played-queue-position', p.toString());
@@ -178,13 +232,13 @@ export function saveSong(q: Songs) {
 
 export async function playSelection(array: Songs[]) {
     try {
-        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-        await invoke("set_shuffle_mode", { mode: false });
-
         // Load the music to be played and saved
         await invoke('play_selection', {songs: array, shuffled: false});
         savePosition(0);
         saveSong(array[0]);
+
+        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+        await invoke("set_shuffle_mode", { mode: false });
     }
     catch(e) {
         error("Play Selection Global (Error) - Error Playing Selection: " + e);
@@ -192,13 +246,13 @@ export async function playSelection(array: Songs[]) {
     }
 }
 
-export async function playAlbum(album_name: string, shuffled: boolean) {
+export async function playAlbum(album_id: number, shuffled: boolean) {
     try {
+        await invoke("play_album", {album_id: album_id, index: 0, shuffled: shuffled});
+        savePosition(0);
+
         localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
         await invoke("set_shuffle_mode", { mode: shuffled });
-
-        await invoke("play_album", {album_name: album_name, index: 0, shuffled: shuffled});
-        savePosition(0);
     }
     catch(e) {
         error("Play Album Global (Error) - Error Playing Album: " + e);
@@ -211,24 +265,23 @@ export async function playSong(song: Songs) {
         // Load the music to be played and saved
         await invoke('play_song', { song: song });
         savePosition(0);
+
+        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+        await invoke("set_shuffle_mode", { mode: false });
     }
     catch(e) {
         error("Play Song Global (Error) - Error Playing Song: " + e);
         console.log(e);
     }
-    finally {
-        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-        await invoke("set_shuffle_mode", { mode: false });
-    }
 }
 
 export async function playPlaylist(playlist_id: number, shuffled: boolean) {
     try {
-        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
-        await invoke("set_shuffle_mode", { mode: shuffled });
-
         await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuffled});
         savePosition(0);
+
+        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+        await invoke("set_shuffle_mode", { mode: shuffled });
     }
     catch(err) {
         error("Play Playlist Global (Error) - Error Playing Playlist: " + err);

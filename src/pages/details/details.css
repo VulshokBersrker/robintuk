@@ -13,7 +13,7 @@
 .album-container {
   width: 98%;
   padding: 0px;
-  margin-top: 0.9rem;
+  padding-top: 0.9rem;
   position: relative;
   display: inline-block;
 }
@@ -39,7 +39,7 @@
 }
 
 .album-details span  {
-  margin-bottom: 0.8rem;
+  padding-bottom: 0.8rem;
 }
 .misc-details {
   color: var(--font-color-two);
@@ -73,6 +73,15 @@
   transition: 0.2s ease-in-out;
   position: relative;
 }
+
+.item.is-dragging .song-row {
+ background-color: var(--gradient-two);
+  border: 1px solid var(--highlight-hover);
+}
+.item.is-dragging hr {
+ display: none;
+}
+
 .song-row.current-song {
   color: var(--font-color-one) !important;
   background: linear-gradient(90deg, var(--current-song-one) 0%, var(--current-song-two) 100%);
@@ -365,6 +374,85 @@ input.new-playlist {
 .playlist .playlist .album-name {
   margin-top: 0.35rem;
   font-size: 1.2rem;
+}
+
+.album-details-main .song-list,
+.queue-main .song-list {
+  padding-bottom: 160px;
+}
+
+.edit-playlist-container {
+  z-index: 600;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+  background-color: var(--gradient-two);
+  border: 2px solid var(--font-color-three);
+  border-radius: var(--border-radius);
+}
+.edit-playlist-container.artist {
+  width: 300px;
+}
+
+.edit-playlist-container h2 {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.edit-playlist-container .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+.edit-playlist-container .close img {
+  height: 30px;
+  width: 30px;
+}
+.edit-playlist-container .buttons {
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+}
+.edit-playlist-container .buttons span {
+  margin-left: 10px;
+}
+
+.edit-playlist-container .details {
+  text-align: center;
+  padding-top: 40px;
+}
+.edit-playlist-container .image-upload {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+}
+
+.drag-icon {
+  display: flex;
+  position: absolute;
+  right: 10px;
+}
+.drag-icon img {
+  opacity: 0.5;
+  cursor: grab;
+}
+
+#root:has(.music-control-container) {
+  .album-details-main .song-list,
+  .queue-main .song-list {
+    padding-bottom: 240px;
+  }
+  .playlist-main .song-list {
+    padding-bottom: 120px;
+  }
+  .lyrics-main .song-list {
+    padding-bottom: 240px;
+  }
 }
 
 /* Very Skinny views */

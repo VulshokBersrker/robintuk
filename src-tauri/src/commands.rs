@@ -1,8 +1,8 @@
 // Imports
 use crate::{
-    AppState, db::{self, create_playlist, get_playlist}, helper::{self},
-    types::{DirsTable, DoesExist, GetArtistList, GetCurrentSong, GetPlaylistList, LrclibLyrics, PlaylistFull, SongTable,
-    ArtistCoversTable, PlaylistTracksTable, PlaylistTable, LyricsTable, SettingsTable, Covers, SongTableUpload}
+    AppState, db::{self, create_playlist, get_playlist}, helper::{self}, types::{AlbumTable, AllArtistResults, AllGenreResults, Covers,
+        DirsTable, DoesExist, GetArtistList, GetCurrentSong, GetPlaylistList, LrclibLyrics, LyricsTable, PlaylistFull, PlaylistTable, 
+        PlaylistTracksTable, SettingsTable, SongTable, SongTableBackup}
 };
 
 // Core Libraries
@@ -16,7 +16,7 @@ use tauri_plugin_log::log::{self, error};
 
 // Misc Libraries
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
-use reqwest::{Client, header::{CONTENT_TYPE, USER_AGENT}};
+use reqwest::{Client, header::{USER_AGENT}};
 use m3u8_rs::{MediaPlaylist, MediaSegment, Playlist};
 
 // -------------------------- Media Player Commands --------------------------
@@ -160,10 +160,13 @@ pub fn player_load_song(state: State<AppState, '_>, index: usize) -> Result<Resu
 }
 
 #[tauri::command]
-pub fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, String> {
-    let current_song = state.player.lock().unwrap().get_current_song();    
+pub async fn player_get_current_song(state: State<AppState, '_>) -> Result<SongTable, String> {
+    let current_song: Result<SongTable, bool> = state.player.lock().unwrap().get_current_song();    
     if current_song.is_ok() {
-        Ok(current_song.unwrap())
+        let song_id: i64 = current_song.unwrap().id;
+
+        let res: Result<SongTable, String> = db::get_song(state.clone(), song_id).await;
+        Ok(res.unwrap())
     }
     else {
         log::error!("Player Get Current Song - Error getting current song");
@@ -182,17 +185,17 @@ pub fn player_get_current_position(state: State<AppState, '_>) -> Result<usize, 
 // ----------------- Play Commands
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn shuffle_queue(state: State<AppState, '_>, song: String, shuffled: bool) -> Result<(), String> {
+pub async fn shuffle_queue(state: State<AppState, '_>, song_id: i64, shuffled: bool) -> Result<(), String> {
     let mut q = db::get_queue(state.clone(), false).await.unwrap();
 
     if shuffled {
         helper::shuffle(&mut q);
-        let index = q.iter().position(|r| r.path == song).unwrap();
+        let index = q.iter().position(|r| r.id == song_id).unwrap();
         let _ = player_update_queue_and_pos(state.clone(), q.clone(), index);
         let _ = db::create_queue_shuffled(state.clone(), &q).await;   
     }
     else {
-        let index = q.iter().position(|r| r.path == song).unwrap();
+        let index = q.iter().position(|r| r.id == song_id).unwrap();
         let _ = player_update_queue_and_pos(state.clone(), q, index);
     }
     Ok(())
@@ -206,21 +209,25 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
     let mut playlist = db::get_playlist(state.clone(), playlist_id).await.unwrap().songs;
     let q = playlist.clone();
 
-    if shuffled {
-        helper::shuffle(&mut playlist);
-        let _ = player_load_album(state.clone(), app.clone(), playlist.clone(), index).await;
-        update_current_song_played(state.clone(), app.clone());
-        let _ = app.clone().emit("queue-changed", false);
-        let _ = db::create_queue_shuffled(state.clone(), &playlist).await;
-        let _ = db::create_queue(state.clone(), &q).await;
+    if playlist.len() != 0 {
+        if shuffled {
+            helper::shuffle(&mut playlist);
+            let _ = player_load_album(state.clone(), app.clone(), playlist.clone(), index).await;
+            update_current_song_played(state.clone(), app.clone());
+            let _ = app.clone().emit("queue-changed", false);
+            let _ = db::create_queue_shuffled(state.clone(), &playlist).await;
+            let _ = db::create_queue(state.clone(), &q).await;
+        }
+        else {
+            let _ = player_load_album(state.clone(), app.clone(), q.clone(), index).await;
+            update_current_song_played(state.clone(), app.clone());
+            let _ = app.clone().emit("queue-changed", false);
+            let _ = db::create_queue(state.clone(), &q).await;
+        }
     }
     else {
-        let _ = player_load_album(state.clone(), app.clone(), q.clone(), index).await;
-        update_current_song_played(state.clone(), app.clone());
-        let _ = app.clone().emit("queue-changed", false);
-        let _ = db::create_queue(state.clone(), &q).await;
+        return Err("Playlist is empty - cannot play".to_string())
     }
-
 
     if *state.songs_being_added.lock().unwrap() > 0 {
         *state.songs_being_added.lock().unwrap() -= 1;
@@ -229,23 +236,17 @@ pub async fn play_playlist(state: State<AppState, '_>, app: tauri::AppHandle, pl
         *state.songs_being_added.lock().unwrap() = 0;
     }
 
-    // let _ = check_for_single_lyrics(state.clone(), app.clone(), playlist[index].path.clone()).await;
-
     Ok(())
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_name: String, index: usize, shuffled: bool) -> Result<bool, String> {
+pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album_id: i32, index: usize, shuffled: bool) -> Result<bool, String> {
 
     *state.songs_being_added.lock().unwrap() += 1;
 
-    let mut album: Vec<SongTable> = sqlx::query_as::<_, SongTable>("SELECT * FROM songs WHERE album=$1 ORDER BY disc_number ASC, track ASC;")
-        .bind(album_name)
-        .fetch_all(&state.pool)
-        .await
-        .unwrap();
+    let mut album = db::get_album(state.clone(), album_id).await.unwrap();
 
-    let q = album.clone();
+    let q: Vec<SongTable> = album.clone();
     let mut checker = true;
 
     if shuffled {
@@ -280,8 +281,6 @@ pub async fn play_album(state: State<AppState, '_>, app: tauri::AppHandle, album
         *state.songs_being_added.lock().unwrap() = 0;
     }
 
-    // let _ = check_for_single_lyrics(state.clone(), app.clone(), album[index].path.clone()).await;
-
     Ok(checker)
 }
 
@@ -294,13 +293,11 @@ pub async fn play_song(state: State<AppState, '_>, app: tauri::AppHandle, song: 
     update_current_song_played(state.clone(), app.clone());
     let _ = db::create_queue(state.clone(), &arr).await;
 
-    // let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
-    
     Ok(())
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, album_artist: String, shuffled: bool) -> Result<(), String> {
+pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, album_artist: i64, shuffled: bool) -> Result<(), String> {
 
     *state.songs_being_added.lock().unwrap() += 1;
     
@@ -327,13 +324,12 @@ pub async fn play_artist(state: State<AppState, '_>, app: tauri::AppHandle, albu
         *state.songs_being_added.lock().unwrap() = 0;
     }
 
-    // let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
     
     Ok(())
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre: String, shuffled: bool) -> Result<(), String> {
+pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre: i64, shuffled: bool) -> Result<(), String> {
 
     *state.songs_being_added.lock().unwrap() += 1;
 
@@ -359,8 +355,6 @@ pub async fn play_genre(state: State<AppState, '_>, app: tauri::AppHandle, genre
     else if *state.songs_being_added.lock().unwrap() == 1 {
         *state.songs_being_added.lock().unwrap() = 0;
     }
-
-    // let _ = check_for_single_lyrics(state.clone(), app.clone(), songs[0].path.clone()).await;
     
     Ok(())
 }
@@ -392,19 +386,14 @@ pub async fn play_selection(state: State<AppState, '_>, app: tauri::AppHandle, s
     else if *state.songs_being_added.lock().unwrap() == 1 {
         *state.songs_being_added.lock().unwrap() = 0;
     }
-
-    // let _ = check_for_single_lyrics(state.clone(), app.clone(), arr[0].path.clone()).await;
     
     Ok(())
 }
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn play_song_in_queue(state: State<AppState, '_>, index: usize) -> Result<(), String> {
-
     state.player.lock().unwrap().jump_to_song(index);
-    
     Ok(())
-
 }
 
 
@@ -545,96 +534,6 @@ pub fn cancel_lyrics_scan(state: State<AppState, '_>,) -> Result<(), String> {
     Ok(())
 }
 
-#[derive(sqlx::FromRow, Clone, serde::Serialize)]
-pub struct SongDataLyrics {
-    pub artist: String,
-    pub album: String,
-    pub name: String,
-    pub path: String,
-    pub duration: u64
-}
-
-// Check is a song has lyrics when it is played
-#[tauri::command(rename_all = "snake_case")]
-pub async fn check_for_single_lyrics(state: State<AppState, '_>, app: tauri::AppHandle, song_id: String) -> Result<(), String> {
-    // println!("Checking if {:?} has lyrics", &song_id);
-    // Get all the songs that do not have lyrics
-    let res = sqlx::query_as::<_, SongDataLyrics>("SELECT artist, album, name, duration, path FROM songs WHERE path NOT IN 
-    (SELECT song_id from lyrics WHERE song_id = ?1) AND path = ?2")
-    .bind(&song_id)
-    .bind(&song_id)
-    .fetch_one(&state.pool).await;
-
-    if res.is_ok() {
-        let song = res.unwrap();
-        // Setup the client
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, "application/x-www-form-urlencoded".parse().unwrap());
-        headers.insert(USER_AGENT, "Robintuk music player".parse().unwrap());
-
-        let url_client = Client::builder().default_headers(headers).build().unwrap();
-        let res = get_remote_lyrics(&url_client, song.name, song.artist, song.album, song.duration).await;
-
-        // If it is a success, add the lyrics to the database
-        if res.is_ok() {
-            let lyrics: LrclibLyrics = res.unwrap();
-            if lyrics.lyrics_id != 0 {
-                // println!("Adding...");
-                let _ = db::add_lyrics(state.clone(), lyrics, song.path).await;
-                let _ = app.emit("update-song", DirsTable{dir_path: song_id});
-            }
-        }
-        else {
-            log::error!("Check for Lyric - Error on fetch response - ${song_id}");
-        }
-    }
-    Ok(())
-}
-
-pub async fn get_remote_lyrics(url_client: &Client, name: String, artist: String, album: String, duration: u64) -> Result<LrclibLyrics, String> {
-    let url = format!("https://lrclib.net/api/get?artist_name={artist}&track_name={name}&album_name={album}&duration={duration}");
-    let first_res = url_client.get(&url).send().await;
-
-    let mut lyrics: LrclibLyrics = LrclibLyrics {
-        ..LrclibLyrics::default()
-    };
-
-    if first_res.is_ok() {
-        let res = first_res.unwrap().text().await;
-        if res.is_ok() {
-            let result = serde_json::from_str::<serde_json::Value>(res.unwrap().as_str()).unwrap();
-            
-            for (key, value) in result.as_object().unwrap() {
-                if key.contains("statusCode") {
-                    // If there is no track found
-                    if value.as_i64().unwrap() == 404 {
-                        log::error!("Get Remote Lyrics - Track Not Found (404) {:?} - {:?} - {:?}", &name, &album, &artist);
-                        return Err("404".to_string())
-                    }
-                }
-                if key.contains("id") {
-                    lyrics.lyrics_id = value.as_i64().unwrap();
-                }
-                if key.contains("plainLyrics") {
-                    lyrics.plain_lyrics = value.to_string();
-                }
-                if key.contains("syncedLyrics") {
-                    lyrics.synced_lyrics = Some(value.to_string());
-                }
-            }
-            Ok(lyrics)
-        }
-        else {
-            let _ = res.inspect_err(|f| log::error!("Get Remote Lyrics - Error getting remote lyrics - {:?}", f) );    
-            Err("Error Getting Remote Lyrics".to_string())
-        }
-    }
-    else {
-        let _ = first_res.inspect_err(|f| log::error!("Get Remote Lyrics - Error getting remote lyrics - {:?}", f) );        
-        Err("Error Getting Remote Lyrics".to_string())
-    }
-
-}
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -674,16 +573,17 @@ pub async fn search_remote_lyrics(name: String, album: String) -> Result<Vec<LRC
             Ok(res.unwrap())
         }
         else {
-            log::error!("Search For Lyrics - Error in Fetch");
-            Err("Search For Lyrics - Error in Fetch".to_string())
+            let err = res.unwrap_err();
+            log::error!("Search Remote Lyrics - {:?}", err);
+            Err(format!("Error 503"))
         }
     }
     else {
         println!("---------------\n{:?}", &first_res);
         
-        let first_test = first_res.unwrap_err().to_string();
+        let first_test = first_res.unwrap_err();
 
-        println!("{:?}", first_test);
+        println!("-> {:?}", &first_test);
 
 
         // log::error!("Search For Lyrics (Error) - {:?}", first_res.unwrap_err().to_string());
@@ -691,10 +591,9 @@ pub async fn search_remote_lyrics(name: String, album: String) -> Result<Vec<LRC
     }
 }
 
-
 // Update Lyrics
 #[tauri::command(rename_all = "snake_case")]
-pub async fn update_remote_lyrics(state: State<AppState, '_>, path: String, plain_lyrics: String, synced_lyrics: String, lyrics_id: i64) -> Result<(), String> {
+pub async fn update_remote_lyrics(state: State<AppState, '_>, song_id: i64, plain_lyrics: String, synced_lyrics: String, lyrics_id: i64) -> Result<(), String> {
 
     let mut lyrics: LrclibLyrics = LrclibLyrics {
         ..LrclibLyrics::default()
@@ -704,19 +603,23 @@ pub async fn update_remote_lyrics(state: State<AppState, '_>, path: String, plai
     lyrics.lyrics_id = lyrics_id;
 
     let res: (bool,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM lyrics WHERE song_id = $1)")
-        .bind(&path)
+        .bind(&song_id)
         .fetch_one(&state.pool)
         .await.unwrap();
 
     if res.0 {
-        let _ = db::update_lyrics(state, lyrics, path).await;
+        let _ = db::update_lyrics(state, lyrics, song_id).await;
         Ok(())
     }
     else {
-        let _ = db::add_lyrics(state, lyrics, path).await;
+        let _ = db::add_lyrics(state, lyrics, song_id).await;
         Ok(())
     }     
 }
+
+
+
+
 
 #[tauri::command]
 pub fn check_for_ongoing_scan(state: State<AppState, '_>) -> bool {
@@ -729,12 +632,18 @@ pub async fn check_for_backup_restore(state: State<AppState, '_>) -> Result<i64,
     Ok(*state.is_back_restore_ongoing.lock().unwrap())
 }
 
+
+
+
+
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Example {
-    songs: Vec<SongTableUpload>,
+    songs: Vec<SongTableBackup>,
+    albums: Vec<AlbumTable>,
+    genres: Vec<AllGenreResults>,
     playlist_songs: Vec<PlaylistTracksTable>,
     playlists: Vec<PlaylistTable>,
-    artist_covers: Vec<ArtistCoversTable>,
+    album_artists: Vec<AllArtistResults>,
     dirs: Vec<DirsTable>,
     lyrics: Vec<LyricsTable>,
     settings: Vec<SettingsTable>
@@ -759,7 +668,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
 
         // Get the Database values
 
-        let song_res: Vec<SongTableUpload> = sqlx::query_as::<_, SongTableUpload>("SELECT * FROM songs")
+        let song_res: Vec<SongTableBackup> = sqlx::query_as::<_, SongTableBackup>("SELECT * FROM songs")
             .fetch_all(&state.pool)
             .await.unwrap();
 
@@ -771,7 +680,15 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
             .fetch_all(&state.pool)
             .await.unwrap();
 
-        let artists_res: Vec<ArtistCoversTable> = sqlx::query_as::<_, ArtistCoversTable>("SELECT * FROM artist_covers")
+        let artists_res: Vec<AllArtistResults> = sqlx::query_as::<_, AllArtistResults>("SELECT * FROM album_artists")
+            .fetch_all(&state.pool)
+            .await.unwrap();
+
+        let album_res: Vec<AlbumTable> = sqlx::query_as::<_, AlbumTable>("SELECT * FROM albums")
+            .fetch_all(&state.pool)
+            .await.unwrap();
+
+        let genre_res: Vec<AllGenreResults> = sqlx::query_as::<_, AllGenreResults>("SELECT * FROM genres")
             .fetch_all(&state.pool)
             .await.unwrap();
 
@@ -792,9 +709,11 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
 
         let example = Example {
             songs: song_res.clone(),
+            albums: album_res,
+            genres: genre_res,
             playlist_songs: playlist_songs_res,
             playlists: playlist_res,
-            artist_covers: artists_res,
+            album_artists: artists_res,
             dirs: dirs_res,
             lyrics: lyrics_res,
             settings: settings_res,
@@ -829,7 +748,7 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
 
         // --------------------------------------------- Album Covers
         println!("...Getting album covers");
-        let covers_res: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT DISTINCT cover FROM songs WHERE cover IS NOT NULL")
+        let covers_res: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM albums WHERE cover IS NOT NULL")
             .fetch_all(&state.pool)
             .await.unwrap();
 
@@ -841,10 +760,12 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
             // println!("adding file {path:?} as {name:?} ...");
             let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
             if zip_res.is_ok() {
-                let mut f = File::open(path).unwrap();
-                f.read_to_end(&mut buffer).unwrap();
-                zip.write_all(&buffer).unwrap();
-                buffer.clear();
+                let f = File::open(path);
+                if f.is_ok() {
+                    f.unwrap().read_to_end(&mut buffer).unwrap();
+                    zip.write_all(&buffer).unwrap();
+                    buffer.clear();
+                }
             }
         }
         
@@ -857,12 +778,15 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
                 let name = path.strip_prefix(prefix).unwrap();
                 let path_as_string = name.to_str().map(str::to_owned).unwrap();
 
-                zip.start_file(path_as_string, SimpleFileOptions::default()).unwrap();
-                let mut f = File::open(path).unwrap();
-
-                f.read_to_end(&mut buffer).unwrap();
-                zip.write_all(&buffer).unwrap();
-                buffer.clear();
+                let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
+                if zip_res.is_ok() {
+                    let f = File::open(path);
+                    if f.is_ok() {
+                        f.unwrap().read_to_end(&mut buffer).unwrap();
+                        zip.write_all(&buffer).unwrap();
+                        buffer.clear();
+                    }
+                }
             }
         }
         
@@ -875,12 +799,15 @@ pub async fn create_backup(state: State<AppState, '_>, app: tauri::AppHandle) ->
                 let name = path.strip_prefix(prefix).unwrap();
                 let path_as_string = name.to_str().map(str::to_owned).unwrap();
                 
-                zip.start_file(path_as_string, SimpleFileOptions::default()).unwrap();
-                let mut f = File::open(path).unwrap();
-
-                f.read_to_end(&mut buffer).unwrap();
-                zip.write_all(&buffer).unwrap();
-                buffer.clear();
+                let zip_res = zip.start_file(path_as_string, SimpleFileOptions::default());
+                if zip_res.is_ok() {
+                    let f = File::open(path);
+                    if f.is_ok() {
+                        f.unwrap().read_to_end(&mut buffer).unwrap();
+                        zip.write_all(&buffer).unwrap();
+                        buffer.clear();
+                    }
+                }
             }
         }
         
@@ -942,7 +869,15 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
                 // First add all the songs
                 println!("...Adding songs");
                 for item in res_two.songs {
-                    let _ = db::add_song(item, &state.clone().pool).await;
+                    let _ = db::add_song_restore(item, &state.clone().pool).await;
+                }
+                println!("...Adding albums");
+                for item in res_two.albums {
+                    let _ = db::add_album_restore(item, &state.clone().pool).await;
+                }
+                println!("...Adding genres");
+                for item in res_two.genres {
+                    let _ = db::add_genre_restore(item, &state.clone().pool).await;
                 }
                 // Then all the playlists
                 println!("...Adding playlists");
@@ -956,8 +891,8 @@ pub async fn use_restore(state: State<AppState, '_>, app: tauri::AppHandle) -> R
                 }
                 // Add custom artist covers
                 println!("...Adding artist covers");
-                for item in res_two.artist_covers {
-                    let _ = db::add_artist_cover_for_restore(state.clone(), item.image, item.artist_name).await;
+                for item in res_two.album_artists {
+                    let _ = db::add_artist_for_restore(item, state.clone()).await;
                 }
                 // Add directory
                 println!("...Adding directories");
@@ -1108,29 +1043,29 @@ pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, 
                 
                     if check {
                         // Add the song to the db
-                        let res: DoesExist = sqlx::query_as::<_, DoesExist>("SELECT EXISTS(SELECT 1 FROM songs WHERE path = $1) AS does_exist")
+                        let res: Result<(i64,), sqlx::Error> = sqlx::query_as("SELECT id from songs WHERE path=$1")
                             .bind(&entry.uri.as_str())
                             .fetch_one(&state.pool)
-                            .await.unwrap();
+                            .await;
                             
-                        if res.does_exist == true {                            
+                        if res.is_ok() {                       
                             let _ = sqlx::query("INSERT INTO playlist_tracks
                                 (playlist_id, track_id, position) 
                                 VALUES (?1, ?2, ?3)")
                                 .bind(&playlist_id.0)
-                                .bind(&entry.uri)
+                                .bind(&res.unwrap().0)
                                 .bind(&i)
                                 .execute(&state.pool).await;
                             i = i + 1;
                             
                         }
                         else {
-                            println!("Error reading song's info");
+                            println!("Import Playlist - Error reading song's info");
                             error!("Import Playlist: Error adding song to playlist");
                         }                        
                     }
                     else {
-                        println!("File does not exist: Not being added to playlist: {:?}", &entry.uri);
+                        // println!("File does not exist: Not being added to playlist: {:?}", &entry.uri);
                         error!("Import Playlist: Files does not exist: {:?}", &entry.uri);
                     }
                 }

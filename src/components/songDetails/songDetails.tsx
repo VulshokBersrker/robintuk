@@ -11,12 +11,12 @@ import ImageWithFallBack from '../imageFallback';
 
 
 type Props = {
-    song_path: String,
+    song_id: number,
     bool: boolean,
-    updateSongDetailsDisplay: (bool: boolean, path: string) => void
+    updateSongDetailsDisplay: (bool: boolean, song_id: number) => void
 }
 
-export default function SongDetailsModal({song_path, bool, updateSongDetailsDisplay}: Props) {
+export default function SongDetailsModal({song_id, bool, updateSongDetailsDisplay}: Props) {
 
     const [songDetails, setSongDetails] = useState<Songs>();
 
@@ -29,10 +29,10 @@ export default function SongDetailsModal({song_path, bool, updateSongDetailsDisp
     useEffect(() => {
         async function getSong() {
             try {
-                const res: Songs = await invoke<Songs>("get_song", { song_path: song_path });
+                const res: Songs = await invoke<Songs>("get_song", { song_id: song_id });
                 setSongDetails(res);
 
-                const lyrics_res: SongLyrics = await invoke("get_lyrics", {song_id: song_path});
+                const lyrics_res: SongLyrics = await invoke("get_lyrics", {song_id: song_id});
                 if(lyrics_res !== undefined) {
                     setHasLyrics(true);
                     setSongLyrics({plain_lyrics: lyrics_res.plain_lyrics, synced_lyrics: lyrics_res.synced_lyrics});
@@ -128,7 +128,7 @@ export default function SongDetailsModal({song_path, bool, updateSongDetailsDisp
                     }
 
                     <div style={{position: "absolute", top: "12px", right: "20px"}}>
-                        <button className="header-font close" onClick={() => updateSongDetailsDisplay(false, "")}>
+                        <button className="header-font close" onClick={() => updateSongDetailsDisplay(false, -1)}>
                             Close
                         </button>
                     </div>

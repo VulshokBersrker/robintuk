@@ -50,25 +50,23 @@ If you'd like to contribute to the project, please let me know in [DISCUSSIONS](
 
 - [ ] Place sink into another thread? to prevent stutters when there is heavy system load
 - [ ] Open with (in file explorer) file associations
-- [ ] Better DPI aware CSS
 - [x] Improve Backup and Restore functions
 - [x] Improve Song Details and Lyrics popup CSS
 - [x] Update Create Playlist order to improve load time of new playlist creation
 - [x] Drag and Drop playlist order
 - [x] Gapless playback
 
-## Stretch Features
+## Possible Future Features
 
 - [ ] Equalizer
 - [ ] Linux support
-- [ ] Get artist data from online service for artist pages? (No great options once you have more than 100 songs)
 
 ## Known Issues
-
 
 - [ ] Small chance of an anti-virus false positive when importing playlists
 - [ ] Some albums with multiple discs are disorganized on view (Due to disorganized metadata)
 - [ ] Songs have hiccups randomly (due to heavy system load from other programs)
+- [x] Albums of the same name are combined on accident
 - [x] Add to Playlist Context Menu not working on Playlist Details
 - [x] Some album artwork is not deleted when songs are removed
 - [x] Some deleted albums are not removed when a new scan is finished

@@ -29,17 +29,19 @@ export default function LRCLIBSearchResults() {
     const [lyricsLoading, setLyricsLoading] = useState<boolean>(true);
     const [lyricsDisplay, setLyricsDisplay] = useState({ bool: false, index: -1, instrumental: false });
 
+    const [resultMessage, setResultMessage] = useState<string>("");
+
     // On first load get the album details
     useEffect(() => {
         getSong();
+        getSongLyrics();
     }, []);
 
     async function getSong() {
         isLoading(true);
-        try {            
-            const res: Songs = await invoke("get_song", {song_path: location.state.name});
+        try {
+            const res: Songs = await invoke("get_song", {song_id: location.state.name});
             setSong(res);
-            getSongLyrics();
             getSongLyricsResults(res.name, res.album);
         }
         catch(e) {
@@ -63,7 +65,7 @@ export default function LRCLIBSearchResults() {
             console.log("Error Getting Song's Lyrics: " + e);
         }
         finally {
-            isLoading(false);
+            // isLoading(false);
         }
     }
 
@@ -77,25 +79,13 @@ export default function LRCLIBSearchResults() {
             }
             else {
                 setLyricsResults([]);
+                setResultMessage("No Results");
             }  
-            
-            // let res2 = await fetch(`https://lrclib.net/api/search?q=${name}`, 
-            //         {
-            //             method: 'GET',
-            //             headers: {
-            //                 "Content-Type": "application/json",
-            //                 "User-Agent": "Robintuk Music Player v1.0.5 (https://github.com/VulshokBersrker/robintuk)"
-            //             }
-            //         }
-            //     )
-            //     .then((result) => {result.json()})
-            //     .then((data) => {return data});
-
-            // console.log(res2);
         }
-        catch(e) {
+        catch(e: any) {
             error("LRCLIB Search Results - Error Getting Song Lyrics: " + e);
             console.log("Error getting song lyrics: " + e);
+            setResultMessage(e);
             setLyricsResults([]);
         }
         finally {
@@ -107,7 +97,7 @@ export default function LRCLIBSearchResults() {
         try {
             resetLyricsDisplay();
             await invoke("update_remote_lyrics", {
-                path: location.state.name,
+                song_id: location.state.name,
                 synced_lyrics: lyricsResults[lyricsDisplay.index].syncedLyrics,
                 plain_lyrics: lyricsResults[lyricsDisplay.index].plainLyrics,
                 lyrics_id: lyricsResults[lyricsDisplay.index].id
@@ -143,7 +133,7 @@ export default function LRCLIBSearchResults() {
     }
     else if(!loading) {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="lyrics-main">
                 <div className="d-flex top-row justify-content-between">
                     <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                 </div>
@@ -160,18 +150,22 @@ export default function LRCLIBSearchResults() {
                             {song!.release && <> {song!.release} &#x2022;</>}
                             {song!.duration && <> {new Date(song!.duration * 1000).toISOString().slice(11, 19)} </>}
                         </span>
+                        
+                        <button 
+                            onClick={() => {getSongLyricsResults(song!.name, song!.album);}} 
+                            className="section-4 header-font font-1"
+                            style={{ marginRight: "15px"}}
+                        >
+                            Search Again
+                        </button>
                         {songLyrics !== undefined && 
                             <button 
                                 onClick={() => {handleLyricsDisplay(-1, false);}} 
-                                className="section-6 header-font font-1"
-                                style={{width: '180px'}}
-                            >Current Lyrics</button>
+                                className="section-4 header-font font-1"
+                            >
+                                Current Lyrics
+                            </button>
                         }
-                        <button 
-                            onClick={() => {getSongLyricsResults(song!.name, song!.album);}} 
-                            className="section-6 header-font font-1"
-                            style={{width: '180px'}}
-                        >Search Again</button>
                     </span>                    
                 </div>
 
@@ -241,10 +235,10 @@ export default function LRCLIBSearchResults() {
 
                     {!lyricsLoading && lyricsResults.length === 0 && 
                         <div className="d-flex justify-content-center header-font font-4">
-                            No Results
+                            {resultMessage.includes("503") && <>LRCLIB is too busy, search again</>}
+                            {!resultMessage.includes("503") && <>No Results</>}
                         </div>
-                    }                 
-                    <div className="empty-space"/>
+                    }
                 </div>
             </SimpleBar>
         );

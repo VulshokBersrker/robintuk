@@ -44,7 +44,7 @@ fn rand() -> u64 {
     RandomState::new().build_hasher().finish()
 }
 
-fn get_section_marker(first_char: char) -> Option<i32> {    
+pub fn get_section_marker(first_char: char) -> Option<i32> {    
     // Special Characters
     if first_char == '#' || first_char == '!' || first_char == '[' || first_char == ']' || first_char == '\\' || first_char == '-'
         || first_char == '_' || first_char == '\"' || first_char == '\'' || first_char == '&' || first_char == '$'
@@ -77,8 +77,6 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
         ..SongTableUpload::default()
     };
 
-    // println!("{:?}", &path);
-
     // Prevents an error where a file might have a bad Timestamp
     let parsing_options = ParseOptions::new().parsing_mode(ParsingMode::BestAttempt);
 
@@ -103,18 +101,18 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
                     if Some(tag.get_string(&ItemKey::TrackTitle).unwrap().to_string()) != None {
                         song_data.name = Some(tag.get_string(&ItemKey::TrackTitle).unwrap().to_string());
 
-                        let char_array: Vec<char> = tag.get_string(&ItemKey::TrackTitle).unwrap().to_string().chars().collect();
-                        let first_char: char = char_array[0].to_ascii_uppercase();
-                        song_data.song_section = get_section_marker(first_char);
+                        // let char_array: Vec<char> = tag.get_string(&ItemKey::TrackTitle).unwrap().to_string().chars().collect();
+                        // let first_char: char = char_array[0].to_ascii_uppercase();
+                        // song_data.song_section = get_section_marker(first_char);
                     }
                 }
                 else {
                     song_data.name = Some(value.to_string());
 
-                    let name: String = value.to_string();
-                    let char_array: Vec<char> = name.chars().collect();
-                    let first_char: char = char_array[0].to_ascii_uppercase();
-                    song_data.song_section = get_section_marker(first_char);
+                    // let name: String = value.to_string();
+                    // let char_array: Vec<char> = name.chars().collect();
+                    // let first_char: char = char_array[0].to_ascii_uppercase();
+                    // song_data.song_section = get_section_marker(first_char);
                 }
             }
             // This song has no title tag - will not be added to the app
@@ -128,24 +126,13 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
                 if Some(value) == None {
                     if Some(tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string()) != None {
                         song_data.album = Some(tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string());
-
-                        let name: String = tag.get_string(&ItemKey::AlbumTitle).unwrap().to_string();
-                        let char_array: Vec<char> = name.chars().collect();
-                        let first_char: char = char_array[0].to_ascii_uppercase();
-                        song_data.album_section = get_section_marker(first_char);
                     }
                     else {
                         song_data.album = None;
-                        song_data.album_section = None;
                     }
                 }
                 else {
                     song_data.album = Some(value.to_string());
-
-                    let name: String = value.to_string();
-                    let char_array: Vec<char> = name.chars().collect();
-                    let first_char: char = char_array[0].to_ascii_uppercase();
-                    song_data.album_section = get_section_marker(first_char);
                 }
             }
 
@@ -302,10 +289,6 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
                     let tt = remove_special_characters(tag.get_string(&ItemKey::AlbumArtist).unwrap().to_string());
                     song_cover_path = format!("{image_dir}{f_name}-{tt}.{ext}");
                 }
-                else if let Some(art) = tag.artist().as_deref()  {
-                    let new_art = remove_special_characters(art.to_string());
-                    song_cover_path = format!("{image_dir}{f_name}-{new_art}.{ext}");
-                }
                 else {
                     song_cover_path = format!("{image_dir}{f_name}.{ext}");
                 }
@@ -313,6 +296,27 @@ pub async fn get_song_data(path: String) -> Result<SongTableUpload, ()> {
 
                 let _ = fs::write(&covers_path, &tag.pictures()[0].data());
                 // Save the cover for the database
+                song_data.cover = Some(song_cover_path);
+            }
+            // Test to see if setting the path anyways would work
+            else {
+                let ext: &str = "jpeg";
+                let f_name: String;
+                if song_data.album == None {
+                    f_name = generate_cover_hash(file_size);
+                }
+                else {
+                    f_name = remove_special_characters(song_data.album.clone().unwrap());
+                }
+
+                let song_cover_path: String;
+                if tag.get_string(&ItemKey::AlbumArtist) != None {
+                    let tt = remove_special_characters(tag.get_string(&ItemKey::AlbumArtist).unwrap().to_string());
+                    song_cover_path = format!("{image_dir}{f_name}-{tt}.{ext}");
+                }
+                else {
+                    song_cover_path = format!("{image_dir}{f_name}.{ext}");
+                }
                 song_data.cover = Some(song_cover_path);
             }
 

@@ -1,5 +1,5 @@
 // Core Libraries
-import {DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
+import { DragDropContext, Draggable, Droppable} from '@hello-pangea/dnd';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { open } from '@tauri-apps/plugin-dialog';
@@ -24,6 +24,7 @@ import EditIcon from '../../images/pen-to-square-regular-full.svg';
 import AlbumIcon from '../../images/vinyl-record-svgrepo-com.svg';
 import PlayOutlineIcon from '../../images/play-icon-outline.svg';
 import DeleteIcon from '../../images/trash-can-regular-full.svg';
+import DragIcon from '../../images/grip-vertical-solid-full.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
 import ArtistIcon from '../../images/user-regular-full.svg';
 import PlayIcon from '../../images/play-solid-full.svg';
@@ -49,7 +50,6 @@ export default function PlaylistOverviewPage() {
     const [playlist, setPlaylist] = useState<Songs[]>([]);
     const [isEdit, setIsEdit] = useState<boolean>(false);
     const [isDelete, setIsDelete] = useState<boolean>(false);
-    const [currentPlaylistName, setCurrentPlaylistName] = useState<string>("");
 
     const [loading, isLoading] = useState<boolean>(true);
     const [playlistDetails, setPlaylistDetails] = useState<PlaylistDetails>({ name: "", total_duration: 0, image: "", num_songs: 0 });
@@ -58,19 +58,19 @@ export default function PlaylistOverviewPage() {
     const [checkBoxNumber, setCheckBoxNumber] = useState<boolean[]>([]);
 
     // Playlist Values
-    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
+    
     const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
     
 
-    const[isCurrent, setIsCurrent] = useState<Songs>({ name: "", path: "", cover: "", release: "", track: 0, album: "",
-        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0
+    const[isCurrent, setIsCurrent] = useState<Songs>({ id: -1,  name: "", path: "", cover: "", release: "", track: 0, album: "",
+        artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0, album_id: -1, album_artist_id: -1
     });
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "playlistsong", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
-    const [displaySong, setDisplaySong] = useState<string>("");
+    const [displaySong, setDisplaySong] = useState<number>(-1);
 
     // On first load get the playlits details
     useEffect(() => {
@@ -112,11 +112,15 @@ export default function PlaylistOverviewPage() {
         setIsEdit(false);
     }, [location.state.name]);
 
-    function navigateToAlbum(album: string) {
-        navigate("/albums/overview", {state: {name: album}});
+    function navigateToAlbum(album: number) {
+        navigate("/albums/overview", {state: {id: album}});
     }
-    function navigateToArtist(artist: string) {
-        navigate("/artists/overview", {state: {name: artist}});
+    function navigateToArtist(artist: number) {
+        navigate("/artists/overview", {state: {id: artist}});
+    }
+
+    function closeEdit() {
+        setIsEdit(false);
     }
 
     // --------------------------- Playlist Functions ---------------------------
@@ -138,7 +142,6 @@ export default function PlaylistOverviewPage() {
                     num_songs: res.songs.length
                 }
             );
-            setCurrentPlaylistName(res.name);
         }
         catch(e) {
             console.log("Error getting playlist: " + e);
@@ -154,7 +157,7 @@ export default function PlaylistOverviewPage() {
     async function deletePlaylist() {
         try {
             isLoading(true);
-            await invoke("delete_playlist", {name: playlistDetails.name});
+            await invoke("delete_playlist", {id: location.state.name});
             await invoke('new_playlist_added');
         }
         catch(e) {
@@ -166,43 +169,23 @@ export default function PlaylistOverviewPage() {
             isLoading(false);
         }
     }
+    function cancelDelete() {
+        setIsDelete(false);
+    }
 
-    async function updatePlaylistName() {
+    async function updatePlaylist(name: string, cover: string) {
         try {
-            invoke("rename_playlist", { old_name: playlistDetails.name, new_name: currentPlaylistName });
+            setPlaylistDetails({...playlistDetails, name: name, image: cover});
+            invoke("rename_playlist", { id: location.state.name, name: name });
+            await invoke("add_playlist_cover", { file_path: cover, playlist_name: playlistDetails.name, playlist_id: location.state.name });
         }
         catch(e) {
-            error("Playlist Overview (Error) - Error Renaming Playlist");
+            error("Playlist Overview (Error) - Error Updating Playlist Details");
             console.log(e)
         }
         finally {
             await invoke('new_playlist_added');
-            setPlaylistDetails({...playlistDetails, name: currentPlaylistName});
             setIsEdit(false);
-        }
-    }
-
-    // Doesn't update image if you change the file of the old uploaded image with a new image (same name and extension but different image)
-    async function addCustomPlaylistArtwork() {
-        let cover_image: string = "";
-        try {
-            if(isEdit) {
-                const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
-                if(file_path !== null) {
-                    cover_image = file_path.toString();
-                    await invoke("add_playlist_cover", { file_path: file_path.toString(), playlist_name: playlistDetails.name, playlist_id: location.state.name });
-                }
-            }            
-        }
-        catch(err) {
-            error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
-            console.log(`Failed to add custom artwork: ${err}`);
-        }
-        finally {
-            if(cover_image !== "") {
-                setPlaylistDetails({ ...playlistDetails, image: cover_image });
-                await invoke('new_playlist_added');
-            }
         }
     }
 
@@ -305,10 +288,6 @@ export default function PlaylistOverviewPage() {
         }
     }
 
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
-    }
-
     async function playSelection() {
         try {
             await invoke('play_selection', {songs: songSelection, shuffled: false});
@@ -359,11 +338,12 @@ export default function PlaylistOverviewPage() {
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            setSongSelection(songSelection.filter(item => item.path !== song.path));
+            setSongSelection(songSelection.filter(item => item.id !== song.id));
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
             setCheckBoxNumber(tempArr);
         }
+        resetContextMenu();
     }
 
     function clearSelection() {
@@ -377,7 +357,7 @@ export default function PlaylistOverviewPage() {
 
     // ------------ Context Menu Functions ------------
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -397,13 +377,13 @@ export default function PlaylistOverviewPage() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, context_type: "playlistsong", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
         setDisplayAddToMenu(false);
     }
 
-    function updateSongDetailsDisplay(bool: boolean, path: string) {
+    function updateSongDetailsDisplay(bool: boolean, id: number) {
         setDisplaySongDetails(bool);
-        setDisplaySong(path)
+        setDisplaySong(id);
         resetContextMenu();
     }
 
@@ -421,7 +401,6 @@ export default function PlaylistOverviewPage() {
         }
     }
 
-
     // ------------ Drag and Drop Functions ------------
     async function onDragEnd(result: any) {
         if(!result.destination) {
@@ -433,11 +412,11 @@ export default function PlaylistOverviewPage() {
 
         const newOrder = reorder(playlist, result.source.index, result.destination.index);
         // Save the song id from before the reorder for the backend
-        const movedSong = playlist[result.source.index].path;
+        const movedSong = playlist[result.source.index].id;
         setPlaylist(newOrder);
 
         try {
-            await invoke("reorder_playlist", {playlist_id: location.state.name, song_path: movedSong, start: result.source.index, end: result.destination.index});
+            await invoke("reorder_playlist", {playlist_id: location.state.name, song_id: movedSong, start: result.source.index, end: result.destination.index});
         }
         catch(e) {
             console.log(e);
@@ -482,19 +461,20 @@ export default function PlaylistOverviewPage() {
     }
 
     function Item({ provided, item, isDragging, itemIndex }: any) {
-        return (
+
+        return(
             <div
-                {...provided.draggableProps}
-                {...provided.dragHandleProps}
-                ref={provided.innerRef}
                 style={provided.draggableProps.style}
+                ref={provided.innerRef}                
+                {...provided.draggableProps}
                 className={`item ${isDragging ? "is-dragging" : ""}`}
+                key={itemIndex}
             >
                 <div
                     className={`grid-20 song-row align-items-center ${item.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
                     onContextMenu={(e) => {
                         e.preventDefault();
-                        handleContextMenu(e, item.album, item.album_artist, item.index);
+                        handleContextMenu(e, item.album_id, item.album_artist_id, itemIndex);
                     }}
                 >
                     <span className="section-1 play">
@@ -509,10 +489,13 @@ export default function PlaylistOverviewPage() {
                         <img src={PlayOutlineIcon} onClick={() => playPlaylist(itemIndex, false)} />
                     </span>
                     <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={item.cover} alt="" image_type="playlist-song" /></span>
-                    <span className="section-9 font-0 name">{item.name}</span>
+                    <span className="section-8 font-0 name">{item.name}</span>
                     <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(item.album)}>{item.album}</span>
                     <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(item.album_artist)}>{item.album_artist}</span>
                     <span className="section-1 header-font duration">{new Date(item.duration * 1000).toISOString().slice(14, 19)}</span>
+                    <span className="section-1 drag-icon">
+                        <img src={DragIcon} {...provided.dragHandleProps}  />
+                    </span>
                 </div>
                 <hr />
             </div>
@@ -532,29 +515,21 @@ export default function PlaylistOverviewPage() {
             <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="playlist-main">
                 <div className="album-container">
 
-                    {displaySongDetails && <SongDetailsModal song_path={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
+                    <Delete isDelete={isDelete} deletePlaylist={deletePlaylist} cancelDelete={cancelDelete}/>
+                    <EditPlaylist
+                        isOpen={isEdit}
+                        playlistDetails={playlistDetails}
+                        updatePlaylist={updatePlaylist} 
+                        closeEdit={closeEdit}
+                    />                    
 
-                    {/* Warning label on deleting a playlist */}
-                    <div className={`selection-popup-container grid-20 header-font warning ${isDelete ? "open" : "closed"}`}>
-                        <div className="section-14" style={{marginLeft: "15px", marginBottom: "0px"}}>Are you sure you want to delete {playlistDetails.name}?</div>
-                        <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
-                            <button className="d-flex align-items-center red" onClick={deletePlaylist}>
-                                Yes
-                            </button>
-                        </div>
+                    {displaySongDetails && <SongDetailsModal song_id={displaySong} bool={displaySongDetails} updateSongDetailsDisplay={updateSongDetailsDisplay} />}
 
-                        <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
-                            <button className="d-flex align-items-center white" onClick={() => setIsDelete(false)}>
-                                No
-                            </button>
-                        </div>
-                    </div>
                     
                     {/* Song Selection Bar */}
                     <SongSelectionBar
                         selectionBarType={1}
                         songSelection={songSelection}
-                        updateNewPlaylistName={updateNewPlaylistName}
                         addSelectedToPlaylist={addSelectedToPlaylist}
                         createSelectedPlaylist={createSelectedPlaylist}
                         clearSelection={clearSelection}
@@ -571,36 +546,10 @@ export default function PlaylistOverviewPage() {
                     </div>
                     {/* Playlist Details */}
                     <div className="album-details d-flex">   
-                        {!isEdit &&
-                            <div>
-                                <ImageWithFallBack image={playlistDetails.image} alt={"playlist image"} image_type={"album"}/>
-                            </div>
-                        }
-                        {isEdit &&
-                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
-                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
-                            </div>
-                        }
-                        
+                        <ImageWithFallBack image={playlistDetails.image} alt={"playlist image"} image_type={"album"}/>
 
                         <span style={{paddingLeft: "10px"}} className="grid-15">
-                            {!isEdit && <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{currentPlaylistName}</div>}
-                            {isEdit &&
-                                <div style={{marginTop: '-5px', marginLeft:'-9px', paddingBottom: "12px"}} className="section-15 d-flex align-items-center">
-                                    <input
-                                        id="current-playlist-name"
-                                        type="text"
-                                        className="header-font font-3"
-                                        style={{width: '300px', height: '40px'}}
-                                        placeholder={currentPlaylistName}
-                                        value={currentPlaylistName}
-                                        onChange={(e) => setCurrentPlaylistName(e.target.value) }
-                                    />
-                                    <span className="" style={{marginBottom: '0px', marginLeft: '6px'}}>
-                                        <button className="white" onClick={updatePlaylistName}>Update</button>
-                                    </span>
-                                </div>
-                            }
+                            <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{playlistDetails.name}</div>
                             <span className="section-15 font-0 misc-details">
                                 {playlistDetails.num_songs && <> {playlistDetails.num_songs} songs &#x2022;</>}
                                 {playlistDetails.total_duration && <> {new Date(playlistDetails.total_duration * 1000).toISOString().slice(11, 19)} total runtime </>}
@@ -617,12 +566,9 @@ export default function PlaylistOverviewPage() {
                                     </button>
                                 </span>
                                 <span><button className="font-1 borderless" disabled={isEdit} onClick={() => playPlaylist(0, true)}><img src={ShuffleIcon} /></button></span>
-                                <span><button className="font-1 borderless" onClick={() => setIsEdit(!isEdit)}><img src={EditIcon} /></button></span>
+                                <span><button className="font-1 borderless" onClick={() => setIsEdit(true)}><img src={EditIcon} /></button></span>
                                 <span>
-                                    <button
-                                        className={`font-1 borderless red ${isEdit ? "" : "display-none"}`}
-                                        onClick={() => {setIsDelete(true)}}
-                                    >
+                                    <button className={`font-1 borderless red`} onClick={() => setIsDelete(true)} >
                                         <img src={DeleteIcon} />
                                     </button>
                                 </span>
@@ -648,105 +594,93 @@ export default function PlaylistOverviewPage() {
                                 </span>
                             </span>
                             <span className="section-1 vertical-centered"></span>
-                            <span className="section-9 vertical-centered font-0 details">Name</span>
+                            <span className="section-8 vertical-centered font-0 details">Name</span>
                             <span className="section-4 vertical-centered font-0 details">Album</span>
                             <span className="section-4 vertical-centered font-0 details">Album Artist</span>
                             <span className="section-1 vertical-centered details">Length</span>
+                            <span className="section-1 vertical-centered details"></span>
                         </div>
                         <hr />
 
-                        {!isEdit &&
-                            <Virtuoso 
-                                totalCount={playlist.length}
-                                itemContent={(index) => {
+                        <DragDropContext onDragEnd={(e) => onDragEnd(e)}>
+                            <Droppable
+                                droppableId="droppable"
+                                mode="virtual"
+                                renderClone={(provided, snapshot, rubric) => {
                                     return(
-                                        <div key={index} >
-                                            <div
-                                                className={`grid-20 song-row align-items-center ${playlist[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
-                                                onContextMenu={(e) => {
-                                                    e.preventDefault();
-                                                    handleContextMenu(e, playlist[index].album, playlist[index].album_artist, index);
-                                                }}
-                                            >
-                                                <span className="section-1 play">
-                                                    <span className="form-control">
-                                                        <input
-                                                            type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                            onClick={(e) => editSelection(playlist[index], e.currentTarget.checked, index)}
-                                                            onChange={() => {}}
-                                                            checked={songSelection.filter(x => {
-                                                                return x.path === playlist[index].path
-                                                            }).length > 0}
-                                                        />
-                                                    </span>
-                                                    <img src={PlayOutlineIcon} onClick={() => playPlaylist(index, false)} />
-                                                </span>
-                                                <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={playlist[index].cover} alt="" image_type="playlist-song" /></span>
-                                                <span className="section-9 font-0 name">{playlist[index].name}</span>
-                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(playlist[index].album)}>{playlist[index].album}</span>
-                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(playlist[index].album_artist)}>{playlist[index].album_artist}</span>
-                                                <span className="section-1 header-font duration">{new Date(playlist[index].duration * 1000).toISOString().slice(14, 19)}</span>
-                                            </div>
-                                            <hr />
-                                        </div>
-                                    );                                
-                                }}
-                                customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                            />
-                        }
-
-                        {/* You can only Drag and Drop when you are editing a playlist */}
-                        {isEdit &&
-                            <DragDropContext onDragEnd={(e) => onDragEnd(e)}>
-                                <Droppable
-                                    droppableId="droppable"
-                                    mode="virtual"
-                                    renderClone={(provided, snapshot, rubric) => {
-                                        return(
-                                            <Item
-                                                provided={provided}
-                                                isDragging={snapshot.isDragging}
-                                                item={playlist[rubric.source.index]}
-                                                itemIndex={rubric.source.index}
-                                            />
-                                        )
-                                    }}
-                                >
-                                {(provided) => {
-                                    const ref = (el: Window | HTMLElement | null) => provided.innerRef(el as HTMLElement);
-                                    
-                                    return (
-                                        <Virtuoso
-                                            components={{ Item: HeightPreservingItem }}
-                                            scrollerRef={ref}
-                                            customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                                            data={playlist}
-                                            // totalCount={playlist.length}
-                                            itemContent={(index, item) => {
-                                                return (
-                                                    <Draggable
-                                                        draggableId={item.path}
-                                                        index={index}
-                                                        key={item.path}
-                                                    >
-                                                        {(provided) => (
-                                                            <Item
-                                                                provided={provided}
-                                                                item={item}
-                                                                isDragging={false}
-                                                                itemIndex={index}
-                                                            />
-                                                        )}
-                                                    </Draggable>
-                                                );
-                                            }}
+                                        <Item
+                                            provided={provided}
+                                            isDragging={snapshot.isDragging}
+                                            item={playlist[rubric.source.index]}
+                                            itemIndex={rubric.source.index}
                                         />
-                                    );
+                                    )
                                 }}
-                                </Droppable>
-                            </DragDropContext>
-                        }
-                        
+                            >
+                            {(provided) => {
+                                const ref = (el: Window | HTMLElement | null) => provided.innerRef(el as HTMLElement);
+                                
+                                return (
+                                    <Virtuoso
+                                        components={{ Item: HeightPreservingItem }}
+                                        scrollerRef={ref}
+                                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                                        data={playlist}
+                                        itemContent={(index, item) => {
+                                            return(
+                                                <Draggable
+                                                    draggableId={item.path}
+                                                    index={index}
+                                                    key={item.id}
+                                                    disableInteractiveElementBlocking={true}
+                                                >
+                                                    {(provided) => (
+                                                        <div
+                                                            style={provided.draggableProps.style}
+                                                            ref={provided.innerRef}                
+                                                            {...provided.draggableProps}
+                                                            className="item"
+                                                            key={index}
+                                                        >
+                                                            <div className={`grid-20 song-row align-items-center ${item.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
+                                                                onContextMenu={(e) => {
+                                                                    e.preventDefault();
+                                                                    handleContextMenu(e, item.album_id, item.album_artist_id, index);
+                                                                }}
+                                                            >
+                                                                <span className="section-1 play">
+                                                                    <span className="form-control">
+                                                                        <input
+                                                                            type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                                            onClick={(e) => editSelection(item, e.currentTarget.checked, index)}
+                                                                            onChange={() => {}}
+                                                                            checked={songSelection.filter(x => {
+                                                                                return x.path === playlist[index].path
+                                                                            }).length > 0}
+                                                                        />
+                                                                    </span>
+                                                                    <img src={PlayOutlineIcon} onClick={() => playPlaylist(index, false)} />
+                                                                </span>
+                                                                <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={item.cover} alt="" image_type="playlist-song" /></span>
+                                                                <span className="section-8 font-0 name">{item.name}</span>
+                                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(item.album_id)}>{item.album}</span>
+                                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(item.album_artist_id)}>{item.album_artist}</span>
+                                                                <span className="section-1 header-font duration">{new Date(item.duration * 1000).toISOString().slice(14, 19)}</span>
+                                                                <span className="section-1 drag-icon">
+                                                                    <img src={DragIcon} {...provided.dragHandleProps}  />
+                                                                </span>
+                                                            </div>
+                                                            <hr />
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }}
+                            </Droppable>
+                        </DragDropContext>
                     </div>
 
                     <CustomContextMenu
@@ -772,7 +706,6 @@ export default function PlaylistOverviewPage() {
                     />
                     
                 </div>
-                <div className="empty-space" />
             </SimpleBar>
         );
     }
@@ -781,35 +714,25 @@ export default function PlaylistOverviewPage() {
             <SimpleBar forceVisible="y" autoHide={false} >
                 <div className="album-container">
 
+                    <Delete isDelete={isDelete} deletePlaylist={deletePlaylist} cancelDelete={cancelDelete}/>
+                    <EditPlaylist
+                        isOpen={isEdit}
+                        playlistDetails={playlistDetails}
+                        updatePlaylist={updatePlaylist} 
+                        closeEdit={closeEdit}
+                    />
+                
                     <div className="top-row">
                         <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                     </div>
                     {/* Playlist Details */}
                     <div className="d-flex">
                         <div className="album-details d-flex">   
-                            <div onClick={addCustomPlaylistArtwork} className="image-upload">
-                                <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
-                            </div>
+                            <ImageWithFallBack image={playlistDetails.image} alt={"upload new image"} image_type={"album"}/>
                             
-
                             <span style={{paddingLeft: "10px"}} className="grid-15">
-                                {!isEdit && <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{currentPlaylistName}</div>}
-                                {isEdit &&
-                                    <div style={{marginTop: '-5px', marginLeft:'-9px', paddingBottom: "12px"}} className="section-15 d-flex align-items-center">
-                                        <input
-                                            id="current-playlist-name"
-                                            type="text"
-                                            className="header-font font-3"
-                                            style={{width: '300px', height: '40px'}}
-                                            placeholder={currentPlaylistName}
-                                            value={currentPlaylistName}
-                                            onChange={(e) => setCurrentPlaylistName(e.target.value) }
-                                        />
-                                        <span className="" style={{marginBottom: '0px', marginLeft: '6px'}}>
-                                            <button className="white" onClick={updatePlaylistName}>Update</button>
-                                        </span>
-                                    </div>
-                                }
+                                <div style={{paddingBottom: "16px", marginLeft: '2px'}} className="section-15 header-font font-3">{playlistDetails.name}</div>
+                               
                                 <span className="section-15 font-0 misc-details">
                                     0 songs
                                 </span>
@@ -819,10 +742,7 @@ export default function PlaylistOverviewPage() {
                                     <span><button className="font-1 borderless" disabled ><img src={ShuffleIcon} /></button></span>
                                     <span><button className="font-1 borderless" onClick={() => setIsEdit(!isEdit)}><img src={EditIcon} /></button></span>
                                     <span>
-                                        <button
-                                            className={`font-1 borderless red ${isEdit ? "" : "display-none"}`}
-                                            onClick={deletePlaylist}
-                                        >
+                                        <button className={`font-1 borderless red`} onClick={deletePlaylist} >
                                             <img src={DeleteIcon} />
                                         </button>
                                     </span>
@@ -834,11 +754,18 @@ export default function PlaylistOverviewPage() {
                     {/* Song list */}
                     <div className="song-list">
                         <div className="grid-20 position-relative">
-                            <span className="section-2" style={{width: '125px'}}>&nbsp;</span>
-                            <span className="section-9 vertical-centered font-0 details">Name</span>
+                            <span className="section-2"><span className="select-all-container">
+                                    <input
+                                        type="checkbox" id={`select-all`} name={`select-all`}
+                                        className="select-all-checkbox"
+                                        onClick={() => {}} onChange={() => {}} checked={false} disabled={true}
+                                    />
+                                </span></span>
+                            <span className="section-8 vertical-centered font-0 details">Name</span>
                             <span className="section-4 vertical-centered font-0 details">Album</span>
                             <span className="section-4 vertical-centered font-0 details">Album Artist</span>
-                            <span className="section-1 details">Length</span>
+                            <span className="section-1 vertical-centered details">Length</span>
+                            <span className="section-1 vertical-centered details"></span>
                         </div>
                         <hr />
                     </div>
@@ -850,12 +777,131 @@ export default function PlaylistOverviewPage() {
 }
 
 
+
+type editPlaylistProps = {
+    isOpen: boolean,
+    playlistDetails: PlaylistDetails,
+    updatePlaylist: (name: string, cover: string) => void,
+    closeEdit: () => void
+}
+
+function EditPlaylist({isOpen, playlistDetails, updatePlaylist, closeEdit}: editPlaylistProps) {
+
+    const [newPlaylistName, setNewPlaylistName] = useState<string>(playlistDetails.name);
+    const [newPlaylistImage, setNewPlaylistImage] = useState<string>(playlistDetails.image);
+
+    useEffect(() => {
+        const element = document.getElementsByClassName("simplebar-content-wrapper");
+        if(isOpen) {
+            element[0].classList.add("overflow-y-hidden");
+        }
+        else {
+            element[0].classList.remove("overflow-y-hidden");
+            closeEdit();
+        }
+    }, [isOpen]);
+
+    function updatePlaylistName(name: string) {
+        setNewPlaylistName(name);
+    }
+
+    // Doesn't update image if you change the file of the old uploaded image with a new image (same name and extension but different image)
+    async function addCustomPlaylistArtwork() {
+        let cover_image: string = "";
+        try {
+            const file_path = await open({ multiple: false, directory: false, filters: [{name: "Image", extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif']}] });
+            if(file_path !== null) {
+                cover_image = file_path.toString();
+                setNewPlaylistImage(cover_image);
+            }    
+        }
+        catch(err) {
+            error("Playlist Overview (Error) - Error Adding Custom Playlist Artwork: " + err);
+            console.log(`Failed to add custom artwork: ${err}`);
+        }
+    }
+    
+    function cancelUpdate() {
+        setNewPlaylistImage(playlistDetails.image);
+        setNewPlaylistName(playlistDetails.name);
+        closeEdit();
+    }
+
+    if(isOpen) {
+        return(
+            <>
+                <div className="edit-playlist-container">
+                    <h2>Update Playlist Details</h2>
+                    <div className="close" onClick={closeEdit}> <img src={CloseIcon} alt="" /></div>
+
+                    <div className="details">
+
+                        <div onClick={addCustomPlaylistArtwork} className="image-upload">
+                            <ImageWithFallBack image={newPlaylistImage} alt={"upload new image"} image_type={"album"}/>
+                        </div>
+
+                        <input
+                            id="current-playlist-name"
+                            type="text"
+                            className="header-font font-3"
+                            autoComplete='false'
+                            placeholder={newPlaylistName}
+                            value={newPlaylistName}
+                            onChange={(e) => updatePlaylistName(e.target.value) }
+                        />
+                    </div>
+
+                    <span className="buttons">
+                        <span> <button className="white" onClick={() => {updatePlaylist(newPlaylistName, newPlaylistImage);}}>Update</button> </span>
+
+                        <span> <button className="red" onClick={cancelUpdate}>Cancel</button> </span>
+                    </span>
+                </div>
+                <div className="bg-screen" />
+            </>
+        );
+    }    
+}
+
+
+
+type deleteProps = {
+    isDelete: boolean,
+    deletePlaylist: () => void,
+    cancelDelete: () => void
+}
+
+function Delete({isDelete, deletePlaylist, cancelDelete}: deleteProps) {
+
+    if(isDelete) {
+        return(
+            <div className="selection-popup-container grid-20 header-font warning open">
+                <div className="section-14" style={{marginLeft: "15px", marginBottom: "0px"}}>Are you sure you want to delete this playlist?</div>
+                <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
+                    <button className="d-flex align-items-center red" onClick={deletePlaylist}>
+                        Yes
+                    </button>
+                </div>
+
+                <div className="section-3 position-relative" style={{marginBottom: "0px"}}>
+                    <button className="d-flex align-items-center white" onClick={cancelDelete}>
+                        No
+                    </button>
+                </div>
+            </div> 
+        );
+    }
+}
+
+
+
+
 type Props = {
     isToggled: boolean,
     // Song Values
     song: Songs,
-    album: string,
-    artist: string,
+    album: number,
+    artist: number,
     index: number,
     play: (index: number, shuffle: boolean) => void,
     editSelection: (song: Songs, isBeingAdded: boolean, index: number) => void,
@@ -870,7 +916,7 @@ type Props = {
     createPlaylist: (name: string, song: Songs) => void,
     addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
-    updateSongDetailsDisplay: (bool: boolean, path: string) => void,
+    updateSongDetailsDisplay: (bool: boolean, id: number) => void,
     ref: any
 }
 
@@ -889,10 +935,10 @@ function CustomContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
-        navigate("/artists/overview", {state: {name: artist}});
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     useEffect(() => {
@@ -968,14 +1014,14 @@ function CustomContextMenu({
                     </span>
                 </li>
                 {/* Navigation Buttons */}
-                {album !== "" &&
+                {album !== -1 &&
                     <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
                         <span className="d-flex context-row">
                             <img src={AlbumIcon} />  &nbsp; Show Album
                         </span>
                     </li>
                 }
-                {artist !== "" &&
+                {artist > 0 &&
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <span className="d-flex context-row">
                             <img src={ArtistIcon} /> &nbsp; Show Artist
@@ -984,7 +1030,7 @@ function CustomContextMenu({
                 }
                 
 
-                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
+                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.id)} >
                     <span className="d-flex context-row">
                         <img src={InfoIcon} />  &nbsp; Song Details
                     </span>

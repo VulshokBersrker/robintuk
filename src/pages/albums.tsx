@@ -44,33 +44,16 @@ export default function AlbumPage({albums}: P) {
     const [filteredAlbums, setFilteredAlbums] = useState<AlbumDetails[]>(albums);
     const [albumSections, setAlbumSections] = useState<number[]>([]);    
 
-    const [albumSelection, setAlbumSelection] = useState<string[]>([]);
-    const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const [albumSelection, setAlbumSelection] = useState<number[]>([]);
+    const [contextMenu, setContextMenu] = useState({ isToggled: false, isBeingAdded: true, album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
     // Playlist Values
-    const [_newPlaylistName, setNewPlaylistName] = useState<string>("");
     const [_displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
     useEffect(() => {
-        function setupAlbumList() {
-            
-            setLoading(true);
-
-            let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, albumList.map((o: AlbumDetails) => { return o.album_section})) );
-
-            for(let i = 0; i < maxSection + 1; i++) {
-                const results = albumList.filter(obj => obj.album_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setAlbumSections(tempSectionArray);
-            
-            setLoading(false);
-        }
         setupAlbumList();
-
 
         const handler = (e: any) => {
             if(!contextMenu.isToggled && !isContextMenuOpen.current?.contains(e.target)) {
@@ -84,27 +67,47 @@ export default function AlbumPage({albums}: P) {
         }
     }, []);
 
-    const navigateToAlbumOverview = (name: string, album_tag: number) => {
-        navigate(`/albums#${album_tag}`, { replace: true});
-        navigate("/albums/overview", {state: {name: name}});
+    useEffect(() => {
+        setupAlbumList();
+        setFilteredAlbums(albums);
+    }, [albums]);
+
+    function setupAlbumList() {
+        setLoading(true);
+
+        const groupCounts = alphabeticallyOrdered.map((letter) => {
+            return albumList.filter((entry) => letter === entry.album_section ).length
+        });
+
+        setAlbumSections(groupCounts);
+        setLoading(false);
     }
 
-    async function playAlbum(album_name: string, shuffled: boolean) {
+    const navigateToAlbumOverview = (id: number, album_tag: number) => {
+        navigate(`/albums#${album_tag}`, { replace: true });
+        navigate("/albums/overview", {state: {id: id}});
+    }
+
+    async function playAlbum(album_id: number, shuffled: boolean) {
         resetContextMenu();
         try {
-            await invoke("play_album", {album_name: album_name, index: 0, shuffled: shuffled});
+            await invoke("play_album", {album_id: album_id, index: 0, shuffled: shuffled});
             savePosition(0);
         }
         catch(e) {
             console.log(e);
+        }
+        finally {
+            localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+            await invoke("set_shuffle_mode", { mode: shuffled });
         }
     }
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
         const temp_section = albumList.filter((entry): any => {
-            if(entry.album !== undefined && entry.album_artist !== undefined) {
-                return (entry.album.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
+            if(entry.name !== undefined && entry.album_artist !== undefined) {
+                return (entry.name.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase())
                 || entry.album_artist.normalize('NFD').toLowerCase().replace(/[\u0300-\u036f]/g, '').includes(value.toLowerCase()) )
             }
         })
@@ -120,7 +123,7 @@ export default function AlbumPage({albums}: P) {
         setAlbumSections(tempSectionArray);
     }
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number, isBeingAdded: boolean) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number, isBeingAdded: boolean) {
         if(e.pageX < window.innerWidth / 2) {
             // Top Left
             if(e.pageY < window.innerHeight / 2) {
@@ -145,18 +148,14 @@ export default function AlbumPage({albums}: P) {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, isBeingAdded: false, album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, isBeingAdded: false, album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
     }
 
     // ------------ Start of Selection Bar Functions ------------
 
-    function updateNewPlaylistName(name: string) {
-        setNewPlaylistName(name);
-    }
-
     function removeSelectedSongs() { }
     
-    function editSelection(album: string, isBeingAdded: boolean) {
+    function editSelection(album: number, isBeingAdded: boolean) {
         resetContextMenu();
         // If we are adding to the array of selected songs
         if(isBeingAdded === true) {
@@ -195,7 +194,7 @@ export default function AlbumPage({albums}: P) {
             
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: albumSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
@@ -214,7 +213,7 @@ export default function AlbumPage({albums}: P) {
         try {
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: albumSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
@@ -231,7 +230,7 @@ export default function AlbumPage({albums}: P) {
         try {
             let songList: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
-                const temp: Songs[] = await invoke<Songs[]>('get_album', {name: albumSelection[i]});
+                const temp: Songs[] = await invoke<Songs[]>('get_album', {album_id: albumSelection[i]});
                 songList.push(...temp);
             }
             clearSelection();
@@ -262,7 +261,7 @@ export default function AlbumPage({albums}: P) {
         try {
             let albums_songs_arr: Songs[] = [];
             for(let i = 0; i < albumSelection.length; i++) {
-                const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { name: albumSelection[i] });
+                const temp_arr: Songs[] = await invoke<Songs[]>("get_album", { album_id: albumSelection[i] });
                 albums_songs_arr = albums_songs_arr.concat(temp_arr);
             }
             clearSelection();
@@ -278,7 +277,7 @@ export default function AlbumPage({albums}: P) {
     }
 
 
-    if(loading) {
+    if(loading === true || albums.length === 0) {
         return(
             <div>
                 <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
@@ -287,32 +286,13 @@ export default function AlbumPage({albums}: P) {
                             <img src={SearchIcon} className="bi search-icon icon-size"/>
                             <input
                                 type="text" placeholder="Search Albums" id="search_albums"
-                                value={searchValue}
-                                onChange={(e) => updateSearchResults(e.target.value)}
+                                value={searchValue} disabled
+                                onChange={() => {}}
                             />
                         </span>
                     </div>
 
-                    <VirtuosoGrid
-                        style={{ paddingBottom: '170px' }}
-                        totalCount={Array(70).length}
-                        components={gridComponents}
-                        increaseViewportBy={{ top: 210, bottom: 420 }}
-                        itemContent={(i) =>
-                            <div key={`place-${i}`} className="album-link placeholder" id={`place-${i}`}>
-                                <div className="album-image-container placeholder">                                                
-                                    <div className="album-image placeholder">
-                                        {/* <div className="activity"/> */}
-                                    </div>
-                                    <div className="album-image-name header-font">
-                                    <div className="album-name"></div>
-                                    <div className="artist-name"></div>
-                                </div>
-                                </div>
-                            </div>
-                        }
-                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                    />
+                    
                 </SimpleBar>
             </div>
         );
@@ -324,7 +304,6 @@ export default function AlbumPage({albums}: P) {
                 <SongSelectionBar
                     selectionBarType={3}
                     songSelection={albumSelection}
-                    updateNewPlaylistName={updateNewPlaylistName}
                     addSelectedToPlaylist={addToPlaylist}
                     createSelectedPlaylist={createPlaylist}
                     clearSelection={clearSelection}
@@ -337,7 +316,7 @@ export default function AlbumPage({albums}: P) {
                 
 
                 <div className="section-list">
-                    {albumList.length !== 0 && alphabeticallyOrdered.map((section, i) => {
+                    {albums.length !== 0 && alphabeticallyOrdered.map((section, i) => {
                         let totalIndex = 0;
                         for(let j = 0; j < i; j++) { totalIndex += albumSections[j]; }
                         if(albumSections[i] !== 0 && albumSections[i] !== undefined) {
@@ -385,8 +364,8 @@ export default function AlbumPage({albums}: P) {
                                 <div className="album-image-container"
                                     onContextMenu={(e) => {
                                         e.preventDefault();
-                                        handleContextMenu(e, filteredAlbums[index].album, filteredAlbums[index].album_artist, index, albumSelection.filter(x => {
-                                                return x === filteredAlbums[index].album
+                                        handleContextMenu(e, filteredAlbums[index].id, filteredAlbums[index].album_artist_id, index, albumSelection.filter(x => {
+                                                return x === filteredAlbums[index].id
                                             }).length > 0
                                         );
                                     }}
@@ -395,22 +374,22 @@ export default function AlbumPage({albums}: P) {
                                         <input
                                             type="checkbox"
                                             id={`select-${index}`} name={`select-${index}`} onChange={() => {}}
-                                            onClick={(e) => editSelection(filteredAlbums[index].album, e.currentTarget.checked)}
+                                            onClick={(e) => editSelection(filteredAlbums[index].id, e.currentTarget.checked)}
                                             checked={albumSelection.filter(x => {
-                                                return x === filteredAlbums[index].album
+                                                return x === filteredAlbums[index].id
                                             }).length > 0} 
                                         />
                                     </span>
-                                    <div className="play-album" onClick={() => playAlbum(filteredAlbums[index].album, false)}>
+                                    <div className="play-album" onClick={() => playAlbum(filteredAlbums[index].id, false)}>
                                         <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                         <img src={Circle} className="circle"/>
                                     </div>
                                     
-                                    <div className="container" onClick={() => navigateToAlbumOverview(filteredAlbums[index].album, index)} >
-                                        <ImageWithFallBack image={filteredAlbums[index].cover} alt={filteredAlbums[index].album} image_type={"album"} />
+                                    <div className="container" onClick={() => navigateToAlbumOverview(filteredAlbums[index].id, index)} >
+                                        <ImageWithFallBack image={filteredAlbums[index].cover} alt={filteredAlbums[index].name} image_type={"album"} />
                                     </div>
                                     <div className="album-image-name header-font">
-                                        <div className="album-name">{filteredAlbums[index].album}</div>
+                                        <div className="album-name">{filteredAlbums[index].name}</div>
                                         <div className="artist-name">{filteredAlbums[index].album_artist}</div>
                                     </div>
                                 </div>
@@ -452,11 +431,11 @@ export default function AlbumPage({albums}: P) {
 
 type Props = {
     isToggled: boolean,
-    album: string,
-    artist: string,
+    album: number,
+    artist: number,
     index: number,
-    play: (album_name: string, shuffled: boolean) => void, // playSong / playAlbum function
-    editSelection: (album: string, isBeingAdded: boolean, index: number) => void,
+    play: (album_name: number, shuffled: boolean) => void, // playSong / playAlbum function
+    editSelection: (album: number, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
     posY: number,
@@ -480,15 +459,15 @@ function ContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
-        navigate("/artists/overview", {state: {name: artist}});
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     async function addToQueue() {
         try {
-            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album});
+            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album, artist: artist});
 
             await invoke('add_to_queue', {songs: album_songs});
             await invoke('player_add_to_queue', {queue: album_songs});
@@ -503,7 +482,7 @@ function ContextMenu({
     
     async function addToPlaylist(id: number) {
         try {
-            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album});
+            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {album_id: album});
             await invoke('add_to_playlist', {songs: album_songs, playlist_id: id});
         }
         catch(e) {
@@ -514,7 +493,7 @@ function ContextMenu({
 
     async function createPlaylist(name: string) {
         try {
-            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {name: album});
+            const album_songs: Songs[] = await invoke<Songs[]>('get_album', {album_id: album});
             await invoke('create_playlist', {name: name, songs: album_songs, songs_to_add: true });
             await invoke('new_playlist_added');
         }
@@ -602,7 +581,7 @@ function ContextMenu({
                     </span>                    
                 </li>
             
-            {artist !== "" &&
+            {artist > 0 &&
                 <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                     <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
                         <img src={ArtistIcon} /> &nbsp; Show Artist

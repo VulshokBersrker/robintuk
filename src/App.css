@@ -10,7 +10,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-  --border-radius: 0.5rem;
+  --border-radius: 6px;
 }
 
 [data-theme="red"] {
@@ -54,7 +54,7 @@
   --current-song-one: #04134f;
   --current-song-two: #2841a400;
   --highlight-color: #f4f4f421;
-  --highlight-hover: #140e6d;
+  --highlight-hover: #150c99;
   /* Hr Colors */
   --hr-gradient-one: #212a4a;
   --hr-gradient-two: #1c1e55;
@@ -129,16 +129,16 @@
   /* Font Colors */
   --font-color-one: #f3f3f3;
   --font-color-two: #8baa8d;
-  --font-color-three: #07782e;
+  --font-color-three: #077812;
   /* Gradient Colors */
-  --gradient-one: rgb(5, 41, 3);
-  --gradient-two: rgb(5, 17, 0);
-  --gradient-three: rgb(0, 0, 0);
+  --gradient-one: rgb(4, 41, 2);
+  --gradient-two: #020c03;
+  --gradient-three: #010101;
   /* Hover / Highlight Colors */
   --current-song-one: #013906;
   --current-song-two: #000000;
   --highlight-color: rgba(0, 0, 0, 0.788);
-  --highlight-hover: #004e1c;
+  --highlight-hover: #056500;
   /* Hr Colors */
   --hr-gradient-one: #154715;
   --hr-gradient-two: #0e4a0e;
@@ -159,13 +159,13 @@
   --font-color-two: #918099;
   --font-color-three: #8e159c;
   /* Gradient Colors */
-  --gradient-one: rgb(45, 8, 64);
-  --gradient-two: rgb(15, 1, 24);
-  --gradient-three: rgb(0, 0, 0);
+  --gradient-one: rgb(31, 2, 44);
+  --gradient-two: #010101;
+  --gradient-three: #010101;
   /* Hover / Highlight Colors */
   --current-song-one: #410748;
   --current-song-two: #ffffff00;
-  --highlight-color: #000000ce;
+  --highlight-color: #61137e72;
   --highlight-hover: #700d7a;
   /* Hr Colors */
   --hr-gradient-one: #281736;
@@ -174,12 +174,41 @@
   --music-player-bg: rgba(13, 1, 16, 0.429);
   --music-player-border: linear-gradient(to right, rgb(81, 1, 101), rgb(28, 28, 28)) 1 stretch;
   --slider-color-one: #8e159c;
+  --border-radius: 4px;
   /* Album Overview Colors */
   --play-icon: brightness(0) saturate(100%) invert(15%) sepia(87%) saturate(3235%) hue-rotate(284deg) brightness(90%) contrast(102%);
   --play-icon-hover: brightness(0) saturate(100%) invert(47%) sepia(96%) saturate(2625%) hue-rotate(242deg) brightness(98%) contrast(91%);
   --arrow-icon: brightness(0) saturate(100%) invert(26%) sepia(24%) saturate(4938%) hue-rotate(255deg) brightness(86%) contrast(89%);
   /* Checkbox Colors */
   --checkbox-checked-color: #8e159c;
+}
+[data-theme="ares"] {
+  /* Font Colors */
+  --font-color-one: #f3f3f3;
+  --font-color-two: #877373;
+  --font-color-three: #890909;
+  /* Gradient Colors */
+  --gradient-one: #010101;
+  --gradient-two: #010101;
+  --gradient-three: #010101;
+  /* Hover / Highlight Colors */
+  --current-song-one: #460202;
+  --current-song-two: #1301040d;
+  --highlight-color: #22222286;
+  --highlight-hover: #720606;
+  /* Hr Colors */
+  --hr-gradient-one: #580b0b;
+  --hr-gradient-two: #580b0b;
+  /* Music Player Colors */
+  --music-player-bg: rgba(16, 1, 1, 0.55);
+  --music-player-border: linear-gradient(to right, rgb(159, 0, 0), rgb(28, 28, 28)) 1 stretch;
+  --slider-color-one: #970505;
+  /* Album Overview Colors */
+  --play-icon: brightness(0) saturate(100%) invert(16%) sepia(67%) saturate(7497%) hue-rotate(8deg) brightness(86%) contrast(125%);
+  --play-icon-hover: brightness(0) saturate(100%) invert(19%) sepia(100%) saturate(3421%) hue-rotate(8deg) brightness(100%) contrast(100%);
+  --arrow-icon: brightness(0) saturate(100%) invert(15%) sepia(99%) saturate(2579%) hue-rotate(344deg) brightness(84%) contrast(86%);
+  /* Checkbox Colors */
+  --checkbox-checked-color: rgb(214, 42, 42);
 }
 [data-theme="tau-ceti"] {
   /* Font Colors */
@@ -297,7 +326,33 @@ body[data-theme="tau-ceti"] {
     filter: brightness(0%);
     transition: 0.1s ease-in-out;
   }
+
+  select.themes option::before {
+    outline: 2px solid rgba(96, 95, 95, 0.354);
+  }
+
+  option:hover, option:active, option:focus {
+    color: #000;
+    background-color: var(--highlight-hover) !important;
+  }
 } 
+
+body[data-theme="ares"] {
+
+  .nav-item.active {
+    background-color: var(--highlight-hover);
+  }
+  
+  select.themes option::before {
+    outline: 2px solid rgba(96, 95, 95, 0.354);
+  }
+
+  option:hover, option:active, option:focus {
+    color: #ece7e7;
+    background-color: var(--highlight-hover) !important;
+  }
+  
+}
 
 .border {
   border: 1px solid #fff;
@@ -381,6 +436,11 @@ a {
   font-family: var(--header-family);
   font-weight: calc(var(--header-weight) - 200);
 }
+
+h1, h2, h3, h4 {
+  margin: 0px;
+}
+
 .header-color {
   color: var(--font-color-three);
 }
@@ -665,19 +725,20 @@ img.off {
   filter: brightness(0) saturate(100%) invert(36%) sepia(94%) saturate(0%) hue-rotate(210deg) brightness(95%) contrast(94%);
 }
 
+
 /* Padding for when the sidebar is collapsed */
 .content {
   position: relative;
   transition: 0s ease-in-out;
-  height: calc(100vh - 30px);
+  height: calc(100vh - 32px);
   width: calc(100vw - 156px);
-  margin-top: 1.8rem;
+  margin-top: 2rem;
   margin-left: 9.3rem;
   z-index: 99;
 }
 /* Allows for the blur for the music controls and the weird padding fix */
 .empty-space {
-  height: 70px;
+  height: 75px;
 }
 
 /* ------------------ Custom Window Tab Styles ------------------*/
@@ -691,7 +752,7 @@ img.off {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 700;
+  z-index: 900;
 }
 .titlebar > .controls {
   display: flex;
@@ -898,6 +959,7 @@ img.off {
 .history.home .list {
   max-height: 10rem;
   overflow: hidden;
+  display: flex;
 }
 .history.home img.album-image {
   width: 6rem;
@@ -910,6 +972,10 @@ img.off {
 .history.home .album-link {
   width: 6.5rem;
   height: 6.2rem;
+}
+
+.song-page-list  {
+  padding-bottom: 120px;
 }
 
 /* -------------- Album List Page -------------- */
@@ -1061,6 +1127,16 @@ input[type="checkbox"]:hover {
 
 .checkbox-container input[type="checkbox"] {
   background-color: rgba(0, 0, 0, 0.7);
+}
+
+.bg-screen {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  z-index: 500;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.749);
 }
 
 /* -------------------------- Settings Page -------------------------- */
@@ -1311,6 +1387,9 @@ select.themes option::before {
 #theme-tau-ceti::before {
   background-image: url("./images/tau-ceti.svg"); 
 }
+#theme-ares::before {
+  background-image: url("./images/ares.svg"); 
+}
 
 option::checkmark {
   display: none;
@@ -1374,6 +1453,25 @@ option:hover, option:active, option:focus {
   width: 22px;
 }
 
+.edit-playlist-container.create {
+  z-index: 100;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+  background-color: var(--gradient-two);
+  border: 2px solid var(--font-color-three);
+  border-radius: var(--border-radius);
+}
+
+.edit-playlist-container.create input {
+  margin-top: 40px;
+}
+
+.edit-playlist-container.create .buttons button {
+  margin-left: 10px;
+}
 
 /* ---------- Placeholder Styles ---------- */
 .album-link.placeholder {
@@ -1515,16 +1613,6 @@ img.search-icon:hover {
 
 
 @media (min-width: 641px) {
-
-  #root:has(.music-control-container) {
-    .nav-scrollable {
-      height: calc(100vh - 26.4rem);
-    }
-    .empty-space {
-      height: 110px;
-    }
-  }
-
   .scrollbar-settings-content .empty-space {
     height: 7rem !important;
   }
@@ -1566,9 +1654,6 @@ img.search-icon:hover {
   height: auto !important;
   z-index: 0;
 }
-.simplebar-content {
-  padding-bottom: 200px;
-}
 
 .albums-main .simplebar-content,
 .artists-main .simplebar-content,
@@ -1595,7 +1680,7 @@ img.search-icon:hover {
   box-sizing: border-box !important;
   position: relative;
   display: block;
-  height: 100%; /* Required for horizontal native scrollbar to not appear if parent is taller than natural height */
+  height: calc(100vh - 32px) !important; /* Required for horizontal native scrollbar to not appear if parent is taller than natural height */
   width: auto;
   max-width: 100%; /* Not required for horizontal scroll to trigger */
   max-height: 100%; /* Needed for vertical scroll to trigger */
@@ -1603,6 +1688,7 @@ img.search-icon:hover {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 
 .simplebar-content-wrapper::-webkit-scrollbar,
 .simplebar-hide-scrollbar::-webkit-scrollbar {
@@ -1687,76 +1773,34 @@ img.search-icon:hover {
 
 /* Settings Page */
 .scrollbar-settings-content .simplebar-track {
-  z-index: 1;
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  overflow: hidden;
   height: calc(100vh - 35px);
 }
 .simplebar-scrollable-y:has(.album-container) {
   .simplebar-track {
-    z-index: 1;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
     height: calc(100vh - 35px);
   }
 }
 .simplebar-scrollable-y:has(.song-page-list) {
   .simplebar-track {
-    z-index: 1;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
     height: calc(100vh - 35px);
   }
 }
 
 #root:has(.music-control-container) {
   .simplebar-track {
-    z-index: 1;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
-    height: calc(100vh - 124px);
+    height: calc(100vh - 132px);
   }
   /* Settings Page */
   .scrollbar-settings-content .simplebar-track {
-    z-index: 1;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
-    height: calc(100vh - 124px);
+    height: calc(100vh - 126px);
   }
   .simplebar-scrollable-y:has(.album-container) {
     .simplebar-track {
-      z-index: 1;
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      overflow: hidden;
-      height: calc(100vh - 124px);
+      height: calc(100vh - 128px);
     }
   }
   .simplebar-scrollable-y:has(.song-page-list) {
     .simplebar-track {
-      z-index: 1;
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      overflow: hidden;
       height: calc(100vh - 134px);
     }
   }
@@ -1791,7 +1835,6 @@ img.search-icon:hover {
   left: 0;
   right: 0;
   min-height: 10px;
-  
 }
 
 /* Scrollbar itself */
@@ -1894,17 +1937,11 @@ img.search-icon:hover {
   }
 
   #root:has(.music-control-container) {
-    .songs-main .empty-space {
-      height: 250px;
+    .song-page-list {
+      padding-bottom: 250px;
     }
-    .playlist-main .empty-space {
-      height: 180px;
-    }
-    .album-details-main .empty-space {
-      height: 180px;
-    }
-    .queue-main .empty-space {
-      height: 180px;
+    .playlist-main .song-list{
+      padding-bottom: 120px;
     }
   }
 
@@ -1912,17 +1949,11 @@ img.search-icon:hover {
 
 @media screen and (min-height: 100px) and (max-height: 799px) {
   #root:has(.music-control-container) {
-    .songs-main .empty-space {
-      height: 250px;
+    .song-page-list {
+      padding-bottom: 250px;
     }
-    .playlist-main .empty-space {
-      height: 180px;
-    }
-    .album-details-main .empty-space {
-      height: 180px;
-    }
-    .queue-main .empty-space {
-      height: 180px;
+    .playlist-main .song-list {
+      padding-bottom: 120px;
     }
   }
 
@@ -1950,32 +1981,22 @@ img.search-icon:hover {
   }
 
   #root:has(.music-control-container) {
-    .songs-main .empty-space {
-      height: 250px;
+    .song-page-list {
+      padding-bottom: 250px;
     }
-    .playlist-main .empty-space {
-      height: 220px;
+    .playlist-main .song-list {
+      padding-bottom: 80px;
     }
   }  
 }
 
 @media screen and (min-width: 1200px) and (max-width: 1800px) {
   #root:has(.music-control-container) {
-    .empty-space {
-      height: 240px;
+    .playlist-main .song-list {
+      padding-bottom: 120px;
     }
-    .playlist-main .empty-space {
-      height: 240px !important;
-    }
-    .albums-main .empty-space,
-    .artists-main .empty-space {
-      height: 120px;
-    }
-    .song-page-list .empty-space {
-      height: 250px;
-    }
-    .album-container .empty-space {
-      height: 220px !important;
+    .song-page-list  {
+      padding-bottom: 160px;
     }
   }
   
@@ -1987,15 +2008,15 @@ img.search-icon:hover {
     .empty-space {
       height: 15.5rem;
     }
-    .playlist-main .empty-space {
-      height: 120px
+    .playlist-main .song-list {
+      padding-bottom: 120px;
     }
     .albums-main .empty-space,
     .artists-main .empty-space {
       height: 6.7rem;
     }
-    .song-page-list .empty-space {
-      height: 18rem;
+    .song-page-list  {
+      padding-bottom: 40px;
     }
     .album-container .empty-space {
       height: 15rem !important;

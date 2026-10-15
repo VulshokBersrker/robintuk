@@ -53,7 +53,7 @@ pub fn run() -> Result<(), String> {
         let mut device: MixerDeviceSink = DeviceSinkBuilder::from_default_device()
             .and_then(|b| {
                 b
-                .with_buffer_size(rodio::cpal::BufferSize::Fixed(1024))
+                // .with_buffer_size(rodio::cpal::BufferSize::Fixed(1024))
                 .open_stream()
             })
             .or_else(|_| DeviceSinkBuilder::open_default_sink())
@@ -248,7 +248,6 @@ pub fn run() -> Result<(), String> {
             commands::new_artist_cover_added,
             // Lyrics Functions
             db::get_lyrics,
-            commands::check_for_single_lyrics,
             commands::cancel_lyrics_scan,
             commands::update_remote_lyrics,
             commands::search_remote_lyrics,
@@ -300,6 +299,8 @@ pub struct GetScanStatus {
 }
 
 // use the path value to check, since that is a unique value in each entry (files cannot share paths)
+
+// Oversight - change scan folder between scans - might skip over files
 #[tauri::command]
 async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Result<ScanResults, String> {
     // Keep track of how many entires pass or fail
@@ -367,9 +368,8 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
 
             let last_modified: DateTime<Utc> = fs::metadata(&received).unwrap().modified().unwrap().into();
 
-            let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
-
             if last_res.is_ok() {
+                let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
                 let last_scan = last_res.unwrap().last_scan_date.parse::<i64>();
 
                 if last_scan.is_ok() {
@@ -389,17 +389,20 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                                 }
                                 else {
                                     let _ = db::add_song(song_res.unwrap(), &state.pool).await;
-                                    num_added += 1;                    
+                                    num_added += 1;
                                 }
                             }
                             else {
-                                let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata{:?}", e));
+                                let _ = song_res.inspect_err(|e| log::error!("Scan Music - Error reading Metadata: {:?}", e));
                                 num_error += 1;
                             }
                         }
                         // If the last modified date of the file is before the time of the last scan - Means no info was changed
                         else {
-                            let _ = db::set_keep_single(&state.pool, true, &received).await;
+                            let song_res = db::get_song_raw(&state.pool, received).await;
+                            if song_res.is_ok() {
+                                let _ = db::set_keep_single(&state.pool, true, song_res.unwrap()).await;
+                            }                            
                         }
                     }
                     else {
@@ -417,7 +420,7 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                     }
                 
                 }
-                // Error - Do a full scane
+                // Error - Do a full scan
                 else {
                     let does_exist = db::does_entry_exist(&state.pool, &received).await.unwrap();
                     if does_exist {
@@ -452,7 +455,6 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
                         }
                     }
                 }
-                
             }
             // There is no last scan date - do a full scan
             else { 
@@ -507,8 +509,11 @@ async fn scan_directory(state: State<AppState, '_>, app: tauri::AppHandle) -> Re
 
     // Remove all songs that are no longer in the directories
     let _ = db::remove_songs(&state.pool).await.unwrap();
+    let _ = db::remove_album(&state.pool).await.unwrap();
+    let _ = db::remove_album_artist(&state.pool).await.unwrap();
+    let _ = db::remove_genre(&state.pool).await.unwrap();
 
-    app.emit("scan-finished", GetScanStatus { res: false}).unwrap();    
+    app.emit("scan-finished", GetScanStatus { res: false}).unwrap();
 
     // Timestamp the current scan date
     let _ = set_last_scan_date(&state.pool).await;

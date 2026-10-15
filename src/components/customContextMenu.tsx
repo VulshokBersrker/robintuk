@@ -20,8 +20,8 @@ type Props = {
     isToggled: boolean,
     context_type: string, // Album / Song / Artist / Playlist / Playlist Songs
     song: Songs,
-    album: string,
-    artist: string,
+    album: number,
+    artist: number,
     index: number,
     play: (index: number, shuffled: boolean) => void, // playSong / playAlbum function
     editSelection: (song: Songs, isBeingAdded: boolean, index: number) => void,
@@ -32,10 +32,10 @@ type Props = {
     // Playlist
     name: string,
     playlistList: PlaylistList[],
-    createPlaylist: (name: string) => void,
+    createPlaylist: (name: string, song: Songs) => void,
     addToPlaylist: (id: number, song: Songs) => void
     addToQueue: () => void,
-    updateSongDetailsDisplay: (bool: boolean, path: string) => void,
+    updateSongDetailsDisplay: (bool: boolean, song_id: number) => void,
     ref: any
 }
 
@@ -52,10 +52,10 @@ export default function CustomContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
-        navigate("/artists/overview", {state: {name: artist}});
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     useEffect(() => {
@@ -104,7 +104,7 @@ export default function CustomContextMenu({
                                     className="new-playlist" value={newPlaylistName}
                                     onChange={(e) => setNewPlaylistName(e.target.value)}
                                 />
-                                <span><button onClick={() => {createPlaylist(newPlaylistName)}}>Create</button></span>
+                                <span><button onClick={() => {createPlaylist(newPlaylistName, song)}}>Create</button></span>
                             </span>
                             
                             <SimpleBar forceVisible="y" autoHide={false} clickOnTrack={false} className="add-playlist-container">
@@ -122,21 +122,21 @@ export default function CustomContextMenu({
                     }
                 </li>
 
-                {!context_type.includes("playlist") || !context_type.includes("album_songs") && 
+                {!context_type.includes("playlist") || !context_type.includes("album_songs") && album > 0 && 
                     <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
                         <span className="context-row">
                             <img src={AlbumIcon} /> &nbsp; Show Album
                         </span>
                     </li>
                 }
-                {(!context_type.includes("artist") || !context_type.includes("album_songs")) && artist !== "" && 
+                {(!context_type.includes("artist") || !context_type.includes("album_songs")) && artist > 0 && 
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <span className="context-row">
                             <img src={ArtistIcon} /> &nbsp; Show Artist
                         </span>
                     </li>
                 }    
-                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.path)} >
+                <li className="d-flex align-items-center" onClick={() => updateSongDetailsDisplay(true, song.id)} >
                     <span className="context-row">
                         <img src={InfoIcon} />&nbsp; Song Details
                     </span>

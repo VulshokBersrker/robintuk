@@ -12,8 +12,8 @@ import ImageWithFallBack from "../components/imageFallback.js";
 // Images
 import AlbumIcon from '../images/vinyl-record-svgrepo-com.svg';
 import ShuffleIcon from '../images/shuffle-solid-full.svg';
+import CreateImage from '../images/create_playlist.png';
 import PlayIcon from '../images/play-solid-full.svg';
-import PlusIcon from '../images/plus-solid-full.svg';
 import Circle from '../images/circle.svg';
 import CloseIcon from '../images/x.svg';
 
@@ -75,17 +75,22 @@ export default function PlaylistPage() {
     async function createPlaylist(name: string) {
         resetContextMenu();
         try {
-            await invoke('create_playlist', {name: name});
-            await invoke('new_playlist_added');
+            if(name.length > 0) {
+                await invoke('create_playlist', {name: name, songs: [], songs_to_add: false});
+                await invoke('new_playlist_added');
+                setDisplayCreate(false);
+                setNewPlaylistName("");
+            }
         }
         catch(e) {
             error("Playlist Main Page (Error) - Error Creating a Playlist: " + e);
             console.log(e);
         }
-        finally {
-            setDisplayCreate(false);
-            setNewPlaylistName("");
-        }
+    }
+
+    function closeCreatePlaylist() {
+        setDisplayCreate(false);
+        setNewPlaylistName("");
     }
 
     function handleContextMenu(e: any, playlist: number) {
@@ -112,37 +117,41 @@ export default function PlaylistPage() {
     }
 
     return(
-        <SimpleBar forceVisible="y" autoHide={false} >
-            <div className="playlist-buttons d-flex align-items-center">
-                <span>
-                    <button className={`d-flex align-items-center ${displayCreate ? "red" : "white"}`} onClick={() => {setDisplayCreate(!displayCreate)}}>
-                        {!displayCreate && <> <img src={PlusIcon} alt={""} /> &nbsp; New Playlist </>}
-                        {displayCreate && <> <img src={CloseIcon} alt={""} /> &nbsp; Cancel</>}
-                    </button>
-                </span>
+        <SimpleBar forceVisible="y" autoHide={false} className="">            
+            {displayCreate &&
+                <div className="edit-playlist-container create">
+                    <h2>New Playlist</h2>
+                    <div className="close" onClick={closeCreatePlaylist}> <img src={CloseIcon} alt="" /></div>
+                    <input
+                        id="playlist-name"
+                        type="text"
+                        placeholder="Playlist Name"
+                        value={newPlaylistName}
+                        className=""
+                        autoComplete="off"
+                        style={{width: '280px'}}
+                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                    />
+                    <span className="buttons">
+                        <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName);}}>
+                            Create
+                        </button>
+                    </span>
+                </div>
+            }
+            <div className="playlist-main d-flex flex-wrap" style={{marginTop: '10px'}}>
+                <div className="album-link playlist" onClick={() => {setDisplayCreate(true)}}>
+                    <div className="album-image-container playlist">
+                        
+                        <div className="container" >
+                            <ImageWithFallBack image={CreateImage} alt={""} image_type={"add"} />
+                        </div>
+                        <div className="album-image-name header-font">
+                            <div className="album-name">New Playlist</div>
+                        </div>
+                    </div>
+                </div>
                 
-                {displayCreate &&
-                    <>
-                        <input
-                            id="playlist-name"
-                            type="text"
-                            placeholder="Playlist Name"
-                            value={newPlaylistName}
-                            className=""
-                            autoComplete="off"
-                            style={{width: '280px'}}
-                            onChange={(e) => setNewPlaylistName(e.target.value)}
-                        />
-                        <span>
-                            <button className="white d-flex align-items-center" onClick={() => {createPlaylist(newPlaylistName);}}>
-                                Create
-                            </button>
-                        </span>
-                    </>
-                }
-            </div>
-
-            <div className="d-flex flex-wrap" style={{marginTop: '10px'}}>
                 {playlistList.map((item, i) => {
                     return(
                         <div
@@ -169,10 +178,8 @@ export default function PlaylistPage() {
                             
                         </div>
                     );
-                        
-                })}
+                })}                
             </div>
-            <div className="empty-space" />
 
             <ContextMenu
                 isToggled={contextMenu.isToggled}

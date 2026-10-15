@@ -32,23 +32,24 @@ export default function ArtistsPage({artists}: P) {
     const [artistSections, setArtistSections] = useState<number[]>([]);    
 
     useEffect(() => {
-        function setupArtists() {
-            setLoading(true);
-
-            let tempSectionArray: number[] = [];
-            const maxSection = alphabeticallyOrdered.indexOf( Math.max.apply(Math, artistList.map((o: AllArtistResults) => { return o.artist_section})) );
-            // console.log(maxSection);
-
-            for(let i = 0; i < maxSection + 1; i++) {
-                const results = artistList.filter(obj => obj.artist_section === alphabeticallyOrdered[i] ).length;
-                tempSectionArray[i] = results;
-            }
-            setArtistSections(tempSectionArray);
-            
-            setLoading(false);
-        }
         setupArtists();
     }, []);
+
+    useEffect(() => {
+        setupArtists();
+        setFilteredArtists(artists);
+    }, [artists]);
+
+    function setupArtists() {
+        setLoading(true);
+
+        const groupCounts = alphabeticallyOrdered.map((letter) => {
+            return artistList.filter((entry) => letter === entry.artist_section ).length
+        });
+        setArtistSections(groupCounts);
+        
+        setLoading(false);
+    }
 
     function updateSearchResults(value: string) {
         setSearchValue(value);
@@ -67,9 +68,9 @@ export default function ArtistsPage({artists}: P) {
         setArtistSections(tempSectionArray);
     }
 
-    const navigateToArtistOverview = (name: string, artist_tag: number) => {
+    const navigateToArtistOverview = (id: number, artist_tag: number) => {
         navigate(`/artists#${artist_tag}`, { replace: true});
-        navigate("/artists/overview", {state: {name: name}});
+        navigate("/artists/overview", {state: {id: id}});
     }
 
     if(loading) {
@@ -166,11 +167,11 @@ export default function ArtistsPage({artists}: P) {
                                         // handleContextMenu(e, filteredArtists[index].album, filteredArtists[index].name, index);
                                     }}
                                 >                                    
-                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].album_artist, index)} >
-                                        <ImageWithFallBack image={filteredArtists[index].image} alt={filteredArtists[index].album_artist} image_type={"artist"} />
+                                    <div className="container" onClick={() => navigateToArtistOverview(filteredArtists[index].id, index)} >
+                                        <ImageWithFallBack image={filteredArtists[index].cover} alt={filteredArtists[index].name} image_type={"artist"} />
                                     </div>
                                     <div className="album-image-name header-font">
-                                        <div className="album-name">{filteredArtists[index].album_artist}</div>
+                                        <div className="album-name">{filteredArtists[index].name}</div>
                                     </div>
                                 </div>
                             </div>
