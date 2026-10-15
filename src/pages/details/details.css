@@ -376,8 +376,9 @@ input.new-playlist {
   font-size: 1.2rem;
 }
 
-.album-container .song-list {
-  padding-bottom: 140px;
+.album-details-main .song-list,
+.queue-main .song-list {
+  padding-bottom: 160px;
 }
 
 .edit-playlist-container {
@@ -442,10 +443,11 @@ input.new-playlist {
 }
 
 #root:has(.music-control-container) {
-  .album-container .song-list {
-    padding-bottom: 120px;
+  .album-details-main .song-list,
+  .queue-main .song-list {
+    padding-bottom: 240px;
   }
-  .album-container.playlist .song-list {
+  .playlist-main .song-list {
     padding-bottom: 120px;
   }
   .lyrics-main .song-list {

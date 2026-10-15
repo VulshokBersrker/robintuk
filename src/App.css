@@ -1940,7 +1940,7 @@ img.search-icon:hover {
     .song-page-list {
       padding-bottom: 250px;
     }
-    .playlist-main {
+    .playlist-main .song-list{
       padding-bottom: 120px;
     }
   }
@@ -1952,7 +1952,7 @@ img.search-icon:hover {
     .song-page-list {
       padding-bottom: 250px;
     }
-    .playlist-main {
+    .playlist-main .song-list {
       padding-bottom: 120px;
     }
   }
@@ -1984,7 +1984,7 @@ img.search-icon:hover {
     .song-page-list {
       padding-bottom: 250px;
     }
-    .playlist-main {
+    .playlist-main .song-list {
       padding-bottom: 80px;
     }
   }  
@@ -1992,7 +1992,7 @@ img.search-icon:hover {
 
 @media screen and (min-width: 1200px) and (max-width: 1800px) {
   #root:has(.music-control-container) {
-    .playlist-main {
+    .playlist-main .song-list {
       padding-bottom: 120px;
     }
     .song-page-list  {
@@ -2008,7 +2008,7 @@ img.search-icon:hover {
     .empty-space {
       height: 15.5rem;
     }
-    .playlist-main {
+    .playlist-main .song-list {
       padding-bottom: 120px;
     }
     .albums-main .empty-space,
