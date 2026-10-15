@@ -581,7 +581,7 @@ function ContextMenu({
                     </span>                    
                 </li>
             
-            {artist !== -1 &&
+            {artist > 0 &&
                 <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                     <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
                         <img src={ArtistIcon} /> &nbsp; Show Artist

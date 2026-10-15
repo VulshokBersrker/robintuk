@@ -56,6 +56,9 @@ export default function ArtistOverviewPage() {
 
     // On first load get the album details
     useEffect(() => {
+        if(location.state.name === 0 || location.state.name === -1) {
+            navigate("/artists");
+        }
         getAlbums();
 
         const handler = (e: any) => {

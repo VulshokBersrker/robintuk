@@ -518,14 +518,14 @@ function CustomContextMenu({
                     </span>
                 </li>
 
-                {album !== -1 && 
+                {album > 0 && 
                     <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
                         <span className="d-flex context-row">
                             <img src={AlbumIcon} /> &nbsp; Show Album
                         </span>
                     </li>
                 }
-                {artist !== -1 && 
+                {artist > 0 && 
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <span className="d-flex context-row">
                             <img src={ArtistIcon} /> &nbsp; Show Artist

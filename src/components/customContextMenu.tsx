@@ -122,14 +122,14 @@ export default function CustomContextMenu({
                     }
                 </li>
 
-                {!context_type.includes("playlist") || !context_type.includes("album_songs") && 
+                {!context_type.includes("playlist") || !context_type.includes("album_songs") && album > 0 && 
                     <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
                         <span className="context-row">
                             <img src={AlbumIcon} /> &nbsp; Show Album
                         </span>
                     </li>
                 }
-                {(!context_type.includes("artist") || !context_type.includes("album_songs")) && artist !== -1 && 
+                {(!context_type.includes("artist") || !context_type.includes("album_songs")) && artist > 0 && 
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <span className="context-row">
                             <img src={ArtistIcon} /> &nbsp; Show Artist

@@ -19,6 +19,7 @@ import QueueIcon from '../../images/rectangle-list-regular-full.svg';
 import SelectIcon from '../../images/circle-check-regular-full.svg';
 import AlbumIcon from '../../images/vinyl-record-svgrepo-com.svg';
 import ShuffleIcon from '../../images/shuffle-solid-full.svg';
+import ArtistIcon from '../../images/user-regular-full.svg';
 import PlayIcon from '../../images/play-solid-full.svg';
 import ArrowBackIcon from '../../images/arrow-left.svg';
 import AddIcon from '../../images/plus-solid-full.svg';
@@ -46,7 +47,7 @@ export default function GenreOverviewPage() {
     const [displayAddToMenu, setDisplayAddToMenu] = useState<boolean>(false);
     const [playlistList, setPlaylistList] = useState<PlaylistList[]>([]);
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "genre", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "genre", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
 
 
@@ -72,6 +73,8 @@ export default function GenreOverviewPage() {
             const res: GenreDetails = await invoke("get_albums_by_genre", {genre: location.state.id});
             setGenreDetails(res);
             setCheckBoxNumber(Array(res.albums.length).fill(false));
+
+            console.log(res)
         }
         catch(e) {
             alert(e)
@@ -302,7 +305,7 @@ export default function GenreOverviewPage() {
     function removeSelectedSongs() {}
     // ------------ End of Selection Bar Functions ------------
 
-    function handleContextMenu(e: any, album: number, artist: string, index: number) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, context_type: "genre", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -322,7 +325,7 @@ export default function GenreOverviewPage() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "genre", album: -1, artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, context_type: "genre", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
     }
 
 
@@ -423,7 +426,7 @@ export default function GenreOverviewPage() {
                                     <div className="album-image-container"
                                         onContextMenu={(e) => {
                                             e.preventDefault();
-                                            handleContextMenu(e, genreDetails.albums[index].id, genreDetails.albums[index].album_artist, index);
+                                            handleContextMenu(e, genreDetails.albums[index].id, genreDetails.albums[index].album_artist_id, index);
                                         }}
                                     >
                                         <span className="checkbox-container">
@@ -480,7 +483,7 @@ export default function GenreOverviewPage() {
 type Props = {
     isToggled: boolean,
     album: number,
-    artist: string,
+    artist: number,
     index: number,
     play: (name: number) => void, // playSong / playAlbum function
     editSelection: (albums: number, isBeingAdded: boolean, index: number) => void,
@@ -497,7 +500,7 @@ type Props = {
 }
 
 function CustomContextMenu({ 
-    isToggled, album, index, 
+    isToggled, album, index, artist,
     play, editSelection, isBeingAdded, posX, posY, side,
     playlistList, createPlaylist, addToPlaylist, addToQueue, ref
 }: Props) {
@@ -509,6 +512,9 @@ function CustomContextMenu({
 
     function NavigateToAlbum() {
         navigate("/albums/overview", {state: {id: album}});
+    }
+    function NavigateToArtist() {
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     useEffect(() => {
@@ -579,6 +585,12 @@ function CustomContextMenu({
                     <span className="context-row">
                         <img src={AlbumIcon} /> &nbsp; Show Album
                     </span>                    
+                </li>
+
+                <li className="d-flex align-items-center" onClick={NavigateToArtist} >
+                    <span className="d-flex context-row" onClick={()=> setDisplayAddMenu(!displayAddMenu)}>
+                        <img src={ArtistIcon} /> &nbsp; Show Artist
+                    </span>
                 </li>
             </div>
         );
