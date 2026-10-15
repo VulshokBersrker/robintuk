@@ -232,13 +232,13 @@ export function saveSong(q: Songs) {
 
 export async function playSelection(array: Songs[]) {
     try {
-        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-        await invoke("set_shuffle_mode", { mode: false });
-
         // Load the music to be played and saved
         await invoke('play_selection', {songs: array, shuffled: false});
         savePosition(0);
         saveSong(array[0]);
+
+        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+        await invoke("set_shuffle_mode", { mode: false });
     }
     catch(e) {
         error("Play Selection Global (Error) - Error Playing Selection: " + e);
@@ -248,11 +248,11 @@ export async function playSelection(array: Songs[]) {
 
 export async function playAlbum(album_id: number, shuffled: boolean) {
     try {
-        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
-        await invoke("set_shuffle_mode", { mode: shuffled });
-
         await invoke("play_album", {album_id: album_id, index: 0, shuffled: shuffled});
         savePosition(0);
+
+        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+        await invoke("set_shuffle_mode", { mode: shuffled });
     }
     catch(e) {
         error("Play Album Global (Error) - Error Playing Album: " + e);
@@ -265,24 +265,23 @@ export async function playSong(song: Songs) {
         // Load the music to be played and saved
         await invoke('play_song', { song: song });
         savePosition(0);
+
+        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
+        await invoke("set_shuffle_mode", { mode: false });
     }
     catch(e) {
         error("Play Song Global (Error) - Error Playing Song: " + e);
         console.log(e);
     }
-    finally {
-        localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-        await invoke("set_shuffle_mode", { mode: false });
-    }
 }
 
 export async function playPlaylist(playlist_id: number, shuffled: boolean) {
     try {
-        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
-        await invoke("set_shuffle_mode", { mode: shuffled });
-
         await invoke("play_playlist", {playlist_id: playlist_id, index: 0, shuffled: shuffled});
         savePosition(0);
+
+        localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+        await invoke("set_shuffle_mode", { mode: shuffled });
     }
     catch(err) {
         error("Play Playlist Global (Error) - Error Playing Playlist: " + err);
