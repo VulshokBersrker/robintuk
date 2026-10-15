@@ -501,8 +501,8 @@ pub async fn remove_songs(pool: &Pool<Sqlite>) -> Result<(), String> {
 
 pub async fn remove_song(pool: &Pool<Sqlite>, song: SongTable) -> Result<(), String> {
 
-    let covers_to_delete: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM songs WHERE path = ?1")
-        .bind(&song.path)
+    let covers_to_delete: Vec<Covers> = sqlx::query_as::<_, Covers>("SELECT cover FROM songs WHERE id = ?1")
+        .bind(&song.id)
         .fetch_all(pool)
         .await.unwrap();
 
@@ -518,8 +518,8 @@ pub async fn remove_song(pool: &Pool<Sqlite>, song: SongTable) -> Result<(), Str
         }
     }
     
-    let _ = sqlx::query("DELETE FROM songs WHERE path = ?1")
-        .bind(&song.path)
+    let _ = sqlx::query("DELETE FROM songs WHERE id = ?1")
+        .bind(&song.id)
         .execute(pool)
         .await;
 
@@ -571,7 +571,7 @@ pub async fn add_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &Opti
             let first_char: char = char_array[0].to_ascii_uppercase();
             let section = helper::get_section_marker(first_char);
 
-            let rs = sqlx::query("INSERT INTO albums (name, cover, album_artist, album_section, genre, keep) VALUES (?1, ?2, ?3, ?4, ?5)")
+            let rs = sqlx::query("INSERT INTO albums (name, cover, album_artist, album_section, genre) VALUES (?1, ?2, ?3, ?4, ?5)")
                 .bind(name)
                 .bind(cover)
                 .bind(artist)

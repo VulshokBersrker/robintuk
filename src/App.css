@@ -1654,9 +1654,6 @@ img.search-icon:hover {
   height: auto !important;
   z-index: 0;
 }
-.simplebar-content {
-  padding-bottom: 200px;
-}
 
 .albums-main .simplebar-content,
 .artists-main .simplebar-content,
@@ -1683,7 +1680,7 @@ img.search-icon:hover {
   box-sizing: border-box !important;
   position: relative;
   display: block;
-  height: 100%; /* Required for horizontal native scrollbar to not appear if parent is taller than natural height */
+  height: calc(100vh - 32px) !important; /* Required for horizontal native scrollbar to not appear if parent is taller than natural height */
   width: auto;
   max-width: 100%; /* Not required for horizontal scroll to trigger */
   max-height: 100%; /* Needed for vertical scroll to trigger */
@@ -1691,6 +1688,7 @@ img.search-icon:hover {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 
 .simplebar-content-wrapper::-webkit-scrollbar,
 .simplebar-hide-scrollbar::-webkit-scrollbar {
@@ -1775,76 +1773,34 @@ img.search-icon:hover {
 
 /* Settings Page */
 .scrollbar-settings-content .simplebar-track {
-  z-index: 1;
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  overflow: hidden;
   height: calc(100vh - 35px);
 }
 .simplebar-scrollable-y:has(.album-container) {
   .simplebar-track {
-    z-index: 1;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
     height: calc(100vh - 35px);
   }
 }
 .simplebar-scrollable-y:has(.song-page-list) {
   .simplebar-track {
-    z-index: 1;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
     height: calc(100vh - 35px);
   }
 }
 
 #root:has(.music-control-container) {
   .simplebar-track {
-    z-index: 1;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
-    height: calc(100vh - 124px);
+    height: calc(100vh - 132px);
   }
   /* Settings Page */
   .scrollbar-settings-content .simplebar-track {
-    z-index: 1;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    overflow: hidden;
-    height: calc(100vh - 124px);
+    height: calc(100vh - 126px);
   }
   .simplebar-scrollable-y:has(.album-container) {
     .simplebar-track {
-      z-index: 1;
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      overflow: hidden;
-      height: calc(100vh - 124px);
+      height: calc(100vh - 128px);
     }
   }
   .simplebar-scrollable-y:has(.song-page-list) {
     .simplebar-track {
-      z-index: 1;
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      overflow: hidden;
       height: calc(100vh - 134px);
     }
   }
@@ -1879,7 +1835,6 @@ img.search-icon:hover {
   left: 0;
   right: 0;
   min-height: 10px;
-  
 }
 
 /* Scrollbar itself */
@@ -1982,17 +1937,11 @@ img.search-icon:hover {
   }
 
   #root:has(.music-control-container) {
-    .songs-main .empty-space {
-      height: 250px;
+    .song-page-list {
+      padding-bottom: 250px;
     }
     .playlist-main {
       padding-bottom: 120px;
-    }
-    .album-details-main .empty-space {
-      height: 180px;
-    }
-    .queue-main .empty-space {
-      height: 180px;
     }
   }
 
@@ -2000,17 +1949,11 @@ img.search-icon:hover {
 
 @media screen and (min-height: 100px) and (max-height: 799px) {
   #root:has(.music-control-container) {
-    .songs-main .empty-space {
-      height: 250px;
+    .song-page-list {
+      padding-bottom: 250px;
     }
     .playlist-main {
       padding-bottom: 120px;
-    }
-    .album-details-main .empty-space {
-      height: 180px;
-    }
-    .queue-main .empty-space {
-      height: 180px;
     }
   }
 
@@ -2038,8 +1981,8 @@ img.search-icon:hover {
   }
 
   #root:has(.music-control-container) {
-    .songs-main .empty-space {
-      height: 250px;
+    .song-page-list {
+      padding-bottom: 250px;
     }
     .playlist-main {
       padding-bottom: 80px;
@@ -2049,21 +1992,11 @@ img.search-icon:hover {
 
 @media screen and (min-width: 1200px) and (max-width: 1800px) {
   #root:has(.music-control-container) {
-    .empty-space {
-      height: 240px;
-    }
     .playlist-main {
       padding-bottom: 120px;
     }
-    .albums-main .empty-space,
-    .artists-main .empty-space {
-      height: 120px;
-    }
     .song-page-list  {
-      padding-bottom: 40px;
-    }
-    .album-container .empty-space {
-      height: 220px !important;
+      padding-bottom: 160px;
     }
   }
   

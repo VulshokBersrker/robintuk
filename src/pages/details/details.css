@@ -13,7 +13,7 @@
 .album-container {
   width: 98%;
   padding: 0px;
-  margin-top: 0.9rem;
+  padding-top: 0.9rem;
   position: relative;
   display: inline-block;
 }
@@ -39,7 +39,7 @@
 }
 
 .album-details span  {
-  margin-bottom: 0.8rem;
+  padding-bottom: 0.8rem;
 }
 .misc-details {
   color: var(--font-color-two);
@@ -441,12 +441,15 @@ input.new-playlist {
   cursor: grab;
 }
 
-
-
-
 #root:has(.music-control-container) {
   .album-container .song-list {
-    padding-bottom: 220px;
+    padding-bottom: 120px;
+  }
+  .album-container.playlist .song-list {
+    padding-bottom: 120px;
+  }
+  .lyrics-main .song-list {
+    padding-bottom: 240px;
   }
 }
 

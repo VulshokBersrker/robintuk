@@ -67,7 +67,7 @@ export default function PlaylistOverviewPage() {
         artist: "", genre: "", album_artist: "", disc_number: 0,  duration: 0, song_section: 0, album_id: -1, album_artist_id: -1
     });
 
-    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0 });
+    const[contextMenu, setContextMenu] = useState({ isToggled: false, context_type: "playlistsong", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0 });
     const isContextMenuOpen = useRef<any>(null);
     const [displaySongDetails, setDisplaySongDetails] = useState<boolean>(false);
     const [displaySong, setDisplaySong] = useState<number>(-1);
@@ -112,11 +112,11 @@ export default function PlaylistOverviewPage() {
         setIsEdit(false);
     }, [location.state.name]);
 
-    function navigateToAlbum(album: string) {
-        navigate("/albums/overview", {state: {name: album}});
+    function navigateToAlbum(album: number) {
+        navigate("/albums/overview", {state: {id: album}});
     }
-    function navigateToArtist(artist: string) {
-        navigate("/artists/overview", {state: {name: artist}});
+    function navigateToArtist(artist: number) {
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     function closeEdit() {
@@ -338,11 +338,12 @@ export default function PlaylistOverviewPage() {
         // If we are removing a song from the array
         else {
             // Find the location of the song in the array with filter and only return the other songs
-            setSongSelection(songSelection.filter(item => item.path !== song.path));
+            setSongSelection(songSelection.filter(item => item.id !== song.id));
             const tempArr: boolean[] = checkBoxNumber;
             tempArr[index] = false;
             setCheckBoxNumber(tempArr);
         }
+        resetContextMenu();
     }
 
     function clearSelection() {
@@ -356,7 +357,7 @@ export default function PlaylistOverviewPage() {
 
     // ------------ Context Menu Functions ------------
 
-    function handleContextMenu(e: any, album: string, artist: string, index: number) {
+    function handleContextMenu(e: any, album: number, artist: number, index: number) {
         if(e.pageX < window.innerWidth / 2) {
             if(e.pageY < window.innerHeight / 2) {
                 setContextMenu({ isToggled: true, context_type: "playlistsong", album: album, artist: artist, index: index, posX: e.pageX, posY: e.pageY, side: 0});
@@ -376,7 +377,7 @@ export default function PlaylistOverviewPage() {
     }
 
     function resetContextMenu() {
-        setContextMenu({ isToggled: false, context_type: "playlistsong", album: "", artist: "", index: 0, posX: 0, posY: 0, side: 0});
+        setContextMenu({ isToggled: false, context_type: "playlistsong", album: -1, artist: -1, index: 0, posX: 0, posY: 0, side: 0});
         setDisplayAddToMenu(false);
     }
 
@@ -460,18 +461,20 @@ export default function PlaylistOverviewPage() {
     }
 
     function Item({ provided, item, isDragging, itemIndex }: any) {
-        return (
+
+        return(
             <div
                 style={provided.draggableProps.style}
                 ref={provided.innerRef}                
                 {...provided.draggableProps}
                 className={`item ${isDragging ? "is-dragging" : ""}`}
+                key={itemIndex}
             >
                 <div
                     className={`grid-20 song-row align-items-center ${item.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
                     onContextMenu={(e) => {
                         e.preventDefault();
-                        handleContextMenu(e, item.album, item.album_artist, item.index);
+                        handleContextMenu(e, item.album_id, item.album_artist_id, itemIndex);
                     }}
                 >
                     <span className="section-1 play">
@@ -599,98 +602,85 @@ export default function PlaylistOverviewPage() {
                         </div>
                         <hr />
 
-                        {/* {!isEdit &&
-                            <Virtuoso 
-                                totalCount={playlist.length}
-                                itemContent={(index) => {
+                        <DragDropContext onDragEnd={(e) => onDragEnd(e)}>
+                            <Droppable
+                                droppableId="droppable"
+                                mode="virtual"
+                                renderClone={(provided, snapshot, rubric) => {
                                     return(
-                                        <div key={index} >
-                                            <div
-                                                className={`grid-20 song-row align-items-center ${playlist[index].path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
-                                                onContextMenu={(e) => {
-                                                    e.preventDefault();
-                                                    handleContextMenu(e, playlist[index].album, playlist[index].album_artist, index);
-                                                }}
-                                            >
-                                                <span className="section-1 play">
-                                                    <span className="form-control">
-                                                        <input
-                                                            type="checkbox" id={`select-${index}`} name={`select-${index}`}
-                                                            onClick={(e) => editSelection(playlist[index], e.currentTarget.checked, index)}
-                                                            onChange={() => {}}
-                                                            checked={songSelection.filter(x => {
-                                                                return x.path === playlist[index].path
-                                                            }).length > 0}
-                                                        />
-                                                    </span>
-                                                    <img src={PlayOutlineIcon} onClick={() => playPlaylist(index, false)} />
-                                                </span>
-                                                <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={playlist[index].cover} alt="" image_type="playlist-song" /></span>
-                                                <span className="section-9 font-0 name">{playlist[index].name}</span>
-                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(playlist[index].album)}>{playlist[index].album}</span>
-                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(playlist[index].album_artist)}>{playlist[index].album_artist}</span>
-                                                <span className="section-1 header-font duration">{new Date(playlist[index].duration * 1000).toISOString().slice(14, 19)}</span>
-                                            </div>
-                                            <hr />
-                                        </div>
-                                    );                                
-                                }}
-                                customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                            />
-                        } */}
-
-                        {/* You can only Drag and Drop when you are editing a playlist */}
-                        
-                            <DragDropContext onDragEnd={(e) => onDragEnd(e)}>
-                                <Droppable
-                                    droppableId="droppable"
-                                    mode="virtual"
-                                    renderClone={(provided, snapshot, rubric) => {
-                                        return(
-                                            <Item
-                                                provided={provided}
-                                                isDragging={snapshot.isDragging}
-                                                item={playlist[rubric.source.index]}
-                                                itemIndex={rubric.source.index}
-                                            />
-                                        )
-                                    }}
-                                >
-                                {(provided) => {
-                                    const ref = (el: Window | HTMLElement | null) => provided.innerRef(el as HTMLElement);
-                                    
-                                    return (
-                                        <Virtuoso
-                                            components={{ Item: HeightPreservingItem }}
-                                            scrollerRef={ref}
-                                            customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
-                                            data={playlist}
-                                            // totalCount={playlist.length}
-                                            itemContent={(index, item) => {
-                                                return(
-                                                    <Draggable
-                                                        draggableId={item.path}
-                                                        index={index}
-                                                        key={item.id}
-                                                    >
-                                                        {(provided) => (
-                                                            <Item
-                                                                provided={provided}
-                                                                item={item}
-                                                                isDragging={false}
-                                                                itemIndex={index}
-                                                            />
-                                                        )}
-                                                    </Draggable>
-                                                );
-                                            }}
+                                        <Item
+                                            provided={provided}
+                                            isDragging={snapshot.isDragging}
+                                            item={playlist[rubric.source.index]}
+                                            itemIndex={rubric.source.index}
                                         />
-                                    );
+                                    )
                                 }}
-                                </Droppable>
-                            </DragDropContext>
-                        
-                        
+                            >
+                            {(provided) => {
+                                const ref = (el: Window | HTMLElement | null) => provided.innerRef(el as HTMLElement);
+                                
+                                return (
+                                    <Virtuoso
+                                        components={{ Item: HeightPreservingItem }}
+                                        scrollerRef={ref}
+                                        customScrollParent={scrollParent ? scrollParent.contentWrapperEl : undefined}
+                                        data={playlist}
+                                        itemContent={(index, item) => {
+                                            return(
+                                                <Draggable
+                                                    draggableId={item.path}
+                                                    index={index}
+                                                    key={item.id}
+                                                    disableInteractiveElementBlocking={true}
+                                                >
+                                                    {(provided) => (
+                                                        <div
+                                                            style={provided.draggableProps.style}
+                                                            ref={provided.innerRef}                
+                                                            {...provided.draggableProps}
+                                                            className="item"
+                                                            key={index}
+                                                        >
+                                                            <div className={`grid-20 song-row align-items-center ${item.path.localeCompare(isCurrent.path) ? "" : "current-song"}`}
+                                                                onContextMenu={(e) => {
+                                                                    e.preventDefault();
+                                                                    handleContextMenu(e, item.album_id, item.album_artist_id, index);
+                                                                }}
+                                                            >
+                                                                <span className="section-1 play">
+                                                                    <span className="form-control">
+                                                                        <input
+                                                                            type="checkbox" id={`select-${index}`} name={`select-${index}`}
+                                                                            onClick={(e) => editSelection(item, e.currentTarget.checked, index)}
+                                                                            onChange={() => {}}
+                                                                            checked={songSelection.filter(x => {
+                                                                                return x.path === playlist[index].path
+                                                                            }).length > 0}
+                                                                        />
+                                                                    </span>
+                                                                    <img src={PlayOutlineIcon} onClick={() => playPlaylist(index, false)} />
+                                                                </span>
+                                                                <span className="section-1 d-flex justify-content-end"><ImageWithFallBack image={item.cover} alt="" image_type="playlist-song" /></span>
+                                                                <span className="section-8 font-0 name">{item.name}</span>
+                                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToAlbum(item.album_id)}>{item.album}</span>
+                                                                <span className="section-4 font-0 line-clamp-2 artist" onClick={() => navigateToArtist(item.album_artist_id)}>{item.album_artist}</span>
+                                                                <span className="section-1 header-font duration">{new Date(item.duration * 1000).toISOString().slice(14, 19)}</span>
+                                                                <span className="section-1 drag-icon">
+                                                                    <img src={DragIcon} {...provided.dragHandleProps}  />
+                                                                </span>
+                                                            </div>
+                                                            <hr />
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }}
+                            </Droppable>
+                        </DragDropContext>
                     </div>
 
                     <CustomContextMenu
@@ -764,11 +754,18 @@ export default function PlaylistOverviewPage() {
                     {/* Song list */}
                     <div className="song-list">
                         <div className="grid-20 position-relative">
-                            <span className="section-2" style={{width: '125px'}}>&nbsp;</span>
-                            <span className="section-9 vertical-centered font-0 details">Name</span>
+                            <span className="section-2"><span className="select-all-container">
+                                    <input
+                                        type="checkbox" id={`select-all`} name={`select-all`}
+                                        className="select-all-checkbox"
+                                        onClick={() => {}} onChange={() => {}} checked={false} disabled={true}
+                                    />
+                                </span></span>
+                            <span className="section-8 vertical-centered font-0 details">Name</span>
                             <span className="section-4 vertical-centered font-0 details">Album</span>
                             <span className="section-4 vertical-centered font-0 details">Album Artist</span>
-                            <span className="section-1 details">Length</span>
+                            <span className="section-1 vertical-centered details">Length</span>
+                            <span className="section-1 vertical-centered details"></span>
                         </div>
                         <hr />
                     </div>
@@ -903,8 +900,8 @@ type Props = {
     isToggled: boolean,
     // Song Values
     song: Songs,
-    album: string,
-    artist: string,
+    album: number,
+    artist: number,
     index: number,
     play: (index: number, shuffle: boolean) => void,
     editSelection: (song: Songs, isBeingAdded: boolean, index: number) => void,
@@ -938,10 +935,10 @@ function CustomContextMenu({
     const navigate = useNavigate();
 
     function NavigateToAlbum() {
-        navigate("/albums/overview", {state: {name: album}});
+        navigate("/albums/overview", {state: {id: album}});
     }
     function NavigateToArtist() {
-        navigate("/artists/overview", {state: {name: artist}});
+        navigate("/artists/overview", {state: {id: artist}});
     }
 
     useEffect(() => {
@@ -1017,14 +1014,14 @@ function CustomContextMenu({
                     </span>
                 </li>
                 {/* Navigation Buttons */}
-                {album !== "" &&
+                {album !== -1 &&
                     <li className="d-flex align-items-center" onClick={NavigateToAlbum} >
                         <span className="d-flex context-row">
                             <img src={AlbumIcon} />  &nbsp; Show Album
                         </span>
                     </li>
                 }
-                {artist !== "" &&
+                {artist !== -1 &&
                     <li className="d-flex align-items-center" onClick={NavigateToArtist} >
                         <span className="d-flex context-row">
                             <img src={ArtistIcon} /> &nbsp; Show Artist

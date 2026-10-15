@@ -133,7 +133,7 @@ export default function LRCLIBSearchResults() {
     }
     else if(!loading) {
         return(
-            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent}>
+            <SimpleBar forceVisible="y" autoHide={false} ref={setScrollParent} className="lyrics-main">
                 <div className="d-flex top-row justify-content-between">
                     <img src={ArrowBackIcon} className="icon icon-size" onClick={() => {navigate(-1)}}/>
                 </div>
@@ -150,21 +150,22 @@ export default function LRCLIBSearchResults() {
                             {song!.release && <> {song!.release} &#x2022;</>}
                             {song!.duration && <> {new Date(song!.duration * 1000).toISOString().slice(11, 19)} </>}
                         </span>
+                        
+                        <button 
+                            onClick={() => {getSongLyricsResults(song!.name, song!.album);}} 
+                            className="section-4 header-font font-1"
+                            style={{ marginRight: "15px"}}
+                        >
+                            Search Again
+                        </button>
                         {songLyrics !== undefined && 
                             <button 
                                 onClick={() => {handleLyricsDisplay(-1, false);}} 
                                 className="section-4 header-font font-1"
-                                style={{ marginRight: "15px"}}
                             >
                                 Current Lyrics
                             </button>
                         }
-                        <button 
-                            onClick={() => {getSongLyricsResults(song!.name, song!.album);}} 
-                            className="section-4 header-font font-1"
-                        >
-                            Search Again
-                        </button>
                     </span>                    
                 </div>
 
@@ -237,8 +238,7 @@ export default function LRCLIBSearchResults() {
                             {resultMessage.includes("503") && <>LRCLIB is too busy, search again</>}
                             {!resultMessage.includes("503") && <>No Results</>}
                         </div>
-                    }                 
-                    <div className="empty-space"/>
+                    }
                 </div>
             </SimpleBar>
         );

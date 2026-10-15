@@ -1065,7 +1065,7 @@ pub async fn import_playlist(state: State<AppState, '_>, app: tauri::AppHandle, 
                         }                        
                     }
                     else {
-                        println!("File does not exist: Not being added to playlist: {:?}", &entry.uri);
+                        // println!("File does not exist: Not being added to playlist: {:?}", &entry.uri);
                         error!("Import Playlist: Files does not exist: {:?}", &entry.uri);
                     }
                 }
