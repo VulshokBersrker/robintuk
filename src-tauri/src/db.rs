@@ -661,7 +661,7 @@ pub async fn update_album(pool: &Pool<Sqlite>, name: &Option<String>, artist: &O
 
 pub async fn remove_album(pool: &Pool<Sqlite>) -> Result<(), String> {
     
-    let _ = sqlx::query("DELETE FROM albums a WHERE NOT EXISTS (SELECT * FROM songs s WHERE s.album = a.id)")
+    let _ = sqlx::query("DELETE FROM albums WHERE id NOT IN (SELECT a.id FROM songs s LEFT JOIN albums a WHERE s.album = a.id) ")
         .execute(pool)
         .await;
     Ok(())
@@ -851,7 +851,7 @@ pub async fn update_album_artist(pool: &Pool<Sqlite>, artist: &Option<String>) -
 
 pub async fn remove_album_artist(pool: &Pool<Sqlite>) -> Result<(), String> {
     
-    let _ = sqlx::query("DELETE FROM album_artists art WHERE NOT EXISTS (SELECT * FROM songs s WHERE s.album_artist = art.id)")
+    let _ = sqlx::query("DELETE FROM album_artists WHERE id NOT IN (SELECT art.id FROM songs s LEFT JOIN album_artists art WHERE s.album_artist = art.id) ")
         .execute(pool)
         .await;
     Ok(())
@@ -992,7 +992,7 @@ pub async fn update_genre(pool: &Pool<Sqlite>, genre: &Option<String>) -> Result
 
 pub async fn remove_genre(pool: &Pool<Sqlite>) -> Result<(), String> {
     
-    let _ = sqlx::query("DELETE FROM genres g WHERE NOT EXISTS (SELECT * FROM songs s WHERE s.genre = g.id)")
+    let _ = sqlx::query("DELETE FROM genres WHERE id NOT IN (SELECT g.id FROM songs s LEFT JOIN genres g WHERE s.genre = g.id) ")
         .execute(pool)
         .await;
     Ok(())
