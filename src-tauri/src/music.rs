@@ -269,6 +269,8 @@ impl MusicPlayer {
             let path = &self.queue[pos].path;
             let file = File::open(&path);
 
+            // println!("loading music - {:?}", &file);
+
             // No error reading the file path
             if file.is_ok() {
                 let good_file = file.unwrap();
@@ -285,13 +287,14 @@ impl MusicPlayer {
                 {
                     Ok(source) => {
                         // On Success, load song into the sink
-                        // log::info!("Load Song - Song Successfully loaded - {:?} -- {:?}", &self.queue[pos].name, &self.queue[pos].album);
+                        log::info!("Load Song - Song Successfully loaded - {:?} -- {:?}", &self.queue[pos].name, &self.queue[pos].album);
+                        // println!("Load Song - Song Successfully loaded - {:?} -- {:?}", &self.queue[pos].name, &self.queue[pos].album);
                         self.sink.append(source);
                         return Ok(());
                     },
                     Err(e) => {
                         log::error!("Load Song - Error decoding Audio File {:?} - {:?}", &e, &path);
-                        println!("Error decoding audio file: {:?} - {:?}", &e, &path);
+                        // println!("Error decoding audio file: {:?} - {:?}", &e, &path);
                         return Err("Error decoding audio file".to_string());
                     }
                 };
