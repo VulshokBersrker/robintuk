@@ -119,15 +119,18 @@ export default function MusicControls() {
         }
 
         // Get the next song's details when the current song ends
-        if(songProgress === songDetails?.duration) {
-            getNewSongDetails();
+        if(songDetails !== undefined) {
+            if(songProgress >= songDetails.duration) {
+                getNewSongDetails();
+            }
         }
-
+        
         // Pre-load the next song when there is one second left
         // Then lock the shuffle function to stop and song mismatch, unlock when new song starts
-        if(songDetails?.duration !== undefined) {
-            if(Math.abs(songProgress - songDetails?.duration) <= 1 && Math.abs(songProgress - songDetails?.duration) !== 0) {
+        if(songDetails !== undefined) {
+            if(Math.abs(songProgress - songDetails.duration) <= 1 && Math.abs(songProgress - songDetails.duration) !== 0) {
                 // Append the next song to the sink
+                // console.log("Starting to load next song onto the sink");
                 setNextSongforLoad();
             }
         }
@@ -464,21 +467,25 @@ export default function MusicControls() {
             const pos: number = await invoke("player_get_current_position");
             const qLength: number = await invoke("player_get_queue_length");
 
+            // console.log(num_loaded_songs + " - " + pos + " - " + qLength);
+
             if (pos + 1 >= qLength) {
                 if(num_loaded_songs == 1) {
                     // Load the next song in the queue to be ready
+                    // console.log("pos + 1 >= qLength ---- num_loaded_songs == " + num_loaded_songs);
                     await invoke("player_load_song", { index: 0 });
                 }
             }
             else {
                 if(num_loaded_songs == 1) {
+                    // console.log("pos + 1 < qLength ----  num_loaded_songs == " + num_loaded_songs);
                     // Load the next, unloaded song to the queue (The second song from the one that just ended)
                     await invoke("player_load_song", { index: pos + 1 });
                 }
             }
         }
         catch(e) {
-            error("Controls - Error pre-loading the next song: " + e);
+            error("Music Controls - Error pre-loading the next song: " + e);
             console.log("Error loading the next song: " + e);
         }
     }
@@ -487,6 +494,12 @@ export default function MusicControls() {
     async function getNewSongDetails() {
         try {
             setSongProgress(0);
+            // Check if song is playing, if not force it
+            const example: boolean = await invoke("player_check_if_playing");
+            if(example) {
+                await playMusic();
+            }
+
             const pos: number = await invoke("player_get_current_position");
             const qLength: number = await invoke("player_get_queue_length");
             if (pos + 1 >= qLength) {
@@ -512,7 +525,7 @@ export default function MusicControls() {
             // Send out update that a new song is being played
             await invoke("update_current_song_played");
             await checkForLyrics(newSong.id);
-            setLockShuffle(false);
+            setLockShuffle(false);            
         }
     }
     // --------------------- End of Song Management Functions ---------------------

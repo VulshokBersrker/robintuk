@@ -96,17 +96,18 @@ export default function ArtistOverviewPage() {
     }
 
     // Load the song the user clicked on but also queue the entire album
-    async function playAlbum(album_id: number) {
+    async function playAlbum(album_id: number, shuffled: boolean) {
+        resetContextMenu();
         try {
-            await invoke("play_album", {album_id: album_id, index: 0, shuffled: false});
+            await invoke("play_album", {album_id: album_id, index: 0, shuffled: shuffled});
             savePosition(0);
         }
         catch(e) {
             console.log(e);
         }
         finally{
-            localStorage.setItem("shuffle-mode", JSON.stringify(false) );
-            await invoke("set_shuffle_mode", { mode: false });
+            localStorage.setItem("shuffle-mode", JSON.stringify(shuffled) );
+            await invoke("set_shuffle_mode", { mode: shuffled });
         }
     }
 
@@ -481,7 +482,7 @@ export default function ArtistOverviewPage() {
                                                 checked={checkBoxNumber[index]} onChange={() => {}}
                                             />
                                         </span>
-                                        <div className="play-album" onClick={() => playAlbum(artistDetails.albums[index].id)}>
+                                        <div className="play-album" onClick={() => playAlbum(artistDetails.albums[index].id, false)}>
                                             <img src={PlayIcon} alt="play icon" className="play-pause-icon" />
                                             <img src={Circle} className="circle"/>
                                         </div>
@@ -529,7 +530,7 @@ type Props = {
     album: number,
     artist: number,
     index: number,
-    play: (name: number) => void, // playSong / playAlbum function
+    play: (name: number, shuffled: boolean) => void, // playSong / playAlbum function
     editSelection: (albums: number, isBeingAdded: boolean, index: number) => void,
     isBeingAdded: boolean,
     posX: number,
@@ -584,9 +585,15 @@ function CustomContextMenu({
                     {isBeingAdded === false && <span className="context-row"> <img src={SelectIcon} />&nbsp;Select </span>}
                 </li>
 
-                <li onClick={() => {play(album)}} className="d-flex align-items-center">
+                <li onClick={() => {play(album, false)}} className="d-flex align-items-center">
                     <span className="context-row">
                         <img src={PlayIcon} /> &nbsp; Play
+                    </span> 
+                </li>
+
+                <li onClick={() => {play(album, true)}} className="d-flex align-items-center">
+                    <span className="context-row">
+                        <img src={ShuffleIcon} /> &nbsp; Shuffle
                     </span> 
                 </li>
 
